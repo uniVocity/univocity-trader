@@ -12,12 +12,12 @@ You can combine the signals of multiple strategies that work at multiple interva
 or even mix indicators at different times, e.g. something like a moving average crossover where one moving average works with 33 minute candles and the other with 5 minute candles.
 
 This framework was built for speed and minimal memory consumption (unless necessary). 
-You should be able to run backtests on a million candlesticks using 500mb of RAM or even less. 
+You should be able to run backtests on a million candlesticks using 500mb of RAM or even less.
 
 ## BEWARE
 
- * This project is still under development. It's been refactored from some quick and dirty solution I built for myself
- and there is a lot test and do to make it more convenient.  
+ * This is a personal project that is still under development. It's been refactored from some quick and dirty solution I built for myself
+ and there are things to test and do to make it more convenient and general purpose.  
  
  * Trading is inherently risky and you can lose your money rather quickly in case of errors. Use this software at your own risk.
 You are solely responsible for any financial loss incurred from using this software.   
@@ -27,8 +27,21 @@ You are solely responsible for any financial loss incurred from using this softw
 The meat-and-bones of this framework is inside the [univocity-trader-core](./univocity-trader-core) project folder, it defines the basic interfaces
 used to implement your strategies, support for backtesting, live trading, and integration with live exchanges.
 
-Right now we only support [Binance](https://www.binance.com/en/register?ref=36767892) for trading cryptocurrencies.
-The integration code is in the [univocity-trader-binance](./univocity-trader-binance) project folder, and you can
+Support for any exchange relies in implementing two interfaces:
+
+ * [ExchangeApi](./univocity-trader-core/src/main/java/com/univocity/trader/ExchangeApi.java) 
+ for everything that's available to the public in general, i.e. latest price of a symbol, available symbols, etc.
+ 
+ * [ClientAccountApi](./univocity-trader-core/src/main/java/com/univocity/trader/ClientAccountApi.java)
+ for account-specific operations: create an order, update account balance, etc. 
+
+Everything else is handled by the framework.
+
+Right now we provide an implementation that supports [Binance](https://www.binance.com/en/register?ref=36767892) for trading cryptocurrencies
+in class [BinanceExchangeApi](./univocity-trader-binance/src/main/java/com/univocity/trader/exchange/binance/BinanceExchangeApi.java).
+As you can see it's not a lot of work especially if the exchange already provides a Java library for their API.
+ 
+The full integration code with Binance is in the [univocity-trader-binance](./univocity-trader-binance) project folder, and you can
 quickly adapt the sample code under [univocity-trader-binance-example](./univocity-trader-binance-example) to start trading live.
 
 The following guide will show you how to get started using [Binance](https://www.binance.com/en/register?ref=36767892) to populate then
@@ -63,27 +76,27 @@ class, which will connect to [Binance](https://www.binance.com/en/register?ref=3
 
 ```java
 public static void main(String... args) {
-
-    //TODO: configure your database connection here.
-    SingleConnectionDataSource ds = new SingleConnectionDataSource();
-    ... 
-    
-    //CandleRepository manages everything for us.
-    CandleRepository.setDataSource(ds);
-
-    //Instantiate the exchange API implementation you need
-    BinanceExchangeApi exchangeApi = new BinanceExchangeApi();
-
-    //Gets all candes from the past 6 months
-    final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
-
-    //Only pair BTCUSDT is enabled in ALL_PAIRS, modify that to your liking
-    for (String[] pair : ALL_PAIRS) {
-        String symbol = pair[0] + pair[1];
-
-        //Runs over stored candles backwards and tries to fill any gaps until the start date is reached.
-        CandleRepository.fillHistoryGaps(exchangeApi, symbol, start, TimeInterval.minutes(1)); // pulls one minute candles
-    }
+ 
+ //TODO: configure your database connection here.
+ SingleConnectionDataSource ds = new SingleConnectionDataSource();
+ ... 
+ 
+ //CandleRepository manages everything for us.
+ CandleRepository.setDataSource(ds);
+ 
+ //Instantiate the exchange API implementation you need
+ BinanceExchangeApi exchangeApi = new BinanceExchangeApi();
+ 
+ //Gets all candes from the past 6 months
+ final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
+ 
+ //Only pair BTCUSDT is enabled in ALL_PAIRS, modify that to your liking
+ for (String[] pair : ALL_PAIRS) {
+  String symbol = pair[0] + pair[1];
+  
+  //Runs over stored candles backwards and tries to fill any gaps until the start date is reached.
+  CandleRepository.fillHistoryGaps(exchangeApi, symbol, start, TimeInterval.minutes(1)); // pulls one minute candles
+ }
 }
 
 ```
@@ -529,10 +542,10 @@ implementations.
 # Improving backtesting performance
 
 We built this code to enable running backtests and optimizations very efficiently using all cores of your CPU
-is ideal for machine learning and brute force testing. We built a separate small library that makes use of that
+which is ideal for machine learning or simple brute force parameter testing. We built a separate small library that makes use of that
 capability which will not be open-sourced, as we intend to sell it to help us continue developing this framework.
  
-If you are familiar with with core java you should be able to implement faster backtests for yourself, but if
+If you are familiar with core java you should be able to implement faster backtests for yourself, but if
 you don't want to waste time on it, or just are not familiar enough with concurrent programming in Java,
 you can buy our backtesting solution for only US$ 79.00. Just send an e-mail directly to jbax@univocity.com and 
 I'll help you out.

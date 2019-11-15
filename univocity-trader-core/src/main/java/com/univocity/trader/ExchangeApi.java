@@ -1,10 +1,8 @@
 package com.univocity.trader;
 
-import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 
-import java.time.*;
 import java.util.*;
 
 public interface ExchangeApi<T> {
