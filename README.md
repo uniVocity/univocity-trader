@@ -61,7 +61,7 @@ Then create the `candle` table as defined in this [script](./univocity-trader-co
 Let's quickly look at the [MarketHistoryLoader](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/MarketHistoryLoader.java)
 class, which will connect to [Binance](https://www.binance.com/en/register?ref=36767892) and pull the market history of Bitcoin of the last 6 months in 1 minute candles.
 
-```
+```java
 public static void main(String... args) {
 
     //TODO: configure your database connection here.
@@ -125,7 +125,7 @@ for every [Candle](./univocity-trader-core/src/main/java/com/univocity/trader/ca
 
 Yet, it is simply defined as:
 
-```
+```java
 public interface Strategy {
 
 	Signal getSignal(Candle candle);
@@ -148,7 +148,7 @@ use technical indicators to compose a trading strategy. Any strategy built with 
 of [IndicatorStrategy](./univocity-trader-core/src/main/java/com/univocity/trader/strategy/IndicatorStrategy.java), which has the following
 contract:
 
-```
+```java
 public class ExampleStrategy extends IndicatorStrategy {
 
 	protected Set<Indicator> getAllIndicators(){
@@ -164,7 +164,7 @@ public class ExampleStrategy extends IndicatorStrategy {
 Let's create the [ExampleStrategy](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategy.java) 
 to combine two [BollingerBands](./univocity-trader-core/src/main/java/com/univocity/trader/indicators/BollingerBand.java) in two different time frames:
 
-```
+```java
 public class ExampleStrategy extends IndicatorStrategy {
 
 	private final Set<Indicator> indicators = new HashSet<>();
@@ -216,7 +216,7 @@ loads the data from each symbol in your database and executes them in the same o
 
 Create new instance with:
 
-```
+```java
     //USDT here is the reference currency. Your account balance will be calculated using this symbol.
     MarketSimulator simulation = new MarketSimulator("USDT");
 
@@ -230,7 +230,7 @@ will trade pairs BTCUSDT, ADAUSDT, LTCUSDT, XRPUSDT and ETHUSDT.
 
 You can also define additional trading pairs such as ADABTC by adding the line:
 
-```
+```java
 simulation.tradeWithPair("ADA", "BTC");
 ```
 
@@ -238,13 +238,13 @@ Add our [ExampleStrategy](./univocity-trader-binance-example/src/main/java/com/u
 to the simulation. Note that the framework **forces** you to provide functions/suppliers that create new instances
 as required.
 
-```
+```java
 simulation.strategies().add(ExampleStrategy::new);
 ```
 
 Set the initial funds of your account with:
 
-```
+```java
 simulation.account().setAmount("USDT", 1000.0);
 ```
 
@@ -252,18 +252,18 @@ NEVER forget trading fees. Each buy/sell on an exchange will typically cost you 
 of the position at stake. Here we use what [Binance](https://www.binance.com/en/register?ref=36767892) charges
 new accounts: **0.1%** for any type of trade. 
 
-```
+```java
 simulation.setTradingFees(SimpleTradingFees.percentage(0.1));
 ```
 
 If you want to see the action, log trades made by the simulator with:
 
-```
+```java
 simulation.listeners().add(new OrderExecutionToLog())
 ```
 
 Finally define the time period of the simulation:
-```
+```java
 simulation.setSimulationStart(LocalDate.of(2018, 7, 1).atStartOfDay());
 simulation.setSimulationEnd(LocalDate.of(2019, 7, 1).atStartOfDay());
 ```
@@ -290,7 +290,7 @@ Before we give up on our initial strategy, it's a good idea to look to closer to
 what went wrong. How many trades were positive? How many negative? We can answer that by adding another
 listener to the simulation, the [SimpleStrategyStatistics](./univocity-trader-core/src/main/java/com/univocity/trader/notification/SimpleStrategyStatistics.java):
 
-```
+```java
 SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
 simulation.listeners().add(stats);
 
@@ -321,7 +321,7 @@ we should include that to simulation to prevent adding noise to our results.
 
 The following configures how many assets minimum a trade can have (i.e. the strategy must buy at least 100 ADA, 0.001 BTC, and so on): 
 
-```
+```java
 simulation.symbolInformation("ADAUSDT").minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
 simulation.symbolInformation("BTCUSDT").minimumAssetsPerOrder(0.001).priceDecimalPlaces(8).quantityDecimalPlaces(8);
 simulation.symbolInformation("LTCUSDT").minimumAssetsPerOrder(0.1).priceDecimalPlaces(8).quantityDecimalPlaces(8);
@@ -352,7 +352,7 @@ It receives the current `Signal` generated from a given `Strategy` for the curre
 If your implementation decides it's time to exit the position, return a `String`  with a message explaining the reason
 (that can be later on be logged or e-mailed so you can know why a trade was stopped) 
 
-```
+```java
 public abstract class StrategyMonitor extends IndicatorGroup {
 
     protected Trader trader;
@@ -374,7 +374,7 @@ to help determine your actions.
 [Here](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategyMonitor.java) 
 is a simple implementation:
 
-```
+```java
 public class ExampleStrategyMonitor extends StrategyMonitor {
 
 	private final Set<Indicator> indicators = new HashSet<>();
@@ -424,7 +424,7 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
 
 Let's add the monitor to our simulation to see what happens:
 
-```
+```java
 simulation.monitors().add(ExampleStrategyMonitor::new);
 ```
 
@@ -449,7 +449,7 @@ to try and see how returns would change. For example, in the
 [ExampleStrategy](/univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategy.java),
 change the constructor to:
 
-```
+```java
 public ExampleStrategy(Parameters params) {
     int length = 12; //default bollinger length
     int interval = 5; //default interval
@@ -468,7 +468,7 @@ We can now change the [MarketSimulation](./univocity-trader-binance-example/src/
 code to generate a set of parameters to see how better (or worse) the results will be:
 
 
-```
+```java
 // comment out this this line
 // simulation.strategies().add(ExampleStrategy::new);
 // and replace with:
@@ -510,7 +510,7 @@ for (int interval = 1; interval <= 15; interval++) { // testing from 1 minute to
 The simulation will run for some time, and you should find some combination of parameters
 that apparently produce better returns than the original ones we had, namely:
 
-```
+```java
 ===[  results using parameters: [15, 4] ]===
 Negative: 44 trades, avg. loss: -1.60%
 Positive: 39 trades, avg. gain: +2.44%
@@ -551,7 +551,7 @@ to buy your crypto quickly and without major hassles.
 Class [LiveBinanceTrader](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/LiveBinanceTrader.java) 
 has code you'd be using to trade with the example strategy shown earlier:
 
-```
+```java
 public static void main(String... args) {
        
     BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1), getEmailConfig()); //gets ticks every 1 minute
@@ -599,7 +599,7 @@ public static void main(String... args) {
 Before you execute this class, we suggest you to enable the `trace` log level 
 in the [logback.xml](./univocity-trader-binance-example/src/main/resources/logback.xml) file:
 
-```
+```xml
 <configuration>
     ....
 	</appender>
@@ -615,7 +615,7 @@ This will show more useful details on the logs for the live environment.
 
 Don't forget to pass along the your e-mail server details so you can receive e-mails (gmail works great for that)
 
-```
+```java
 private static final MailSenderConfig getEmailConfig() {
     MailSenderConfig out = new MailSenderConfig();
 
