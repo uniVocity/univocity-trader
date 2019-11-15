@@ -101,7 +101,7 @@ logs should print something like this:
 ```
 
 This will take a long while. To help you and to avoid abusing Binance's servers, 
-the historical data I collected for all symbols listed in `ALL_PAIRS` are available [here](https://drive.google.com/open?id=13jzICy3rCSCUUwiIaum88-ldA_gAxlFm).
+the historical data I collected for all symbols listed in `ALL_PAIRS` are available [here](https://drive.google.com/file/d/13jzICy3rCSCUUwiIaum88-ldA_gAxlFm/view?usp=sharing).
  You can download this file, unpack it (2.2 GB of disk space required) then restore the backup with:
 
 ```
