@@ -20,9 +20,9 @@ import java.util.stream.*;
 
 import static com.univocity.trader.exchange.binance.api.client.domain.general.FilterType.*;
 
-public class BinanceExchangeApi implements ExchangeApi<Candlestick> {
+public class BinanceExchange implements Exchange<Candlestick> {
 
-	private static final Logger log = LoggerFactory.getLogger(BinanceExchangeApi.class);
+	private static final Logger log = LoggerFactory.getLogger(BinanceExchange.class);
 
 	private BinanceApiWebSocketClient socketClient;
 	private org.asynchttpclient.ws.WebSocket socketClientCloseable;
@@ -34,8 +34,8 @@ public class BinanceExchangeApi implements ExchangeApi<Candlestick> {
 
 
 	@Override
-	public BinanceClientAccountApi connectToAccount(String apiKey, String secret) {
-		return new BinanceClientAccountApi(apiKey, secret, this);
+	public BinanceClientAccount connectToAccount(String apiKey, String secret) {
+		return new BinanceClientAccount(apiKey, secret, this);
 	}
 
 	@Override

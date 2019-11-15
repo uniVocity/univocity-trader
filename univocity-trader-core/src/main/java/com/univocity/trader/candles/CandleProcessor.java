@@ -10,9 +10,9 @@ public class CandleProcessor<T> {
 	private static final Logger log = LoggerFactory.getLogger(CandleProcessor.class);
 
 	private final Engine consumer;
-	private final ExchangeApi api;
+	private final Exchange api;
 
-	public CandleProcessor(Engine consumer, ExchangeApi<T> api) {
+	public CandleProcessor(Engine consumer, Exchange<T> api) {
 		this.consumer = consumer;
 		this.api = api;
 	}

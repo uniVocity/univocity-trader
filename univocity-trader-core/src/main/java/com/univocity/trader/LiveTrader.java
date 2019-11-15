@@ -26,7 +26,7 @@ public abstract class LiveTrader<T> implements Closeable {
 
 	private String allClientPairs;
 	private final Map<String, Long> symbols = new ConcurrentHashMap<>();
-	private final ExchangeApi<T> api;
+	private final Exchange<T> api;
 	private final TimeInterval tickInterval;
 	private final SmtpMailSender mailSender;
 	private long lastHour;
@@ -92,7 +92,7 @@ public abstract class LiveTrader<T> implements Closeable {
 		}
 	}
 
-	public LiveTrader(ExchangeApi<T> api, TimeInterval tickInterval, MailSenderConfig mailSenderConfig) {
+	public LiveTrader(Exchange<T> api, TimeInterval tickInterval, MailSenderConfig mailSenderConfig) {
 		Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 		this.api = api;
 		this.tickInterval = tickInterval;
@@ -225,7 +225,7 @@ public abstract class LiveTrader<T> implements Closeable {
 	}
 
 	public Client addClient(String email, ZoneId timezone, String referenceCurrencySymbol, String apiKey, String secret) {
-		ClientAccountApi clientApi = api.connectToAccount(apiKey, secret);
+		ClientAccount clientApi = api.connectToAccount(apiKey, secret);
 		Client client = new Client(email, timezone, referenceCurrencySymbol, clientApi);
 		clients.add(client);
 		return client;

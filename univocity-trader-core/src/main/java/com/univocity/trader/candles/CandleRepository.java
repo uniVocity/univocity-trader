@@ -264,7 +264,7 @@ public class CandleRepository {
 		return executeQuery(symbol, query, out);
 	}
 
-	public static <T> void fillHistoryGaps(ExchangeApi<T> api, String symbol, Instant from, TimeInterval minGap) {
+	public static <T> void fillHistoryGaps(Exchange<T> api, String symbol, Instant from, TimeInterval minGap) {
 		log.info("Looking for gaps in history of {} from {}", symbol, getFormattedDateTimeWithYear(from.toEpochMilli()));
 
 		List<T> ticks = api.getLatestTicks(symbol, minGap);

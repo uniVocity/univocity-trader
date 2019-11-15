@@ -55,7 +55,7 @@ public class MarketSimulator extends AbstractSimulator {
 			String assetSymbol = pair[0];
 			String fundSymbol = pair[1];
 
-			SimulatedExchangeApi api = new SimulatedExchangeApi(account);
+			SimulatedExchange api = new SimulatedExchange(account);
 			api.setSymbolInformation(this.symbolInformation);
 			SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(api);
 //			api.setMainTradeSymbols(mainTradeSymbols);

@@ -25,17 +25,17 @@ import static com.univocity.trader.account.Order.Status.*;
 import static com.univocity.trader.exchange.binance.api.client.domain.TimeInForce.*;
 import static com.univocity.trader.exchange.binance.api.client.domain.account.NewOrder.*;
 
-class BinanceClientAccountApi implements ClientAccountApi {
+class BinanceClientAccount implements ClientAccount {
 
 	private static final Logger log = LoggerFactory.getLogger(BinanceApiRestClient.class);
 
 	private final BinanceApiClientFactory factory;
 	private final BinanceApiRestClient client;
 	private SymbolPriceDetails symbolPriceDetails;
-	private BinanceExchangeApi exchangeApi;
+	private BinanceExchange exchangeApi;
 	private double minimumBnbAmountToKeep = 1.0;
 
-	public BinanceClientAccountApi(String apiKey, String secret, BinanceExchangeApi exchangeApi) {
+	public BinanceClientAccount(String apiKey, String secret, BinanceExchange exchangeApi) {
 		this.exchangeApi = exchangeApi;
 
 		final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);

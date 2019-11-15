@@ -27,7 +27,7 @@ public abstract class AbstractSimulator extends DefaultConfiguration {
 
 	@Override
 	protected final AccountManager createAccount() {
-		SimulatedClientAccountApi accountApi = new SimulatedClientAccountApi(getReferenceCurrency(), tradingFees);
+		SimulatedClientAccount accountApi = new SimulatedClientAccount(getReferenceCurrency(), tradingFees);
 		AccountManager account = accountApi.getAccount();
 		account.setAmount(getReferenceCurrency(), initialFunds);
 		return account;

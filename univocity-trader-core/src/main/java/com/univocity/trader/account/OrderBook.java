@@ -10,9 +10,9 @@ public class OrderBook {
 	private final int depth;
 	private final Map<Double, Double> bids = new TreeMap<>(Comparator.reverseOrder());
 	private final Map<Double, Double> asks = new TreeMap<>(Comparator.naturalOrder());
-	private ClientAccountApi api;
+	private ClientAccount api;
 
-	public OrderBook(ClientAccountApi api, String symbol, int depth) {
+	public OrderBook(ClientAccount api, String symbol, int depth) {
 		this.symbol = symbol;
 		this.depth = depth;
 		this.api = api;

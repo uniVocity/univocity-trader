@@ -12,6 +12,6 @@ public class BinanceTrader extends LiveTrader<Candlestick> {
 	}
 
 	public BinanceTrader(TimeInterval tickInterval, MailSenderConfig mailSenderConfig) {
-		super(new BinanceExchangeApi(), tickInterval, mailSenderConfig);
+		super(new BinanceExchange(), tickInterval, mailSenderConfig);
 	}
 }

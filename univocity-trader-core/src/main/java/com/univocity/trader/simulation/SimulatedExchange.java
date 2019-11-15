@@ -7,12 +7,12 @@ import com.univocity.trader.indicators.base.*;
 
 import java.util.*;
 
-public class SimulatedExchangeApi implements ExchangeApi<Candle> {
+public class SimulatedExchange implements Exchange<Candle> {
 
 	private final AccountManager account;
 	private final Map<String, SymbolInformation> symbolInformation = new TreeMap<>();
 
-	public SimulatedExchangeApi(AccountManager account) {
+	public SimulatedExchange(AccountManager account) {
 		this.account = account;
 	}
 
@@ -114,7 +114,7 @@ public class SimulatedExchangeApi implements ExchangeApi<Candle> {
 
 
 	@Override
-	public ClientAccountApi connectToAccount(String apiKey, String secret) {
+	public ClientAccount connectToAccount(String apiKey, String secret) {
 		throw new UnsupportedOperationException();
 	}
 }

@@ -8,12 +8,12 @@ import java.util.*;
 
 import static com.univocity.trader.account.Order.Side.*;
 
-public class SimulatedClientAccountApi implements ClientAccountApi {
+public class SimulatedClientAccount implements ClientAccount {
 
 	private final TradingFees tradingFees;
 	private final AccountManager account;
 
-	public SimulatedClientAccountApi(String referenceCurrencySymbol, TradingFees tradingFees) {
+	public SimulatedClientAccount(String referenceCurrencySymbol, TradingFees tradingFees) {
 		this.tradingFees = tradingFees;
 		this.account = new AccountManager(referenceCurrencySymbol, this);
 	}

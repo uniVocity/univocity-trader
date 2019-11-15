@@ -12,7 +12,7 @@ import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
-public class AccountManager implements ClientAccountApi, SimulatedAccountConfiguration {
+public class AccountManager implements ClientAccount, SimulatedAccountConfiguration {
 	private double[] NO_LIMITS = new double[]{100.0, Integer.MAX_VALUE};
 
 	private static final Logger log = LoggerFactory.getLogger(AccountManager.class);
@@ -30,12 +30,12 @@ public class AccountManager implements ClientAccountApi, SimulatedAccountConfigu
 	private long lastBalanceSync = 0L;
 	private final Map<String, Balance> balances = new ConcurrentHashMap<>();
 
-	private final ClientAccountApi accountApi;
+	private final ClientAccount accountApi;
 	private final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
 	private String referenceCurrencySymbol;
 	private final Map<String, OrderManager> orderManagers = new ConcurrentHashMap<>();
 
-	public AccountManager(String referenceCurrencySymbol, ClientAccountApi accountApi) {
+	public AccountManager(String referenceCurrencySymbol, ClientAccount accountApi) {
 		this.accountApi = accountApi;
 		this.referenceCurrencySymbol = referenceCurrencySymbol;
 	}

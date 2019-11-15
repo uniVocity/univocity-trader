@@ -24,13 +24,13 @@ public class TradingManager {
 	final String fundSymbol;
 	private final AccountManager tradingAccount;
 	protected Trader trader;
-	private ExchangeApi<?> api;
+	private Exchange<?> api;
 	private final OrderEventListener[] notifications;
 	protected Client client;
 	private OrderExecutionToEmail emailNotifier;
 	private final SymbolPriceDetails priceDetails;
 
-	public TradingManager(ExchangeApi api, SymbolPriceDetails priceDetails, AccountManager account, InstancesProvider<OrderEventListener> listenerProvider, String assetSymbol, String fundSymbol, Parameters params) {
+	public TradingManager(Exchange api, SymbolPriceDetails priceDetails, AccountManager account, InstancesProvider<OrderEventListener> listenerProvider, String assetSymbol, String fundSymbol, Parameters params) {
 		if (api == null) {
 			throw new IllegalArgumentException("Exchange API implementation cannot be null");
 		}

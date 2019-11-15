@@ -17,14 +17,14 @@ public class Client<T> extends DefaultConfiguration {
 	private final String email;
 	private final ZoneId timezone;
 
-	private ExchangeApi api;
+	private Exchange api;
 	private TradingManager root;
-	private ClientAccountApi clientAccountApi;
+	private ClientAccount clientAccountApi;
 
 	private final List<CandleProcessor<T>> candleProcessors = new ArrayList<>();
 
 
-	public Client(String email, ZoneId timezone, String referenceCurrencySymbol, ClientAccountApi clientAccountApi) {
+	public Client(String email, ZoneId timezone, String referenceCurrencySymbol, ClientAccount clientAccountApi) {
 		super(referenceCurrencySymbol);
 		this.email = email;
 		this.timezone = timezone;
@@ -40,7 +40,7 @@ public class Client<T> extends DefaultConfiguration {
 		return getAccount();
 	}
 
-	public void initialize(ExchangeApi<T> api, SmtpMailSender mailSender) {
+	public void initialize(Exchange<T> api, SmtpMailSender mailSender) {
 		this.api = api;
 		if (symbolPairs.isEmpty()) {
 			throw new IllegalStateException("No trade symbols defined for client " + email);

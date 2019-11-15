@@ -5,7 +5,7 @@ import com.univocity.trader.indicators.base.*;
 
 import java.util.*;
 
-public interface ExchangeApi<T> {
+public interface Exchange<T> {
 
 	T getLatestTick(String symbol, TimeInterval interval);
 
@@ -29,7 +29,7 @@ public interface ExchangeApi<T> {
 
 	double getLatestPrice(String assetSymbol, String fundSymbol);
 
-	ClientAccountApi connectToAccount(String apiKey, String secret);
+	ClientAccount connectToAccount(String apiKey, String secret);
 
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol);
 }

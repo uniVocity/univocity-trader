@@ -1,12 +1,10 @@
 package com.univocity.trader.exchange.binance.example;
 
-import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.exchange.binance.*;
 import com.univocity.trader.indicators.base.*;
 import org.springframework.jdbc.datasource.*;
 
-import javax.sql.*;
 import java.time.*;
 import java.time.temporal.*;
 
@@ -72,7 +70,7 @@ public class MarketHistoryLoader {
 		//CandleRepository manages everything for us.
 		CandleRepository.setDataSource(ds);
 
-		BinanceExchangeApi exchangeApi = new BinanceExchangeApi();
+		BinanceExchange exchangeApi = new BinanceExchange();
 		final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
 		for (String[] pair : ALL_PAIRS) {
 			String symbol = pair[0] + pair[1];

@@ -4,7 +4,7 @@ import com.univocity.trader.account.*;
 
 import java.util.*;
 
-public interface ClientAccountApi {
+public interface ClientAccount {
 
 	Order executeOrder(OrderRequest orderDetails);
 

@@ -29,16 +29,16 @@ used to implement your strategies, support for backtesting, live trading, and in
 
 Support for any exchange relies in implementing two interfaces:
 
- * [ExchangeApi](./univocity-trader-core/src/main/java/com/univocity/trader/ExchangeApi.java) 
+ * [Exchange](./univocity-trader-core/src/main/java/com/univocity/trader/Exchange.java) 
  for everything that's available to the public in general, i.e. latest price of a symbol, available symbols, etc.
  
- * [ClientAccountApi](./univocity-trader-core/src/main/java/com/univocity/trader/ClientAccountApi.java)
+ * [ClientAccount](./univocity-trader-core/src/main/java/com/univocity/trader/ClientAccount.java)
  for account-specific operations: create an order, update account balance, etc. 
 
 Everything else is handled by the framework.
 
 Right now we provide an implementation that supports [Binance](https://www.binance.com/en/register?ref=36767892) for trading cryptocurrencies
-in class [BinanceExchangeApi](./univocity-trader-binance/src/main/java/com/univocity/trader/exchange/binance/BinanceExchangeApi.java).
+in class [BinanceExchange](./univocity-trader-binance/src/main/java/com/univocity/trader/exchange/binance/BinanceExchange.java).
 As you can see it's not a lot of work especially if the exchange already provides a Java library for their API.
  
 The full integration code with Binance is in the [univocity-trader-binance](./univocity-trader-binance) project folder, and you can
@@ -85,7 +85,7 @@ public static void main(String... args) {
  CandleRepository.setDataSource(ds);
  
  //Instantiate the exchange API implementation you need
- BinanceExchangeApi exchangeApi = new BinanceExchangeApi();
+ BinanceExchange exchange = new BinanceExchange();
  
  //Gets all candes from the past 6 months
  final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
@@ -95,7 +95,7 @@ public static void main(String... args) {
   String symbol = pair[0] + pair[1];
   
   //Runs over stored candles backwards and tries to fill any gaps until the start date is reached.
-  CandleRepository.fillHistoryGaps(exchangeApi, symbol, start, TimeInterval.minutes(1)); // pulls one minute candles
+  CandleRepository.fillHistoryGaps(exchange, symbol, start, TimeInterval.minutes(1)); // pulls one minute candles
  }
 }
 
@@ -581,7 +581,7 @@ I'll help you out.
 # Trading live
 
 Once you are satisfied with your strategy you might decide to start trading. All you need to do 
-is to create an instance of a supported exchange (i.e. anything that implements interface [ExchangeApi](/home/jbax/dev/repository/univocity-trader/univocity-trader-core/src/main/java/com/univocity/trader/ExchangeApi.java)).
+is to create an instance of a supported exchange (i.e. anything that implements interface [Exchange](/home/jbax/dev/repository/univocity-trader/univocity-trader-core/src/main/java/com/univocity/trader/Exchange.java)).
 
 At this moment, we have built-in support [Binance](https://www.binance.com/en/register?ref=36767892). We
 suggest you to create a new trading account using the link above, and only add funds dedicated for your strategy.
