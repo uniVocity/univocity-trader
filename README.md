@@ -537,6 +537,107 @@ you don't want to waste time on it, or just are not familiar enough with concurr
 you can buy our backtesting solution for only US$ 79.00. Just send an e-mail directly to jbax@univocity.com and 
 I'll help you out.
 
+# Trading live
+
+Once you are satisfied with your strategy you might decide to start trading. All you need to do 
+is to create an instance of a supported exchange (i.e. anything that implements interface [ExchangeApi](/home/jbax/dev/repository/univocity-trader/univocity-trader-core/src/main/java/com/univocity/trader/ExchangeApi.java)).
+
+At this moment, we have built-in support [Binance](https://www.binance.com/en/register?ref=36767892). We
+suggest you to create a new trading account using the link above, and only add funds dedicated for your strategy.
+
+I had issues buying crypto directly on Binance, so I suggest using [Coinmama](https://go.coinmama.com/visit/?bta=56730&brand=coinmama)
+to buy your crypto quickly and without major hassles. 
+
+Class [LiveBinanceTrader](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/LiveBinanceTrader.java) 
+has code you'd be using to trade with the example strategy shown earlier:
+
+```
+public static void main(String... args) {
+       
+    BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1), getEmailConfig()); //gets ticks every 1 minute
+
+    String apiKey = "<YOUR BINANCE API KEY>"; //your binance account API credentials
+    String secret = "<YOUR BINANCE API SECRET>";
+
+    //set an e-mail and timezone here to get notifications to your e-mail every time a BUY or SELL happens.
+    //the timezone is required if you want to host this in a server outside of your local timezone
+    //so the time a trade happens will come to you in your local time and not the server time 
+    Client client = binance.addClient("<YOUR E-MAIL>", ZoneId.systemDefault(), "USDT", apiKey, secret);
+
+
+    client.tradeWith("BTC", "ETH", "XRP", "ADA");
+
+    client.strategies().add(ExampleStrategy::new);
+    client.monitors().add(ExampleStrategyMonitor::new);
+
+    //limit 20 dollars per trade here
+
+    client.account().maximumInvestmentAmountPerAsset(20);
+
+    //you set an OrderManager to manipulate an order before it is sent to the exchange for execution
+    //the code below will change the price of the order so it won't be filled (in case you want to see how the program behaves) 
+    client.account().setOrderManager(new DefaultOrderManager() {
+        @Override
+        public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
+            switch (order.getSide()) {
+                case BUY:
+                    order.setPrice(order.getPrice().multiply(new BigDecimal("0.9"))); //10% less
+                    break;
+                case SELL:
+                    order.setPrice(order.getPrice().multiply(new BigDecimal("1.1"))); //10% more
+            }
+        }
+    });
+
+    //let's also log every trade.
+    client.listeners().add(new OrderExecutionToLog());
+    binance.run();
+}
+
+```
+
+Before you execute this class, we suggest you to enable the `trace` log level 
+in the [logback.xml](./univocity-trader-binance-example/src/main/resources/logback.xml) file:
+
+```
+<configuration>
+    ....
+	</appender>
+
+	<root level="trace">
+		<appender-ref ref="STDOUT"/>
+		<!--<appender-ref ref="FILE" />-->
+	</root>
+</configuration>
+```
+
+This will show more useful details on the logs for the live environment.
+
+Don't forget to pass along the your e-mail server details so you can receive e-mails (gmail works great for that)
+
+```
+private static final MailSenderConfig getEmailConfig() {
+    MailSenderConfig out = new MailSenderConfig();
+
+    out.setReplyToAddress("dev@univocity.com");
+    out.setSmtpHost("smtp.gmail.com");
+    out.setSmtpTlsSsl(true);
+    out.setSmtpPort(587);
+    out.setSmtpUsername("<YOU>@gmail.com");
+    out.setSmtpPassword("<YOUR SMTP PASSWORD>".toCharArray());
+    out.setSmtpSender("<YOU>>@gmail.com");
+
+    return out;
+} 
+```
+
+That's it for now, I hope you have fun and become rich soon. 
+
+Please consider <a class="github-button" href="https://github.com/sponsors/jbax" data-icon="octicon-heart" aria-label="Sponsor @jbax on GitHub">sponsoring</a> univocity-trader if 
+you find it useful, any contribution will help me a lot to continue working on the
+improvement of this project.
+
+Thank you!
 
 # We build custom strategies for you
 

@@ -31,6 +31,10 @@ public class LiveBinanceTrader {
 	}
 
 	public static void main(String... args) {
+		//TODO: configure your database connection as needed.
+		//DataSource ds = ?
+		//CandleRepository.setDataSource(ds);
+
 		BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1), getEmailConfig());
 
 		String apiKey = "<YOUR BINANCE API KEY>";
@@ -38,6 +42,9 @@ public class LiveBinanceTrader {
 
 		Client client = binance.addClient("<YOUR E-MAIL>", ZoneId.systemDefault(), "USDT", apiKey, secret);
 		client.tradeWith("BTC", "ETH", "XRP", "ADA");
+
+		client.strategies().add(ExampleStrategy::new);
+		client.monitors().add(ExampleStrategyMonitor::new);
 
 		client.account().maximumInvestmentAmountPerAsset(20);
 		client.account().setOrderManager(new DefaultOrderManager() {
@@ -53,21 +60,7 @@ public class LiveBinanceTrader {
 			}
 		});
 
-
-		client.strategies().add(() -> new Strategy() {
-			@Override
-			public Signal getSignal(Candle candle) {
-				return BUY;
-			}
-		});
-
-//		client.strategies()
-//				.add(()->new TradingStrategy())
-//				.add(()->new SellCodes());
-
 		client.listeners().add(new OrderExecutionToLog());
-
-
 		binance.run();
 
 	}

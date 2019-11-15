@@ -13,6 +13,10 @@ public class MarketSimulation {
 
 	public static void main(String... args) {
 
+		//TODO: configure your database connection as needed.
+		//DataSource ds = ?
+		//CandleRepository.setDataSource(ds);
+
 		MarketSimulator simulation = new MarketSimulator("USDT");
 		simulation.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH");
 
