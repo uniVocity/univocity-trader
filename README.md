@@ -140,9 +140,7 @@ Yet, it is simply defined as:
 
 ```java
 public interface Strategy {
-
-	Signal getSignal(Candle candle);
-
+ Signal getSignal(Candle candle);
 }
 ```
 
@@ -163,14 +161,13 @@ contract:
 
 ```java
 public class ExampleStrategy extends IndicatorStrategy {
-
-	protected Set<Indicator> getAllIndicators(){
-//      return all indicators used by the strategy
-    }
-    
-    public Signal getSignal(Candle candle){
-//      produce a Signal
-    }
+ protected Set<Indicator> getAllIndicators(){
+  //return all indicators used by the strategy
+ }
+   
+ public Signal getSignal(Candle candle){
+  //produce a Signal
+ }
 }
 ```
 
@@ -179,43 +176,50 @@ to combine two [BollingerBands](./univocity-trader-core/src/main/java/com/univoc
 
 ```java
 public class ExampleStrategy extends IndicatorStrategy {
-
-	private final Set<Indicator> indicators = new HashSet<>();
-
-	private final BollingerBand boll5m;
-	private final BollingerBand boll1h;
-
-	public ExampleStrategy() {
-		indicators.add(boll5m = new BollingerBand(TimeInterval.minutes(5)));
-		indicators.add(boll1h = new BollingerBand(TimeInterval.hours(1)));
-	}
-
-	@Override
-	protected Set<Indicator> getAllIndicators() {
-		return indicators;
-	}
-
-	@Override
-	public Signal getSignal(Candle candle) {
-		if (candle.high < boll1h.getLowerBand()) { //price jumped below lower band on the 1 hour time frame
-			if (candle.low > boll5m.getLowerBand()) { //on the 5 minute time frame, the lowest price of the candle is above the lower band.
-				if (candle.close < boll5m.getMiddleBand()) { //still on the 5 minute time frame, the close price of the candle is under the middle band
-					if (boll5m.movingUp()) { // if the slope of the 5 minute bollinger band is starting to point up, BUY
-						return Signal.BUY;
-					}
-				}
-			}
-		}
-
-		if (candle.high > boll1h.getUpperBand()) { //candle hitting the upper band on the 1 hour time frame
-			if (candle.low < boll5m.getMiddleBand()) { //on the 5 minute time frame, the lowest price of the candle is under the middle band
-				if (boll5m.movingDown()) { // if the slope of the 5 minute bollinger band is starting to point down, SELL
-					return Signal.SELL;
-				}
-			}
-		}
-		return Signal.NEUTRAL;
-	}
+ 
+ private final Set<Indicator> indicators = new HashSet<>();
+ 
+ private final BollingerBand boll5m;
+ private final BollingerBand boll1h;
+ 
+ public ExampleStrategy() {
+  indicators.add(boll5m = new BollingerBand(TimeInterval.minutes(5)));
+  indicators.add(boll1h = new BollingerBand(TimeInterval.hours(1)));
+ }
+ 
+ @Override
+ protected Set<Indicator> getAllIndicators() {
+  return indicators;
+ }
+ 
+ @Override
+ public Signal getSignal(Candle candle) {   
+  //price jumped below lower band on the 1 hour time frame
+  if (candle.high < boll1h.getLowerBand()) {    
+   //on the 5 minute time frame, the lowest price of the candle is above the lower band.
+   if (candle.low > boll5m.getLowerBand()) {           
+    //still on the 5 minute time frame, the close price of the candle is under the middle band
+    if (candle.close < boll5m.getMiddleBand()) {
+     // if the slope of the 5 minute bollinger band is starting to point up, BUY 
+     if (boll5m.movingUp()) { 
+      return Signal.BUY;
+     }
+    }
+   }
+  }
+                                             
+  //candle hitting the upper band on the 1 hour time frame
+  if (candle.high > boll1h.getUpperBand()) {  
+   //on the 5 minute time frame, the lowest price of the candle is under the middle band
+   if (candle.low < boll5m.getMiddleBand()) {
+    //if the slope of the 5 minute bollinger band is starting to point down, SELL 
+    if (boll5m.movingDown()) {
+     return Signal.SELL;
+    }
+   }
+  }
+  return Signal.NEUTRAL;
+ }
 }
 
 ``` 
@@ -230,11 +234,11 @@ loads the data from each symbol in your database and executes them in the same o
 Create new instance with:
 
 ```java
-    //USDT here is the reference currency. Your account balance will be calculated using this symbol.
-    MarketSimulator simulation = new MarketSimulator("USDT");
+//USDT here is the reference currency. Your account balance will be calculated using this symbol.
+MarketSimulator simulation = new MarketSimulator("USDT");
 
-    //Trade with the following symbols:
-	simulation.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH");
+//Trade with the following symbols:
+simulation.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH");
 ```
 
 Each one of the symbols given in `tradeWith` will be paired against the reference currency, i.e. the 
@@ -289,8 +293,16 @@ print each trade made to the log.
 The last line will show something like this:
 
 ```
-2019-11-14 19:27:06.681 [main] DEBUG (OrderExecutionToLog.java:28) - 2019 May 09 15:50 XRPUSDT BUY      0.29808 @ $0.29808000 (670.22282608 units. Total spent: $199.78001999)
-2019-11-14 19:27:06.698 [main] DEBUG (OrderExecutionToLog.java:28) - 2019 May 10 14:40 XRPUSDT SELL     0.29801 @ $0.29801 (-0.02%) sell signal >> 1370 ticks >> [Min: $0.29112999 (-2.33%) - Max: $0.30133999 (1.09%)]	 Holdings ~$496.11674953 USDT
+
+- 2019 May 09 15:50 XRPUSDT BUY      
+0.29808 @ $0.29808000 (670.22282608 units. 
+Total spent: $199.78001999)
+
+- 2019 May 10 14:40 XRPUSDT SELL   
+0.29801 @ $0.29801 (-0.02%) sell signal >> 1370 ticks 
+>> [Min: $0.29112999 (-2.33%) - Max: $0.30133999 (1.09%)]	 
+Holdings ~$496.11674953 USDT
+
 ...
 Approximate holdings: $447.66581896401414 USDT
 ```
@@ -335,11 +347,20 @@ we should include that to simulation to prevent adding noise to our results.
 The following configures how many assets minimum a trade can have (i.e. the strategy must buy at least 100 ADA, 0.001 BTC, and so on): 
 
 ```java
-simulation.symbolInformation("ADAUSDT").minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
-simulation.symbolInformation("BTCUSDT").minimumAssetsPerOrder(0.001).priceDecimalPlaces(8).quantityDecimalPlaces(8);
-simulation.symbolInformation("LTCUSDT").minimumAssetsPerOrder(0.1).priceDecimalPlaces(8).quantityDecimalPlaces(8);
-simulation.symbolInformation("XRPUSDT").minimumAssetsPerOrder(50.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
-simulation.symbolInformation("ETHUSDT").minimumAssetsPerOrder(0.01).priceDecimalPlaces(8).quantityDecimalPlaces(8); 
+simulation.symbolInformation("ADAUSDT")
+ .minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
+
+simulation.symbolInformation("BTCUSDT")
+ .minimumAssetsPerOrder(0.001).priceDecimalPlaces(8).quantityDecimalPlaces(8);
+
+simulation.symbolInformation("LTCUSDT")
+ .minimumAssetsPerOrder(0.1).priceDecimalPlaces(8).quantityDecimalPlaces(8);
+
+simulation.symbolInformation("XRPUSDT")
+ .minimumAssetsPerOrder(50.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
+
+simulation.symbolInformation("ETHUSDT")
+ .minimumAssetsPerOrder(0.01).priceDecimalPlaces(8).quantityDecimalPlaces(8); 
 ```
 
 With this we try to prevent buying anything for under 10 dollars (roughly). Now the log should print something like the following at the end:
@@ -368,17 +389,17 @@ If your implementation decides it's time to exit the position, return a `String`
 ```java
 public abstract class StrategyMonitor extends IndicatorGroup {
 
-    protected Trader trader;
-
-	public String handleStop(Signal signal, Strategy strategy) {
-		return null;
-	}
-
-	public boolean discardBuy(Strategy strategy) {
-		return null;
-	}
-
-    ... //other methods that can also be overridden
+ protected Trader trader;
+ 
+ public String handleStop(Signal signal, Strategy strategy) {
+  return null;
+ }
+ 
+ public boolean discardBuy(Strategy strategy) {
+  return null;
+ }
+ 
+ ... //other methods that can also be overridden
 }
 ```
 
@@ -390,48 +411,52 @@ is a simple implementation:
 ```java
 public class ExampleStrategyMonitor extends StrategyMonitor {
 
-	private final Set<Indicator> indicators = new HashSet<>();
+ private final Set<Indicator> indicators = new HashSet<>();
+ 
+ //use the InstantaneousTrendline indicator to hit us about the current trend
+ private final InstantaneousTrendline trend;
+ 
+ //if we lose money on a trade, will wait for the trend to give a BUY signal before buying again.
+ private boolean waitForUptrend = false;
+ 
+ public ExampleStrategyMonitor() {
+  //check the trend on the 25 minute time scale
+  indicators.add(trend = new InstantaneousTrendline(TimeInterval.minutes(25)));
+ }
+ 
+ @Override
+ protected Set<Indicator> getAllIndicators() {
+  return indicators;
+ }
+ 
+ @Override
+ public String handleStop(Signal signal, Strategy strategy) {
+  //current profit or loss %
+  double currentReturns = trader.getChange();
+  //best profit % (can only be 0% or more)
+  double bestReturns = trader.getMaxChange(); 
+                                             
+  //if we are down 2% from the best ever profit generated
+  if (currentReturns - bestReturns < -2.0) { 
+   //if we are losing money
+   if (currentReturns < 0.0) { 
+    waitForUptrend = true;
+    return "stop loss";
+   }
+   return "exit with some profit"; //else we made money (though we let 2% slip)
+  }
+  return null; //hold on to the trade
+ }
+ 
+ @Override
+ public boolean discardBuy(Strategy strategy) {
+  //we need at least two 25 minute candles on the uptrend
+  if(trend.getSignal(trader.getCandle()) == Signal.BUY) {
+   waitForUptrend = false;
+  }
 
-    //use the InstantaneousTrendline indicator to hit us about the current trend
-	private final InstantaneousTrendline trend;
-
-    //if we lose money on a trade, will wait for the trend to give a BUY signal before buying again.
-	private boolean waitForUptrend = false;
-
-	public ExampleStrategyMonitor() {
-        //check the trend on the 25 minute time scale
-		indicators.add(trend = new InstantaneousTrendline(TimeInterval.minutes(25)));
-	}
-
-	@Override
-	protected Set<Indicator> getAllIndicators() {
-		return indicators;
-	}
-
-    @Override
-	public String handleStop(Signal signal, Strategy strategy) {
-		double currentReturns = trader.getChange(); //current profit or loss %
-		double bestReturns = trader.getMaxChange(); //best profit % (can only be 0% or more)
-
-		if (currentReturns - bestReturns < -2.0) { //if we are down 2% from the best ever profit generated
-			if (currentReturns < 0.0) { //if we are losing money
-				waitForUptrend = true;
-				return "stop loss";
-			}
-			return "exit with some profit"; //else we made money (though we let 2% slip)
-		}
-		return null; //hold on to the trade
-	}
-
-	@Override
-	public boolean discardBuy(Strategy strategy) {
-        //we need at least two 25 minute candles on the uptrend
-		if(trend.getSignal(trader.getCandle()) == Signal.BUY) {
-			waitForUptrend = false;
-		}
-
-		return waitForUptrend; //ignore buy signals until we are on an uptrend
-	}
+  return waitForUptrend; //ignore buy signals until we are on an uptrend
+ }
 }
 ```
 
@@ -464,16 +489,17 @@ change the constructor to:
 
 ```java
 public ExampleStrategy(Parameters params) {
-    int length = 12; //default bollinger length
-    int interval = 5; //default interval
-    if (params instanceof IntParameters) { //if we receive parameters as an array of integers
-        int[] p = ((IntParameters) params).params;
-        length = p[0];
-        interval = p[1];
-    }
-
-    indicators.add(boll5m = new BollingerBand(length, TimeInterval.minutes(interval))); //instantiate using the given parameters
-    indicators.add(boll1h = new BollingerBand(TimeInterval.hours(1)));
+ int length = 12; //default bollinger length
+ int interval = 5; //default interval   
+ //if we receive parameters as an array of integers
+ if (params instanceof IntParameters) { 
+  int[] p = ((IntParameters) params).params;
+  length = p[0];
+  interval = p[1];
+ }
+ 
+ indicators.add(boll5m = new BollingerBand(length, TimeInterval.minutes(interval))); //instantiate using the given parameters
+ indicators.add(boll1h = new BollingerBand(TimeInterval.hours(1)));
 }
 ```
 
@@ -500,22 +526,24 @@ simulation.setCachingEnabled(true);
 // Run the simulation on a loop that generates different parameters for
 // the time interval and the length of the bollinger band in the ExampleStrategy
 
-for (int interval = 1; interval <= 15; interval++) { // testing from 1 minute to 15 minute time frames
-    for (int length = 5; length <= 25; length++) { // with length varying from 5 to 25 bars
-
-        simulation.listeners().clear(); //remove previous stats
-
-        SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
-        simulation.listeners().add(stats);
-
-        //reset to acount balance to 1000.00 on every loop
-        simulation.account().resetBalances().setAmount("USDT", 1000.0);
-
-        //execute simulation with  
-        simulation.run(new IntParameters(length, interval));
-
-        stats.printTradeStats();
-    }
+// testing from 1 minute to 15 minute time frames                                                     
+for (int interval = 1; interval <= 15; interval++) {
+ // with length varying from 5 to 25 bars 
+ for (int length = 5; length <= 25; length++) {
+  
+  simulation.listeners().clear(); //remove previous stats
+  
+  SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
+  simulation.listeners().add(stats);
+  
+  //reset to acount balance to 1000.00 on every loop
+  simulation.account().resetBalances().setAmount("USDT", 1000.0);
+  
+  //execute simulation with  
+  simulation.run(new IntParameters(length, interval));
+  
+  stats.printTradeStats();
+ }
 }
 ```
 
@@ -567,44 +595,44 @@ has code you'd be using to trade with the example strategy shown earlier:
 ```java
 public static void main(String... args) {
        
-    BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1), getEmailConfig()); //gets ticks every 1 minute
-
-    String apiKey = "<YOUR BINANCE API KEY>"; //your binance account API credentials
-    String secret = "<YOUR BINANCE API SECRET>";
-
-    //set an e-mail and timezone here to get notifications to your e-mail every time a BUY or SELL happens.
-    //the timezone is required if you want to host this in a server outside of your local timezone
-    //so the time a trade happens will come to you in your local time and not the server time 
-    Client client = binance.addClient("<YOUR E-MAIL>", ZoneId.systemDefault(), "USDT", apiKey, secret);
-
-
-    client.tradeWith("BTC", "ETH", "XRP", "ADA");
-
-    client.strategies().add(ExampleStrategy::new);
-    client.monitors().add(ExampleStrategyMonitor::new);
-
-    //limit 20 dollars per trade here
-
-    client.account().maximumInvestmentAmountPerAsset(20);
-
-    //you set an OrderManager to manipulate an order before it is sent to the exchange for execution
-    //the code below will change the price of the order so it won't be filled (in case you want to see how the program behaves) 
-    client.account().setOrderManager(new DefaultOrderManager() {
-        @Override
-        public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
-            switch (order.getSide()) {
-                case BUY:
-                    order.setPrice(order.getPrice().multiply(new BigDecimal("0.9"))); //10% less
-                    break;
-                case SELL:
-                    order.setPrice(order.getPrice().multiply(new BigDecimal("1.1"))); //10% more
-            }
-        }
-    });
-
-    //let's also log every trade.
-    client.listeners().add(new OrderExecutionToLog());
-    binance.run();
+ BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1), getEmailConfig()); //gets ticks every 1 minute
+ 
+ String apiKey = "<YOUR BINANCE API KEY>"; //your binance account API credentials
+ String secret = "<YOUR BINANCE API SECRET>";
+ 
+ //set an e-mail and timezone here to get notifications to your e-mail every time a BUY or SELL happens.
+ //the timezone is required if you want to host this in a server outside of your local timezone
+ //so the time a trade happens will come to you in your local time and not the server time 
+ Client client = binance.addClient("<YOUR E-MAIL>", ZoneId.systemDefault(), "USDT", apiKey, secret);
+ 
+ 
+ client.tradeWith("BTC", "ETH", "XRP", "ADA");
+ 
+ client.strategies().add(ExampleStrategy::new);
+ client.monitors().add(ExampleStrategyMonitor::new);
+ 
+ //limit 20 dollars per trade here
+ 
+ client.account().maximumInvestmentAmountPerAsset(20);
+ 
+ //you set an OrderManager to manipulate an order before it is sent to the exchange for execution
+ //the code below will change the price of the order so it won't be filled (in case you want to see how the program behaves) 
+ client.account().setOrderManager(new DefaultOrderManager() {
+  @Override
+  public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
+   switch (order.getSide()) {
+    case BUY:
+     order.setPrice(order.getPrice().multiply(new BigDecimal("0.9"))); //10% less
+     break;
+    case SELL:
+     order.setPrice(order.getPrice().multiply(new BigDecimal("1.1"))); //10% more
+   }
+  }
+ });
+ 
+ //let's also log every trade.
+ client.listeners().add(new OrderExecutionToLog());
+ binance.run();
 }
 
 ```
@@ -614,13 +642,13 @@ in the [logback.xml](./univocity-trader-binance-example/src/main/resources/logba
 
 ```xml
 <configuration>
-    ....
-	</appender>
-
-	<root level="trace">
-		<appender-ref ref="STDOUT"/>
-		<!--<appender-ref ref="FILE" />-->
-	</root>
+ ....
+ </appender>
+ 
+ <root level="trace">
+  <appender-ref ref="STDOUT"/>
+  <!--<appender-ref ref="FILE" />-->
+ </root>
 </configuration>
 ```
 
@@ -630,17 +658,17 @@ Don't forget to pass along the your e-mail server details so you can receive e-m
 
 ```java
 private static final MailSenderConfig getEmailConfig() {
-    MailSenderConfig out = new MailSenderConfig();
-
-    out.setReplyToAddress("dev@univocity.com");
-    out.setSmtpHost("smtp.gmail.com");
-    out.setSmtpTlsSsl(true);
-    out.setSmtpPort(587);
-    out.setSmtpUsername("<YOU>@gmail.com");
-    out.setSmtpPassword("<YOUR SMTP PASSWORD>".toCharArray());
-    out.setSmtpSender("<YOU>>@gmail.com");
-
-    return out;
+ MailSenderConfig out = new MailSenderConfig();
+ 
+ out.setReplyToAddress("dev@univocity.com");
+ out.setSmtpHost("smtp.gmail.com");
+ out.setSmtpTlsSsl(true);
+ out.setSmtpPort(587);
+ out.setSmtpUsername("<YOU>@gmail.com");
+ out.setSmtpPassword("<YOUR SMTP PASSWORD>".toCharArray());
+ out.setSmtpSender("<YOU>>@gmail.com");
+ 
+ return out;
 } 
 ```
 
