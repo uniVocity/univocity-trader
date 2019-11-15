@@ -18,9 +18,6 @@ public class OrderExecutionToEmail implements OrderEventListener {
 	private SmtpMailSender mailSender;
 	private TradingManager tradingManager;
 
-	private String assetSymbol;
-	private String fundSymbol;
-
 	private String referenceCurrencySymbol;
 
 	public OrderExecutionToEmail() {
@@ -37,8 +34,6 @@ public class OrderExecutionToEmail implements OrderEventListener {
 
 	public void initialize(TradingManager tradingManager) {
 		this.tradingManager = tradingManager;
-		this.assetSymbol = tradingManager.getAssetSymbol();
-		this.fundSymbol = tradingManager.getFundSymbol();
 		this.referenceCurrencySymbol = tradingManager.getReferenceCurrencySymbol();
 	}
 
@@ -67,7 +62,7 @@ public class OrderExecutionToEmail implements OrderEventListener {
 		StringBuilder out = new StringBuilder("\nActual balances:\n");
 		var total = new AtomicReference<>(0.0);
 		printTotalBalances(balances, new HashSet<>(), out, total, this.tradingManager);
-		out.append("\n\t* ").append(f.priceToString(tradingManager.getCash())).append(' ').append(fundSymbol);
+		out.append("\n\t* ").append(f.priceToString(tradingManager.getCash())).append(' ').append(tradingManager.getFundSymbol());
 		double holdings = total.get() + balances.getOrDefault(referenceCurrencySymbol, ZERO).getTotal().doubleValue();
 		out.append("\n\nApproximate holdings ~$").append(f.switchToSymbol(tradingManager.getAssetSymbol() + referenceCurrencySymbol).priceToString(holdings)).append(" ").append(referenceCurrencySymbol);
 		return out.toString();
@@ -78,6 +73,9 @@ public class OrderExecutionToEmail implements OrderEventListener {
 		if (mailSender == null) {
 			return;
 		}
+
+		String assetSymbol = trader.getAssetSymbol();
+		String fundSymbol = trader.getFundSymbol();
 		try {
 			SymbolPriceDetails f = trader.getPriceDetails();
 			String balances = printTotalBalances(tradingManager.updateBalances());
@@ -146,7 +144,7 @@ public class OrderExecutionToEmail implements OrderEventListener {
 			if (assets > 0.0) {
 				Trader trader = next.getTrader();
 				double worth = assets * lastPrice;
-				total.set(total.get() + convertToReferenceCurrency(worth));
+				total.set(total.get() + convertToReferenceCurrency(worth, next));
 				if (worth > 0.5) {
 					printing = true;
 					msg.append("\n\t* ").append(f.quantityToString(assets)).append(" ").append(next.getAssetSymbol());
@@ -180,7 +178,7 @@ public class OrderExecutionToEmail implements OrderEventListener {
 				} else {
 					msg.append("\n\t* ");
 				}
-				total.set(total.get() + convertToReferenceCurrency((locked * lastPrice)));
+				total.set(total.get() + convertToReferenceCurrency(locked * lastPrice, next));
 				msg.append(f.quantityToString(locked)).append(" ").append(next.getAssetSymbol()).append(" locked in order (worth ~").append(f.switchToSymbol(next.getAssetSymbol() + next.getReferenceCurrencySymbol()).priceToString(locked * lastPrice)).append(" ").append(next.getFundSymbol()).append(')');
 			}
 		}
@@ -191,11 +189,11 @@ public class OrderExecutionToEmail implements OrderEventListener {
 		}
 	}
 
-	private double convertToReferenceCurrency(double total) {
-		if (fundSymbol.equalsIgnoreCase(referenceCurrencySymbol)) {
+	private double convertToReferenceCurrency(double total, TradingManager tradingManager) {
+		if (tradingManager.getFundSymbol().equalsIgnoreCase(referenceCurrencySymbol)) {
 			return total;
 		} else {
-			return total * tradingManager.getLatestPrice(assetSymbol, referenceCurrencySymbol);
+			return total * tradingManager.getLatestPrice(tradingManager.getAssetSymbol(), referenceCurrencySymbol);
 		}
 	}
 
