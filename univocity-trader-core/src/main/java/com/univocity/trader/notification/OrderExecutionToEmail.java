@@ -91,6 +91,7 @@ public class OrderExecutionToEmail implements OrderEventListener {
 			if (order.getSide() == Order.Side.BUY) {
 				title += " @ " + f.priceToString(order.getPrice()) + timeShort;
 				details = "Bought " + qty + " " + assetSymbol + " " + typeDescription + " when price reached " + f.priceToString(trader.getLastClosingPrice()) + " " + fundSymbol + timeLong + ".";
+				details += "\nAmount invested: $" + f.priceToString(order.getTotalOrderAmount()) + " " + fundSymbol;
 				details += "\nOrder status: " + order.getStatus();
 			} else {
 				title += " @ " + f.priceToString(order.getPrice()) + " (" + trader.getFormattedPriceChangePct(order.getPrice()) + ")" + timeShort;
