@@ -60,7 +60,7 @@ public abstract class LiveTrader<T> implements Closeable {
 									clients.parallelStream().forEach(c -> c.processCandle(symbol, tick, false));
 								}
 							} catch (Exception e) {
-								TimeInterval waitTime = api.handleException("poll", symbol, e);
+								TimeInterval waitTime = api.handlePollingException(symbol, e);
 								if (waitTime != null) {
 									LiveTrader.sleep(waitTime.ms);
 								}

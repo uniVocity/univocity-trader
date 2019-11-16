@@ -58,34 +58,34 @@ public class BinanceExchange implements Exchange<Candlestick> {
 	}
 
 	@Override
-	public Candle generateCandle(Candlestick c) {
+	public Candle generateCandle(Candlestick exchangeCandle) {
 		return new Candle(
-				c.getOpenTime(),
-				c.getCloseTime(),
-				Double.parseDouble(c.getOpen()),
-				Double.parseDouble(c.getHigh()),
-				Double.parseDouble(c.getLow()),
-				Double.parseDouble(c.getClose()),
-				Double.parseDouble(c.getVolume())
+				exchangeCandle.getOpenTime(),
+				exchangeCandle.getCloseTime(),
+				Double.parseDouble(exchangeCandle.getOpen()),
+				Double.parseDouble(exchangeCandle.getHigh()),
+				Double.parseDouble(exchangeCandle.getLow()),
+				Double.parseDouble(exchangeCandle.getClose()),
+				Double.parseDouble(exchangeCandle.getVolume())
 		);
 	}
 
 	@Override
-	public PreciseCandle generatePreciseCandle(Candlestick c) {
+	public PreciseCandle generatePreciseCandle(Candlestick exchangeCandle) {
 		return new PreciseCandle(
-				c.getOpenTime(),
-				c.getCloseTime(),
-				new BigDecimal(c.getOpen()),
-				new BigDecimal(c.getHigh()),
-				new BigDecimal(c.getLow()),
-				new BigDecimal(c.getClose()),
-				new BigDecimal(c.getVolume())
+				exchangeCandle.getOpenTime(),
+				exchangeCandle.getCloseTime(),
+				new BigDecimal(exchangeCandle.getOpen()),
+				new BigDecimal(exchangeCandle.getHigh()),
+				new BigDecimal(exchangeCandle.getLow()),
+				new BigDecimal(exchangeCandle.getClose()),
+				new BigDecimal(exchangeCandle.getVolume())
 		);
 	}
 
 	@Override
-	public TimeInterval handleException(String action, String symbol, Exception e) {
-		String message = "execute " + action + " for " + symbol;
+	public TimeInterval handlePollingException(String symbol, Exception e) {
+		String message = "execute polling for " + symbol;
 		if (e.getCause() instanceof TimeoutException) {
 			log.error("Timeout trying to " + message, e);
 		} else if (e.getCause() instanceof UnknownHostException) {

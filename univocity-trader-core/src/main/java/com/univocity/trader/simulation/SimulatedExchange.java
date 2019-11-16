@@ -32,12 +32,12 @@ public class SimulatedExchange implements Exchange<Candle> {
 	}
 
 	@Override
-	public Candle generateCandle(Candle realTimeTick) {
-		return realTimeTick;
+	public Candle generateCandle(Candle exchangeCandle) {
+		return exchangeCandle;
 	}
 
 	@Override
-	public PreciseCandle generatePreciseCandle(Candle realTimeTick) {
+	public PreciseCandle generatePreciseCandle(Candle exchangeCandle) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -89,7 +89,7 @@ public class SimulatedExchange implements Exchange<Candle> {
 	}
 
 	@Override
-	public TimeInterval handleException(String action, String symbol, Exception e) {
+	public TimeInterval handlePollingException(String symbol, Exception e) {
 		return TimeInterval.millis(0);
 	}
 
