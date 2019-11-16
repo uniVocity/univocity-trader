@@ -474,6 +474,10 @@ public class Trader {
 		return tradingManager.getReferenceCurrencySymbol();
 	}
 
+	public TradingFees getTradingFees(){
+		return tradingManager.getTradingFees();
+	}
+
 	public double getBreakEvenChange(double amount) {
 		return tradingManager.getTradingFees().getBreakEvenChange(amount);
 	}
@@ -488,6 +492,10 @@ public class Trader {
 
 	public double getTotalFundsIn(String symbol) {
 		return tradingManager.getTotalFundsIn(symbol);
+	}
+
+	public StrategyMonitor[] getMonitors(){
+		return monitors;
 	}
 
 	public boolean stopped() {
