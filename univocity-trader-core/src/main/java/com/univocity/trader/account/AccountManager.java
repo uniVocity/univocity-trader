@@ -341,9 +341,11 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 						waitForFill(order);
 					case FILLED:
 						logOrderStatus("Completed order. ", order);
+						orderFinalized(null, order);
 						return order;
 					case CANCELLED:
 						logOrderStatus("Could not create order. ", order);
+						orderFinalized(null, order);
 						return null;
 				}
 			}
@@ -479,8 +481,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 					if (s == FILLED || s == CANCELLED) {
 						logOrderStatus("", order);
 						pendingOrders.remove(order.getOrderId());
-						updateBalances();
-						orderManager.finalized(order);
+						orderFinalized(orderManager, order);
 						return;
 					} else { // update order status
 						pendingOrders.put(order.getOrderId(), order);
@@ -507,6 +508,12 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}).start();
 	}
 
+	private void orderFinalized(OrderManager orderManager, Order order) {
+		orderManager = orderManager == null ? orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER) : orderManager;
+		updateBalances();
+		orderManager.finalized(order);
+	}
+
 	private void cancelOrder(OrderManager orderManager, Order order) {
 		accountApi.cancel(order);
 		order = accountApi.updateOrderStatus(order);
@@ -530,7 +537,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		});
 	}
 
-	public SimulatedAccountConfiguration resetBalances(){
+	public SimulatedAccountConfiguration resetBalances() {
 		this.balances.clear();
 		updateBalances();
 		return this;
