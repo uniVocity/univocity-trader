@@ -1,4 +1,4 @@
-package com.univocity.trader.requests;
+package com.univocity.trader.vendor.iqfeed.api.client.requests;
 import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.List;
