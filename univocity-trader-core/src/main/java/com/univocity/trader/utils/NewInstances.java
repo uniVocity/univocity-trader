@@ -8,7 +8,7 @@ import java.util.function.*;
 
 public class NewInstances<T> implements InstancesProvider<T> {
 
-	private static final Set<Object> allInstances = Collections.newSetFromMap(new WeakHashMap<>());
+	private static final Set<Object> allInstances = Collections.newSetFromMap(Collections.synchronizedMap(new WeakHashMap<>()));
 
 	private final T[] empty;
 	private final List<InstanceProvider<T>> providers = new ArrayList<>();

@@ -190,22 +190,26 @@ public class CandleRepository {
 		}
 	}
 
-	private static String narrowQueryToTimeInterval(String query, Instant from, Instant to) {
+	public static String narrowQueryToTimeInterval(String query, Long from, Long to) {
 		if (from != null || to != null) {
 			query += " AND ";
 
 			if (from != null) {
-				query += "open_time >= " + from.toEpochMilli();
+				query += "open_time >= " + from;
 			}
 
 			if (to != null) {
 				if (from != null) {
 					query += " AND ";
 				}
-				query += "close_time <= " + to.toEpochMilli();
+				query += "close_time <= " + to;
 			}
 		}
 		return query;
+	}
+
+	public static String narrowQueryToTimeInterval(String query, Instant from, Instant to) {
+		return narrowQueryToTimeInterval(query, from == null ? null : from.toEpochMilli(), to == null ? null : to.toEpochMilli());
 	}
 
 	public static Enumeration<Candle> iterate(String symbol, Instant from, Instant to, boolean cache) {
