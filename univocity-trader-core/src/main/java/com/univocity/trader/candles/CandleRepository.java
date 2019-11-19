@@ -11,6 +11,7 @@ import java.sql.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.*;
 
 import static com.univocity.trader.candles.Candle.*;
 
@@ -31,17 +32,18 @@ public class CandleRepository {
 		return out;
 	};
 
-	private static DataSource dataSource;
-	private static JdbcTemplate db;
+	private static Supplier<DataSource> dataSource = CandleRepository::defaultDataSource;
+	private static final ThreadLocal<JdbcTemplate> db = ThreadLocal.withInitial(() -> new JdbcTemplate(getDataSource()));
 
 	public static DataSource getDataSource() {
-		if (dataSource == null) {
-			dataSource = defaultDataSource();
-		}
-		return dataSource;
+		return dataSource.get();
 	}
 
 	public static void setDataSource(DataSource dataSource) {
+		setDataSource(() -> dataSource);
+	}
+
+	public static void setDataSource(Supplier<DataSource> dataSource) {
 		CandleRepository.dataSource = dataSource;
 	}
 
@@ -55,20 +57,16 @@ public class CandleRepository {
 		SingleConnectionDataSource ds = new SingleConnectionDataSource();
 		ds.setUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull");
 		ds.setUsername("root");
-
 		ds.setSuppressClose(true);
 		return ds;
 	}
 
-	public static final JdbcTemplate db() {
-		if (db == null) {
-			db = new JdbcTemplate(getDataSource());
-		}
-		return db;
+	public static JdbcTemplate db() {
+		return db.get();
 	}
 
 
-	private static final String buildCandleQuery(String symbol) {
+	private static String buildCandleQuery(String symbol) {
 		return "SELECT open_time, close_time, open, high, low, close, volume FROM candle WHERE symbol = '" + symbol + "'";
 	}
 
