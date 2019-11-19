@@ -15,10 +15,18 @@ public class LinearRegression {
 		this.add(y, true);
 	}
 
+	public void accumulate(double y, boolean updating) {
+		if (updating) {
+			this.update(y);
+		} else {
+			this.add(y);
+		}
+	}
+
 	private void add(double y, boolean updating) {
 		last = y;
 
-		if(updating && count > 2) {
+		if (updating && count > 2) {
 			double dx = count - meanX;
 			double dy = y - meanY;
 			double t = ((count - 1.0) / count) * dx;
