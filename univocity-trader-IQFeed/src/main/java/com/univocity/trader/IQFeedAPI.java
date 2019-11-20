@@ -1,6 +1,5 @@
 package com.univocity.trader;
 
-import com.univocity.trader.vendor.iqfeed.api.client.impl.IQFeedAPIWebSocketClient;
 import com.univocity.trader.candles.SymbolInformation;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
