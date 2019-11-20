@@ -9,6 +9,8 @@ public class Balance {
 	private final String symbol;
 	private BigDecimal free = BigDecimal.ZERO;
 	private BigDecimal locked = BigDecimal.ZERO;
+	private double freeAmount = -1.0;
+
 
 	public Balance(String symbol) {
 		this.symbol = symbol;
@@ -27,8 +29,16 @@ public class Balance {
 		return free;
 	}
 
+	public double getFreeAmount() {
+		if(freeAmount < 0.0){
+			freeAmount = free.doubleValue();
+		}
+		return freeAmount;
+	}
+
 	public void setFree(BigDecimal free) {
 		this.free = free == null ? BigDecimal.ZERO : free;
+		this.freeAmount = -1.0;
 	}
 
 	public BigDecimal getLocked() {

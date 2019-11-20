@@ -60,7 +60,7 @@ public class SymbolPriceDetails {
 	}
 
 	public double getMinimumOrderAmount(double unitPrice) {
-		return getOrDefault(info, SymbolInformation::minimumAssetsPerOrder, DEFAULT_MINIMUM_ASSETS_PER_ORDER).doubleValue() * unitPrice;
+		return getOrDefault(info, SymbolInformation::minimumAssetsPerOrderAmount, DEFAULT_MINIMUM_ASSETS_PER_ORDER_AMOUNT) * unitPrice;
 	}
 
 	private int getQuantityDecimals(SymbolInformation info) {

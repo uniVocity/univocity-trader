@@ -60,7 +60,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	@Override
 	public double getAmount(String symbol) {
-		return balances.getOrDefault(symbol, Balance.ZERO).getFree().doubleValue();
+		return balances.getOrDefault(symbol, Balance.ZERO).getFreeAmount();
 	}
 
 	@Override
