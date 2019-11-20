@@ -81,10 +81,18 @@ public class LinearRegression {
 	}
 
 	public boolean goingDown() {
-		return predict(1) < last;
+		return goingDown(100.0);
+	}
+
+	public boolean goingDown(double factor) {
+		return predict(1) < last * (1.0 - (factor / 100.0));
 	}
 
 	public boolean goingUp() {
-		return predict(1) > last;
+		return goingUp(100.0);
+	}
+
+	public boolean goingUp(double factor) {
+		return predict(1) > last * (1.0 + (factor / 100.0));
 	}
 }
