@@ -89,6 +89,7 @@ public class TimeInterval {
 	}
 
 	public static String getFormattedDuration(long ms) {
+		long seconds = ms / 1000;
 		long minutes = ms / MINUTE.ms;
 		long hours = ms / HOUR.ms;
 		if (hours > 0) {
@@ -99,7 +100,15 @@ public class TimeInterval {
 				return pluralize("hour", hours) + " and " + pluralize("minute", minutes);
 			}
 		}
-		return pluralize("minute", minutes);
+		if(minutes > 0){
+			seconds -= minutes * 60;
+			if (seconds == 0) {
+				return pluralize("minute", minutes);
+			} else {
+				return pluralize("minute", minutes) + " and " + pluralize("second", seconds);
+			}
+		}
+		return pluralize("second", seconds);
 	}
 
 	private static String pluralize(String word, long len) {

@@ -79,4 +79,12 @@ public class LinearRegression {
 	public double last() {
 		return last;
 	}
+
+	public boolean goingDown() {
+		return predict(1) < last;
+	}
+
+	public boolean goingUp() {
+		return predict(1) > last;
+	}
 }
