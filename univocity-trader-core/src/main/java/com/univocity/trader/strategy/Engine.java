@@ -5,7 +5,6 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.utils.*;
-import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
 import java.util.*;
@@ -27,14 +26,14 @@ public class Engine {
 	private final TradingManager tradingManager;
 	private final Aggregator[] aggregators;
 
-	public Engine(TradingManager tradingManager, InstancesProvider<Strategy> strategies, InstancesProvider<StrategyMonitor> monitors) {
-		this(tradingManager, strategies, monitors, Parameters.NULL);
+	public Engine(TradingManager tradingManager, InstancesProvider<Strategy> strategies, InstancesProvider<StrategyMonitor> monitors, Set<Object> allInstances) {
+		this(tradingManager, strategies, monitors, Parameters.NULL, allInstances);
 	}
 
-	public Engine(TradingManager tradingManager, InstancesProvider<Strategy> strategies, InstancesProvider<StrategyMonitor> monitors, Parameters parameters) {
+	public Engine(TradingManager tradingManager, InstancesProvider<Strategy> strategies, InstancesProvider<StrategyMonitor> monitors, Parameters parameters, Set<Object> allInstances) {
 		this.tradingManager = tradingManager;
-		this.trader = new Trader(tradingManager, monitors, parameters);
-		this.strategies = getInstances(tradingManager.getSymbol(), parameters, strategies, "Strategy", true);
+		this.trader = new Trader(tradingManager, monitors, parameters, allInstances);
+		this.strategies = getInstances(tradingManager.getSymbol(), parameters, strategies, "Strategy", true, allInstances);
 
 		Set<IndicatorGroup> groups = new LinkedHashSet<>();
 		Set<Strategy> plainStrategies = new LinkedHashSet<>();

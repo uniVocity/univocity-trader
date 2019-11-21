@@ -8,6 +8,7 @@ import java.text.*;
 import java.util.*;
 
 import static com.univocity.trader.account.Order.Side.*;
+import static com.univocity.trader.candles.Candle.*;
 
 public class SimpleStrategyStatistics implements OrderEventListener {
 
@@ -45,7 +46,6 @@ public class SimpleStrategyStatistics implements OrderEventListener {
 	}
 
 	public void printTradeStats() {
-		final DecimalFormat formatter = new DecimalFormat("0.00%");
 		for (Map.Entry<String, List<Double>> e : parameterReturns.entrySet()) {
 			double totalNegative = 0.0;
 			double totalPositive = 0.0;
@@ -69,6 +69,7 @@ public class SimpleStrategyStatistics implements OrderEventListener {
 			double latestHoldings = trader.getTotalFundsInReferenceCurrency();
 
 			System.out.println("===[ " + (symbol == null ? "" : symbol) + " results using parameters: " + e.getKey() + " ]===");
+			DecimalFormat formatter = CHANGE_FORMAT.get();
 			System.out.println("Negative: " + negativeCount + " trades, avg. loss: " + formatter.format(averageLoss / 100));
 			System.out.println("Positive: " + positiveCount + " trades, avg. gain: +" + formatter.format(averageGain / 100));
 			System.out.println("Returns : " + formatter.format((latestHoldings / initialInvestment) - 1.0));

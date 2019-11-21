@@ -53,6 +53,7 @@ public class Client<T> extends DefaultConfiguration {
 			this.listeners().add(new OrderExecutionToEmail(mailSender));
 		}
 
+		Set<Object> allInstances = new HashSet<>();
 		for (Map.Entry<String, String[]> e : symbolPairs.entrySet()) {
 			String assetSymbol = e.getValue()[0];
 			String fundSymbol = e.getValue()[1];
@@ -63,11 +64,12 @@ public class Client<T> extends DefaultConfiguration {
 			}
 			all.add(tradingManager);
 
-			Engine engine = new Engine(tradingManager, strategies, monitors);
+			Engine engine = new Engine(tradingManager, strategies, monitors, allInstances);
 
 			CandleProcessor<T> processor = new CandleProcessor<T>(engine, api);
 			candleProcessors.add(processor);
 		}
+		allInstances.clear();
 
 		for (TradingManager a : all) {
 			a.client = this;

@@ -9,4 +9,8 @@ public interface OrderEventListener {
 
 	void onOrderUpdate(Order order, Trader trader, Client client);
 
+	default void onSimulationEnd(Trader trader, Client client){
+
+	}
+
 }

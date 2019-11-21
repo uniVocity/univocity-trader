@@ -45,12 +45,12 @@ public class Trader {
 
 	private final boolean allowMixedStrategies;
 
-	public Trader(TradingManager tradingManager, InstancesProvider<StrategyMonitor> monitors, Parameters params) {
+	public Trader(TradingManager tradingManager, InstancesProvider<StrategyMonitor> monitors, Parameters params, Set<Object> allInstances) {
 		this.parameters = params;
 		this.tradingManager = tradingManager;
 		this.tradingManager.trader = this;
 
-		this.monitors = monitors == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters, monitors, "StrategyMonitor", false);
+		this.monitors = monitors == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters, monitors, "StrategyMonitor", false, allInstances);
 		boolean allowMixedStrategies = true;
 		for (int i = 0; i < this.monitors.length; i++) {
 			this.monitors[i].setTrader(this);
@@ -323,6 +323,10 @@ public class Trader {
 
 	public double getBoughtPrice() {
 		return boughtPrice;
+	}
+
+	public void notifySimulationEnd() {
+		tradingManager.notifySimulationEnd();
 	}
 
 	void notifyTrade(Candle c, Order response) {

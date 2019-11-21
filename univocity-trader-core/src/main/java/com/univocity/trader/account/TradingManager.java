@@ -111,6 +111,8 @@ public class TradingManager {
 		return false;
 	}
 
+
+
 //	public boolean switchTo(String ticker, Signal trade, String exitSymbol) {
 //		String targetSymbol = exitSymbol + fundSymbol;
 //		double targetUnitPrice = getLatestPrice(exitSymbol, fundSymbol);
@@ -236,6 +238,17 @@ public class TradingManager {
 			}
 		}
 	}
+
+	void notifySimulationEnd() {
+		for (int i = 0; i < notifications.length; i++) {
+			try {
+				notifications[i].onSimulationEnd(trader, client);
+			} catch (Exception e) {
+				log.error("Error executing simulation end callback", e);
+			}
+		}
+	}
+
 
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
 //		return api.isDirectSwitchSupported(currentAssetSymbol, targetAssetSymbol);

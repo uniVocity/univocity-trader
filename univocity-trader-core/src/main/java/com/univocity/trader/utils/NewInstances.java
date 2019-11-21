@@ -8,8 +8,6 @@ import java.util.function.*;
 
 public class NewInstances<T> implements InstancesProvider<T> {
 
-	private static final Set<Object> allInstances = Collections.newSetFromMap(Collections.synchronizedMap(new WeakHashMap<>()));
-
 	private final T[] empty;
 	private final List<InstanceProvider<T>> providers = new ArrayList<>();
 
@@ -44,7 +42,7 @@ public class NewInstances<T> implements InstancesProvider<T> {
 		return out;
 	}
 
-	public static <T> T[] getInstances(String symbol, Parameters params, InstancesProvider<T> provider, String description, boolean mandatory) {
+	public static <T> T[] getInstances(String symbol, Parameters params, InstancesProvider<T> provider, String description, boolean mandatory, Set<Object> allInstances) {
 		T[] instancesToUse = provider.create(symbol, params);
 		if (ArrayUtils.isEmpty(instancesToUse) && mandatory) {
 			throw new IllegalStateException("Can't execute market simulation. No " + description + " provided for symbol " + symbol);

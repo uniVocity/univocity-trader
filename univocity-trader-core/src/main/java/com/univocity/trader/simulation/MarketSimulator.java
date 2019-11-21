@@ -51,6 +51,7 @@ public class MarketSimulator extends AbstractSimulator {
 		AccountManager account = getAccount();
 		symbolHandlers.clear();
 
+		Set<Object> allInstances = new HashSet<>();
 		for (String[] pair : account.getTradedPairs()) {
 			String assetSymbol = pair[0];
 			String fundSymbol = pair[1];
@@ -61,9 +62,11 @@ public class MarketSimulator extends AbstractSimulator {
 //			api.setMainTradeSymbols(mainTradeSymbols);
 			TradingManager tradingManager = new TradingManager(api, symbolPriceDetails, account, listeners, assetSymbol, fundSymbol, parameters);
 
-			Engine engine = new Engine(tradingManager, strategies, monitors, parameters);
+			Engine engine = new Engine(tradingManager, strategies, monitors, parameters, allInstances);
 			symbolHandlers.put(engine.getSymbol(), engine);
 		}
+
+		allInstances.clear();
 
 		ConcurrentHashMap<String, Enumeration<Candle>> markets = new ConcurrentHashMap<>();
 		HashMap<String, Candle> pending = new HashMap<>();
