@@ -201,8 +201,8 @@ public class TradingManager {
 		return tradingAccount;
 	}
 
-	public void cancelStaleOrders() {
-		tradingAccount.cancelStaleOrders();
+	public void cancelStaleOrdersFor(Trader trader) {
+		tradingAccount.cancelStaleOrdersFor(trader);
 	}
 
 	public TradingFees getTradingFees() {

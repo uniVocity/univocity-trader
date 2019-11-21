@@ -169,7 +169,7 @@ public class Trader {
 		}
 
 		if (tradingManager.waitingForBuyOrderToFill()) {
-			tradingManager.cancelStaleOrders();
+			tradingManager.cancelStaleOrdersFor(this);
 			if (tradingManager.waitingForBuyOrderToFill()) {
 				log.debug("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
 				return false;
@@ -184,7 +184,7 @@ public class Trader {
 		double amountToSpend = tradingManager.allocateFunds();
 		final double minimum = getPriceDetails().getMinimumOrderAmount(candle.close);
 		if (amountToSpend * candle.close <= minimum) {
-			tradingManager.cancelStaleOrders();
+			tradingManager.cancelStaleOrdersFor(this);
 			amountToSpend = tradingManager.allocateFunds() / candle.close;
 			if (amountToSpend * candle.close <= minimum) {
 				if (tradingManager.exitExistingPositions(tradingManager.assetSymbol, candle)) {
