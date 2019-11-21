@@ -92,8 +92,9 @@ public interface OrderManager {
 	 * Requests to cancels a given order that has not been {@code FILLED} in order to release funds to execute another order for another symbol.
 	 * The details of the other symbol that cannot be traded due to lack of funds can be obtained from the {@code newSymbolTrader} object
 	 *
-	 * @param order an order that has not been completely filled yet.
+	 * @param order           an order that has not been completely filled yet.
 	 * @param newSymbolTrader the {@link Trader} of the symbol that could not be traded due to lack of funds.
+	 *
 	 * @return {@code true} if the given order can be cancelled, otherwise {@code false}.
 	 */
 	boolean cancelToReleaseFundsFor(Order order, Trader newSymbolTrader);
