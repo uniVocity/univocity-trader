@@ -78,7 +78,7 @@ public class DefaultOrderManager implements OrderManager {
 	}
 
 	@Override
-	public void cancelToReleaseFunds(Order order) {
+	public void cancelToReleaseFundsFor(Order order, Trader trader) {
 		if(order.getTimeElapsed() > maxTimeToKeepOrderOpen.ms / 2){
 			order.cancel();
 		}

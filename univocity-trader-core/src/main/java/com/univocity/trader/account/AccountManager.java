@@ -464,6 +464,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	private void waitForFill(Order o) {
 		pendingOrders.put(o.getOrderId(), o);
 		new Thread(() -> {
+			Thread.currentThread().setName("Order " + o.getOrderId() + " monitor:" + o.getSide() + " " + o.getSymbol());
 			Order order = o;
 			while (true) {
 				try {
@@ -530,7 +531,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 		pendingOrders.forEach((id, order) -> {
 			OrderManager orderManager = orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER);
-			orderManager.cancelToReleaseFunds(order);
+			orderManager.cancelToReleaseFundsFor(order, getTraderOf(order.getSymbol()));
 			if (order.getStatus() == CANCELLED) {
 				cancelOrder(orderManager, order);
 			}
