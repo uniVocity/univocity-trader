@@ -75,8 +75,10 @@ public class MarketSimulator extends AbstractSimulator {
 
 
 		int activeQueries = 0;
+		// load everything from each symbol in separate thread, store the futures in the enumeration, leave it running
 		Map<String, CompletableFuture<Enumeration<Candle>>> futures = new HashMap<>();
 		ExecutorService executor = Executors.newCachedThreadPool();
+		// loads the values from the database, stores open results in memory to iterate through, contains the candles
 		for (Engine engine : symbolHandlers.values()) {
 			activeQueries++;
 			boolean loadAllDataFirst = cachingEnabled || activeQueries > activeQueryLimit;
@@ -86,6 +88,7 @@ public class MarketSimulator extends AbstractSimulator {
 			);
 		}
 
+		//
 		futures.forEach((symbol, candles) -> {
 			try {
 				markets.put(symbol, candles.get());
@@ -97,6 +100,7 @@ public class MarketSimulator extends AbstractSimulator {
 		executor.shutdown();
 
 //		Map<String, Long> counts = new TreeMap<>();
+		// from start time of simulation, will tick the clock 1m forward, grab all of the loaded candles at that time,
 		for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
 			for (Map.Entry<String, Enumeration<Candle>> e : markets.entrySet()) {
 				String symbol = e.getKey();
@@ -104,7 +108,9 @@ public class MarketSimulator extends AbstractSimulator {
 				Candle candle = pending.get(symbol);
 				if (candle != null) {
 					if (candle.openTime + 1 >= clock && candle.openTime <= clock + MINUTE.ms - 1) {
+					    // call process for that candle in the future
 						symbolHandlers.get(symbol).process(candle, false);
+						// if the candle is not in the date, it will store the candle to use later
 //						counts.compute(symbol, (p, c) -> c == null ? 1 : c + 1);
 						pending.remove(symbol);
 						if (it.hasMoreElements()) {
@@ -127,6 +133,7 @@ public class MarketSimulator extends AbstractSimulator {
 				}
 			}
 		}
+
 //		System.out.println("Processed candle counts:" + counts);
 
 		System.out.println("Real time trading simulation from " + start + " to " + end);
