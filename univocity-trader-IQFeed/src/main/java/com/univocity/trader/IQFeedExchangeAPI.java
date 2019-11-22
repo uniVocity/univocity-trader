@@ -4,8 +4,11 @@ import com.univocity.trader.candles.Candle;
 import com.univocity.trader.candles.TickConsumer;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiCallback;
+import com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedConstants;
 import com.univocity.trader.vendor.iqfeed.api.client.impl.IQFeedAPIWebSocketClient;
 import com.univocity.trader.candles.SymbolInformation;
+import com.univocity.trader.vendor.iqfeed.api.client.requests.IQFeedHistoricalRequest;
+import com.univocity.trader.vendor.iqfeed.api.client.requests.IQFeedHistoricalRequestBuilder;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.asynchttpclient.AsyncHttpClient;
@@ -13,6 +16,7 @@ import org.asynchttpclient.util.HttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
@@ -25,6 +29,7 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     private org.asynchttpclient.ws.WebSocket socketClientCloseable;
     private final Map<String, SymbolInformation> symbolInformation = new ConcurrentHashMap<>();
 
+    private boolean IQPortal = False;
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
     // TODO: ask about maxFrameSize
     private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 655356);
@@ -32,7 +37,16 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     @Override
     public IQFeedAccountApi connectToAccount(String api){
         // TODO: implement this
-        return new IQFeedClientAccountApi();
+        if(!IQPortal){
+            try {
+                String IQPortalPath = IQFeedConstants.getIQPortalPath();
+                Runtime.getRuntime().exec(IQPortalPath, null, new File(IQPortalPath));
+                IQPortal = True;
+            } catch (Exception e){
+                logger.log(e.getMessage());
+            }
+            return new IQFeedClientAccountApi();
+        }
     }
 
     @Override
@@ -48,6 +62,13 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     //TODO: implement
     @Override
     public List<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime){
+        IQFeedHistoricalRequest request = new IQFeedHistoricalRequestBuilder()
+                .setRequestID(requestID)
+                .setSymbol(symbol)
+                .setIntervalType(interval)
+                .setBeginDateTime(startTime)
+                .setEndDateTime(endTime)
+                .build();
 
     }
     // TODO: add callback for connection login via IQFeed
@@ -98,6 +119,17 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
             public void onClose() { consumer.streamClosed(); }
         });
     }
+
+    @Override
+    public void closeLiveStream(){
+        if(socketClientCloseable != null){
+            socketClientCloseable.sendCloseFrame();
+            socketClientCloseable = null;
+        }
+    }
+
+    @Override
+    public Map<String, Double>
 
     private IQFeedAPIWebSocketClient socketClient(){
         if(socketClient == null){
