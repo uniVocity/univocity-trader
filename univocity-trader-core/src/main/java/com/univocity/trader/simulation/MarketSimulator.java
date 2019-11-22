@@ -56,11 +56,11 @@ public class MarketSimulator extends AbstractSimulator {
 			String assetSymbol = pair[0];
 			String fundSymbol = pair[1];
 
-			SimulatedExchange api = new SimulatedExchange(account);
-			api.setSymbolInformation(this.symbolInformation);
-			SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(api);
-//			api.setMainTradeSymbols(mainTradeSymbols);
-			TradingManager tradingManager = new TradingManager(api, symbolPriceDetails, account, listeners, assetSymbol, fundSymbol, parameters);
+			SimulatedExchange exchange = new SimulatedExchange(account);
+			exchange.setSymbolInformation(this.symbolInformation);
+			SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange);
+//			exchange.setMainTradeSymbols(mainTradeSymbols);
+			TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, account, listeners, assetSymbol, fundSymbol, parameters);
 
 			Engine engine = new Engine(tradingManager, strategies, monitors, parameters, allInstances);
 			symbolHandlers.put(engine.getSymbol(), engine);

@@ -10,11 +10,11 @@ public class CandleProcessor<T> {
 	private static final Logger log = LoggerFactory.getLogger(CandleProcessor.class);
 
 	private final Engine consumer;
-	private final Exchange api;
+	private final Exchange exchange;
 
-	public CandleProcessor(Engine consumer, Exchange<T> api) {
+	public CandleProcessor(Engine consumer, Exchange<T> exchange) {
 		this.consumer = consumer;
-		this.api = api;
+		this.exchange = exchange;
 	}
 
 	public void processCandle(String symbol, Candle candle, boolean initializing) {
@@ -37,11 +37,11 @@ public class CandleProcessor<T> {
 				return;
 			}
 			synchronized (consumer) {
-				PreciseCandle tick = api.generatePreciseCandle(realTimeTick);
+				PreciseCandle tick = exchange.generatePreciseCandle(realTimeTick);
 				if (!CandleRepository.addToHistory(consumer.getSymbol(), tick, initializing)) {  //already processed, skip.
 					return;
 				}
-				Candle candle = api.generateCandle(realTimeTick);
+				Candle candle = exchange.generateCandle(realTimeTick);
 
 				processCandle(symbol, candle, initializing);
 			}

@@ -267,12 +267,12 @@ public class CandleRepository {
 		return executeQuery(symbol, query, out);
 	}
 
-	public static <T> void fillHistoryGaps(Exchange<T> api, String symbol, Instant from, TimeInterval minGap) {
+	public static <T> void fillHistoryGaps(Exchange<T> exchange, String symbol, Instant from, TimeInterval minGap) {
 		log.info("Looking for gaps in history of {} from {}", symbol, getFormattedDateTimeWithYear(from.toEpochMilli()));
 
-		List<T> ticks = api.getLatestTicks(symbol, minGap);
+		List<T> ticks = exchange.getLatestTicks(symbol, minGap);
 		for (T tick : ticks) {
-			PreciseCandle candle = api.generatePreciseCandle(tick);
+			PreciseCandle candle = exchange.generatePreciseCandle(tick);
 			addToHistory(symbol, candle, true);
 		}
 
@@ -338,7 +338,7 @@ public class CandleRepository {
 					continue;
 				}
 				try {
-					ticks = api.getHistoricalTicks(symbol.toUpperCase(), minGap, start, end);
+					ticks = exchange.getHistoricalTicks(symbol.toUpperCase(), minGap, start, end);
 					if (ticks.size() <= 2) {
 						noDataCount++;
 //						log.info("No Candles found for {} between {} and {}", symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
@@ -348,7 +348,7 @@ public class CandleRepository {
 						log.info("Loaded {} {} Candles between {} and {}", ticks.size(), symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
 						noDataCount = 0;
 						for (T tick : ticks) {
-							PreciseCandle candle = api.generatePreciseCandle(tick);
+							PreciseCandle candle = exchange.generatePreciseCandle(tick);
 							addToHistory(symbol, candle, true);
 						}
 					}

@@ -17,8 +17,8 @@ public class SymbolPriceDetails {
 
 	private final SymbolInformation info;
 
-	public SymbolPriceDetails(Exchange<?> exchangeApi) {
-		Map<String, SymbolInformation> symbols = exchangeApi.getSymbolInformation();
+	public SymbolPriceDetails(Exchange<?> exchange) {
+		Map<String, SymbolInformation> symbols = exchange.getSymbolInformation();
 
 		this.allFormatters = new ConcurrentHashMap<>();
 		if (symbols != null) {

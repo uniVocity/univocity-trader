@@ -14,8 +14,8 @@ public class AccountManagerTest {
 	private AccountManager account = getAccountManager();
 
 	private AccountManager getAccountManager() {
-		SimulatedClientAccount api = new SimulatedClientAccount("USDT", SimpleTradingFees.percentage(0.1));
-		AccountManager account = api.getAccount();
+		SimulatedClientAccount clientAccount = new SimulatedClientAccount("USDT", SimpleTradingFees.percentage(0.1));
+		AccountManager account = clientAccount.getAccount();
 		account.setTradedPairs(Collections.singletonList(new String[]{"ADA", "USDT"}));
 
 		TradingManager m = new TradingManager(new SimulatedExchange(account), null, account, null, "ADA", "USDT", Parameters.NULL);

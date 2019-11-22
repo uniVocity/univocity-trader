@@ -24,18 +24,18 @@ public class TradingManager {
 	final String fundSymbol;
 	private final AccountManager tradingAccount;
 	protected Trader trader;
-	private Exchange<?> api;
+	private Exchange<?> exchange;
 	private final OrderEventListener[] notifications;
 	protected Client client;
 	private OrderExecutionToEmail emailNotifier;
 	private final SymbolPriceDetails priceDetails;
 
-	public TradingManager(Exchange api, SymbolPriceDetails priceDetails, AccountManager account, InstancesProvider<OrderEventListener> listenerProvider, String assetSymbol, String fundSymbol, Parameters params) {
-		if (api == null) {
-			throw new IllegalArgumentException("Exchange API implementation cannot be null");
+	public TradingManager(Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, InstancesProvider<OrderEventListener> listenerProvider, String assetSymbol, String fundSymbol, Parameters params) {
+		if (exchange == null) {
+			throw new IllegalArgumentException("Exchange implementation cannot be null");
 		}
 		if (priceDetails == null) {
-			priceDetails = new SymbolPriceDetails(api);
+			priceDetails = new SymbolPriceDetails(exchange);
 		}
 		if (account == null) {
 			throw new IllegalArgumentException("Account manager cannot be null");
@@ -46,7 +46,7 @@ public class TradingManager {
 		if (StringUtils.isBlank(fundSymbol)) {
 			throw new IllegalArgumentException("Currency cannot be blank (examples: 'USD', 'EUR', 'USDT', 'ETH')");
 		}
-		this.api = api;
+		this.exchange = exchange;
 		this.tradingAccount = account;
 		this.assetSymbol = assetSymbol;
 		this.fundSymbol = fundSymbol;
@@ -83,7 +83,7 @@ public class TradingManager {
 		if (lastCandle != null && (System.currentTimeMillis() - lastCandle.closeTime) < FIFTEEN_SECONDS) {
 			return lastCandle.close;
 		}
-		return api.getLatestPrice(assetSymbol, fundSymbol);
+		return exchange.getLatestPrice(assetSymbol, fundSymbol);
 	}
 
 	public String getSymbol() {
@@ -91,7 +91,7 @@ public class TradingManager {
 	}
 
 	public Map<String, Double> getAllPrices() {
-		return api.getLatestPrices();
+		return exchange.getLatestPrices();
 	}
 
 	public boolean hasAssets(Candle c) {
@@ -251,6 +251,6 @@ public class TradingManager {
 
 
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
-//		return api.isDirectSwitchSupported(currentAssetSymbol, targetAssetSymbol);
+//		return exchange.isDirectSwitchSupported(currentAssetSymbol, targetAssetSymbol);
 //	}
 }

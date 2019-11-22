@@ -26,7 +26,7 @@ public abstract class LiveTrader<T> implements Closeable {
 
 	private String allClientPairs;
 	private final Map<String, Long> symbols = new ConcurrentHashMap<>();
-	private final Exchange<T> api;
+	private final Exchange<T> exchange;
 	private final TimeInterval tickInterval;
 	private final SmtpMailSender mailSender;
 	private long lastHour;
@@ -54,13 +54,13 @@ public abstract class LiveTrader<T> implements Closeable {
 							count[0]++;
 							try {
 								log.info("Polling next candle for {} as we didn't get an update since {}", symbol, lastUpdate == null ? "N/A" : Candle.getFormattedDateTimeWithYear(lastUpdate));
-								T tick = api.getLatestTick(symbol, tickInterval);
+								T tick = exchange.getLatestTick(symbol, tickInterval);
 								if (tick != null) {
 									symbols.put(symbol, now);
 									clients.parallelStream().forEach(c -> c.processCandle(symbol, tick, false));
 								}
 							} catch (Exception e) {
-								TimeInterval waitTime = api.handlePollingException(symbol, e);
+								TimeInterval waitTime = exchange.handlePollingException(symbol, e);
 								if (waitTime != null) {
 									LiveTrader.sleep(waitTime.ms);
 								}
@@ -92,9 +92,9 @@ public abstract class LiveTrader<T> implements Closeable {
 		}
 	}
 
-	public LiveTrader(Exchange<T> api, TimeInterval tickInterval, MailSenderConfig mailSenderConfig) {
+	public LiveTrader(Exchange<T> exchange, TimeInterval tickInterval, MailSenderConfig mailSenderConfig) {
 		Runtime.getRuntime().addShutdownHook(new Thread(this::close));
-		this.api = api;
+		this.exchange = exchange;
 		this.tickInterval = tickInterval;
 		this.mailSender = mailSenderConfig == null ? null : new SmtpMailSender(mailSenderConfig);
 	}
@@ -103,7 +103,7 @@ public abstract class LiveTrader<T> implements Closeable {
 		if (allPairs == null) {
 			allPairs = new TreeMap<>();
 			for (Client client : clients) {
-				client.initialize(api, mailSender);
+				client.initialize(exchange, mailSender);
 				allPairs.putAll(client.getSymbolPairs());
 			}
 		}
@@ -125,12 +125,12 @@ public abstract class LiveTrader<T> implements Closeable {
 
 		//fill history with last 30 days of data
 		for (String symbol : allPairs.keySet()) {
-			CandleRepository.fillHistoryGaps(api, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
+			CandleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
 		}
 
 		//quick update for the last 30 minutes in case the previous step takes too long and we miss a few ticks
 		for (String symbol : allPairs.keySet()) {
-			CandleRepository.fillHistoryGaps(api, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
+			CandleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
 			symbols.put(symbol, System.currentTimeMillis());
 		}
 
@@ -147,7 +147,7 @@ public abstract class LiveTrader<T> implements Closeable {
 
 		//loads the very latest ticks and process them before we can finally connect to the live stream and trade for real.
 		for (String symbol : allPairs.keySet()) {
-			List<T> candles = api.getLatestTicks(symbol, tickInterval);
+			List<T> candles = exchange.getLatestTicks(symbol, tickInterval);
 			for (T candle : candles) {
 				clients.forEach(c -> c.processCandle(symbol, candle, true));
 			}
@@ -175,7 +175,7 @@ public abstract class LiveTrader<T> implements Closeable {
 				new PollThread().start();
 			}
 
-			api.openLiveStream(allClientPairs, tickInterval, new TickConsumer<T>() {
+			exchange.openLiveStream(allClientPairs, tickInterval, new TickConsumer<T>() {
 				@Override
 				public void tickReceived(String symbol, T tick) {
 					long now = System.currentTimeMillis();
@@ -212,9 +212,9 @@ public abstract class LiveTrader<T> implements Closeable {
 	@Override
 	public void close() {
 		try {
-			if (api != null) {
+			if (exchange != null) {
 				try {
-					api.closeLiveStream();
+					exchange.closeLiveStream();
 				} catch (Exception e) {
 					log.error("Error closing socket client connection", e);
 				}
@@ -225,8 +225,8 @@ public abstract class LiveTrader<T> implements Closeable {
 	}
 
 	public Client addClient(String email, ZoneId timezone, String referenceCurrencySymbol, String apiKey, String secret) {
-		ClientAccount clientApi = api.connectToAccount(apiKey, secret);
-		Client client = new Client(email, timezone, referenceCurrencySymbol, clientApi);
+		ClientAccount account = exchange.connectToAccount(apiKey, secret);
+		Client client = new Client(email, timezone, referenceCurrencySymbol, account);
 		clients.add(client);
 		return client;
 	}
