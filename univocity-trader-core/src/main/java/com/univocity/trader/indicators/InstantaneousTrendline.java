@@ -11,8 +11,7 @@ import static com.univocity.trader.indicators.Signal.*;
 public class InstantaneousTrendline extends SingleValueIndicator {
 
 	private final CircularList price;
-	private static final double[] instants = Indicator.populateInstants(5000);
-	private CircularList phase = new CircularList(instants.length);
+	private CircularList phase = new CircularList(5000);
 	private CircularList value1 = new CircularList(10);
 	private CircularList value2 = new CircularList(10);
 	private CircularList value3 = new CircularList(10);
@@ -42,7 +41,7 @@ public class InstantaneousTrendline extends SingleValueIndicator {
 
 	public InstantaneousTrendline(TimeInterval interval, boolean useHilbertTransform) {
 		super(interval, InstantaneousTrendline::getDetrendPrice);
-		price = new CircularList(instants.length);
+		price = new CircularList(5000);
 		this.useHilbertTransform = useHilbertTransform;
 	}
 

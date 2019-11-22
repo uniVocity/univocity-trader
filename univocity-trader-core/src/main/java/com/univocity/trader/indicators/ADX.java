@@ -9,7 +9,6 @@ import com.univocity.trader.strategy.*;
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class ADX extends SingleValueIndicator {
-	private static final double[] instants = Indicator.populateInstants(13);
 	private final PlusDIIndicator plusDIIndicator;
 	private final MinusDIIndicator minusDIIndicator;
 	private final ModifiedMovingAverage adx;

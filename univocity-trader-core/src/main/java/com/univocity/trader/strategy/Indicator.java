@@ -22,14 +22,6 @@ public interface Indicator {
 
 	Signal getSignal(Candle candle);
 
-	static double[] populateInstants(int length){
-		double[] instants = new double[length];
-		for (int i = 0; i < length; i++) {
-			instants[i] = i;
-		}
-		return instants;
-	}
-
 	default void initialize(Aggregator aggregator) {
 		throw new IllegalStateException("method initialize(aggregator, symbol) must be implemented in " + this.getClass().getSimpleName());
 	}

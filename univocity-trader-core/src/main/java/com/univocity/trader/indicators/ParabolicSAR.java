@@ -23,9 +23,8 @@ public class ParabolicSAR extends SingleValueIndicator {
 	private double tmpSar = Double.MAX_VALUE;
 	private double sar;
 
-	private static final double[] instants = Indicator.populateInstants(5000);
-	private CircularList sarValues = new CircularList(instants.length);
-	private CircularList priceValues = new CircularList(instants.length);
+	private CircularList sarValues = new CircularList(5000);
+	private CircularList priceValues = new CircularList(5000);
 	private int ticksOnTrend;
 
 
