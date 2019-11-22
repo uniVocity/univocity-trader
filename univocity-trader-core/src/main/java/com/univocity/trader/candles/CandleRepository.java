@@ -2,6 +2,7 @@ package com.univocity.trader.candles;
 
 import com.univocity.trader.*;
 import com.univocity.trader.indicators.base.*;
+import org.apache.commons.lang3.*;
 import org.slf4j.*;
 import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.datasource.*;
@@ -319,7 +320,6 @@ public class CandleRepository {
 //				gaps = gaps.subList(gaps.size() - 30, gaps.size());
 //			}
 			log.info("Filling {} gaps in history of {}", gaps.size(), symbol);
-			boolean settingsModified = false;
 
 			Collections.reverse(gaps);
 
@@ -333,17 +333,17 @@ public class CandleRepository {
 					return;
 				}
 
-//				if (settings.isIntervalIgnored(start, end)) {
-//					continue;
-//				}
+				if (isKnownGap(symbol, start, end)) {
+					noDataCount++;
+					continue;
+				}
 				try {
 					ticks = api.getHistoricalTicks(symbol.toUpperCase(), minGap, start, end);
 					if (ticks.size() <= 2) {
 						noDataCount++;
-						log.info("No Candles found for {} between {} and {}", symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
-//						log.warn("Found a historical gap between {} and {}. Interval blacklisted.", getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
-//						settings.addIntervalToIgnore(start, end);
-//						settingsModified = true;
+//						log.info("No Candles found for {} between {} and {}", symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
+						log.warn("Found a historical gap between {} and {}. Interval blacklisted.", getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
+						addGap(symbol, start, end);
 					} else {
 						log.info("Loaded {} {} Candles between {} and {}", ticks.size(), symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
 						noDataCount = 0;
@@ -361,14 +361,35 @@ public class CandleRepository {
 		}
 	}
 
+	private static long count(String query, Object... params) {
+		Long result = db().queryForObject(query, params, Long.class);
+		if (result == null) {
+			return 0;
+		}
+		return result;
+	}
+
+	private static boolean isKnownGap(String symbol, long start, long end) {
+		return count("SELECT COUNT(*) FROM gap WHERE symbol = ? AND open_time = ? AND close_time = ?", symbol.toUpperCase(), start, end) > 0;
+	}
+
+	private static void addGap(String symbol, long start, long end) {
+		try {
+			db().update("INSERT INTO gap VALUES (?,?,?)", symbol.toUpperCase(), start, end);
+		} catch (Exception e) {
+			log.error("Error persisting gap details: " + StringUtils.join(symbol, start, end), e);
+		}
+	}
+
+
 	public static Set<String> getKnownSymbols() {
 		return new TreeSet<>(db().queryForList("SELECT DISTINCT symbol FROM candle", String.class));
 	}
 
 	public static long countCandles(String symbol, Instant from, Instant to) {
-		String query = "SELECT COUNT(*) FROM candle WHERE symbol = '" + symbol + "'";
+		String query = "SELECT COUNT(*) FROM candle WHERE symbol = ?";
 		query = narrowQueryToTimeInterval(query, from, to);
-		return db().queryForObject(query, Long.class);
+		return count(query, symbol);
 	}
 
 	public static long countCandles(String symbol) {
@@ -380,5 +401,6 @@ public class CandleRepository {
 		query += " ORDER BY close_time DESC LIMIT 1";
 		return db().queryForObject(query, CANDLE_MAPPER);
 	}
+
 
 }

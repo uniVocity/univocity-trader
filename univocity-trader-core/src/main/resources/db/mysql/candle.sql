@@ -9,7 +9,7 @@ CREATE TABLE candle
 	close      DECIMAL(20, 10) NOT NULL,
 	volume     DECIMAL(20, 10) NOT NULL,
 
-	CONSTRAINT candle_symbol_time UNIQUE (symbol, open_time, close_time)
+	CONSTRAINT candle_symbol_time_uq UNIQUE (symbol, open_time, close_time)
 )
 	PARTITION BY KEY (symbol) PARTITIONS 1000
 ;

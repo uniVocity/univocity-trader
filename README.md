@@ -69,7 +69,9 @@ CREATE DATABASE trading;
 USE trading;
 ```
 
-Then create the `candle` table as defined in this [script](./univocity-trader-core/src/main/resources/db/mysql/candle.sql).
+Then create the [candle](./univocity-trader-core/src/main/resources/db/mysql/candle.sql)
+and [gap](./univocity-trader-core/src/main/resources/db/mysql/gap.sql) tables 
+defined [here](./univocity-trader-core/src/main/resources/db/mysql).
 
 Let's quickly look at the [MarketHistoryLoader](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/MarketHistoryLoader.java)
 class, which will connect to [Binance](https://www.binance.com/en/register?ref=36767892) and pull the market history of Bitcoin of the last 6 months in 1 minute candles.
