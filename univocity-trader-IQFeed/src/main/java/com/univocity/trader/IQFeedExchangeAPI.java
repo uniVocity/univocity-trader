@@ -1,7 +1,9 @@
 package com.univocity.trader;
 
 import com.univocity.trader.candles.Candle;
+import com.univocity.trader.candles.TickConsumer;
 import com.univocity.trader.indicators.base.TimeInterval;
+import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiCallback;
 import com.univocity.trader.vendor.iqfeed.api.client.impl.IQFeedAPIWebSocketClient;
 import com.univocity.trader.candles.SymbolInformation;
 import io.netty.channel.EventLoopGroup;
@@ -79,6 +81,22 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
         } else {
             log.error("Eror trying to " + message, e);
         }
+        return null;
+    }
+
+    @Override
+    public void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candlestick> consumer){
+        CandlestickInterval interval = CandlestickInterval.fromTimeInterval(tickInterval);
+        log.info("Opening IQFeed {} live stream for: {}", tickInterval, symbols);
+        socketClientCloseable = socketClient().onCandlestickEvent(symbols, interval, new IQFeedApiCallback<>(){
+
+            @Override
+            public void onResponse(CandlestickEvent response){consumer.tickReceived(response.getSymbol(), response);}
+
+            public void onFailure(Throwable cause) { consumer.streamError(cause);}
+
+            public void onClose() { consumer.streamClosed(); }
+        });
     }
 
     private IQFeedAPIWebSocketClient socketClient(){

@@ -45,8 +45,8 @@ public class IQFeedApiWebSocketListener<T> implements WebSocketListener {
 
     @Override
     public void onOpen(WebSocket webSocket){
-        this.webSocket = websocket;
-        this.wsName = websocket.toString();
+        this.webSocket = webSocket;
+        this.wsName = webSocket.toString();
         log.info(String.format("WebSocket %s opened", wsName));
     }
 
