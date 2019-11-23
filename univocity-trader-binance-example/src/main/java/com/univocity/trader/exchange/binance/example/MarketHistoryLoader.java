@@ -69,7 +69,7 @@ public class MarketHistoryLoader {
 		}
 
 		SingleConnectionDataSource ds = new SingleConnectionDataSource();
-		ds.setUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull");
+		ds.setUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull&useSSL=false");
 		ds.setUsername("root"); // or the appropriate user name
 		ds.setPassword("YOUR-PASSWORD"); // omit this line if you have no password
 		ds.setSuppressClose(true);

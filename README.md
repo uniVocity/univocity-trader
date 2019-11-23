@@ -103,8 +103,16 @@ public static void main(String... args) {
 
 ```
 
-Once the database connection is configured with your particular details, you can execute the `main` method. The 
-logs should print something like this:
+Once the database connection is configured with your particular details, you can execute the `main` method.
+
+>NOTE: If you are running this from the command line, execute:
+>
+>```
+>cd univocity-trader-binance-example
+>mvn exec:java -Dexec.mainClass=com.univocity.trader.exchange.binance.example.MarketHistoryLoader
+>```
+
+The logs should print something like this:
 
 ```
 [main] INFO  (CandleRepository.java:268) - Looking for gaps in history of BTCUSDT from 2019 May 13 09:30
@@ -128,6 +136,13 @@ mysql -u <user> -p trading < candle.sql
 After the backup is restored, the  [MarketHistoryLoader](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/MarketHistoryLoader.java)
 should finish rather quickly. Re-execute this class whenever you want to update your local database
 with the latest data from Binance.
+
+> NOTE: if you get database authentication errors after restoring the backup, execute the following commands on MySQL console:
+> 
+> ```
+> GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost'; 
+> FLUSH PRIVILEGES;
+> ```
 
 Let's finally get started with the coding bit:
 
@@ -291,6 +306,13 @@ Here we test with data from July 2018 to July 2019.
 
 You can finally execute to see what happens as the [OrderExecutionToLog](./univocity-trader-core/src/main/java/com/univocity/trader/notification/OrderExecutionToLog.java) will 
 print each trade made to the log.
+
+> NOTE: If you are running from the command line, execute:
+>
+>```
+>cd univocity-trader-binance-example
+>mvn exec:java -Dexec.mainClass=com.univocity.trader.exchange.binance.example.MarketSimulation
+>```
 
 The last line will show something like this:
 
@@ -674,6 +696,16 @@ private static final MailSenderConfig getEmailConfig() {
 } 
 ```
 
+
+You can now run the [LiveBinanceTrader](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/LiveBinanceTrader.java).
+
+> NOTE: If you are running from the command line, execute:
+>
+>```
+>cd univocity-trader-binance-example
+>mvn exec:java -Dexec.mainClass=com.univocity.trader.exchange.binance.example.LiveBinanceTrader
+>```
+
 That's it for now, I hope you have fun and become rich soon. 
 
 Please consider <a class="github-button" href="https://github.com/sponsors/jbax" data-icon="octicon-heart" aria-label="Sponsor @jbax on GitHub">sponsoring</a> univocity-trader if 
@@ -721,7 +753,8 @@ If you find a bug, please report it on github or send us an email on dev@univoci
 
 We try out best to eliminate all bugs as soon as possible and we do our best to answer all questions. Enhancements/suggestions are implemented on a best effort basis.
 
-Fell free to submit your contribution via pull requests. Any little bit is appreciated.
+Fell free to submit your contribution via pull requests. Any little bit is appreciated. Any github issues marked as **help wanted**
+are things we want to do but don't have time/resources yet. If you can take on that work by all means go for it!
 
 If you need support or are looking for someone who can code your trading strategy, please contact me directly on jbax@univocity.com.
 
