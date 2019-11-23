@@ -21,7 +21,7 @@ public abstract class Parameters {
 		throw new UnsupportedOperationException();
 	}
 
-	public <T extends Parameters> List<T> fromString(Collection<String> parameters) {
+	public <T extends Parameters> Collection<T> fromString(Collection<String> parameters) {
 		List<T> out = new ArrayList<>();
 		for (String p : parameters) {
 			out.add((T) this.fromString(p));
