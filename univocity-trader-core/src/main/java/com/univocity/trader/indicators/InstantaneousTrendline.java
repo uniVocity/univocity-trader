@@ -68,7 +68,7 @@ public class InstantaneousTrendline extends SingleValueIndicator {
 		return currentTrend;
 	}
 
-	private static double getDetrendPrice(Candle candle) {
+	protected static double getDetrendPrice(Candle candle) {
 		return (candle.high + candle.low) / 2.0;
 	}
 
