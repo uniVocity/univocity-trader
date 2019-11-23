@@ -20,7 +20,7 @@ public class TimeInterval {
 
 	}
 
-	private static String getUnitStr(TimeUnit unit) {
+	public static String getUnitStr(TimeUnit unit) {
 		switch (unit) {
 			case DAYS:
 				return "d";

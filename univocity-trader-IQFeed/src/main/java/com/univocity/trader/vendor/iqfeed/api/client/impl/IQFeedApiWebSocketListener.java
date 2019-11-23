@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiCallback;
+import com.univocity.trader.vendor.iqfeed.api.client.exception.IQFeedApiException;
 import org.asynchttpclient.ws.WebSocket;
 import org.asynchttpclient.ws.WebSocketListener;
 import org.slf4j.Logger;

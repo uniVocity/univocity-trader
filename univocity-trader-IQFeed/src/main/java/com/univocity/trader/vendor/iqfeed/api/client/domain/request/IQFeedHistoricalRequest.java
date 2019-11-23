@@ -1,5 +1,9 @@
 package com.univocity.trader.vendor.iqfeed.api.client.domain.request;
+import com.univocity.trader.indicators.base.TimeInterval;
+
 import java.security.InvalidParameterException;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,22 +20,29 @@ public class IQFeedHistoricalRequest {
     public String dataPeriod;
     // optional
     public String beginDate;
-    public String beginDateTime;
+    public Long beginDateTime;
     public String beginFilterTime;
     public String dataDirection;
     public String dataPtsPerSend;
     public String endDate;
-    public String endDateTime;
+    public Long endDateTime;
     public String endFilterTime;
     public String includePartialData;
     public String interval;
-    public String intervalType;
+    public String svtIntervalType;
+    public TimeInterval intervalType;
     public String labelAtBeginning;
     public String maxDataPts;
     public String maxDays;
     public String maxMonths;
     public String maxWeeks;
     public String requestID;
+
+    public String formatMillis(Long millis){
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYYMMdd HHmmSS");
+        Instant instant = Instant.ofEpochMilli(millis);
+        return formatter.format(instant).toString();
+    }
 
 
     public IQFeedHistoricalRequest(IQFeedHistoricalRequestBuilder builder) {
@@ -61,9 +72,9 @@ public class IQFeedHistoricalRequest {
         String dataQualifier = null;
         String timeQualifier = null;
 
-        switch (dataPeriod.toLowerCase()) {
+        switch (TimeInterval.getUnitStr(intervalType.unit)) {
             // TODO: convert strings to enums
-            case "tick":
+            case "tick": case "ms":
                 dataQualifier = "T";
                 break;
             case "minute": case "min": case "m":
@@ -107,11 +118,13 @@ public class IQFeedHistoricalRequest {
             dataRequest.append(timeQualifier);
             dataRequest.append(",");
         }
+        String beginDateTimeString = formatMillis(beginDateTime);
+        String endDateTimeString = formatMillis(endDateTime);
 
         // arguments for historical requests follow the priority shown below
-        List<String> argsOrder = Arrays.asList(symbol, interval, maxDays, maxWeeks, maxMonths, beginDateTime, beginDate,
-                endDate, maxDataPts, beginFilterTime, endFilterTime, dataDirection, requestID, dataPtsPerSend, includePartialData,
-                intervalType, labelAtBeginning);
+        List<String> argsOrder = Arrays.asList(symbol, interval, maxDays, maxWeeks, maxMonths, beginDateTimeString, beginDate,
+                endDateTimeString, endDate, maxDataPts, beginFilterTime, endFilterTime, dataDirection, requestID, dataPtsPerSend, includePartialData,
+                svtIntervalType, labelAtBeginning);
 
         for(String arg: argsOrder){
             // TODO: convert to Objects.equals
@@ -121,6 +134,7 @@ public class IQFeedHistoricalRequest {
         }
         // remove trailing comma
         dataRequest.deleteCharAt(dataRequest.length()-1);
+        dataRequest.append("\r\n");
 
         return dataRequest.toString();
     }

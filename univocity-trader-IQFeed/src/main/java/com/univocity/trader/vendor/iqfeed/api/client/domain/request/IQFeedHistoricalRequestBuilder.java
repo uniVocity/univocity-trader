@@ -2,6 +2,7 @@ package com.univocity.trader.vendor.iqfeed.api.client.domain.request;
 
 //@author jecker
 
+import com.univocity.trader.indicators.base.TimeInterval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,16 +22,17 @@ public final class IQFeedHistoricalRequestBuilder {
     protected String tickSize= "";
     // optional
     protected String beginDate= "";
-    protected String beginDateTime= "";
+    protected Long beginDateTime;
     protected String beginFilterTime= "";
     protected String dataDirection= "";
     protected String dataPtsPerSend= "";
     protected String endDate= "";
-    protected String endDateTime= "";
+    protected Long endDateTime;
     protected String endFilterTime= "";
     protected String includePartialData= "";
     protected String interval= "";
-    protected String intervalType= "";
+    protected TimeInterval intervalType;
+    protected String svtIntervalType;
     protected String labelAtBeginning= "";
     protected String maxDataPts= "";
     protected String maxDays= "";
@@ -60,7 +62,7 @@ public final class IQFeedHistoricalRequestBuilder {
         return this;
     }
 
-    public IQFeedHistoricalRequestBuilder setBeginDateTime(String beginDateTime) {
+    public IQFeedHistoricalRequestBuilder setBeginDateTime(Long beginDateTime) {
         this.beginDateTime = beginDateTime;
         return this;
     }
@@ -85,7 +87,7 @@ public final class IQFeedHistoricalRequestBuilder {
         return this;
     }
 
-    public IQFeedHistoricalRequestBuilder setEndDateTime(String endDateTime) {
+    public IQFeedHistoricalRequestBuilder setEndDateTime(Long endDateTime) {
         this.endDateTime = endDateTime;
         return this;
     }
@@ -105,8 +107,13 @@ public final class IQFeedHistoricalRequestBuilder {
         return this;
     }
 
-    public IQFeedHistoricalRequestBuilder setIntervalType(String intervalType) {
+    public IQFeedHistoricalRequestBuilder setIntervalType(TimeInterval intervalType) {
         this.intervalType = intervalType;
+        return this;
+    }
+
+    public IQFeedHistoricalRequestBuilder setSvtIntervalType(String svtIntervalType) {
+        this.svtIntervalType = svtIntervalType;
         return this;
     }
 
@@ -141,7 +148,7 @@ public final class IQFeedHistoricalRequestBuilder {
     }
 
     public IQFeedHistoricalRequestBuilder but() {
-        return anIQFeedHistoricalRequest().setSymbol(symbol).setDataType(tickSize).setBeginDate(beginDate).setBeginDateTime(beginDateTime).setBeginFilterTime(beginFilterTime).setDataDirection(dataDirection).setDataPtsPerSend(dataPtsPerSend).setEndDate(endDate).setEndDateTime(endDateTime).setEndFilterTime(endFilterTime).setIncludePartialData(includePartialData).setInterval(interval).setIntervalType(intervalType).setLabelAtBeginning(labelAtBeginning).setMaxDataPts(maxDataPts).setMaxDays(maxDays).setMaxMonths(maxMonths).setMaxWeeks(maxWeeks).setRequestID(requestID);
+        return anIQFeedHistoricalRequest().setSymbol(symbol).setDataType(tickSize).setBeginDate(beginDate).setBeginDateTime(beginDateTime).setBeginFilterTime(beginFilterTime).setDataDirection(dataDirection).setDataPtsPerSend(dataPtsPerSend).setEndDate(endDate).setEndDateTime(endDateTime).setEndFilterTime(endFilterTime).setIncludePartialData(includePartialData).setInterval(interval).setIntervalType(intervalType).setSvtIntervalType(svtIntervalType).setLabelAtBeginning(labelAtBeginning).setMaxDataPts(maxDataPts).setMaxDays(maxDays).setMaxMonths(maxMonths).setMaxWeeks(maxWeeks).setRequestID(requestID);
     }
 
 
@@ -167,7 +174,7 @@ public final class IQFeedHistoricalRequestBuilder {
             switch(size){
                 case "tick":
                     if(!(checkVal(request.maxDataPts) || checkVal(request.maxDays) ||
-                            (checkVal(request.beginDateTime) && checkVal(request.endDateTime)))){
+                            (checkVal(request.beginDateTime.toString()) && checkVal(request.endDateTime.toString())))){
                         throw new InvalidParameterException("Invalid parameters for request of tick size: tick");
                     }
                     break;

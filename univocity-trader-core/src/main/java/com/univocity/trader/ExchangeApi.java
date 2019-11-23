@@ -31,5 +31,6 @@ public interface ExchangeApi<T> {
 
 	ClientAccountApi connectToAccount(String apiKey, String secret);
 
+
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol);
 }

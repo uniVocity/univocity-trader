@@ -1,20 +1,18 @@
 package com.univocity.trader;
 
-import com.univocity.trader.candles.Candle;
-import com.univocity.trader.candles.TickConsumer;
+import com.univocity.trader.*;
+import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.TimeInterval;
-import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiCallback;
-import com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedConstants;
-import com.univocity.trader.vendor.iqfeed.api.client.impl.IQFeedAPIWebSocketClient;
+import com.univocity.trader.vendor.iqfeed.api.client.*;
 import com.univocity.trader.candles.SymbolInformation;
-import com.univocity.trader.vendor.iqfeed.api.client.requests.IQFeedHistoricalRequest;
-import com.univocity.trader.vendor.iqfeed.api.client.requests.IQFeedHistoricalRequestBuilder;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import org.asynchttpclient.AsyncHttpClient;
+import com.univocity.trader.vendor.iqfeed.api.client.*;
+import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequest;
+import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequestBuilder;
+import io.netty.channel.*;
+import io.netty.channel.nio.*;
+import org.asynchttpclient.*;
 import org.asynchttpclient.util.HttpUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 import java.io.File;
 import java.util.Map;
@@ -25,32 +23,45 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
 
     private static final Logger log = LoggerFactory.getLogger(BinanceExchangeApi.class);
 
-    private IQFeedAPIWebSocketClient socketClient;
+    private IQFeedApiWebSocketClient socketClient;
     private org.asynchttpclient.ws.WebSocket socketClientCloseable;
     private final Map<String, SymbolInformation> symbolInformation = new ConcurrentHashMap<>();
 
-    private boolean IQPortal = False;
+    private boolean iqPortal = False;
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
     // TODO: ask about maxFrameSize
     private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 655356);
+    private String iqPortalPath;
 
-    @Override
-    public IQFeedAccountApi connectToAccount(String api){
-        // TODO: implement this
+    public IQFeedClientAccountApi connectToIQFeedAccount(String product, String version, String login, String pass, boolean autoConnect = False,
+                                                   boolean saveLoginInfo = False){
         if(!IQPortal){
             try {
-                String IQPortalPath = IQFeedConstants.getIQPortalPath();
-                Runtime.getRuntime().exec(IQPortalPath, null, new File(IQPortalPath));
-                IQPortal = True;
+                Runtime.getRuntime().exec(iqPortalPath, null, new File(iqPortalPath));
+                iqPortal = True;
+            } catch(Exception e){
+                logger.log(e.getMessage());
+            }
+        }
+        return new IQFeedClientAccountApi();
+    }
+
+
+    @Override
+    public IQFeedClientAccountApi connectToAccount(String api, String secret){
+        if(!IQPortal){
+            try {
+                Runtime.getRuntime().exec(iqPortalPath, null, new File(iqPortalPath));
+                iqPortal = True;
             } catch (Exception e){
                 logger.log(e.getMessage());
             }
-            return new IQFeedClientAccountApi();
         }
+        return new IQFeedClientAccountApi();
     }
 
     @Override
-    public Candlestick getLatestTick(String symbol, TiemInterval interval){
+    public Candlestick getLatestTick(String symbol, TimeInterval interval){
         // TODO: implement
         List<Candlestick> candles = socketClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval), 1, null, null);
         if(candles != null && candles.size() > 0) {
