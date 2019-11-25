@@ -25,12 +25,12 @@ public class TradingManager {
 	private final AccountManager tradingAccount;
 	protected Trader trader;
 	private Exchange<?> exchange;
-	private final OrderEventListener[] notifications;
+	private final OrderListener[] notifications;
 	protected Client client;
 	private OrderExecutionToEmail emailNotifier;
 	private final SymbolPriceDetails priceDetails;
 
-	public TradingManager(Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, InstancesProvider<OrderEventListener> listenerProvider, String assetSymbol, String fundSymbol, Parameters params) {
+	public TradingManager(Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, InstancesProvider<OrderListener> listenerProvider, String assetSymbol, String fundSymbol, Parameters params) {
 		if (exchange == null) {
 			throw new IllegalArgumentException("Exchange implementation cannot be null");
 		}
@@ -53,7 +53,7 @@ public class TradingManager {
 		this.symbol = assetSymbol + fundSymbol;
 		this.priceDetails = priceDetails.switchToSymbol(symbol);
 
-		this.notifications = listenerProvider != null ? listenerProvider.create(symbol, params) : new OrderEventListener[0];
+		this.notifications = listenerProvider != null ? listenerProvider.create(symbol, params) : new OrderListener[0];
 		this.emailNotifier = getEmailNotifier();
 		account.register(this);
 	}
@@ -232,7 +232,7 @@ public class TradingManager {
 	void notifyTradeExecution(Order order) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
-				notifications[i].onOrderUpdate(order, trader, client);
+				notifications[i].onOrder(order, trader, client);
 			} catch (Exception e) {
 				log.error("Error executing update notification on order: " + order, e);
 			}

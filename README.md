@@ -588,7 +588,7 @@ USDT = $1222.86
 You can now repeat the process to test other parameters in the strategy or the strategy monitor.
 
 Remember that this is an introductory example. You should ideally generate statistics for your
-particular with the help your own custom [OrderEventListener](./univocity-trader-core/src/main/java/com/univocity/trader/notification/OrderEventListener.java)
+particular with the help your own custom [OrderListener](./univocity-trader-core/src/main/java/com/univocity/trader/notification/OrderListener.java)
 implementations.
 
 # Improving backtesting performance

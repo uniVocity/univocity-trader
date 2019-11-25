@@ -2,7 +2,6 @@ package com.univocity.trader.notification;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.notification.*;
 
 import java.text.*;
 import java.util.*;
@@ -10,7 +9,7 @@ import java.util.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.candles.Candle.*;
 
-public class SimpleStrategyStatistics implements OrderEventListener {
+public class SimpleStrategyStatistics implements OrderListener {
 
 	private Map<String, List<Double>> parameterReturns = new TreeMap<>();
 	private double initialInvestment = 0.0;
@@ -30,7 +29,7 @@ public class SimpleStrategyStatistics implements OrderEventListener {
 	}
 
 	@Override
-	public void onOrderUpdate(Order order, Trader trader, Client client) {
+	public void onOrder(Order order, Trader trader, Client client) {
 		if (this.trader == null) {
 			this.trader = trader;
 			initialInvestment = this.trader.getTotalFundsInReferenceCurrency();

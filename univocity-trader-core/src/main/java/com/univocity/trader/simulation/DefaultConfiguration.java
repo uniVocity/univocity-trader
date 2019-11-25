@@ -12,7 +12,7 @@ public abstract class DefaultConfiguration {
 
 	protected final NewInstances<Strategy> strategies = new NewInstances<>(new Strategy[0]);
 	protected final NewInstances<StrategyMonitor> monitors = new NewInstances<>(new StrategyMonitor[0]);
-	protected final Instances<OrderEventListener> listeners = new Instances<>(new OrderEventListener[0]);
+	protected final Instances<OrderListener> listeners = new Instances<>(new OrderListener[0]);
 	protected final Map<String, String[]> symbolPairs = new TreeMap<>();
 	private final String referenceCurrency;
 	private AccountManager account;
@@ -36,7 +36,7 @@ public abstract class DefaultConfiguration {
 		return monitors;
 	}
 
-	public Instances<OrderEventListener> listeners() {
+	public Instances<OrderListener> listeners() {
 		return listeners;
 	}
 
