@@ -1,5 +1,7 @@
 package com.univocity.trader;
 
+import com.sun.org.slf4j.internal.Logger;
+import com.sun.org.slf4j.internal.LoggerFactory;
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.TimeInterval;
@@ -21,7 +23,7 @@ import java.util.concurrent.TimeoutException;
 
 public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
 
-    private static final Logger log = LoggerFactory.getLogger(BinanceExchangeApi.class);
+    private static final Logger log = LoggerFactory.getLogger(IQFeedExchangeAPI.class);
 
     private IQFeedApiWebSocketClient socketClient;
     private org.asynchttpclient.ws.WebSocket socketClientCloseable;
