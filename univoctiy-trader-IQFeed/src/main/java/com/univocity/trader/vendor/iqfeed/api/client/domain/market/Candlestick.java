@@ -1,7 +1,7 @@
 package com.univocity.trader.vendor.iqfeed.api.client.domain.market;
 
 import com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedApiConstants;
-
+import com.fasterxml.jackson.annotation.*;
 
 @JsonFormat(shape=JsonFormat.Shape.ARRAY)
 @JsonPropertyOrder()

@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * Binance API data streaming façade, supporting streaming of events through web sockets.
  */
-public interface BinanceApiWebSocketClient extends Closeable {
+public interface  it minanceApiWebSocketClient extends Closeable {
 
     /**
      * Open a new web socket to receive {@link DepthEvent depthEvents} on a callback.
