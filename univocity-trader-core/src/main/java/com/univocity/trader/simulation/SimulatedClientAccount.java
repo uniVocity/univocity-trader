@@ -55,7 +55,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		return null;
 	}
 
-	private DefaultOrder fillOrder(String assetsSymbol, String fundSymbol, double quantity, double price, Order.Side orderSide, Order.Type orderType) {
+	protected DefaultOrder fillOrder(String assetsSymbol, String fundSymbol, double quantity, double price, Order.Side orderSide, Order.Type orderType) {
 		DefaultOrder out = new DefaultOrder(assetsSymbol, fundSymbol, orderSide);
 		out.setPrice(new BigDecimal(price));
 		out.setQuantity(new BigDecimal(quantity));

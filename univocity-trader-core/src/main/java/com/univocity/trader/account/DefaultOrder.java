@@ -9,8 +9,8 @@ public class DefaultOrder extends OrderRequest implements Order {
 	private Long time;
 	private Order.Status status;
 
-	public DefaultOrder(String assettSymbol, String fundSymbol, Side side) {
-		super(assettSymbol, fundSymbol, side);
+	public DefaultOrder(String assetSymbol, String fundSymbol, Side side) {
+		super(assetSymbol, fundSymbol, side);
 	}
 
 	public DefaultOrder(Order order) {
