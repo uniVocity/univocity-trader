@@ -65,8 +65,9 @@ public class DefaultOrder extends OrderRequest implements Order {
 	@Override
 	public String toString() {
 		return "DefaultOrder{" +
-				", orderId='" + orderId + '\'' +
+				"orderId='" + orderId + '\'' +
 				", executedQuantity=" + executedQuantity +
+				", price=" + getPrice().toPlainString() +
 				", time=" + time +
 				", status=" + status +
 				'}';
