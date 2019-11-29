@@ -112,4 +112,14 @@ public interface ClientAccount {
 	 * @param order the order to be cancelled.
 	 */
 	void cancel(Order order);
+
+	/**
+	 * Tries filling any open orders of a symbol based on its latest candle. Used in simulations only.
+	 *
+	 * @param symbol a symbol that might have open an open {@link Order} which has not been completed yet.
+	 * @param candle the latest candle of the given symbol.
+	 */
+	default void updateOpenOrders(String symbol, Candle candle) {
+
+	}
 }

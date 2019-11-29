@@ -12,7 +12,7 @@ public interface Order {
 		return getAssetsSymbol() + getFundsSymbol();
 	}
 
-	default long getTimeElapsed(){
+	default long getTimeElapsed() {
 		return System.currentTimeMillis() - getTime();
 	}
 
@@ -40,6 +40,10 @@ public interface Order {
 
 	default BigDecimal getTotalOrderAmount() {
 		return getQuantity().multiply(getPrice());
+	}
+
+	default boolean isFinalized() {
+		return getStatus() == Status.FILLED || getStatus() == Status.CANCELLED;
 	}
 
 	enum Side {

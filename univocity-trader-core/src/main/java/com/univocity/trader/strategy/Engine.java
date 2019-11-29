@@ -71,6 +71,9 @@ public class Engine {
 			return;
 		}
 
+		//for simulations only - tries to fill open orders using the latest candle information loaded from history.
+		tradingManager.getAccount().updateOpenOrders(trader.getSymbol(), candle);
+
 		for (int i = 0; i < strategies.length; i++) {
 			Strategy strategy = strategies[i];
 			Signal signal = strategy.getSignal(candle);

@@ -1,6 +1,7 @@
 package com.univocity.trader.account;
 
 import com.univocity.trader.*;
+import com.univocity.trader.candles.*;
 import com.univocity.trader.simulation.*;
 import org.slf4j.*;
 
@@ -546,5 +547,9 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		this.balances.clear();
 		updateBalances();
 		return this;
+	}
+
+	public void updateOpenOrders(String symbol, Candle candle) {
+		this.account.updateOpenOrders(symbol, candle);
 	}
 }
