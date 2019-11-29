@@ -112,7 +112,6 @@ public class TradingManager {
 	}
 
 
-
 //	public boolean switchTo(String ticker, Signal trade, String exitSymbol) {
 //		String targetSymbol = exitSymbol + fundSymbol;
 //		double targetUnitPrice = getLatestPrice(exitSymbol, fundSymbol);
@@ -249,6 +248,13 @@ public class TradingManager {
 		}
 	}
 
+	public void updateOpenOrders(String symbol, Candle candle) {
+		if (tradingAccount.isSimulated()) {
+			if (tradingAccount.updateOpenOrders(symbol, candle)) {
+				tradingAccount.updateOrderStatuses(trader.getSymbol());
+			}
+		}
+	}
 
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
 //		return exchange.isDirectSwitchSupported(currentAssetSymbol, targetAssetSymbol);

@@ -462,45 +462,29 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 	}
 
-	private void waitForFill(Order o) {
-		pendingOrders.put(o.getOrderId(), o);
+	@Override
+	public boolean isSimulated() {
+		return account.isSimulated();
+	}
+
+	private void waitForFill(Order order) {
+		pendingOrders.put(order.getOrderId(), order);
+		if (isSimulated()) {
+			return;
+		}
 		new Thread(() -> {
-			Thread.currentThread().setName("Order " + o.getOrderId() + " monitor:" + o.getSide() + " " + o.getSymbol());
-			Order order = o;
+			Thread.currentThread().setName("Order " + order.getOrderId() + " monitor:" + order.getSide() + " " + order.getSymbol());
+			OrderManager orderManager = orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER);
 			while (true) {
 				try {
-					OrderManager orderManager = orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER);
 					try {
 						Thread.sleep(orderManager.getOrderUpdateFrequency().ms);
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
-
-					Order old = order;
-					order = account.updateOrderStatus(order);
-
-					Order.Status s = order.getStatus();
-					if (s == FILLED || s == CANCELLED) {
-						logOrderStatus("", order);
-						pendingOrders.remove(order.getOrderId());
-						orderFinalized(orderManager, order);
+					Order updated = updateOrder(order);
+					if (updated.isFinalized()) {
 						return;
-					} else { // update order status
-						pendingOrders.put(order.getOrderId(), order);
-					}
-
-					if (s == PARTIALLY_FILLED && old.getExecutedQuantity().compareTo(order.getExecutedQuantity()) != 0) {
-						logOrderStatus("", order);
-						updateBalances();
-						orderManager.updated(order);
-					} else {
-						logOrderStatus("Unchanged ", order);
-						orderManager.unchanged(order);
-					}
-
-					//order manager could have cancelled the order
-					if (order.getStatus() == CANCELLED) {
-						cancelOrder(orderManager, order);
 					}
 				} catch (Exception e) {
 					log.error("Error tracking state of order " + order, e);
@@ -508,6 +492,37 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 				}
 			}
 		}).start();
+	}
+
+	public Order updateOrder(Order order) {
+		OrderManager orderManager = orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER);
+		Order old = order;
+		order = account.updateOrderStatus(order);
+
+		Order.Status s = order.getStatus();
+		if (order.isFinalized()) {
+			logOrderStatus("", order);
+			pendingOrders.remove(order.getOrderId());
+			orderFinalized(orderManager, order);
+			return order;
+		} else { // update order status
+			pendingOrders.put(order.getOrderId(), order);
+		}
+
+		if (s == PARTIALLY_FILLED && old.getExecutedQuantity().compareTo(order.getExecutedQuantity()) != 0) {
+			logOrderStatus("", order);
+			updateBalances();
+			orderManager.updated(order);
+		} else {
+			logOrderStatus("Unchanged ", order);
+			orderManager.unchanged(order);
+		}
+
+		//order manager could have cancelled the order
+		if (order.getStatus() == CANCELLED) {
+			cancelOrder(orderManager, order);
+		}
+		return order;
 	}
 
 	private void orderFinalized(OrderManager orderManager, Order order) {
@@ -549,7 +564,15 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return this;
 	}
 
-	public void updateOpenOrders(String symbol, Candle candle) {
-		this.account.updateOpenOrders(symbol, candle);
+	public boolean updateOpenOrders(String symbol, Candle candle) {
+		return this.account.updateOpenOrders(symbol, candle);
+	}
+
+	public void updateOrderStatuses(String symbol) {
+		for(Order order : this.pendingOrders.values()){
+			if(symbol.equals(order.getSymbol())){
+				updateOrder(order);
+			}
+		}
 	}
 }

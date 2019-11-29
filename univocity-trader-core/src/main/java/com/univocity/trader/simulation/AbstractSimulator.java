@@ -27,10 +27,14 @@ public abstract class AbstractSimulator extends DefaultConfiguration {
 
 	@Override
 	protected final AccountManager createAccount() {
-		SimulatedClientAccount clientAccount = new SimulatedClientAccount(getReferenceCurrency(), tradingFees);
+		SimulatedClientAccount clientAccount = createAccountInstance(getReferenceCurrency(), tradingFees);
 		AccountManager account = clientAccount.getAccount();
 		account.setAmount(getReferenceCurrency(), initialFunds);
 		return account;
+	}
+
+	protected SimulatedClientAccount createAccountInstance(String referenceCurrency, TradingFees tradingFees) {
+		return new SimulatedClientAccount(referenceCurrency, tradingFees);
 	}
 
 	public double getInitialFunds() {
