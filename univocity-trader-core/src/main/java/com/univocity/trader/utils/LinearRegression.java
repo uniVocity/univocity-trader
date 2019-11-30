@@ -95,4 +95,9 @@ public class LinearRegression {
 	public boolean goingUp(double factor) {
 		return predict(1) > last * (1.0 + (factor / 100.0));
 	}
+
+	public void clear() {
+		last = meanX = meanY = varX = covXY = slope = intercept = umeanX = umeanY = uvarX = ucovXY = 0.0;
+		count = 0;
+	}
 }
