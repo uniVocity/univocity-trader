@@ -3,11 +3,8 @@ package com.univocity.trader.indicators;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
-import com.univocity.trader.utils.*;
 
 import java.util.function.*;
-
-import static com.univocity.trader.indicators.Signal.*;
 
 
 /**
@@ -69,8 +66,8 @@ public class MACD extends SingleValueIndicator {
 
 	@Override
 	protected boolean process(Candle candle, double value, boolean updating) {
-		emaShort.update(candle);
-		emaLong.update(candle);
+		emaShort.accumulate(candle);
+		emaLong.accumulate(candle);
 
 		final double macdValue = emaShort.getValue() - emaLong.getValue();
 		if (updating) {

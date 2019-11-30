@@ -23,7 +23,7 @@ public class MVWAP extends SingleValueIndicator {
 
 	@Override
 	protected boolean process(Candle candle, double value, boolean updating) {
-		vwap.update(candle);
+		vwap.accumulate(candle);
 		if (updating) {
 			sma.update(vwap.getValue());
 		} else {

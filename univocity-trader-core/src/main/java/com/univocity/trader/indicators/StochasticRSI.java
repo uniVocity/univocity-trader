@@ -28,7 +28,7 @@ public class StochasticRSI extends SingleValueIndicator {
 
 	@Override
 	protected boolean process(Candle candle, double value, boolean updating) {
-		rsi.update(candle);
+		rsi.accumulate(candle);
 
 		double rsi = this.rsi.getValue();
 

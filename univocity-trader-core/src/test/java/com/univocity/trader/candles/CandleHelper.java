@@ -41,12 +41,12 @@ public class CandleHelper {
 	}
 
 	public static double updateTick(Indicator indicator, long openTime, long closeTime, double value) {
-		indicator.update(newTick(openTime, closeTime, value));
+		indicator.accumulate(newTick(openTime, closeTime, value));
 		return indicator.getValue();
 	}
 
 	public static double update(Indicator indicator, int minute, double value) {
-		indicator.update(newCandle(minute, value));
+		indicator.accumulate(newCandle(minute, value));
 		return indicator.getValue();
 	}
 

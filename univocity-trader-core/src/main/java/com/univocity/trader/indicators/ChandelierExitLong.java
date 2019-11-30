@@ -29,8 +29,8 @@ public class ChandelierExitLong extends SingleValueCalculationIndicator {
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
-		high.update(candle);
-		atr.update(candle);
+		high.accumulate(candle);
+		atr.accumulate(candle);
 		return high.getValue() - (atr.getValue() * k);
 	}
 

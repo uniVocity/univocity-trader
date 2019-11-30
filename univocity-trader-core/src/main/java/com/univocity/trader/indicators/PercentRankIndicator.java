@@ -28,7 +28,7 @@ public class PercentRankIndicator extends SingleValueIndicator {
 
 	@Override
 	protected boolean process(Candle candle, double value, boolean updating) {
-		if (roc.update(candle)) {
+		if (roc.accumulate(candle)) {
 			double change = roc.getValue();
 
 			if (updating) {

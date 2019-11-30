@@ -45,9 +45,9 @@ public class CHOP extends SingleValueCalculationIndicator {
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
-		hvi.update(candle);
-		lvi.update(candle);
-		atrIndicator.update(candle);
+		hvi.accumulate(candle);
+		lvi.accumulate(candle);
+		atrIndicator.accumulate(candle);
 
 		if (updating) {
 			atrIndicators.update(this.atrIndicator.getValue());

@@ -70,9 +70,9 @@ public class DirectionIndicator<T extends SingleValueIndicator> implements Indic
 		return false;
 	}
 
-	@Override
+//	@Override
 	public boolean update(Candle candle) {
-		if (indicator.update(candle)) {
+		if (indicator.accumulate(candle)) {
 			linearRegression.update(valueGetter.applyAsDouble(indicator));
 			return true;
 		}

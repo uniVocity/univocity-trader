@@ -17,7 +17,7 @@ public class AverageTrueRange extends ModifiedMovingAverage {
 	}
 
 	protected double extractValue(Candle candle, boolean updating) {
-		tr.update(candle);
+		tr.accumulate(candle);
 		return tr.getValue();
 	}
 

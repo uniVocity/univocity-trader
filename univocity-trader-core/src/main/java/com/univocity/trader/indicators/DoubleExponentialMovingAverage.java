@@ -30,7 +30,7 @@ public class DoubleExponentialMovingAverage extends ExponentialMovingAverage {
 
 	@Override
 	protected double extractValue(Candle candle, boolean updating) {
-		ema.update(candle);
+		ema.accumulate(candle);
 		return ema.getValue();
 	}
 

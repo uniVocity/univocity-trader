@@ -25,7 +25,7 @@ public interface Strategy {
 	 * @param candle the latest candle received from a live {@link com.univocity.trader.Exchange} or the trading history of a symbol
 	 *               (typically managed by {@link com.univocity.trader.simulation.SimulatedExchange}).
 	 *
-	 * @return an indication to {@code BUY}, {@code SELL} or do nothing {@code NEUTRAL}. Any other value will be ignored by the
+	 * @return an indication to {@code BUY}, {@code SELL} or do nothing (i.e. {@code NEUTRAL}). Any other value will be ignored by the
 	 * {@link com.univocity.trader.account.Trader} that processes this {@link Signal}.
 	 */
 	Signal getSignal(Candle candle);

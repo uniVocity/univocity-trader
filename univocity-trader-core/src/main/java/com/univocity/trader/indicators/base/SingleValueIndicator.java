@@ -39,11 +39,6 @@ public abstract class SingleValueIndicator implements Indicator {
 
 	@Override
 	public final boolean accumulate(Candle candle) {
-		return update(candle);
-	}
-
-	@Override
-	public final boolean update(Candle candle) {
 		if (aggregator == null) {
 			try {
 				throw new IllegalStateException(getClass().getSimpleName() + " not properly initialized. Ensure nested indicators are returned in method `protected Indicator[] children()`");

@@ -27,8 +27,8 @@ public abstract class AbstractDIIndicator extends SingleValueIndicator {
 
 	@Override
 	protected final boolean process(Candle candle, double v, boolean updating) {
-		dm.update(candle);
-		atr.update(candle);
+		dm.accumulate(candle);
+		atr.accumulate(candle);
 		if (updating) {
 			avg.update(dm.getValue());
 		} else {

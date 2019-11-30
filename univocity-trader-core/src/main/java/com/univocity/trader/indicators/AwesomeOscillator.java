@@ -37,8 +37,8 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
-		sma5.update(candle);
-		sma34.update(candle);
+		sma5.accumulate(candle);
+		sma34.accumulate(candle);
 		indicator = populateIndicator(updating);
 		return sma5.getValue() - sma34.getValue();
 	}

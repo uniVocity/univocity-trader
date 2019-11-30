@@ -29,8 +29,8 @@ public class ChandelierExitShort extends SingleValueCalculationIndicator {
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
-		atr.update(candle);
-		low.update(candle);
+		atr.accumulate(candle);
+		low.accumulate(candle);
 		return low.getValue() + (atr.getValue() * k);
 	}
 

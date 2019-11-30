@@ -35,8 +35,8 @@ public class ADX extends SingleValueIndicator {
 
 	@Override
 	protected boolean process(Candle candle, double value, boolean updating) {
-		plusDIIndicator.update(candle);
-		minusDIIndicator.update(candle);
+		plusDIIndicator.accumulate(candle);
+		minusDIIndicator.accumulate(candle);
 
 		double pdi = plusDIIndicator.getValue();
 		double mdi = minusDIIndicator.getValue();

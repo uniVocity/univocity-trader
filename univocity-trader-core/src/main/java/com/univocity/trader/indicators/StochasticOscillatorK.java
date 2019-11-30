@@ -26,8 +26,8 @@ public class StochasticOscillatorK extends SingleValueIndicator {
 
 	@Override
 	protected boolean process(Candle candle, double value, boolean updating) {
-		lows.update(candle);
-		highs.update(candle);
+		lows.accumulate(candle);
+		highs.accumulate(candle);
 
 		double highestHigh = highs.getValue();
 		double lowestLow = lows.getValue();

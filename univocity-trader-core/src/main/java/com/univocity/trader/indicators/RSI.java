@@ -54,8 +54,8 @@ public class RSI extends SingleValueIndicator {
 			return false;
 		}
 
-		averageGainIndicator.update(candle);
-		averageLossIndicator.update(candle);
+		averageGainIndicator.accumulate(candle);
+		averageLossIndicator.accumulate(candle);
 
 		double averageGain = averageGainIndicator.getValue();
 		double averageLoss = averageLossIndicator.getValue();

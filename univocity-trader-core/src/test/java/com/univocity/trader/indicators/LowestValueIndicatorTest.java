@@ -70,38 +70,38 @@ public class LowestValueIndicatorTest {
 	public void test2Minutes(){
 		LowestValueIndicator b = new LowestValueIndicator(3, minutes(2), c -> c.low);
 
-		b.update(newCandle(1, 1));
-		b.update(newCandle(2, 2));
+		b.accumulate(newCandle(1, 1));
+		b.accumulate(newCandle(2, 2));
 		assertEquals(1.0, b.getValue());
 		//end candle 1
 
-		b.update(newCandle(3, 3));
-		b.update(newCandle(4, 4));
+		b.accumulate(newCandle(3, 3));
+		b.accumulate(newCandle(4, 4));
 		assertEquals(1.0, b.getValue());
 		//end candle 2
 
-		b.update(newCandle(5, 3));
-		b.update(newCandle(6, 4));
+		b.accumulate(newCandle(5, 3));
+		b.accumulate(newCandle(6, 4));
 		assertEquals(1.0, b.getValue());
 		//end candle 3
 
-		b.update(newCandle(7, 5));
-		b.update(newCandle(8, 4));
+		b.accumulate(newCandle(7, 5));
+		b.accumulate(newCandle(8, 4));
 		assertEquals(3.0, b.getValue());
 		//end candle 4
 
-		b.update(newCandle(9, 3));
-		b.update(newCandle(10, 3));
+		b.accumulate(newCandle(9, 3));
+		b.accumulate(newCandle(10, 3));
 		assertEquals(3.0, b.getValue());
 		//end candle 5
 
-		b.update(newCandle(11, 4));
-		b.update(newCandle(12, 3));
+		b.accumulate(newCandle(11, 4));
+		b.accumulate(newCandle(12, 3));
 		assertEquals(3.0, b.getValue());
 		//end candle 6
 
-		b.update(newCandle(13, 2));
-		b.update(newCandle(14, 1));
+		b.accumulate(newCandle(13, 2));
+		b.accumulate(newCandle(14, 1));
 		assertEquals(1.0, b.getValue());
 		//end candle 7
 
