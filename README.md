@@ -387,7 +387,12 @@ simulation.symbolInformation("ETHUSDT")
  .minimumAssetsPerOrder(0.01).priceDecimalPlaces(8).quantityDecimalPlaces(8); 
 ```
 
-With this we try to prevent buying anything for under 10 dollars (roughly). Now the log should print something like the following at the end:
+Alternatively there's a shorthand to achieve the same goal:
+```
+simulation.account().minimumInvestmentAmountPerTrade(10.0);
+```
+
+With this we try to prevent buying anything for under 10 dollars. Now the log should print something like the following at the end:
 
 ```
 Approximate holdings: $538.4896701047184 USDT

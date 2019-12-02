@@ -8,5 +8,14 @@ public interface AccountConfiguration {
 
 	AccountConfiguration maximumInvestmentAmountPerAsset(double maximumAmount, String... symbols);
 
+	AccountConfiguration maximumInvestmentPercentagePerTrade(double percentage, String... symbols);
+
+
+	AccountConfiguration maximumInvestmentAmountPerTrade(double maximumAmount, String... symbols);
+
+
+	AccountConfiguration minimumInvestmentAmountPerTrade(double minimumAmount, String... symbols);
+
+
 	AccountConfiguration setOrderManager(OrderManager orderCreator, String... symbols);
 }

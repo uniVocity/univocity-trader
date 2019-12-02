@@ -7,22 +7,13 @@ public class Allocation {
 	private double maximumAmountPerAsset = Integer.MAX_VALUE;
 	private double maximumPercentagePerAsset = 100.0;
 
-	private Allocation() {
+	private double maximumAmountPerTrade = Integer.MAX_VALUE;
+	private double maximumPercentagePerTrade = 100.0;
 
-	}
+	private double minimumAmountPerTrade = 0.0000001;
 
-	static Allocation maximumAmountPerAsset(double amount) {
-		Allocation out = new Allocation();
-		out.maximumAmountPerAsset = amount;
-		out.maximumPercentagePerAsset = -1.0;
-		return out;
-	}
+	Allocation() {
 
-	static Allocation maximumPercentagePerAsset(double percentage) {
-		Allocation out = new Allocation();
-		out.maximumAmountPerAsset = -1.0;
-		out.maximumPercentagePerAsset = percentage;
-		return out;
 	}
 
 	public double getMaximumAmountPerAsset() {
@@ -30,7 +21,7 @@ public class Allocation {
 	}
 
 	public Allocation setMaximumAmountPerAsset(double maximumAmountPerAsset) {
-		this.maximumAmountPerAsset = maximumAmountPerAsset;
+		this.maximumAmountPerAsset = adjustAmount(maximumAmountPerAsset);
 		return this;
 	}
 
@@ -39,7 +30,44 @@ public class Allocation {
 	}
 
 	public Allocation setMaximumPercentagePerAsset(double maximumPercentagePerAsset) {
-		this.maximumPercentagePerAsset = maximumPercentagePerAsset;
+		this.maximumPercentagePerAsset = adjustPercentage(maximumPercentagePerAsset);
 		return this;
+	}
+
+	public double getMaximumAmountPerTrade() {
+		return maximumAmountPerTrade;
+	}
+
+	public Allocation setMaximumAmountPerTrade(double maximumAmountPerTrade) {
+		this.maximumAmountPerTrade = adjustAmount(maximumAmountPerTrade);
+		return this;
+	}
+
+	public double getMaximumPercentagePerTrade() {
+		return maximumPercentagePerTrade;
+	}
+
+	public Allocation setMaximumPercentagePerTrade(double maximumPercentagePerTrade) {
+		this.maximumPercentagePerTrade = adjustPercentage(maximumPercentagePerTrade);
+		return this;
+	}
+
+	public double getMinimumAmountPerTrade() {
+		return minimumAmountPerTrade;
+	}
+
+	public Allocation setMinimumAmountPerTrade(double minimumAmountPerTrade) {
+		this.minimumAmountPerTrade = adjustAmount(minimumAmountPerTrade);
+		return this;
+	}
+
+	private static double adjustPercentage(double percentage){
+		percentage = Math.max(percentage, 0.0);
+		percentage = Math.min(percentage, 100.0);
+		return percentage;
+	}
+
+	private static double adjustAmount(double maximumAmount){
+		return Math.max(maximumAmount, 0.0);
 	}
 }

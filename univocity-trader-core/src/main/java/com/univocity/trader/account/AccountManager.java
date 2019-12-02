@@ -8,6 +8,7 @@ import org.slf4j.*;
 import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.*;
 
 import static com.univocity.trader.account.Allocation.*;
 import static com.univocity.trader.account.Order.Side.*;
@@ -88,81 +89,77 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			}
 		}
 
+		double minimumInvestment = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMinimumAmountPerTrade();
 		double percentage = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumPercentagePerAsset() / 100.0;
-		final double maxAmount = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumAmountPerAsset();
+		double maxAmount = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumAmountPerAsset();
+
+		double percentagePerTrade = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumPercentagePerTrade() / 100.0;
+		double maxAmountPerTrade = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumAmountPerTrade();
+
 		if (percentage == 0.0 || maxAmount == 0.0) {
 			return 0.0;
 		}
-		if ((percentage == 1.0 && maxAmount < 0.0)) {
-			return getAmount(fundSymbol);
-		}
-
-		if (percentage < 0.0) {
-			percentage = 1.0;
-		}
 
 		double totalFunds = getTotalFundsIn(fundSymbol);
-		double available = getAmount(fundSymbol);
+		maxAmountPerTrade = Math.min(totalFunds * percentagePerTrade, maxAmountPerTrade);
+
 
 		double allocated = getAmount(assetSymbol);
 		double unitPrice = tradingManager.getLatestPrice();
 		allocated = allocated * unitPrice;
 
+		double available = totalFunds - allocated;
 		double allocation = totalFunds * percentage;
-		if (maxAmount > -1.0 && allocation > maxAmount) {
+		if (allocation > maxAmount) {
 			allocation = maxAmount;
 		}
 		double max = allocation - allocated;
-
-		if ((max / allocation) * 100.0 < 1.0) {
-			return 0.0;
-		}
-
-		available = available - allocated;
-		if (available <= 0.0) {
-			return 0.0;
-		}
-
 		if (available > max) {
-			return max;
+			available = max;
 		}
-		return available;
+		available = Math.min(maxAmountPerTrade, Math.min(maxAmount, available));
 
+		if(available < minimumInvestment){
+			return 0.0;
+		}
+
+		return available;
 	}
 
 	public double allocateFunds(String assetSymbol) {
 		return allocateFunds(assetSymbol, getReferenceCurrencySymbol());
 	}
 
-	public synchronized AccountManager maximumInvestmentPercentagePerAsset(double percentage, String... symbols) {
-		percentage = Math.max(percentage, 0.0);
-		percentage = Math.min(percentage, 100.0);
-		final double pct = percentage;
-		if (symbols.length == 0) {
-			symbols = supportedSymbols.toArray(new String[0]);
-		}
-		for (String symbol : symbols) {
-			if (supportedSymbols.contains(symbol)) {
-				allocations.compute(symbol, (p, allocation) -> allocation == null ? Allocation.maximumPercentagePerAsset(pct) : allocation.setMaximumPercentagePerAsset(pct));
-			} else {
-				reportUnknownSymbol("Can't allocate " + percentage + "% of account to '" + symbol + "'", symbol);
-			}
-		}
-		return this;
+	public synchronized AccountConfiguration maximumInvestmentPercentagePerAsset(double percentage, String... symbols) {
+		return updateAllocation("percentage of account", percentage, symbols, (allocation) -> allocation.setMaximumPercentagePerAsset(percentage));
 	}
 
 
 	public synchronized AccountConfiguration maximumInvestmentAmountPerAsset(double maximumAmount, String... symbols) {
-		maximumAmount = Math.max(maximumAmount, 0.0);
-		final double max = maximumAmount;
+		return updateAllocation("maximum expenditure of account", maximumAmount, symbols, (allocation) -> allocation.setMaximumAmountPerAsset(maximumAmount));
+	}
+
+	public synchronized AccountConfiguration maximumInvestmentPercentagePerTrade(double percentage, String... symbols) {
+		return updateAllocation("percentage of account per trade", percentage, symbols, (allocation) -> allocation.setMaximumPercentagePerTrade(percentage));
+	}
+
+	public synchronized AccountConfiguration maximumInvestmentAmountPerTrade(double maximumAmount, String... symbols) {
+		return updateAllocation("maximum expenditure per trade", maximumAmount, symbols, (allocation) -> allocation.setMaximumAmountPerTrade(maximumAmount));
+	}
+
+	public synchronized AccountConfiguration minimumInvestmentAmountPerTrade(double minimumAmount, String... symbols) {
+		return updateAllocation("minimum expenditure per trade", minimumAmount, symbols, (allocation) -> allocation.setMinimumAmountPerTrade(minimumAmount));
+	}
+
+	private AccountConfiguration updateAllocation(String description, double param, String[] symbols, Function<Allocation, Allocation> f) {
 		if (symbols.length == 0) {
 			symbols = supportedSymbols.toArray(new String[0]);
 		}
 		for (String symbol : symbols) {
 			if (supportedSymbols.contains(symbol)) {
-				allocations.compute(symbol, (p, allocation) -> allocation == null ? Allocation.maximumAmountPerAsset(max) : allocation.setMaximumAmountPerAsset(max));
+				allocations.compute(symbol, (s, allocation) -> allocation == null ? f.apply(new Allocation()) : f.apply(allocation));
 			} else {
-				reportUnknownSymbol("Can't allocate maximum expenditure of account for '" + symbol + "' to " + max, symbol);
+				reportUnknownSymbol("Can't allocate " + description + " for '" + symbol + "' to " + param, symbol);
 			}
 		}
 		return this;
