@@ -235,7 +235,7 @@ public class Trader {
 		}
 
 		for (int i = 0; i < monitors.length; i++) {
-			if (!monitors[i].allowSelling()) {
+			if (!monitors[i].allowExit()) {
 				return false;
 			}
 		}
