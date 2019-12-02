@@ -9,19 +9,18 @@ import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static com.univocity.trader.account.Allocation.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 public class AccountManager implements ClientAccount, SimulatedAccountConfiguration {
-	private double[] NO_LIMITS = new double[]{100.0, Integer.MAX_VALUE};
-
 	private static final Logger log = LoggerFactory.getLogger(AccountManager.class);
 	private static final OrderManager DEFAULT_ORDER_MANAGER = new DefaultOrderManager();
 
 	private final Set<String> supportedSymbols = new TreeSet<>();
 	private Map<String, String[]> tradedPairs = new ConcurrentHashMap<>();
-	private final Map<String, double[]> allocations = new ConcurrentHashMap<>();
+	private final Map<String, Allocation> allocations = new ConcurrentHashMap<>();
 	private final Map<String, Order> pendingOrders = new ConcurrentHashMap<>();
 	private final Set<String> lockedPairs = ConcurrentHashMap.newKeySet();
 
@@ -89,8 +88,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			}
 		}
 
-		double percentage = allocations.getOrDefault(assetSymbol, NO_LIMITS)[0] / 100.0;
-		final double maxAmount = allocations.getOrDefault(assetSymbol, NO_LIMITS)[1];
+		double percentage = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumPercentagePerAsset() / 100.0;
+		final double maxAmount = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumAmountPerAsset();
 		if (percentage == 0.0 || maxAmount == 0.0) {
 			return 0.0;
 		}
@@ -144,7 +143,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 		for (String symbol : symbols) {
 			if (supportedSymbols.contains(symbol)) {
-				allocations.compute(symbol, (p, allocation) -> allocation == null ? new double[]{pct, -1.0} : new double[]{pct, allocation[1]});
+				allocations.compute(symbol, (p, allocation) -> allocation == null ? Allocation.maximumPercentagePerAsset(pct) : allocation.setMaximumPercentagePerAsset(pct));
 			} else {
 				reportUnknownSymbol("Can't allocate " + percentage + "% of account to '" + symbol + "'", symbol);
 			}
@@ -161,7 +160,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 		for (String symbol : symbols) {
 			if (supportedSymbols.contains(symbol)) {
-				allocations.compute(symbol, (p, allocation) -> allocation == null ? new double[]{-1.0, max} : new double[]{allocation[0], max});
+				allocations.compute(symbol, (p, allocation) -> allocation == null ? Allocation.maximumAmountPerAsset(max) : allocation.setMaximumAmountPerAsset(max));
 			} else {
 				reportUnknownSymbol("Can't allocate maximum expenditure of account for '" + symbol + "' to " + max, symbol);
 			}
@@ -569,8 +568,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public void updateOrderStatuses(String symbol) {
-		for(Order order : this.pendingOrders.values()){
-			if(symbol.equals(order.getSymbol())){
+		for (Order order : this.pendingOrders.values()) {
+			if (symbol.equals(order.getSymbol())) {
 				updateOrder(order);
 			}
 		}
