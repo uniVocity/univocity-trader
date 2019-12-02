@@ -171,7 +171,7 @@ public class Trader {
 		if (tradingManager.waitingForBuyOrderToFill()) {
 			tradingManager.cancelStaleOrdersFor(this);
 			if (tradingManager.waitingForBuyOrderToFill()) {
-				log.debug("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
+				log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
 				return false;
 			}
 		}

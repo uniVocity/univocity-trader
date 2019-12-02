@@ -95,6 +95,11 @@ public class SimulatedClientAccount implements ClientAccount {
 	public void cancel(Order order) {
 		order.cancel();
 	}
+
+	@Override
+	public boolean isSimulated() {
+		return true;
+	}
 }
 
 

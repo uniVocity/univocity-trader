@@ -73,6 +73,29 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		throw reportUnknownSymbol("Can't set funds", symbol);
 	}
 
+	@Override
+	public synchronized AccountManager lockAmount(String symbol, double amount) {
+		if (supportedSymbols.contains(symbol) || symbol.equals(referenceCurrencySymbol)) {
+			Balance balance = balances.get(symbol);
+			if (balance == null) {
+				throw new IllegalStateException("Can't lock " + amount + " " + symbol + ". No balance available.");
+			}
+			BigDecimal locked = new BigDecimal(amount, new MathContext(8, RoundingMode.HALF_UP));
+			locked = balance.getLocked().add(locked);
+
+			BigDecimal free = balance.getFree().subtract(locked);
+			if (BigDecimal.ZERO.compareTo(free) > 0) {
+				throw new IllegalStateException("Can't lock " + amount + " " + symbol + ". Not enough free balance available.");
+			}
+
+			balance.setLocked(locked);
+			balance.setFree(free);
+			return this;
+		}
+		throw reportUnknownSymbol("Can't set funds", symbol);
+	}
+
+
 	private IllegalArgumentException reportUnknownSymbol(String message, String symbol) {
 		throw new IllegalArgumentException(message + ". Account is not managing '" + symbol + "'. Allowed symbols are: " + supportedSymbols + " and " + referenceCurrencySymbol);
 	}
@@ -119,7 +142,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 		available = Math.min(maxAmountPerTrade, Math.min(maxAmount, available));
 
-		if(available < minimumInvestment){
+		if (available < minimumInvestment) {
 			return 0.0;
 		}
 
@@ -336,6 +359,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 					case PARTIALLY_FILLED:
 						logOrderStatus("Tracking pending order. ", order);
 						waitForFill(order);
+						return order;
 					case FILLED:
 						logOrderStatus("Completed order. ", order);
 						orderFinalized(null, order);
