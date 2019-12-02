@@ -65,9 +65,9 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	@Override
-	public synchronized AccountManager setAmount(String symbol, double cash) {
+	public synchronized AccountManager setAmount(String symbol, double amount) {
 		if (supportedSymbols.contains(symbol) || symbol.equals(referenceCurrencySymbol)) {
-			balances.put(symbol, new Balance(symbol, cash));
+			balances.put(symbol, new Balance(symbol, amount));
 			return this;
 		}
 		throw reportUnknownSymbol("Can't set funds", symbol);
@@ -417,12 +417,12 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return account.getTradingFees();
 	}
 
-	public AccountConfiguration setOrderManager(OrderManager orderCreator, String... symbols) {
+	public AccountConfiguration setOrderManager(OrderManager orderManager, String... symbols) {
 		if (symbols.length == 0) {
 			symbols = tradedPairs.keySet().toArray(new String[0]);
 		}
 		for (String symbol : symbols) {
-			this.orderManagers.put(symbol, orderCreator);
+			this.orderManagers.put(symbol, orderManager);
 		}
 		return this;
 	}

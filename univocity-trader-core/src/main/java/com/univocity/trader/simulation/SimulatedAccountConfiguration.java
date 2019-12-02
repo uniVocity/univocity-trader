@@ -4,7 +4,7 @@ import com.univocity.trader.account.*;
 
 public interface SimulatedAccountConfiguration extends AccountConfiguration {
 
-	SimulatedAccountConfiguration setAmount(String symbol, double cash);
+	SimulatedAccountConfiguration setAmount(String symbol, double amount);
 
 	SimulatedAccountConfiguration resetBalances();
 }
