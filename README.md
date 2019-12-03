@@ -124,11 +124,11 @@ The logs should print something like this:
 ```
 
 This will take a long while. To help you and to avoid abusing Binance's servers, 
-the historical data I collected for all symbols listed in `ALL_PAIRS` are available [here](https://drive.google.com/file/d/13jzICy3rCSCUUwiIaum88-ldA_gAxlFm/view?usp=sharing).
- You can download this file, unpack it (2.2 GB of disk space required) then restore the backup with:
+the historical data I collected for all symbols listed in `ALL_PAIRS` are available [here](https://drive.google.com/file/d/1bdg064knXHOgO8w-emp1tDYYD_upAmq2/view?usp=sharing).
+ You can download this file, unpack it (2.5 GB of disk space required) then restore the backup with:
 
 ```
-mysql -u <user> -p trading < candle.sql
+mysql -u <user> -p trading < db.sql
 ```   
 
 > NOTE: if you get "too many open files" errors later on, restart mysql after restoring the database.
