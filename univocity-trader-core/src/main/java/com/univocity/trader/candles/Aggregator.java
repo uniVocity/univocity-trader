@@ -9,20 +9,20 @@ import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 public class Aggregator {
 
-	private final Map<Long, Aggregator> allInstances;
-	private final String description;
+	protected final Map<Long, Aggregator> allInstances;
+	protected final String description;
 
-	private final long ms;
-	private final long minutes;
+	protected final long ms;
+	protected final long minutes;
 
-	private Candle full;
-	private Candle partial;
+	protected Candle full;
+	protected Candle partial;
 
 	public Aggregator(String description) {
 		this(new ConcurrentHashMap<>(), description, TimeInterval.millis(0));
 	}
 
-	private Aggregator(Map<Long, Aggregator> allInstances, String description, TimeInterval time) {
+	protected Aggregator(Map<Long, Aggregator> allInstances, String description, TimeInterval time) {
 		this.minutes = time.ms / MINUTE.ms;
 		this.ms = time.ms % MINUTE.ms;
 		this.allInstances = allInstances;
@@ -34,10 +34,10 @@ public class Aggregator {
 		}
 	}
 
-	public static Aggregator getInstance(Aggregator parent, TimeInterval time) {
-		Aggregator instance = parent.allInstances.get(time.ms);
+	public Aggregator getInstance(TimeInterval time) {
+		Aggregator instance = allInstances.get(time.ms);
 		if (instance == null) {
-			return new Aggregator(parent.allInstances, parent.description, time);
+			return new Aggregator(allInstances, description, time);
 		}
 		return instance;
 	}
@@ -47,11 +47,6 @@ public class Aggregator {
 	}
 
 	public void aggregate(Candle candle) {
-//		if (skipAggregation) {
-//			full = candle;
-//			return;
-//		}
-
 		if (partial == null) {
 			partial = candle;
 			full = null;

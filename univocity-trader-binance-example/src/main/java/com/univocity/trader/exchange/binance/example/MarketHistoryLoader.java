@@ -15,7 +15,7 @@ public class MarketHistoryLoader {
 //			, new String[]{"ALGO", "USDT"}
 //			, new String[]{"ATOM", "USDT"}
 //			, new String[]{"BAT", "USDT"}
-//			, new String[]{"BCHABC", "USDT"}
+//			, new String[]{"BCH", "USDT"}
 //			, new String[]{"BNB", "USDT"},
 			 new String[]{"BTC", "USDT"}
 //			, new String[]{"BTT", "USDT"}

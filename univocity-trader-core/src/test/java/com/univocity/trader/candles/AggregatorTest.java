@@ -26,7 +26,7 @@ public class AggregatorTest {
 
 	@Test
 	public void testAggregation1Min() {
-		Aggregator a = Aggregator.getInstance(parent, minutes(1));
+		Aggregator a = parent.getInstance(minutes(1));
 
 		Candle full = a.getFull();
 		Candle partial = a.getPartial();
@@ -47,7 +47,7 @@ public class AggregatorTest {
 
 	@Test
 	public void testAggregation3Min() {
-		Aggregator a = Aggregator.getInstance(parent, minutes(3));
+		Aggregator a = parent.getInstance(minutes(3));
 		Candle full = a.getFull();
 		Candle partial = a.getPartial();
 
@@ -110,7 +110,7 @@ public class AggregatorTest {
 
 	@Test
 	public void testAggregation2Min() {
-		Aggregator a = Aggregator.getInstance(parent, minutes(2));
+		Aggregator a = parent.getInstance(minutes(2));
 		Candle full = a.getFull();
 		Candle partial = a.getPartial();
 
@@ -226,7 +226,7 @@ public class AggregatorTest {
 
 	@Test
 	public void testTickAggregation() {
-		Aggregator a = Aggregator.getInstance(parent, millis(2500)); //2.5 seconds
+		Aggregator a = parent.getInstance(millis(2500)); //2.5 seconds
 		Candle full = a.getFull();
 		Candle partial = a.getPartial();
 

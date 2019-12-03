@@ -26,7 +26,7 @@ public abstract class SingleValueIndicator implements Indicator {
 	@Override
 	public final void initialize(Aggregator root) {
 		if (this.aggregator == null) {
-			aggregator = Aggregator.getInstance(root, timeInterval);
+			aggregator = root.getInstance(timeInterval);
 			for (Indicator indicator : children()) {
 				indicator.initialize(root);
 			}
@@ -46,7 +46,7 @@ public abstract class SingleValueIndicator implements Indicator {
 				StackTraceElement[] s = Thread.currentThread().getStackTrace();
 				for (StackTraceElement ste : s) {
 					if (ste.toString().contains("junit")) {
-						aggregator = Aggregator.getInstance(new Aggregator("fakeTestRoot"), timeInterval);
+						aggregator = new Aggregator("fakeTestRoot").getInstance(timeInterval);
 						testing = true;
 					}
 				}
