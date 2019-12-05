@@ -2,6 +2,7 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.simulation.*;
 import org.slf4j.*;
 
@@ -464,20 +465,21 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	private static void logOrderStatus(String msg, Order order) {
 		if (log.isTraceEnabled()) {
 			//e.g. PARTIALLY_FILLED LIMIT BUY of 1 BTC @ 9000 USDT each after 10 seconds.
-			log.trace("{}{} {} {} of {} {} @ {} {} each after {} seconds. Order id: {}, order quantity: {}, amount: ${} of expected ${} {}",
+			log.trace("{}{} {} {} of {}/{} {} @ {} {} each after {}. Order id: {}, order quantity: {}, amount: ${} of expected ${} {}",
 					msg,
 					order.getStatus(),
 					order.getType(),
 					order.getSide(),
-					order.getExecutedQuantity().setScale(8, RoundingMode.FLOOR),
+					order.getQuantity(),
+					order.getExecutedQuantity().setScale(8, RoundingMode.FLOOR).toPlainString(),
 					order.getAssetsSymbol(),
-					order.getPrice().setScale(8, RoundingMode.FLOOR),
+					order.getPrice().setScale(8, RoundingMode.FLOOR).toPlainString(),
 					order.getFundsSymbol(),
-					(System.currentTimeMillis() - order.getTime()) / 1000,
+					TimeInterval.getFormattedDuration(System.currentTimeMillis() - order.getTime()),
 					order.getOrderId(),
-					order.getQuantity().setScale(8, RoundingMode.FLOOR),
-					order.getTotalSpent().setScale(8, RoundingMode.FLOOR),
-					order.getTotalOrderAmount().setScale(8, RoundingMode.FLOOR),
+					order.getQuantity().setScale(8, RoundingMode.FLOOR).toPlainString(),
+					order.getTotalSpent().setScale(8, RoundingMode.FLOOR).toPlainString(),
+					order.getTotalOrderAmount().setScale(8, RoundingMode.FLOOR).toPlainString(),
 					order.getFundsSymbol());
 		}
 	}

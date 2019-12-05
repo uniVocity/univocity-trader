@@ -81,7 +81,7 @@ public class Engine {
 			try {
 				trader.trade(candle, signal, strategy);
 			} catch (Exception e) {
-				log.error("Error processing " + signal + " generated using candle (" + candle + ") from " + strategy, e);
+				log.error("Error processing " + signal + " " + trader.getSymbol() + " generated using candle (" + candle + ") from " + strategy, e);
 			}
 		}
 	}

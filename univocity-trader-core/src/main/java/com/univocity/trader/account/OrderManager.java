@@ -40,7 +40,7 @@ public interface OrderManager {
 	 * The default time interval to wait between calls to {@link AccountManager#updateOrderStatus(Order)}, to identify if an {@link Order} has
 	 * been {@code FILLED}, {@code CANCELLED} or {@code PARTIALLY_FILLED}.
 	 */
-	TimeInterval DEFAULT_ORDER_UPDATE_FREQUENCY = TimeInterval.seconds(10);
+	TimeInterval DEFAULT_ORDER_UPDATE_FREQUENCY = TimeInterval.seconds(30);
 
 	/**
 	 * Prepares a given {@link OrderRequest} for submission to the exchange (via {@link AccountManager#buy(String, String, double)} or
