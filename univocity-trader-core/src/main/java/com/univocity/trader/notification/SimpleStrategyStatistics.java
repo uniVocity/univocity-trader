@@ -62,8 +62,8 @@ public class SimpleStrategyStatistics implements OrderListener {
 				}
 			}
 
-			double averageGain = totalPositive / positiveCount;
-			double averageLoss = totalNegative / negativeCount;
+			double averageGain = positiveCount == 0 ? 0 : totalPositive / positiveCount;
+			double averageLoss = negativeCount == 0 ? 0 : totalNegative / negativeCount;
 
 			double latestHoldings = trader.getTotalFundsInReferenceCurrency();
 
