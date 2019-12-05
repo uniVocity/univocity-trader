@@ -8,13 +8,13 @@ import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.vendor.iqfeed.api.client.*;
 import com.univocity.trader.candles.SymbolInformation;
 import com.univocity.trader.vendor.iqfeed.api.client.*;
+import com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedApiConstants;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.market.Candlestick;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequest;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequestBuilder;
 import io.netty.channel.*;
 import io.netty.channel.nio.*;
 import org.asynchttpclient.*;
-import org.asynchttpclient.util.HttpUtils;
 import org.slf4j.*;
 
 import java.io.File;
@@ -25,40 +25,40 @@ import java.util.concurrent.TimeoutException;
 
 public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
 
-    private static final Logger log = LoggerFactory.getLogger(IQFeedExchangeAPI.class);
+    private static final Logger logger = LoggerFactory.getLogger(IQFeedExchangeAPI.class);
 
     private IQFeedApiWebSocketClient socketClient;
     private org.asynchttpclient.ws.WebSocket socketClientCloseable;
     private final Map<String, SymbolInformation> symbolInformation = new ConcurrentHashMap<>();
 
-    private boolean iqPortal = False;
+    private boolean iqPortal = false;
     private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
     // TODO: ask about maxFrameSize
     private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 655356);
-    private String iqPortalPath;
+    private String iqPortalPath = IQFeedApiConstants.IQPORTAL_PATH;
 
-    public IQFeedClientAccountApi connectToIQFeedAccount(String product, String version, String login, String pass, boolean autoConnect = False,
-                                                   boolean saveLoginInfo = False){
-        if(!IQPortal){
+    public IQFeedClientAccountApi connectToIQFeedAccount(String product, String version, String login, String pass, boolean autoConnect,
+                                                   boolean saveLoginInfo ){
+        if(!iqPortal){
             try {
                 Runtime.getRuntime().exec(iqPortalPath, null, new File(iqPortalPath));
-                iqPortal = True;
+                iqPortal = true;
             } catch(Exception e){
-                logger.log(e.getMessage());
+                logger.info(e.getMessage());
             }
         }
-        return new IQFeedClientAccountApi();
+        return new IQFeedClientAccountApi(iqPortalPath, product, version, login, pass, this, true, true);
     }
 
 
     @Override
     public IQFeedClientAccountApi connectToAccount(String api, String secret){
-        if(!IQPortal){
+        if(!iqPortal){
             try {
                 Runtime.getRuntime().exec(iqPortalPath, null, new File(iqPortalPath));
-                iqPortal = True;
+                iqPortal = true;
             } catch (Exception e){
-                logger.log(e.getMessage());
+                logger.info(e.getMessage());
             }
         }
         return new IQFeedClientAccountApi();
@@ -78,7 +78,6 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     @Override
     public List<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime){
         IQFeedHistoricalRequest request = new IQFeedHistoricalRequestBuilder()
-                .setRequestID(requestID)
                 .setSymbol(symbol)
                 .setIntervalType(interval)
                 .setBeginDateTime(startTime)
@@ -110,12 +109,12 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     public TimeInterval handleException(String action, String symbol, Exception e){
         String message = "excecute " + action + " for " + symbol;
         if(e.getCause() instanceof TimeoutException){
-            log.error("Timeout trying to ", message, e);
+            logger.error("Timeout trying to ", message, e);
         } else if (e.getCause() instanceof UnknownHostException) {
-            log.error("Unable to " + message + ". IQFeed is offline. ", e);
+            logger.error("Unable to " + message + ". IQFeed is offline. ", e);
             return TimeInterval.minutes(1);
         } else {
-            log.error("Eror trying to " + message, e);
+            logger.error("Eror trying to " + message, e);
         }
         return null;
     }
@@ -123,7 +122,7 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     @Override
     public void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candlestick> consumer){
         CandlestickInterval interval = CandlestickInterval.fromTimeInterval(tickInterval);
-        log.info("Opening IQFeed {} live stream for: {}", tickInterval, symbols);
+        logger.info("Opening IQFeed {} live stream for: {}", tickInterval, symbols);
         socketClientCloseable = socketClient().onCandlestickEvent(symbols, interval, new IQFeedApiCallback<>(){
 
             @Override
@@ -143,12 +142,10 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
         }
     }
 
-    @Override
-    public Map<String, Double>
 
-    private IQFeedAPIWebSocketClient socketClient(){
+    private IQFeedApiWebSocketClient socketClient(){
         if(socketClient == null){
-            IQFeedAPIClientFactory factory = IQFeedAPIClientFactory.newInstance(asyncHttpClient);
+            IQFeedApiClientFactory factory = IQFeedApiClientFactory.newInstance(asyncHttpClient);
             socketClient = factory.newWebSocketClient();
         }
         return socketClient;

@@ -1,9 +1,11 @@
-package com.univocity.trader.vendor.iqfeed.api.client;
+package com.univocity.trader;
 
 import com.univocity.trader.ClientAccountApi;
 import com.univocity.trader.IQFeedExchangeAPI;
 import com.univocity.trader.SymbolPriceDetails;
 import com.univocity.trader.account.*;
+import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiClientFactory;
+import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiWebSocketClient;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;

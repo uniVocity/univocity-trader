@@ -1,7 +1,14 @@
 package com.univocity.trader.vendor.iqfeed.api.client.impl;
 
+import com.univocity.trader.indicators.base.TimeInterval;
+import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiCallback;
 import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiWebSocketClient;
+import com.univocity.trader.vendor.iqfeed.api.client.domain.event.CandlestickEvent;
+import com.univocity.trader.vendor.iqfeed.api.client.domain.market.Candlestick;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.netty.handler.WebSocketHandler;
 import org.asynchttpclient.ws.WebSocket;
 import org.asynchttpclient.ws.WebSocketUpgradeHandler;
 import org.slf4j.Logger;
@@ -9,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, Closeable {
@@ -19,11 +27,17 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
 
     public IQFeedApiWebSocketClientImpl(AsyncHttpClient client){
         this.client = client;
+        EventLoopGroup group = new NioEventLoopGroup();
     }
 
     @Override
-    public WebSocket onDepthEvent(String symbols, IQFeedApiCallback<DepthEvent> callback){
-        final String channel = Arrays.stream
+    public List<Candlestick> getCandlestickBars(String symbol, Long start, Long end, TimeInterval tickSize){
+
+    }
+
+    @Override
+    public List<Candlestick> getHistoricalCandlestickBars(String symbol, Long start, Long end, TimeInterval tickSize){
+        this.client.
     }
 
     @Override
@@ -47,6 +61,8 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
         }
         return null;
     }
+
+    if()
 
     @Override
     public void close() {}
