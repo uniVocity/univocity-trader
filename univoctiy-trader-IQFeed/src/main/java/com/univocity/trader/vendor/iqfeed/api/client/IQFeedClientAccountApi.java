@@ -3,6 +3,7 @@ package com.univocity.trader.vendor.iqfeed.api.client;
 import com.univocity.trader.ClientAccountApi;
 import com.univocity.trader.IQFeedExchangeAPI;
 import com.univocity.trader.SymbolPriceDetails;
+import com.univocity.trader.account.*;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -12,7 +13,9 @@ import org.asynchttpclient.util.HttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class IQFeedClientAccountApi {
+import java.util.Map;
+
+class IQFeedClientAccountApi implements ClientAccountApi {
 
     private static final Logger log = LoggerFactory.getLogger(IQFeedApiWebSocketClient.class);
 
@@ -23,12 +26,34 @@ class IQFeedClientAccountApi {
     private double minimumBnbAmountToKeep = 1.0;
 
     public IQFeedClientAccountApi(String iqPortalPath, String product, String version, String login, String password,
-                                  IQFeedExchangeAPI exchangeAPI, boolean autoconnect = False, boolean saveLogin = False){
+                                  IQFeedExchangeAPI exchangeAPI, boolean autoconnect, boolean saveLogin){
         this.exchangeAPI = exchangeAPI;
         final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
-        final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536);
         factory = IQFeedApiClientFactory.newInstance(iqPortalPath, product, version, login, password, autoconnect, saveLogin, asyncHttpClient);
         client = factory.newWebSocketClient();
+    }
+
+    @Override
+    public Order updateOrderStatus(Order order){
+        return null;
+    }
+    @Override
+    public void cancel(Order order){
+    }
+
+    @Override
+    public OrderBook getOrderBook(String symbol, int depth){
+        return null;
+    }
+
+    @Override
+    public Map<String, Balance> updateBalances() {
+        return null;
+    }
+
+    @Override
+    public Order executeOrder(OrderRequest orderDetails){
+        return null;
     }
 
     public double getMinimumBnbAmountToKeep() { return minimumBnbAmountToKeep;}

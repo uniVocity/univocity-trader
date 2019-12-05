@@ -8,6 +8,7 @@ import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.vendor.iqfeed.api.client.*;
 import com.univocity.trader.candles.SymbolInformation;
 import com.univocity.trader.vendor.iqfeed.api.client.*;
+import com.univocity.trader.vendor.iqfeed.api.client.domain.market.Candlestick;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequest;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequestBuilder;
 import io.netty.channel.*;
@@ -17,6 +18,7 @@ import org.asynchttpclient.util.HttpUtils;
 import org.slf4j.*;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
@@ -82,7 +84,7 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
                 .setBeginDateTime(startTime)
                 .setEndDateTime(endTime)
                 .build();
-
+        return socketClient.getCandlestickBars();
     }
     // TODO: add callback for connection login via IQFeed
 

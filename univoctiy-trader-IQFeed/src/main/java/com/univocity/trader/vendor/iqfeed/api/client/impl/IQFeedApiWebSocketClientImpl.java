@@ -11,9 +11,9 @@ import java.io.Closeable;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class IQFeedAPIWebSocketClientImpl implements IQFeedApiWebSocketClient, Closeable {
+public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, Closeable {
 
-    private static final Logger log = LoggerFactory.getLogger(IQFeedAPIWebSocketClientImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(IQFeedApiWebSocketClientImpl.class);
 
     private final AsyncHttpClient client;
 
@@ -32,7 +32,7 @@ public class IQFeedAPIWebSocketClientImpl implements IQFeedApiWebSocketClient, C
                 .map(String :: trim)
                 .map(s -> String.format("%s@depth", s))
                 .collect(Collectors.joining("/"));
-        return createNewWebSocket(channel, new IQFeedAPIWebSocketListener<>(callback, DepthEvent.class));
+        return createNewWebSocket(channel, new IQFeedApiWebSocketListener<>(callback, CandleStickEvent.class));
     }
 
 
@@ -41,7 +41,7 @@ public class IQFeedAPIWebSocketClientImpl implements IQFeedApiWebSocketClient, C
 
         String streamingUrl = new StringBuilder(host).append(port).toString();
         try {
-            return client.prepareGet(streamingUrl).execute(new WebSocketUpgradeHandler.Builder().addWebSocketListener(listener).build());
+            return client.prepareGet(streamingUrl).execute(new WebSocketUpgradeHandler.Builder().addWebSocketListener(listener).build()).get();
         } catch(Exception any ) {
             log.error(String.format("Error while creating new websocket connection to %s", streamingUrl), any);
         }

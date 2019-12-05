@@ -22,13 +22,19 @@ public class IQFeedApiWebSocketListener<T> implements WebSocketListener {
 
     private WebSocket webSocket = null;
     private String wsName = null;
+    private IQFeedProcessor processor;
 
-    public IQFeedApiWebSocketListener(IQFeedApiCallback<T> callback, Class<T> eventClass) {
-        this.callback = callback;
+    public IQFeedApiWebSocketListener(){
+        this.processor = new IQFeedProcessor();
+    }
+
+    public IQFeedApiWebSocketListener(Class<T> eventClass) {
+        this.processor = new IQFeedProcessor();
         this.objectReader = MAPPER.readerFor(eventClass);
     }
 
     public IQFeedApiWebSocketListener(IQFeedApiCallback<T> callback, TypeReference reference) {
+        this.processor = new IQFeedProcessor();
         this.callback = callback;
         this.objectReader = MAPPER.readerFor(reference);
     }
@@ -36,9 +42,8 @@ public class IQFeedApiWebSocketListener<T> implements WebSocketListener {
     @Override
     public void onTextFrame(String payload, boolean finalFragment, int rsv) {
         try {
-            T event = objectReader.readValue(payload);
-            this.callback.onResponse(event);
-        } catch (IOException ex) {
+            this.processor.process(payload);
+        } catch (Exception ex) {
             log.error("Error at WebSocket " + wsName, ex);
             throw new IQFeedApiException(ex);
         }
