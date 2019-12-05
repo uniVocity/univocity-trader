@@ -61,13 +61,13 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
                 logger.info(e.getMessage());
             }
         }
-        return new IQFeedClientAccountApi();
+        return null;
     }
 
     @Override
     public Candlestick getLatestTick(String symbol, TimeInterval interval){
         // TODO: implement
-        List<Candlestick> candles = socketClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval), 1, null, null);
+        List<Candlestick> candles = socketClient().getCandlestickBars(symbol, interval, 1, null, null);
         if(candles != null && candles.size() > 0) {
             return candles.get(0);
         }

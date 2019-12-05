@@ -24,31 +24,19 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
     private static final Logger log = LoggerFactory.getLogger(IQFeedApiWebSocketClientImpl.class);
 
     private final AsyncHttpClient client;
+    private final WebSocket webSocketClient;
 
-    public IQFeedApiWebSocketClientImpl(AsyncHttpClient client){
+    public IQFeedApiWebSocketClientImpl(AsyncHttpClient client, String host, String port, IQFeedApiWebSocketListener<?> listener){
         this.client = client;
-        EventLoopGroup group = new NioEventLoopGroup();
+        webSocketClient = createNewWebSocket(host, port, listener);
     }
 
-    @Override
-    public List<Candlestick> getCandlestickBars(String symbol, Long start, Long end, TimeInterval tickSize){
-
+    public sendRequest(String request){
+        if(this.webSocketClient.isOpen()){
+           this.webSocketClient.sendTextFrame(request);
+           log.info("Univocity-IQFeed OUT: " + request);
+        }
     }
-
-    @Override
-    public List<Candlestick> getHistoricalCandlestickBars(String symbol, Long start, Long end, TimeInterval tickSize){
-        this.client.
-    }
-
-    @Override
-    public WebSocket onCandleStickEvent(String symbols, CandlestickInterval interval, IQFeedApiCallback<CandlestickEvent> callback){
-        final String channel = Arrays.stream(symbols.split(","))
-                .map(String :: trim)
-                .map(s -> String.format("%s@depth", s))
-                .collect(Collectors.joining("/"));
-        return createNewWebSocket(channel, new IQFeedApiWebSocketListener<>(callback, CandleStickEvent.class));
-    }
-
 
     // TODO: check on this method here
     private WebSocket createNewWebSocket(String host, String port, IQFeedApiWebSocketListener<?> listener){
@@ -62,7 +50,6 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
         return null;
     }
 
-    if()
 
     @Override
     public void close() {}
