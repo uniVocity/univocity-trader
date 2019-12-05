@@ -12,7 +12,7 @@ public class OrderExecutionToLog implements OrderListener {
 	private static final Logger log = LoggerFactory.getLogger(OrderExecutionToLog.class);
 
 	@Override
-	public void onOrder(Order order, Trader trader, Client client) {
+	public void orderSubmitted(Order order, Trader trader, Client client) {
 		if (log.isDebugEnabled()) {
 			SymbolPriceDetails f = trader.getPriceDetails();
 			String type = StringUtils.rightPad(order.getSide().toString(), 8);

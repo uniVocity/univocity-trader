@@ -29,7 +29,7 @@ public class SimpleStrategyStatistics implements OrderListener {
 	}
 
 	@Override
-	public void onOrder(Order order, Trader trader, Client client) {
+	public void orderSubmitted(Order order, Trader trader, Client client) {
 		if (this.trader == null) {
 			this.trader = trader;
 			initialInvestment = this.trader.getTotalFundsInReferenceCurrency();

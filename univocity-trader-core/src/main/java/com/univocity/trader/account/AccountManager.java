@@ -392,7 +392,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			orderCreator.prepareOrder(priceDetails, book, orderPreparation, tradingManager.getLatestCandle());
 		}
 
-		if (orderPreparation.getTotalOrderAmount().compareTo(priceDetails.getMinimumOrderAmount(orderPreparation.getPrice())) > 0) {
+		if (!orderPreparation.isCancelled() && orderPreparation.getTotalOrderAmount().compareTo(priceDetails.getMinimumOrderAmount(orderPreparation.getPrice())) > 0) {
 			orderPreparation.setPrice(priceDetails.adjustPriceScale(orderPreparation.getPrice()));
 			orderPreparation.setQuantity(priceDetails.adjustQuantityScale(orderPreparation.getQuantity()));
 
@@ -547,8 +547,15 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	private void orderFinalized(OrderManager orderManager, Order order) {
 		orderManager = orderManager == null ? orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER) : orderManager;
-		updateBalances();
-		orderManager.finalized(order);
+		try {
+			updateBalances();
+		} finally {
+			try {
+				orderManager.finalized(order);
+			} finally {
+				getTradingManagerOf(order.getSymbol()).notifyOrderFinalized(order);
+			}
+		}
 	}
 
 	private void cancelOrder(OrderManager orderManager, Order order) {
@@ -585,14 +592,14 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public boolean updateOpenOrders(String symbol, Candle candle) {
-		return this.account.updateOpenOrders(symbol, candle);
-	}
-
-	public void updateOrderStatuses(String symbol) {
-		for (Order order : this.pendingOrders.values()) {
-			if (symbol.equals(order.getSymbol())) {
-				updateOrder(order);
+		if (this.account.updateOpenOrders(symbol, candle)) {
+			for (Order order : this.pendingOrders.values()) {
+				if (symbol.equals(order.getSymbol())) {
+					updateOrder(order);
+				}
 			}
+			return true;
 		}
+		return false;
 	}
 }

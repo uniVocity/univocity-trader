@@ -6,6 +6,7 @@ import java.math.*;
 
 public class OrderRequest {
 
+	private boolean cancelled = false;
 	private final String assetsSymbol;
 	private final String fundsSymbol;
 	private final Order.Side side;
@@ -82,5 +83,13 @@ public class OrderRequest {
 				", quantity=" + quantity +
 				", type=" + type +
 				'}';
+	}
+
+	public boolean isCancelled() {
+		return cancelled;
+	}
+
+	public void cancel() {
+		cancelled = true;
 	}
 }

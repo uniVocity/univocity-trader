@@ -16,7 +16,16 @@ import static com.univocity.trader.indicators.Signal.*;
 import static com.univocity.trader.utils.NewInstances.*;
 
 /**
+ * A {@code Trader} is responsible for the lifecycle of a trade and provides all information associated with an open position.
+ * It is made available to the user via a {@link StrategyMonitor} to provide information about trades opened by a {@link Strategy}.
+ *
+ * Once a {@link Strategy} returns a {@link Signal}, the {@link Engine} responsible for the symbol being traded will call
+ * {@link Trader#trade(Candle, Signal, Strategy)}, who will then decide whether to buy, sell or ignore the signal, mostly based on its
+ * {@link #getStrategyMonitors()} decision.
+ *
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @see StrategyMonitor
+ * @see Strategy
  */
 public class Trader {
 	private static final Logger log = LoggerFactory.getLogger(Trader.class);
@@ -45,12 +54,22 @@ public class Trader {
 
 	private final boolean allowMixedStrategies;
 
-	public Trader(TradingManager tradingManager, InstancesProvider<StrategyMonitor> monitors, Parameters params, Set<Object> allInstances) {
+	/**
+	 * Creates a new trader for a given symbol. For internal use only.
+	 *
+	 * @param tradingManager  the object responsible for managing the entire trading workflow of a symbol
+	 * @param monitorProvider the provider of {@link StrategyMonitor} instances
+	 * @param params          optional parameter set used for parameter optimization which is passed on to the {@link StrategyMonitor}
+	 *                        instances created by the given monitorProvider
+	 * @param allInstances    all known instances of {@link StrategyMonitor} that have been created so far,
+	 *                        used to validate no single {@link StrategyMonitor} instance is shared among different {@code Trader} instances.
+	 */
+	public Trader(TradingManager tradingManager, InstancesProvider<StrategyMonitor> monitorProvider, Parameters params, Set<Object> allInstances) {
 		this.parameters = params;
 		this.tradingManager = tradingManager;
 		this.tradingManager.trader = this;
 
-		this.monitors = monitors == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters, monitors, "StrategyMonitor", false, allInstances);
+		this.monitors = monitorProvider == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters, monitorProvider, "StrategyMonitor", false, allInstances);
 		boolean allowMixedStrategies = true;
 		for (int i = 0; i < this.monitors.length; i++) {
 			this.monitors[i].setTrader(this);
@@ -59,14 +78,88 @@ public class Trader {
 		this.allowMixedStrategies = allowMixedStrategies;
 	}
 
+	/**
+	 * Returns the parameters used by the {@link StrategyMonitor} instances in this {@code Trader} instance. Used mainly to report which parameters
+	 * are being used in a parameter optimization process.
+	 *
+	 * @return the parameters tested in the {@link StrategyMonitor} instances of this {@code Trader}.
+	 */
 	public Parameters getParameters() {
 		return parameters;
 	}
 
+	/**
+	 * Returns all {@link StrategyMonitor} instances built in the constructor of this class, which will be used by an {@link Engine} that
+	 * processes candles for the symbol traded by this {@code Trader}
+	 *
+	 * @return all strategy monitors used by this {@code Trader}.
+	 */
 	public StrategyMonitor[] getStrategyMonitors() {
 		return monitors;
 	}
 
+	/**
+	 * Takes a trading decision based on the signal generated from a strategy.
+	 *
+	 * Once an {@link Order} is placed in the {@link Exchange}, this {@code Trader} object will start capturing the following information:
+	 * <ul>
+	 *      <li>the number of ticks received since the trade opened via {@link #getTicks()}</li>
+	 *      <li>the price paid for the instrument traded by this {@code Trader} via {@link #getBoughtPrice()}</li>
+	 *      <li>the time elapsed since the the instrument was bought via {@link #getTradeDuration()};</li>
+	 *      <li>the current change % in price since this trade opened via {@link #getChange()}</li>
+	 *      <li>the maximum positive change % this trade had via {@link #getMaxChange()}</li>
+	 *      <li>the maximum price reached since the trade opened via {@link #getMaxPrice()}</li>
+	 *      <li>the minimum change % (negative or zero) this trade had via {@link #getMinChange()}</li>
+	 *      <li>the minimum price reached since the trade opened via {@link #getMinPrice()}</li>
+	 *      <li>the latest closing price of the instrument traded via {@link #getLastClosingPrice()}</li>
+	 *      <li>the minimum positive change % required to break even after fees, via {@link #getBreakEvenChange()}</li>
+	 * </ul>
+	 *
+	 * The actions taken by the trader depend on the signal received:
+	 * <ul>
+	 *   <li>signal = {@code BUY}:
+	 *       If no trades are open for the given symbol (i.e. when {@link TradingManager#hasAssets(Candle)} evaluates to {@code false}),
+	 *       a {@code BUY} order might be submitted when:
+	 *       <ol>
+	 *         <li>there are funds available to purchase that asset (via {@link TradingManager#allocateFunds()});</li>
+	 *         <li>none of the associated strategy monitors (from {@link #getStrategyMonitors()} produce {@link StrategyMonitor#discardBuy(Strategy)};</li>
+	 *         <li>the {@link OrderRequest} processed by the {@link OrderManager} associated with the symbol is not cancelled
+	 *             (i.e. {@link OrderRequest#isCancelled()})</li>
+	 *       </ol>
+	 *   </li>
+	 *   <li>signal = {@code SELL}:
+	 *       Sells all assets held for the current symbol, closing any open orders, if:
+	 *       <ol>
+	 * 	       <li>the account has assets available to sell (via {@link TradingManager#hasAssets(Candle)});</li>
+	 * 	       <li>none of the associated strategy monitors (from {@link #getStrategyMonitors()} produce {@code false} upon invoking
+	 *             {@link StrategyMonitor#allowExit()};</li>
+	 * 	       <li>the {@link OrderRequest} processed by the {@link OrderManager} associated with the symbol is not cancelled
+	 * 	           (i.e. {@link OrderRequest#isCancelled()})</li>
+	 * 	     </ol>
+	 *
+	 * 	     After the {@link Order} is placed in the {@link Exchange} this {@code Trader} will hold the previous trade information until a new trade
+	 * 	     is opened.
+	 *
+	 * 	     If one of the strategy monitors returns {@code false} for {@link StrategyMonitor#allowMixedStrategies()}, then only {@code SELL} signals that
+	 * 	     come from the same {@link Strategy} that generated the original {@code BUY} signal will be accepted.
+	 *   </li>
+	 *   <li>signal = {@code NEUTRAL}:
+	 *       Will simply update the statistics of any open trades.
+	 *   </li>
+	 * </ul>
+	 *
+	 * When there is a trade open (i.e. {@link TradingManager#hasAssets(Candle)} evaluates to {@code true}), regardless of the signal received, all strategy
+	 * monitors (from {@link #getStrategyMonitors()} will have their {@link StrategyMonitor#handleStop(Signal, Strategy)} method called to determine whether
+	 * or not to exit the trade. If any one of these calls return an exit message, the assets will be sold, {@link #stopped()} will evaluate to {@code true}
+	 * and {@link #exitReason()} will return the reason for exiting the trade.
+	 *
+	 * @param candle the latest candle received for the symbol traded by this {@code Trader}
+	 * @param signal the signal generated by the given strategy after receiving the given candle
+	 * @param strategy the strategy that originated the signal
+	 *
+	 * @return a signal indicating the action taken by this {@code Trader}, i.e. {@code BUY} if it bought assets, {@code SELL} if assets were sold for
+	 * whatever reason, and {@code NEUTRAL} if no action taken.
+	 */
 	public Signal trade(Candle candle, Signal signal, Strategy strategy) {
 		prev = candle;
 
@@ -119,13 +212,14 @@ public class Trader {
 			change = 0.0;
 		}
 
-		Signal out = null;
+		Signal out = NEUTRAL;
 
 		if (signal == BUY) {
 			Strategy currentBoughtStrategy = boughtStrategy;
 			try {
 				boughtStrategy = strategy;
 				if (buy(candle, strategy)) {
+					tradeDuration = -1L;
 					boughtPrice = candle.close;
 					tradeStartTime = System.currentTimeMillis();
 					for (int i = 0; i < monitors.length; i++) {
@@ -336,7 +430,7 @@ public class Trader {
 				unitPrice = c.close;
 			}
 			try {
-				tradingManager.notifyTradeExecution(response);
+				tradingManager.notifyOrderSubmitted(response);
 			} finally {
 				if (response.getSide() == Order.Side.BUY) {
 					updateBoughtPrice(c, unitPrice, response.getQuantity().doubleValue());
@@ -442,15 +536,18 @@ public class Trader {
 		return ticks;
 	}
 
-	public long getTimeSinceTradeOpened() {
+	public long getTradeDuration() {
+		if (tradeDuration != -1) {
+			return tradeDuration;
+		}
 		if (tradeStartTime == 0L) {
 			return 0L;
 		}
 		return System.currentTimeMillis() - tradeStartTime;
 	}
 
-	public String getFormattedTimeSinceTradeOpened() {
-		return TimeInterval.getFormattedDuration(getTimeSinceTradeOpened());
+	public String getFormattedTradeDuration() {
+		return TimeInterval.getFormattedDuration(getTradeDuration());
 	}
 
 	public String getFormattedTradeLength() {
@@ -478,8 +575,12 @@ public class Trader {
 		return tradingManager.getReferenceCurrencySymbol();
 	}
 
-	public TradingFees getTradingFees(){
+	public TradingFees getTradingFees() {
 		return tradingManager.getTradingFees();
+	}
+
+	public double getBreakEvenChange() {
+		return getBreakEvenChange(getBoughtPrice());
 	}
 
 	public double getBreakEvenChange(double amount) {
@@ -498,7 +599,7 @@ public class Trader {
 		return tradingManager.getTotalFundsIn(symbol);
 	}
 
-	public StrategyMonitor[] getMonitors(){
+	public StrategyMonitor[] getMonitors() {
 		return monitors;
 	}
 

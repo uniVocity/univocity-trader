@@ -228,12 +228,22 @@ public class TradingManager {
 		return emailNotifier;
 	}
 
-	void notifyTradeExecution(Order order) {
+	void notifyOrderSubmitted(Order order) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
-				notifications[i].onOrder(order, trader, client);
+				notifications[i].orderSubmitted(order, trader, client);
 			} catch (Exception e) {
-				log.error("Error executing update notification on order: " + order, e);
+				log.error("Error sending orderSubmitted notification for order: " + order, e);
+			}
+		}
+	}
+
+	void notifyOrderFinalized(Order order) {
+		for (int i = 0; i < notifications.length; i++) {
+			try {
+				notifications[i].orderFinalized(order, trader, client);
+			} catch (Exception e) {
+				log.error("Error sending orderFinalized notification for order: " + order, e);
 			}
 		}
 	}
@@ -241,18 +251,16 @@ public class TradingManager {
 	void notifySimulationEnd() {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
-				notifications[i].onSimulationEnd(trader, client);
+				notifications[i].simulationEnded(trader, client);
 			} catch (Exception e) {
-				log.error("Error executing simulation end callback", e);
+				log.error("Error sending onSimulationEnd notification", e);
 			}
 		}
 	}
 
 	public void updateOpenOrders(String symbol, Candle candle) {
 		if (tradingAccount.isSimulated()) {
-			if (tradingAccount.updateOpenOrders(symbol, candle)) {
-				tradingAccount.updateOrderStatuses(trader.getSymbol());
-			}
+			tradingAccount.updateOpenOrders(symbol, candle);
 		}
 	}
 

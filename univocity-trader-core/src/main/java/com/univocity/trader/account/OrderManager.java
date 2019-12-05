@@ -20,17 +20,17 @@ import com.univocity.trader.strategy.*;
  * order type, etc.
  *
  * Once the {@link OrderRequest} is submitted to the exchange, an {@link Order} will be returned and tracked until it's {@code FILLED} or {@code CANCELLED}.
- * This happens in a separate thread that requests a new order stats using {@link AccountManager#updateOrderStatus(Order)}, at the rate specified by
+ * This happens in a separate thread that requests a new order status using {@link AccountManager#updateOrderStatus(Order)}, at the rate specified by
  * {@link OrderManager#getOrderUpdateFrequency()}. Once the updated {@link Order} details are available, the order monitor thread will invoke
  * {@link #unchanged(Order)} if no changes happened to the order since the last status update, {@link #updated(Order)} if the executed quantity changed
  * (i.e. the order is being {@code PARTIALLY_FILLED}), or {@link #finalized(Order)} when the order was {@code FILLED} or {@code CANCELLED}.
  *
- * If the user does not specific an {@link OrderManager} implementation, the {@link DefaultOrderManager} will be used. Notice that this default implementation
- * will determine unit prices on each buy/sell order based on the central point of the gap in the {@link OrderBook}, and that orders which are not
+ * If the user does not specifies an {@link OrderManager} implementation, the {@link DefaultOrderManager} will be used. Notice that this default implementation
+ * will determine unit prices on each buy/sell order based on the central point of the gap in the {@link OrderBook}. Also note that orders which are not
  * {@code FILLED} within 10 minutes will be cancelled (via {@link Order#cancel()}).
  *
- * Note that an order might also be cancelled if it is not yet {@code FILLED} and another {@code BUY} or {@code SELL} signal appears for
- * another instrument when there are no funds available. In that case, {@link AccountManager#cancelStaleOrdersFor(Trader)} ()} will be used to cycle through
+ * An order might also be cancelled if it is not yet {@code FILLED} and another {@code BUY} or {@code SELL} signal appears for
+ * another instrument when there are no funds available. In that case, {@link AccountManager#cancelStaleOrdersFor(Trader)} will be used to cycle through
  * all pending orders, which will in turn invoke {@link #cancelToReleaseFundsFor(Order, Trader)}. The implementation of this method should decide whether or
  * not to cancel the order so that the instrument of the given {@link Trader} can be traded.
  */
@@ -45,7 +45,8 @@ public interface OrderManager {
 	/**
 	 * Prepares a given {@link OrderRequest} for submission to the exchange (via {@link AccountManager#buy(String, String, double)} or
 	 * {@link AccountManager#sell(String, String, double)}). Allows for modifications in the price and quantity pre-filled using the
-	 * available allocated funds to the instrument represented by the symbol being traded.
+	 * available allocated funds to the instrument represented by the symbol being traded. The order request can be cancelled via
+	 * {@link OrderRequest#cancel()}
 	 *
 	 * @param priceDetails price details associated with the symbol of the given order request, which includes number of decimal digits to use
 	 *                     and minimum order quantity. Note that after this method executes, the order price and amount will be adjusted to conform
@@ -89,7 +90,7 @@ public interface OrderManager {
 	void unchanged(Order order);
 
 	/**
-	 * Requests to cancels a given order that has not been {@code FILLED} in order to release funds to execute another order for another symbol.
+	 * Requests to cancel a given order that has not been {@code FILLED} to release funds for executing another order for another symbol.
 	 * The details of the other symbol that cannot be traded due to lack of funds can be obtained from the {@code newSymbolTrader} object
 	 *
 	 * @param order           an order that has not been completely filled yet.

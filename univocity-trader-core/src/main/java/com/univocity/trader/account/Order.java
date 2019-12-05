@@ -34,6 +34,10 @@ public interface Order {
 
 	void cancel();
 
+	default boolean isCancelled(){
+		return getStatus() == Status.CANCELLED;
+	}
+
 	default BigDecimal getTotalSpent() {
 		return getExecutedQuantity().multiply(getPrice());
 	}

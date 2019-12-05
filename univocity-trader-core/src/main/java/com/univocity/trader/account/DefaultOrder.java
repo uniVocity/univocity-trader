@@ -62,6 +62,10 @@ public class DefaultOrder extends OrderRequest implements Order {
 		this.status = Status.CANCELLED;
 	}
 
+	public boolean isCancelled() {
+		return this.status == Status.CANCELLED;
+	}
+
 	@Override
 	public String toString() {
 		return "DefaultOrder{" +

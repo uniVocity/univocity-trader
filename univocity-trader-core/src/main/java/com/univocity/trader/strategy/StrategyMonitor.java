@@ -26,6 +26,10 @@ import com.univocity.trader.indicators.*;
  * this method will be called to ask if the current trade can be exited to release funds and open another trade in another instrument.
  *
  * Specific details about the trade can be obtained from the {@link Trader} instance.
+ *
+ * @see Trader
+ * @see IndicatorGroup
+ * @see Strategy
  */
 public abstract class StrategyMonitor extends IndicatorGroup {
 
