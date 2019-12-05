@@ -12,9 +12,10 @@ import java.util.List;
 
 public interface IQFeedApiWebSocketClient extends Closeable {
 
+    // todo - add more methods for IQFeed
 
-    List<Candlestick> getCandlestickBars();
+    List<Candlestick> getCandlestickBars(String request);
 
-    List<Candlestick> getHistoricalCandleStickBars();
+    List<Candlestick> getHistoricalCandlestickBars(String request);
 
 }

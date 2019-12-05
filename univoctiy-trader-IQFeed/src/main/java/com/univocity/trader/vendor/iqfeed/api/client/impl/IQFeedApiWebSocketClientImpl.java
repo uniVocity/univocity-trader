@@ -22,25 +22,36 @@ import java.util.stream.Collectors;
 public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, Closeable {
 
     private static final Logger log = LoggerFactory.getLogger(IQFeedApiWebSocketClientImpl.class);
-
+    private final IQFeedProcessor processor;
     private final AsyncHttpClient client;
     private final WebSocket webSocketClient;
 
     public IQFeedApiWebSocketClientImpl(AsyncHttpClient client, String host, String port, IQFeedApiWebSocketListener<?> listener){
+        processor = new IQFeedProcessor();
         this.client = client;
+        listener.setProcessor(processor);
         webSocketClient = createNewWebSocket(host, port, listener);
     }
 
-    public sendRequest(String request){
+    public void sendRequest(String request){
         if(this.webSocketClient.isOpen()){
-           this.webSocketClient.sendTextFrame(request);
-           log.info("Univocity-IQFeed OUT: " + request);
+            this.webSocketClient.sendTextFrame(request);
+            log.info("Univocity-IQFeed OUT: " + request);
         }
     }
 
+    public List<Candlestick> getCandlestickBars(String request){
+        this.sendRequest(request);
+    }
+
+    public List<Candlestick> getHistoricalCandlestickBars(String request){
+        this.sendRequest(request);
+    }
+
+
     // TODO: check on this method here
     private WebSocket createNewWebSocket(String host, String port, IQFeedApiWebSocketListener<?> listener){
-
+        listener.setProcessor(processor);
         String streamingUrl = new StringBuilder(host).append(port).toString();
         try {
             return client.prepareGet(streamingUrl).execute(new WebSocketUpgradeHandler.Builder().addWebSocketListener(listener).build()).get();

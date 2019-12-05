@@ -17,8 +17,6 @@ public class IQFeedApiWebSocketListener<T> implements WebSocketListener {
     private static final Logger log = LoggerFactory.getLogger(IQFeedApiWebSocketListener.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private final ObjectReader objectReader;
-    private final IQFeedApiCallback<T> callback;
 
     private WebSocket webSocket = null;
     private String wsName = null;
@@ -26,17 +24,6 @@ public class IQFeedApiWebSocketListener<T> implements WebSocketListener {
 
     public IQFeedApiWebSocketListener(){
         this.processor = new IQFeedProcessor();
-    }
-
-    public IQFeedApiWebSocketListener(Class<T> eventClass) {
-        this.processor = new IQFeedProcessor();
-        this.objectReader = MAPPER.readerFor(eventClass);
-    }
-
-    public IQFeedApiWebSocketListener(IQFeedApiCallback<T> callback, TypeReference reference) {
-        this.processor = new IQFeedProcessor();
-        this.callback = callback;
-        this.objectReader = MAPPER.readerFor(reference);
     }
 
     @Override
@@ -59,12 +46,15 @@ public class IQFeedApiWebSocketListener<T> implements WebSocketListener {
     @Override
     public void onClose(WebSocket websocket, int code, String reason) {
         log.warn("WebSocket {} was closed ... Code {}, Reason {}", wsName, code, reason);
-        callback.onClose();
     }
 
     @Override
     public void onError(Throwable t) {log.error(String.format("Error at WebSocket %s: ", wsName), t);}
 
     public WebSocket getWebSocket(){ return this.webSocket;}
+
+    public void setProcessor(IQFeedProcessor processor){
+        this.processor = processor;
+    }
 
 }
