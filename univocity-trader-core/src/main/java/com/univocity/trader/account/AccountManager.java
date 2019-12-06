@@ -146,8 +146,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		if (available < minimumInvestment) {
 			return 0.0;
 		}
-
-		return available;
+		final double freeAmount = getAmount(fundSymbol);
+		return Math.min(available, freeAmount);
 	}
 
 	public double allocateFunds(String assetSymbol) {
