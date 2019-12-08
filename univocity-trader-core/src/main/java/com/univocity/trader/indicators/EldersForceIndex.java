@@ -21,7 +21,9 @@ public class EldersForceIndex extends SingleValueCalculationIndicator {
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
 		double efi = (value - previous) * candle.volume;
-		previous = value;
+		if(!updating) {
+			previous = value;
+		}
 		return efi;
 	}
 
