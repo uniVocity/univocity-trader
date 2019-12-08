@@ -15,15 +15,15 @@ public class UnivocityConfiguration {
       return configfileName;
    }
 
-   public static void setConfigfileName(String configfileName) {
-      UnivocityConfiguration.configfileName = configfileName;
-   }
-
    public static UnivocityConfiguration getInstance() {
       if (null == instance) {
          instance = new UnivocityConfiguration();
       }
       return instance;
+   }
+
+   public static void setConfigfileName(String configfileName) {
+      UnivocityConfiguration.configfileName = configfileName;
    }
 
    private String dbDriver;
@@ -37,6 +37,8 @@ public class UnivocityConfiguration {
    private String mailUsername;
    private String mailPassword;
    private String mailSender;
+   private String exchangeAPIKey;
+   private String exchangeAPISecret;
 
    private UnivocityConfiguration() {
       try {
@@ -59,6 +61,11 @@ public class UnivocityConfiguration {
          mailUsername = properties.getProperty("mail.username");
          mailPassword = properties.getProperty("mail.password");
          mailSender = properties.getProperty("mail.sender");
+         /*
+          * exchange
+          */
+         exchangeAPIKey = properties.getProperty("exchange.apikey");
+         exchangeAPISecret = properties.getProperty("exchange.secret");
       } catch (final Exception e) {
          e.printStackTrace();
       }
@@ -78,6 +85,14 @@ public class UnivocityConfiguration {
 
    public String getDbUsername() {
       return dbUsername;
+   }
+
+   public String getExchangeAPIKey() {
+      return exchangeAPIKey;
+   }
+
+   public String getExchangeAPISecret() {
+      return exchangeAPISecret;
    }
 
    public String getMailPassword() {

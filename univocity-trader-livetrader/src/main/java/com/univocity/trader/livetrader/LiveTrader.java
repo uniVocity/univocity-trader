@@ -51,8 +51,9 @@ class LiveTrader {
          if (null != configFileName) {
             UnivocityConfiguration.setConfigfileName(configFileName);
             final BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1), MailUtil.getEmailConfig());
-            final String apiKey = "<YOUR BINANCE API KEY>";
-            final String secret = "<YOUR BINANCE API SECRET>";
+            final UnivocityConfiguration univocityConfiguration = UnivocityConfiguration.getInstance();
+            final String apiKey = univocityConfiguration.getExchangeAPIKey();
+            final String secret = univocityConfiguration.getExchangeAPISecret();
             final Client client = binance.addClient("<YOUR E-MAIL>", ZoneId.systemDefault(), "USDT", apiKey, secret);
             client.tradeWith("BTC", "ETH", "XRP", "ADA");
             client.strategies().add(ExampleStrategy::new);
