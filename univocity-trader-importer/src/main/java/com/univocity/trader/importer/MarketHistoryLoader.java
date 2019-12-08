@@ -79,6 +79,7 @@ public class MarketHistoryLoader {
    };
 
    public static void main(String... args) {
+      System.out.println("Univocity History Loader");
       /*
        * options
        */
