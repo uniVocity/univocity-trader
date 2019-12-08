@@ -29,8 +29,11 @@
 
 	<modules>
 		<module>univocity-trader-core</module>
+		<module>univocity-trader-importer</module>
 		<module>univocity-trader-binance</module>
-		<module>univocity-trader-binance-example</module>
+		<module>univocity-trader-examplestrategy</module>
+		<module>univocity-trader-livetrader</module>
+		<module>univocity-trader-marketsimulator</module>
 	</modules>
 
 	<issueManagement>
@@ -138,31 +141,7 @@
 					</includes>
 				</configuration>
 			</plugin>
-	
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>flatten-maven-plugin</artifactId>
-				<version>1.1.0</version>
-				<configuration>
-					<updatePomFile>true</updatePomFile>
-				</configuration>
-				<executions>
-					<execution>
-						<id>flatten</id>
-						<phase>process-resources</phase>
-						<goals>
-							<goal>flatten</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>flatten.clean</id>
-						<phase>clean</phase>
-						<goals>
-							<goal>clean</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+
 		</plugins>
 	</build>
 

@@ -1,0 +1,45 @@
+<configuration>
+
+	<!-- HikariCP logs -->
+	<logger name="com.zaxxer" level="warn" />
+
+	<!-- Spring logs -->
+	<logger name="com.univocity.commons.jdbc.spring" level="warn" />
+	<logger name="org.springframework" level="warn" />
+	<logger name="org.springframework.web" level="info"/>
+	<logger name="org.springframework.web.method.support" level="debug"/>
+
+	<logger name="io.netty" level="info"/>
+	<logger name="org.asynchttpclient" level="info"/>
+
+	<!-- Logback logs -->
+	<logger name="ch.qos.logback" level="error" />
+
+
+	<!-- uniVocity loggers -->
+	<logger name="com.univocity.log" level="debug" />
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level \(%file:%line\) - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>logs/server.log</file>
+		<append>true</append>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- daily rollover -->
+			<fileNamePattern>logs/server-%d{yyyyMMdd}.log</fileNamePattern>
+			<maxHistory>30</maxHistory>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level \(%file:%line\) - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<root level="debug">
+		<appender-ref ref="STDOUT"/>
+		<!--<appender-ref ref="FILE" />-->
+	</root>
+</configuration>

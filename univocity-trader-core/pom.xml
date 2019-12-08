@@ -10,8 +10,7 @@
 	</parent>
 
 	<artifactId>univocity-trader-core</artifactId>
-	<version>${revision}</version>
-
+	
 	<name>univocity-trader-core</name>
 	<packaging>jar</packaging>
 

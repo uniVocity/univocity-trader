@@ -10,7 +10,6 @@
 	</parent>
 
 	<artifactId>univocity-trader-binance</artifactId>
-	<version>${revision}</version>
 
 	<name>univocity-trader-binance</name>
 	<packaging>jar</packaging>
