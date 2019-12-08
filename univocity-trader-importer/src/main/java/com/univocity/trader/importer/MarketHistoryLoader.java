@@ -5,8 +5,6 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
-import javax.sql.DataSource;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -15,10 +13,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import com.univocity.trader.candles.CandleRepository;
-import com.univocity.trader.datasource.ThreadLocalDataSourceFactory;
 import com.univocity.trader.exchange.binance.BinanceExchange;
 import com.univocity.trader.indicators.base.TimeInterval;
-import com.univocity.trader.utils.UnivocityConfiguration;
 
 public class MarketHistoryLoader {
    /**
@@ -98,12 +94,6 @@ public class MarketHistoryLoader {
           */
          final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
          if (null != configFileName) {
-            UnivocityConfiguration.setConfigfileName(configFileName);
-            final DataSource ds = ThreadLocalDataSourceFactory.getInstance().getDataSource();
-            /*
-             * CandleRepository manages everything for us.
-             */
-            CandleRepository.setDataSource(ds);
             final BinanceExchange exchange = new BinanceExchange();
             final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
             for (final String[] pair : ALL_PAIRS) {
