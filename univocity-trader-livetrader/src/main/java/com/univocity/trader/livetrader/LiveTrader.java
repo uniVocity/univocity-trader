@@ -15,17 +15,19 @@ import com.univocity.trader.notification.MailSenderConfig;
 import com.univocity.trader.notification.OrderExecutionToLog;
 import com.univocity.trader.strategy.example.ExampleStrategy;
 import com.univocity.trader.strategy.example.ExampleStrategyMonitor;
+import com.univocity.trader.utils.UnivocityConfiguration;
 
 public class LiveTrader {
    private static final MailSenderConfig getEmailConfig() {
+      UnivocityConfiguration univocityConfiguration = UnivocityConfiguration.getInstance();
       MailSenderConfig out = new MailSenderConfig();
-      out.setReplyToAddress("dev@univocity.com");
-      out.setSmtpHost("smtp.gmail.com");
-      out.setSmtpTlsSsl(true);
-      out.setSmtpPort(587);
-      out.setSmtpUsername("<YOU>@gmail.com");
-      out.setSmtpPassword("<YOUR SMTP PASSWORD>".toCharArray());
-      out.setSmtpSender("<YOU>>@gmail.com");
+      out.setReplyToAddress(univocityConfiguration.getMailReplyto());
+      out.setSmtpHost(univocityConfiguration.getMailSMTPphost());
+      out.setSmtpTlsSsl(univocityConfiguration.isMailSSL());
+      out.setSmtpPort(univocityConfiguration.getMailPort());
+      out.setSmtpUsername(univocityConfiguration.getMailUsername());
+      out.setSmtpPassword(univocityConfiguration.getMailPassword().toCharArray());
+      out.setSmtpSender(univocityConfiguration.getMailSender());
       return out;
    }
 
