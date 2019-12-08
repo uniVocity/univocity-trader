@@ -7,12 +7,27 @@ import java.time.temporal.ChronoUnit;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+
 import com.univocity.trader.candles.CandleRepository;
 import com.univocity.trader.datasource.ThreadLocalDataSourceFactory;
 import com.univocity.trader.exchange.binance.BinanceExchange;
 import com.univocity.trader.indicators.base.TimeInterval;
+import com.univocity.trader.utils.UnivocityConfiguration;
 
 public class MarketHistoryLoader {
+   /**
+    * configfile option
+    */
+   private static final String CONFIG_OPTION = "config";
+   /**
+    * pairs
+    */
    static String[][] ALL_PAIRS = new String[][] {
          // new String[]{"ADA", "USDT"}
          // , new String[]{"ALGO", "USDT"}
@@ -64,17 +79,41 @@ public class MarketHistoryLoader {
    };
 
    public static void main(String... args) {
-      DataSource ds = ThreadLocalDataSourceFactory.getInstance().getDataSource();
       /*
-       * CandleRepository manages everything for us.
+       * options
        */
-      CandleRepository.setDataSource(ds);
-      BinanceExchange exchange = new BinanceExchange();
-      final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
-      for (String[] pair : ALL_PAIRS) {
-         String symbol = pair[0] + pair[1];
-         CandleRepository.fillHistoryGaps(exchange, symbol, start, TimeInterval.minutes(1));
+      final Options options = new Options();
+      final Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(true).desc("config file").build();
+      options.addOption(oo);
+      /*
+       * parse
+       */
+      final CommandLineParser parser = new DefaultParser();
+      CommandLine cmd = null;
+      try {
+         cmd = parser.parse(options, args);
+         /*
+          * get the file
+          */
+         final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
+         if (null != configFileName) {
+            UnivocityConfiguration.setConfigfileName(configFileName);
+            final DataSource ds = ThreadLocalDataSourceFactory.getInstance().getDataSource();
+            /*
+             * CandleRepository manages everything for us.
+             */
+            CandleRepository.setDataSource(ds);
+            final BinanceExchange exchange = new BinanceExchange();
+            final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
+            for (final String[] pair : ALL_PAIRS) {
+               final String symbol = pair[0] + pair[1];
+               CandleRepository.fillHistoryGaps(exchange, symbol, start, TimeInterval.minutes(1));
+            }
+         }
+      } catch (final Exception e) {
+         e.printStackTrace();
+         final HelpFormatter formatter = new HelpFormatter();
+         formatter.printHelp("posix", options);
       }
-      System.exit(0);
    }
 }

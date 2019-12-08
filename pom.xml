@@ -68,6 +68,12 @@
 			<name>univocity development team</name>
 			<email>dev@univocity.com</email>
 		</developer>
+
+		<developer>
+			<id>teverett</id>
+			<name>Tom Everett</name>
+			<email>tom@khubla.com</email>
+		</developer>
 	</developers>
 
 	<distributionManagement>

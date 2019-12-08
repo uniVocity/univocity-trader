@@ -9,6 +9,15 @@ import java.util.Properties;
 public class UnivocityConfiguration {
    private static final String CONFIGFILE = "univocity.properties";
    private static UnivocityConfiguration instance;
+   private static String configfileName = CONFIGFILE;
+
+   public static String getConfigfileName() {
+      return configfileName;
+   }
+
+   public static void setConfigfileName(String configfileName) {
+      UnivocityConfiguration.configfileName = configfileName;
+   }
 
    public static UnivocityConfiguration getInstance() {
       if (null == instance) {
@@ -32,7 +41,7 @@ public class UnivocityConfiguration {
    private UnivocityConfiguration() {
       try {
          final Properties properties = new Properties();
-         properties.load(new FileInputStream(CONFIGFILE));
+         properties.load(new FileInputStream(configfileName));
          /*
           * DB properties
           */
