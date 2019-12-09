@@ -12,6 +12,7 @@ public final class CandlestickBuilder {
     protected String last;
     protected String totalVolume;
     protected String periodVolume;
+    protected String openInterest;
     protected String numTrades;
     protected String bid;
     protected String ask;
@@ -153,6 +154,11 @@ public final class CandlestickBuilder {
         return this;
     }
 
+    public CandlestickBuilder setOpenInterest(String openInterest){
+        this.openInterest = openInterest;
+        return this;
+    }
+
     public Candlestick build() {
         Candlestick candlestick = new Candlestick();
         candlestick.setOpenTime(openTime);
@@ -167,6 +173,7 @@ public final class CandlestickBuilder {
         candlestick.setTotalVolume(totalVolume);
         candlestick.setPeriodVolume(periodVolume);
         candlestick.setNumTrades(numTrades);
+        candlestick.setOpenInterest(openInterest);
         candlestick.setBid(bid);
         candlestick.setAsk(ask);
         candlestick.setBasis(basis);

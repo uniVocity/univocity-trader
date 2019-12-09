@@ -1,8 +1,10 @@
 package com.univocity.trader.vendor.iqfeed.api.client.impl;
 
+import com.univocity.trader.candles.Candle;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.market.Candlestick;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.market.CandlestickBuilder;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,7 +17,21 @@ public class IQFeedProcessor {
     public String latestHeader;
 
     public void process(String payload){
-        this.candles.add();
+        String dataQualifier = latestHeader.substring(1,2);
+        switch(dataQualifier.toLowerCase()) {
+            case "i":
+                this.candles = processHIX(payload);
+            case "t":
+                this.candles = processHTX(payload);
+            case "m": case "d": case"w":
+                this.candles = processHMX(payload);
+        }
+    }
+
+    public Long formatDate(String dateString) {
+        String date = dateString.replace(" ", "T");
+        date = date + "Z";
+        return Instant.parse(date).toEpochMilli();
     }
 
     public List<Candlestick> processHistoricalResponse(String payload){
@@ -66,7 +82,8 @@ public class IQFeedProcessor {
     }
 
     public List<Candlestick> processHTX(String payload){
-        payload.lines().forEach(line -> {
+        List<Candlestick> candles = new ArrayList<Candlestick>();
+        for(String line : payload.split("\n")){
            String[] vals = line.split(",");
            String ID = vals[0];
             String dateTime = vals[1];
@@ -93,8 +110,9 @@ public class IQFeedProcessor {
                     .setAggressor(aggressor)
                     .setDayCode(daycode)
                     .build();
-            candle.setOpenTime(Long.valueOf(dateTime));
-        } );
+            candles.add(candle);
+        }
+        return candles;
     }
 
     public List<Candlestick> processHIX(String payload){
@@ -126,7 +144,8 @@ public class IQFeedProcessor {
     }
 
     public List<Candlestick> processHMX(String payload){
-        payload.lines().forEach(line -> {
+        List<Candlestick> candles = new ArrayList<>();
+        for(String line : payload.split("\n")){
             String[] vals = line.split(",");
             String ID = vals[0];
             String dateTime = vals[1];
@@ -136,7 +155,18 @@ public class IQFeedProcessor {
             String close = vals[5];
             String periodVolume = vals[6];
             String openInterest  = vals[7];
-        } );
+            Candlestick candle = new CandlestickBuilder()
+                    .setOpenTime(formatDate(dateTime))
+                    .setHigh(high)
+                    .setLow(low)
+                    .setOpen(open)
+                    .setClose(close)
+                    .setPeriodVolume(periodVolume)
+                    .setOpenInterest(openInterest)
+                    .build();
+            candles.add(candle);
+        }
+        return candles;
     }
 
     public Object processMarketSummaryResponse(String payload){

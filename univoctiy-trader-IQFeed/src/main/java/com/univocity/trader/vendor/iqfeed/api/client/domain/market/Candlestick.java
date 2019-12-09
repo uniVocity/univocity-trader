@@ -19,6 +19,7 @@ public class Candlestick{
     protected String lastSize;
     protected String totalVolume;
     protected String periodVolume;
+    protected String openInterest;
     protected String numTrades;
     protected String bid;
     protected String ask;
@@ -203,6 +204,10 @@ public class Candlestick{
 
     public void setLast(String last) {
         this.last = last;
+    }
+
+    public void setOpenInterest(String openInterest){
+        this.openInterest = openInterest;
     }
 
     public String getTakerBuyQuoteAssetVolume() {
