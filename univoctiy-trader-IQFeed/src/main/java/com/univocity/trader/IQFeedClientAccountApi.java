@@ -27,12 +27,12 @@ class IQFeedClientAccountApi implements ClientAccountApi {
     private IQFeedExchangeAPI exchangeAPI;
     private double minimumBnbAmountToKeep = 1.0;
 
-    public IQFeedClientAccountApi(String iqPortalPath, String product, String version, String login, String password,
-                                  IQFeedExchangeAPI exchangeAPI, boolean autoconnect, boolean saveLogin){
+    public IQFeedClientAccountApi(String iqPortalPath, String product, String host, String port, String version, String login, String password,
+                                  IQFeedExchangeAPI exchangeAPI, boolean autoconnect, boolean saveLogin, AsyncHttpClient asyncHttpClient){
         this.exchangeAPI = exchangeAPI;
         final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
         factory = IQFeedApiClientFactory.newInstance(iqPortalPath, product, version, login, password, autoconnect, saveLogin, asyncHttpClient);
-        client = factory.newWebSocketClient();
+        client = factory.newWebSocketClient(host, port);
     }
 
     @Override
