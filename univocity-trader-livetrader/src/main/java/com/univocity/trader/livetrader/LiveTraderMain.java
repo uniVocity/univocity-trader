@@ -10,13 +10,16 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
+import com.univocity.trader.LiveTrader;
 import com.univocity.trader.SymbolPriceDetails;
 import com.univocity.trader.account.Client;
 import com.univocity.trader.account.DefaultOrderManager;
 import com.univocity.trader.account.OrderBook;
 import com.univocity.trader.account.OrderRequest;
 import com.univocity.trader.candles.Candle;
-import com.univocity.trader.exchange.binance.BinanceTrader;
+import com.univocity.trader.exchange.Exchange;
+import com.univocity.trader.exchange.ExchangeFactory;
+import com.univocity.trader.exchange.binance.api.client.domain.market.Candlestick;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.notification.OrderExecutionToLog;
 import com.univocity.trader.strategy.example.ExampleStrategy;
@@ -51,7 +54,8 @@ class LiveTraderMain {
          final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
          if (null != configFileName) {
             UnivocityConfiguration.setConfigfileName(configFileName);
-            final BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1), MailUtil.getEmailConfig());
+            final Exchange<Candlestick> exchange = ExchangeFactory.getInstance().getExchange(UnivocityConfiguration.getInstance().getExchangeClass());
+            final LiveTrader<Candlestick> binance = new LiveTrader<Candlestick>(exchange, TimeInterval.minutes(1), MailUtil.getEmailConfig());
             final UnivocityConfiguration univocityConfiguration = UnivocityConfiguration.getInstance();
             final String apiKey = univocityConfiguration.getExchangeAPIKey();
             final String secret = univocityConfiguration.getExchangeAPISecret();

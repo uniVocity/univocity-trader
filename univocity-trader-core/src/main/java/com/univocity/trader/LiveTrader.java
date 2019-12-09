@@ -1,234 +1,229 @@
 package com.univocity.trader;
 
-import com.univocity.trader.account.*;
-import com.univocity.trader.candles.*;
+import static com.univocity.trader.indicators.base.TimeInterval.HOUR;
+
+import java.io.Closeable;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.univocity.trader.account.Client;
+import com.univocity.trader.candles.Candle;
+import com.univocity.trader.candles.CandleRepository;
+import com.univocity.trader.candles.TickConsumer;
 import com.univocity.trader.exchange.Exchange;
-import com.univocity.trader.indicators.base.*;
-import com.univocity.trader.notification.*;
-import org.slf4j.*;
-
-import java.io.*;
-import java.time.*;
-import java.time.temporal.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
-
-import static com.univocity.trader.indicators.base.TimeInterval.*;
+import com.univocity.trader.indicators.base.TimeInterval;
+import com.univocity.trader.notification.MailSenderConfig;
+import com.univocity.trader.notification.SmtpMailSender;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public abstract class LiveTrader<T> implements Closeable {
+public class LiveTrader<T> implements Closeable {
+   private static final Logger log = LoggerFactory.getLogger(LiveTrader.class);
+   private List<Client<T>> clients = new ArrayList<>();
+   private String allClientPairs;
+   private final Map<String, Long> symbols = new ConcurrentHashMap<>();
+   private final Exchange<T> exchange;
+   private final TimeInterval tickInterval;
+   private final SmtpMailSender mailSender;
+   private long lastHour;
+   private Map<String, String[]> allPairs;
 
-	private static final Logger log = LoggerFactory.getLogger(LiveTrader.class);
+   private class PollThread extends Thread {
+      public PollThread() {
+         setName("candle poller");
+      }
 
-	private List<Client<T>> clients = new ArrayList<>();
+      public void run() {
+         while (true) {
+            try {
+               long now = System.currentTimeMillis();
+               if (now - lastHour > HOUR.ms) {
+                  lastHour = System.currentTimeMillis();
+                  log.info("Updating balances");
+                  clients.forEach(Client::updateBalances);
+               }
+               int[] count = new int[] { 0 };
+               symbols.forEach((symbol, lastUpdate) -> {
+                  if (lastUpdate == null || (now - lastUpdate) > tickInterval.ms) {
+                     count[0]++;
+                     try {
+                        log.info("Polling next candle for {} as we didn't get an update since {}", symbol, lastUpdate == null ? "N/A" : Candle.getFormattedDateTimeWithYear(lastUpdate));
+                        T tick = exchange.getLatestTick(symbol, tickInterval);
+                        if (tick != null) {
+                           symbols.put(symbol, now);
+                           clients.parallelStream().forEach(c -> c.processCandle(symbol, tick, false));
+                        }
+                     } catch (Exception e) {
+                        TimeInterval waitTime = exchange.handlePollingException(symbol, e);
+                        if (waitTime != null) {
+                           LiveTrader.sleep(waitTime.ms);
+                        }
+                     }
+                     LiveTrader.sleep(500);
+                  }
+               });
+               if (count[0] == symbols.size()) { // all symbols being polled.
+                  log.info("Websocket seems to be offline, trying to start it up");
+                  retryRunWebsocket();
+               }
+               LiveTrader.sleep(5_000);
+            } catch (Exception e) {
+               log.error("Error polling Candles", e);
+            }
+         }
+         // List<Candle> Candles = client.getCandlestickBars("NEOETH", CandlestickInterval.ONE_MINUTE, 1, null, null);
+      }
+   }
 
-	private String allClientPairs;
-	private final Map<String, Long> symbols = new ConcurrentHashMap<>();
-	private final Exchange<T> exchange;
-	private final TimeInterval tickInterval;
-	private final SmtpMailSender mailSender;
-	private long lastHour;
-	private Map<String, String[]> allPairs;
+   private static void sleep(long time) {
+      try {
+         Thread.sleep(time);
+      } catch (InterruptedException e) {
+         log.error("Thread polling interrupted", e);
+      }
+   }
 
-	private class PollThread extends Thread {
-		public PollThread() {
-			setName("candle poller");
-		}
+   public LiveTrader(Exchange<T> exchange, TimeInterval tickInterval, MailSenderConfig mailSenderConfig) {
+      Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+      this.exchange = exchange;
+      this.tickInterval = tickInterval;
+      this.mailSender = mailSenderConfig == null ? null : new SmtpMailSender(mailSenderConfig);
+   }
 
-		public void run() {
-			while (true) {
-				try {
-					long now = System.currentTimeMillis();
-					if (now - lastHour > HOUR.ms) {
-						lastHour = System.currentTimeMillis();
-						log.info("Updating balances");
-						clients.forEach(Client::updateBalances);
-					}
+   private void initialize() {
+      if (allPairs == null) {
+         allPairs = new TreeMap<>();
+         for (Client client : clients) {
+            client.initialize(exchange, mailSender);
+            allPairs.putAll(client.getSymbolPairs());
+         }
+      }
+      updateDatabase();
+   }
 
-					int[] count = new int[]{0};
+   private void updateDatabase() {
+      if (allClientPairs != null) {
+         return;
+      }
+      StringBuilder tmp = new StringBuilder();
+      for (String symbol : allPairs.keySet()) {
+         if (tmp.length() > 0) {
+            tmp.append(',');
+         }
+         tmp.append(symbol);
+      }
+      this.allClientPairs = tmp.toString().toLowerCase();
+      // fill history with last 30 days of data
+      for (String symbol : allPairs.keySet()) {
+         CandleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
+      }
+      // quick update for the last 30 minutes in case the previous step takes too long and we miss a few ticks
+      for (String symbol : allPairs.keySet()) {
+         CandleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
+         symbols.put(symbol, System.currentTimeMillis());
+      }
+      // loads last 30 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
+      for (String symbol : allPairs.keySet()) {
+         Enumeration<Candle> it = CandleRepository.iterate(symbol, Instant.now().minus(30, ChronoUnit.DAYS), Instant.now(), false);
+         while (it.hasMoreElements()) {
+            Candle candle = it.nextElement();
+            if (candle != null) {
+               clients.forEach(c -> c.processCandle(symbol, candle, true));
+            }
+         }
+      }
+      // loads the very latest ticks and process them before we can finally connect to the live stream and trade for real.
+      for (String symbol : allPairs.keySet()) {
+         List<T> candles = exchange.getLatestTicks(symbol, tickInterval);
+         for (T candle : candles) {
+            clients.forEach(c -> c.processCandle(symbol, candle, true));
+         }
+      }
+   }
 
-					symbols.forEach((symbol, lastUpdate) -> {
-						if (lastUpdate == null || (now - lastUpdate) > tickInterval.ms) {
-							count[0]++;
-							try {
-								log.info("Polling next candle for {} as we didn't get an update since {}", symbol, lastUpdate == null ? "N/A" : Candle.getFormattedDateTimeWithYear(lastUpdate));
-								T tick = exchange.getLatestTick(symbol, tickInterval);
-								if (tick != null) {
-									symbols.put(symbol, now);
-									clients.parallelStream().forEach(c -> c.processCandle(symbol, tick, false));
-								}
-							} catch (Exception e) {
-								TimeInterval waitTime = exchange.handlePollingException(symbol, e);
-								if (waitTime != null) {
-									LiveTrader.sleep(waitTime.ms);
-								}
-							}
-							LiveTrader.sleep(500);
-						}
-					});
+   private AtomicInteger retryCount = new AtomicInteger(0);
 
-					if (count[0] == symbols.size()) { //all symbols being polled.
-						log.info("Websocket seems to be offline, trying to start it up");
-						retryRunWebsocket();
-					}
+   public void run() {
+      initialize();
+      runLiveStream();
+   }
 
-					LiveTrader.sleep(5_000);
-				} catch (Exception e) {
-					log.error("Error polling Candles", e);
-				}
+   private void runLiveStream() {
+      new Thread(() -> {
+         log.debug("Starting web socket. Retry count: {}", retryCount);
+         if (retryCount.get() > 0) {
+            try {
+               close();
+            } catch (Exception e) {
+               log.error("Error closing socket", e);
+            }
+         } else {
+            new PollThread().start();
+         }
+         exchange.openLiveStream(allClientPairs, tickInterval, new TickConsumer<T>() {
+            @Override
+            public void tickReceived(String symbol, T tick) {
+               long now = System.currentTimeMillis();
+               symbols.put(symbol, now);
+               clients.forEach(c -> c.processCandle(symbol, tick, false));
+            }
 
-			}
-			//List<Candle> Candles = client.getCandlestickBars("NEOETH", CandlestickInterval.ONE_MINUTE, 1, null, null);
-		}
-	}
+            @Override
+            public void streamError(Throwable cause) {
+               log.error("Error listening to candle events, reconnecting...", cause);
+               retryRunWebsocket();
+            }
 
-	private static void sleep(long time) {
-		try {
-			Thread.sleep(time);
-		} catch (InterruptedException e) {
-			log.error("Thread polling interrupted", e);
-		}
-	}
+            @Override
+            public void streamClosed() {
+               retryRunWebsocket();
+            }
+         });
+      }).start();
+      if (retryCount.get() == 0) {
+         clients.forEach(c -> {
+            c.updateBalances();
+            c.sendBalanceEmail("Trading robot started. Here is your current position.");
+         });
+      }
+   }
 
-	public LiveTrader(Exchange<T> exchange, TimeInterval tickInterval, MailSenderConfig mailSenderConfig) {
-		Runtime.getRuntime().addShutdownHook(new Thread(this::close));
-		this.exchange = exchange;
-		this.tickInterval = tickInterval;
-		this.mailSender = mailSenderConfig == null ? null : new SmtpMailSender(mailSenderConfig);
-	}
+   private void retryRunWebsocket() {
+      retryCount.incrementAndGet();
+      runLiveStream();
+   }
 
-	private void initialize() {
-		if (allPairs == null) {
-			allPairs = new TreeMap<>();
-			for (Client client : clients) {
-				client.initialize(exchange, mailSender);
-				allPairs.putAll(client.getSymbolPairs());
-			}
-		}
-		updateDatabase();
-	}
+   @Override
+   public void close() {
+      try {
+         if (exchange != null) {
+            try {
+               exchange.closeLiveStream();
+            } catch (Exception e) {
+               log.error("Error closing socket client connection", e);
+            }
+         }
+      } catch (Exception e) {
+         throw new IllegalStateException(e);
+      }
+   }
 
-	private void updateDatabase() {
-		if (allClientPairs != null) {
-			return;
-		}
-		StringBuilder tmp = new StringBuilder();
-		for (String symbol : allPairs.keySet()) {
-			if (tmp.length() > 0) {
-				tmp.append(',');
-			}
-			tmp.append(symbol);
-		}
-		this.allClientPairs = tmp.toString().toLowerCase();
-
-		//fill history with last 30 days of data
-		for (String symbol : allPairs.keySet()) {
-			CandleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
-		}
-
-		//quick update for the last 30 minutes in case the previous step takes too long and we miss a few ticks
-		for (String symbol : allPairs.keySet()) {
-			CandleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
-			symbols.put(symbol, System.currentTimeMillis());
-		}
-
-		//loads last 30 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
-		for (String symbol : allPairs.keySet()) {
-			Enumeration<Candle> it = CandleRepository.iterate(symbol, Instant.now().minus(30, ChronoUnit.DAYS), Instant.now(), false);
-			while (it.hasMoreElements()) {
-				Candle candle = it.nextElement();
-				if (candle != null) {
-					clients.forEach(c -> c.processCandle(symbol, candle, true));
-				}
-			}
-		}
-
-		//loads the very latest ticks and process them before we can finally connect to the live stream and trade for real.
-		for (String symbol : allPairs.keySet()) {
-			List<T> candles = exchange.getLatestTicks(symbol, tickInterval);
-			for (T candle : candles) {
-				clients.forEach(c -> c.processCandle(symbol, candle, true));
-			}
-		}
-	}
-
-	private AtomicInteger retryCount = new AtomicInteger(0);
-
-	public void run() {
-		initialize();
-		runLiveStream();
-	}
-
-
-	private void runLiveStream() {
-		new Thread(() -> {
-			log.debug("Starting web socket. Retry count: {}", retryCount);
-			if (retryCount.get() > 0) {
-				try {
-					close();
-				} catch (Exception e) {
-					log.error("Error closing socket", e);
-				}
-			} else {
-				new PollThread().start();
-			}
-
-			exchange.openLiveStream(allClientPairs, tickInterval, new TickConsumer<T>() {
-				@Override
-				public void tickReceived(String symbol, T tick) {
-					long now = System.currentTimeMillis();
-					symbols.put(symbol, now);
-					clients.forEach(c -> c.processCandle(symbol, tick, false));
-				}
-
-				@Override
-				public void streamError(Throwable cause) {
-					log.error("Error listening to candle events, reconnecting...", cause);
-					retryRunWebsocket();
-				}
-
-				@Override
-				public void streamClosed() {
-					retryRunWebsocket();
-				}
-			});
-		}).start();
-
-		if (retryCount.get() == 0) {
-			clients.forEach(c -> {
-				c.updateBalances();
-				c.sendBalanceEmail("Trading robot started. Here is your current position.");
-			});
-		}
-	}
-
-	private void retryRunWebsocket() {
-		retryCount.incrementAndGet();
-		runLiveStream();
-	}
-
-	@Override
-	public void close() {
-		try {
-			if (exchange != null) {
-				try {
-					exchange.closeLiveStream();
-				} catch (Exception e) {
-					log.error("Error closing socket client connection", e);
-				}
-			}
-		} catch (Exception e) {
-			throw new IllegalStateException(e);
-		}
-	}
-
-	public Client addClient(String email, ZoneId timezone, String referenceCurrencySymbol, String apiKey, String secret) {
-		ClientAccount account = exchange.connectToAccount(apiKey, secret);
-		Client client = new Client(email, timezone, referenceCurrencySymbol, account);
-		clients.add(client);
-		return client;
-	}
+   public Client addClient(String email, ZoneId timezone, String referenceCurrencySymbol, String apiKey, String secret) {
+      ClientAccount account = exchange.connectToAccount(apiKey, secret);
+      Client client = new Client(email, timezone, referenceCurrencySymbol, account);
+      clients.add(client);
+      return client;
+   }
 }
