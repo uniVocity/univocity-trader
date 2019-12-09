@@ -12,6 +12,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
+import com.univocity.trader.candles.Candle;
 import com.univocity.trader.candles.CandleRepository;
 import com.univocity.trader.exchange.Exchange;
 import com.univocity.trader.exchange.ExchangeFactory;
@@ -97,7 +98,7 @@ public class MarketHistoryImporterMain {
          final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
          if (null != configFileName) {
             UnivocityConfiguration.setConfigfileName(configFileName);
-            final Exchange exchange = ExchangeFactory.getInstance().getExchange(UnivocityConfiguration.getInstance().getExchangeClass());
+            final Exchange<Candle> exchange = ExchangeFactory.getInstance().getExchange(UnivocityConfiguration.getInstance().getExchangeClass());
             final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
             for (final String[] pair : ALL_PAIRS) {
                final String symbol = pair[0] + pair[1];
