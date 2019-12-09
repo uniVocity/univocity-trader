@@ -9,22 +9,31 @@ import java.util.function.*;
 public class EldersForceIndex extends SingleValueCalculationIndicator {
 
 	private double previous;
+	private SingleValueIndicator average;
 
 	public EldersForceIndex(TimeInterval interval) {
-		super(interval);
+		this(13, interval);
 	}
 
-	public EldersForceIndex(TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	public EldersForceIndex(int length, TimeInterval interval) {
+		super(interval);
+		this.average = new ExponentialMovingAverage(length, interval);
+	}
+
+	public EldersForceIndex(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		super(interval, valueGetter);
+		this.average = new ExponentialMovingAverage(length, interval);
 	}
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
 		double efi = (value - previous) * candle.volume;
-		if(!updating) {
+		if (!updating) {
 			previous = value;
 		}
-		return efi;
+		average.accumulate(efi);
+
+		return average.getValue();
 	}
 
 	@Override
