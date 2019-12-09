@@ -61,7 +61,7 @@ class LiveTraderMain {
                final UnivocityConfiguration univocityConfiguration = UnivocityConfiguration.getInstance();
                final String apiKey = univocityConfiguration.getExchangeAPIKey();
                final String secret = univocityConfiguration.getExchangeAPISecret();
-               final Client client = binance.addClient("<YOUR E-MAIL>", ZoneId.systemDefault(), "USDT", apiKey, secret);
+               final Client client = binance.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), "USDT", apiKey, secret);
                client.tradeWith("BTC", "ETH", "XRP", "ADA");
                client.strategies().add(ExampleStrategy::new);
                client.monitors().add(ExampleStrategyMonitor::new);

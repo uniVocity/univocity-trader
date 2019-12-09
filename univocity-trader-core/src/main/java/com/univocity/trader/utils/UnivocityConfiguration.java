@@ -40,6 +40,7 @@ public class UnivocityConfiguration {
    private String exchangeAPIKey;
    private String exchangeAPISecret;
    private String exchangeClass;
+   private String exchangeClientId;
 
    private UnivocityConfiguration() {
       try {
@@ -68,6 +69,7 @@ public class UnivocityConfiguration {
          exchangeAPIKey = properties.getProperty("exchange.apikey");
          exchangeAPISecret = properties.getProperty("exchange.secret");
          exchangeClass = properties.getProperty("exchange.class");
+         exchangeClientId = properties.getProperty("exchange.clientid");
       } catch (final Exception e) {
          e.printStackTrace();
       }
@@ -99,6 +101,10 @@ public class UnivocityConfiguration {
 
    public String getExchangeClass() {
       return exchangeClass;
+   }
+
+   public String getExchangeClientId() {
+      return exchangeClientId;
    }
 
    public String getMailPassword() {
