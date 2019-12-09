@@ -42,17 +42,22 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
     }
 
     public List<Candlestick> getCandlestickBars(IQFeedHistoricalRequest request){
+        this.processor.setLatestHeader(request.getHeader());
         this.sendRequest(request.toString());
-        this.webSocketClient.l
+        List<Candlestick> candles = this.processor.getCandles();
+        return candles;
     }
 
     public List<Candlestick> getCandlestickBars(String request){
         this.sendRequest(request);
+        List<Candlestick> candles = this.processor.getCandles();
+        return candles;
     }
 
     public List<Candlestick> getHistoricalCandlestickBars(String request) {
         this.sendRequest(request);
-
+        List<Candlestick> candles = this.processor.getCandles();
+        return candles;
     }
 
 

@@ -18,7 +18,10 @@ public class IQFeedHistoricalRequest {
     // required
     public String symbol;
     public String dataPeriod;
+
+
     // optional
+    public String header;
     public String beginDate;
     public Long beginDateTime;
     public String beginFilterTime;
@@ -37,6 +40,8 @@ public class IQFeedHistoricalRequest {
     public String maxMonths;
     public String maxWeeks;
     public String requestID;
+    public String dataQualifier;
+    public String timeQualifier;
 
     public String formatMillis(Long millis){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("YYYYMMdd HHmmSS");
@@ -65,13 +70,12 @@ public class IQFeedHistoricalRequest {
         maxMonths = builder.maxMonths;
         maxWeeks = builder.maxWeeks;
         requestID = builder.requestID;
+
+        header = this.buildHeader("H");
        // validating the requests here
     }
 
-    public String toString() throws InvalidParameterException {
-        String dataQualifier = null;
-        String timeQualifier = null;
-
+    public String buildHeader(String prefix){
         switch (TimeInterval.getUnitStr(intervalType.unit)) {
             // TODO: convert strings to enums
             case "tick": case "ms":
@@ -110,6 +114,11 @@ public class IQFeedHistoricalRequest {
         } else {
             throw new InvalidParameterException("Invalid time Qualifier");
         }
+        this.header = prefix + dataQualifier + timeQualifier;
+        return this.header;
+    }
+
+    public String toString() throws InvalidParameterException {
 
         StringBuilder dataRequest = new StringBuilder("H");
 
@@ -137,6 +146,14 @@ public class IQFeedHistoricalRequest {
         dataRequest.append("\r\n");
 
         return dataRequest.toString();
+    }
+
+    public String getHeader() {
+        return header;
+    }
+
+    public void setHeader(String header) {
+        this.header = header;
     }
 
 }
