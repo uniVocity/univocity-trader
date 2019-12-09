@@ -24,7 +24,7 @@ import com.univocity.trader.strategy.example.ExampleStrategyMonitor;
 import com.univocity.trader.utils.MailUtil;
 import com.univocity.trader.utils.UnivocityConfiguration;
 
-class LiveTrader {
+class LiveTraderMain {
    /**
     * configfile option
     */

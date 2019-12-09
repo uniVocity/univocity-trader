@@ -18,7 +18,7 @@ import com.univocity.trader.exchange.ExchangeFactory;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.utils.UnivocityConfiguration;
 
-public class MarketHistoryLoader {
+public class MarketHistoryImporterMain {
    /**
     * configfile option
     */

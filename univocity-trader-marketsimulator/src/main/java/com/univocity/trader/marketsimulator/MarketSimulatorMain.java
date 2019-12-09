@@ -20,7 +20,7 @@ import com.univocity.trader.utils.UnivocityConfiguration;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class MarketSimulation {
+public class MarketSimulatorMain {
    /**
     * configfile option
     */
