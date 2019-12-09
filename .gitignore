@@ -21,7 +21,7 @@
 /.ideaDataSources/
 /dataSources/
 
-/**/.DS_Store
+univocity.properties
 /**/.project
 /**/.classpath
 /**/.settings/
