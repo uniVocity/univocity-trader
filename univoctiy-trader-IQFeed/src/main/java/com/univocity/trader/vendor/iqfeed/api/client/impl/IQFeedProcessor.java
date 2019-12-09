@@ -2,15 +2,18 @@ package com.univocity.trader.vendor.iqfeed.api.client.impl;
 
 import com.univocity.trader.vendor.iqfeed.api.client.domain.market.Candlestick;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class IQFeedProcessor {
 
 
+    public List<Candlestick> candles = new ArrayList<>();
     public Object in;
 
-    public List<Candlestick> process(String payload){
-
+    public void process(String payload){
+        this.candles.add();
     }
 
     public List<Candlestick> processHistoricalResponse(String payload){
@@ -55,7 +58,55 @@ public class IQFeedProcessor {
          * TESTREQUEST,2013-07-15,928.00,916.36,924.30,924.69,1961361,0,<CR><LF>
          * TESTREQUEST,!ENDMSG!,<CR><LF>
          */
+
+
         return null;
+    }
+
+    public List<Candlestick> processHTX(String payload){
+        payload.lines().forEach(line -> {
+           String[] vals = line.split(",");
+           String ID = vals[0];
+            String dateTime = vals[1];
+            String last = vals[2];
+            String lastSize = vals[3];
+            String totalVolume = vals[4];
+            String bid = vals[5];
+            String ask = vals[6];
+            String basis  = vals[7];
+            String marketCenter  = vals[8];
+            String conditions  = vals[9];
+            String aggressor  = vals[10];
+            String daycode  = vals[11];
+        } );
+
+    }
+    public List<Candlestick> processHIX(String payload){
+        payload.lines().forEach(line -> {
+            String[] vals = line.split(",");
+            String ID = vals[0];
+            String dateTime = vals[1];
+            String high = vals[2];
+            String low = vals[3];
+            String open = vals[4];
+            String close = vals[5];
+            String totalVolume = vals[6];
+            String periodVolume  = vals[7];
+            String numTrades  = vals[8];
+        } );
+    }
+    public List<Candlestick> processHMX(String payload){
+        payload.lines().forEach(line -> {
+            String[] vals = line.split(",");
+            String ID = vals[0];
+            String dateTime = vals[1];
+            String high = vals[2];
+            String low = vals[3];
+            String open = vals[4];
+            String close = vals[5];
+            String periodVolume = vals[6];
+            String openInterest  = vals[7];
+        } );
     }
 
     public Object processMarketSummaryResponse(String payload){

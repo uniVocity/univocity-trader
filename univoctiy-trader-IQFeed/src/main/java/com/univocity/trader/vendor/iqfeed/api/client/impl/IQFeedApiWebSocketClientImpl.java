@@ -5,6 +5,7 @@ import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiCallback;
 import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiWebSocketClient;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.event.CandlestickEvent;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.market.Candlestick;
+import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequest;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.asynchttpclient.AsyncHttpClient;
@@ -40,12 +41,18 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
         }
     }
 
+    public List<Candlestick> getCandlestickBars(IQFeedHistoricalRequest request){
+        this.sendRequest(request.toString());
+        this.webSocketClient.l
+    }
+
     public List<Candlestick> getCandlestickBars(String request){
         this.sendRequest(request);
     }
 
-    public List<Candlestick> getHistoricalCandlestickBars(String request){
+    public List<Candlestick> getHistoricalCandlestickBars(String request) {
         this.sendRequest(request);
+
     }
 
 

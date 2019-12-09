@@ -74,6 +74,16 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
         return null;
     }
 
+    @Override
+    public List<Candlestick> getLatestTicks(String symbol, TimeInterval interval){
+        // TODO: implement
+        List<Candlestick> candles = socketClient().getCandlestickBars(symbol, interval, 1, null, null);
+        if(candles != null && candles.size() > 0) {
+            return candles.get(0);
+        }
+        return null;
+    }
+
     //TODO: implement
     @Override
     public List<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime){
@@ -83,7 +93,7 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
                 .setBeginDateTime(startTime)
                 .setEndDateTime(endTime)
                 .build();
-        return socketClient.getCandlestickBars();
+        return socketClient.getCandlestickBars(request);
     }
     // TODO: add callback for connection login via IQFeed
 

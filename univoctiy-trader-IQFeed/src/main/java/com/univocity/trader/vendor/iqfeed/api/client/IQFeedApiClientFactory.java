@@ -1,6 +1,7 @@
 package com.univocity.trader.vendor.iqfeed.api.client;
 
-import com.univocity.trader.vendor.iqfeed.api.client.impl.IQFeedAPIWebSocketClientImpl;
+import com.univocity.trader.vendor.iqfeed.api.client.impl.IQFeedApiWebSocketClientImpl;
+import com.univocity.trader.vendor.iqfeed.api.client.impl.IQFeedApiWebSocketListener;
 import org.asynchttpclient.AsyncHttpClient;
 
 public class IQFeedApiClientFactory {
@@ -32,7 +33,8 @@ public class IQFeedApiClientFactory {
         return new IQFeedApiClientFactory(iqPortalPath, product, version, login, password, autoconnect, savelogin, client);
     }
 
-    public IQFeedApiWebSocketClient newWebSocketClient() { return new IQFeedAPIWebSocketClientImpl(this.client);}
+    public IQFeedApiWebSocketClient newWebSocketClient(String host, String port) {
+        return new IQFeedApiWebSocketClientImpl(this.client, host, port, new IQFeedApiWebSocketListener<>());
     }
 
 }
