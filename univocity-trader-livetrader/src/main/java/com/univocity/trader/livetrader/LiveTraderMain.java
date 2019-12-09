@@ -25,6 +25,7 @@ import com.univocity.trader.notification.OrderExecutionToLog;
 import com.univocity.trader.strategy.example.ExampleStrategy;
 import com.univocity.trader.strategy.example.ExampleStrategyMonitor;
 import com.univocity.trader.utils.MailUtil;
+import com.univocity.trader.utils.Symbol;
 import com.univocity.trader.utils.UnivocityConfiguration;
 
 class LiveTraderMain {
@@ -62,7 +63,7 @@ class LiveTraderMain {
                final String apiKey = univocityConfiguration.getExchangeAPIKey();
                final String secret = univocityConfiguration.getExchangeAPISecret();
                final Client client = binance.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), "USDT", apiKey, secret);
-               client.tradeWith("BTC", "ETH", "XRP", "ADA");
+               client.tradeWith(Symbol.BTC.name(), Symbol.ETH.name(), Symbol.XRP.name(), Symbol.ADA.name());
                client.strategies().add(ExampleStrategy::new);
                client.monitors().add(ExampleStrategyMonitor::new);
                client.account().maximumInvestmentAmountPerAsset(20);
