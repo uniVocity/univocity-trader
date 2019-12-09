@@ -55,29 +55,34 @@ class LiveTraderMain {
          if (null != configFileName) {
             UnivocityConfiguration.setConfigfileName(configFileName);
             final Exchange<Candlestick> exchange = ExchangeFactory.getInstance().getExchange(UnivocityConfiguration.getInstance().getExchangeClass());
-            final LiveTrader<Candlestick> binance = new LiveTrader<Candlestick>(exchange, TimeInterval.minutes(1), MailUtil.getEmailConfig());
-            final UnivocityConfiguration univocityConfiguration = UnivocityConfiguration.getInstance();
-            final String apiKey = univocityConfiguration.getExchangeAPIKey();
-            final String secret = univocityConfiguration.getExchangeAPISecret();
-            final Client client = binance.addClient("<YOUR E-MAIL>", ZoneId.systemDefault(), "USDT", apiKey, secret);
-            client.tradeWith("BTC", "ETH", "XRP", "ADA");
-            client.strategies().add(ExampleStrategy::new);
-            client.monitors().add(ExampleStrategyMonitor::new);
-            client.account().maximumInvestmentAmountPerAsset(20);
-            client.account().setOrderManager(new DefaultOrderManager() {
-               @Override
-               public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
-                  switch (order.getSide()) {
-                     case BUY:
-                        order.setPrice(order.getPrice().multiply(new BigDecimal("0.9"))); // 10% less
-                        break;
-                     case SELL:
-                        order.setPrice(order.getPrice().multiply(new BigDecimal("1.1"))); // 10% more
+            LiveTrader<Candlestick> binance = null;
+            try {
+               binance = new LiveTrader<Candlestick>(exchange, TimeInterval.minutes(1), MailUtil.getEmailConfig());
+               final UnivocityConfiguration univocityConfiguration = UnivocityConfiguration.getInstance();
+               final String apiKey = univocityConfiguration.getExchangeAPIKey();
+               final String secret = univocityConfiguration.getExchangeAPISecret();
+               final Client client = binance.addClient("<YOUR E-MAIL>", ZoneId.systemDefault(), "USDT", apiKey, secret);
+               client.tradeWith("BTC", "ETH", "XRP", "ADA");
+               client.strategies().add(ExampleStrategy::new);
+               client.monitors().add(ExampleStrategyMonitor::new);
+               client.account().maximumInvestmentAmountPerAsset(20);
+               client.account().setOrderManager(new DefaultOrderManager() {
+                  @Override
+                  public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
+                     switch (order.getSide()) {
+                        case BUY:
+                           order.setPrice(order.getPrice().multiply(new BigDecimal("0.9"))); // 10% less
+                           break;
+                        case SELL:
+                           order.setPrice(order.getPrice().multiply(new BigDecimal("1.1"))); // 10% more
+                     }
                   }
-               }
-            });
-            client.listeners().add(new OrderExecutionToLog());
-            binance.run();
+               });
+               client.listeners().add(new OrderExecutionToLog());
+               binance.run();
+            } finally {
+               binance.close();
+            }
          }
       } catch (final Exception e) {
          e.printStackTrace();
