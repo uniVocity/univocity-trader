@@ -2,6 +2,7 @@ package com.univocity.trader.exchange.binance;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.exchange.Exchange;
 import com.univocity.trader.exchange.binance.api.client.*;
 import com.univocity.trader.exchange.binance.api.client.domain.event.*;
 import com.univocity.trader.exchange.binance.api.client.domain.general.*;

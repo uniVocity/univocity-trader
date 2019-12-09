@@ -13,8 +13,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import com.univocity.trader.candles.CandleRepository;
-import com.univocity.trader.exchange.binance.BinanceExchange;
+import com.univocity.trader.exchange.Exchange;
+import com.univocity.trader.exchange.ExchangeFactory;
 import com.univocity.trader.indicators.base.TimeInterval;
+import com.univocity.trader.utils.UnivocityConfiguration;
 
 public class MarketHistoryLoader {
    /**
@@ -94,7 +96,8 @@ public class MarketHistoryLoader {
           */
          final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
          if (null != configFileName) {
-            final BinanceExchange exchange = new BinanceExchange();
+            UnivocityConfiguration.setConfigfileName(configFileName);
+            final Exchange exchange = ExchangeFactory.getInstance().getExchange(UnivocityConfiguration.getInstance().getExchangeClass());
             final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
             for (final String[] pair : ALL_PAIRS) {
                final String symbol = pair[0] + pair[1];

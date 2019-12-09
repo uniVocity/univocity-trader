@@ -5,7 +5,7 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.*;
 
 /**
- * A {@code Strategy} is responsible for processing price updates transmitted by an {@link com.univocity.trader.Exchange}
+ * A {@code Strategy} is responsible for processing price updates transmitted by an {@link com.univocity.trader.exchange.Exchange}
  * and generating a {@link Signal} which is then submitted to {@link Trader#trade(Candle, Signal, Strategy)}
  * to open, maintain or close a trade.
  *
@@ -22,7 +22,7 @@ public interface Strategy {
 	/**
 	 * Processes the latest price update of a symbol to produce a {@link Signal}
 	 *
-	 * @param candle the latest candle received from a live {@link com.univocity.trader.Exchange} or the trading history of a symbol
+	 * @param candle the latest candle received from a live {@link com.univocity.trader.exchange.Exchange} or the trading history of a symbol
 	 *               (typically managed by {@link com.univocity.trader.simulation.SimulatedExchange}).
 	 *
 	 * @return an indication to {@code BUY}, {@code SELL} or do nothing (i.e. {@code NEUTRAL}). Any other value will be ignored by the

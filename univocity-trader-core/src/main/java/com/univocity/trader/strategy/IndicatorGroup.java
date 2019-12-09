@@ -46,7 +46,7 @@ public abstract class IndicatorGroup {
 	 * After all indicators are updated, method {@link #candleAccumulated(Candle)} will be invoked to notify implementations of this class
 	 * that state of the indicators in this group might have changed.
 	 *
-	 * @param candle the latest price details returned by an {@link com.univocity.trader.Exchange}
+	 * @param candle the latest price details returned by an {@link com.univocity.trader.exchange.Exchange}
 	 */
 	public final void accumulate(Candle candle) {
 		for (int i = 0; i < indicators.length; i++) {
@@ -59,7 +59,7 @@ public abstract class IndicatorGroup {
 	 * Callback method used to notify subclasses that a {@link Candle} was accumulated and the indicators of this group might have a new state.
 	 * Does nothing by default.
 	 *
-	 * @param candle the latest price details returned by an {@link com.univocity.trader.Exchange}
+	 * @param candle the latest price details returned by an {@link com.univocity.trader.exchange.Exchange}
 	 */
 	protected void candleAccumulated(Candle candle) {
 

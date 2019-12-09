@@ -1,6 +1,7 @@
 package com.univocity.trader;
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.exchange.Exchange;
 
 import java.math.*;
 import java.util.*;

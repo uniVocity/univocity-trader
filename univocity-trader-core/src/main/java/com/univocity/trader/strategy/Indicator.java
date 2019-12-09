@@ -38,7 +38,7 @@ public interface Indicator {
 	 * - Minute 3, candle(1.2) = [1.5, 1.2]. Average :1.35
 	 * - Minute 4, candle(1.3) = [1.5, 1.3]. Average :1.4
 	 *
-	 * @param candle the latest candle received from a live {@link com.univocity.trader.Exchange} or the trading history of a symbol
+	 * @param candle the latest candle received from a live {@link com.univocity.trader.exchange.Exchange} or the trading history of a symbol
 	 *               (typically managed by {@link com.univocity.trader.simulation.SimulatedExchange}).
 	 *
 	 * @return {@code true} if the candle was processed by this indicator, or {@code false} if it was ignored.
@@ -73,7 +73,7 @@ public interface Indicator {
 	 * is less than the {@link BollingerBand#getLowerBand()}. Users are expected to override this method to determine which signals make
 	 * sense to them.
 	 *
-	 * @param candle the latest candle received from a live {@link com.univocity.trader.Exchange} or the trading history of a symbol
+	 * @param candle the latest candle received from a live {@link com.univocity.trader.exchange.Exchange} or the trading history of a symbol
 	 *               (typically managed by {@link com.univocity.trader.simulation.SimulatedExchange}).
 	 *
 	 * @return the current indicator signal, if applicable, or {@code NEUTRAL}

@@ -27,8 +27,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.RowMapper;
 
-import com.univocity.trader.Exchange;
 import com.univocity.trader.datasource.ThreadLocalDataSourceFactory;
+import com.univocity.trader.exchange.Exchange;
 import com.univocity.trader.indicators.base.TimeInterval;
 
 public class CandleRepository {

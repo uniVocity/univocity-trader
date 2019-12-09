@@ -1,6 +1,7 @@
 package com.univocity.trader;
 
 import com.univocity.trader.account.*;
+import com.univocity.trader.exchange.Exchange;
 
 /**
  * Calculates the trading fees applied to an {@link Order}. Used for simulations/backtesting as the live {@link Exchange}

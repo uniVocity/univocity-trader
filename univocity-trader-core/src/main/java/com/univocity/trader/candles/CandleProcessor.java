@@ -1,6 +1,7 @@
 package com.univocity.trader.candles;
 
 import com.univocity.trader.*;
+import com.univocity.trader.exchange.Exchange;
 import com.univocity.trader.strategy.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;

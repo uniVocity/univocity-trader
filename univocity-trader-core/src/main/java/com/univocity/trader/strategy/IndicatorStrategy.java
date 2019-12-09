@@ -25,7 +25,7 @@ public abstract class IndicatorStrategy extends IndicatorGroup implements Strate
 	 * Submits the latest price update of a symbol to this strategy and all of its indicators, in order to update their state
 	 * and calculate a "final" {@link Signal}
 	 *
-	 * @param candle the latest candle received from a live {@link com.univocity.trader.Exchange} or the trading history of a symbol
+	 * @param candle the latest candle received from a live {@link com.univocity.trader.exchange.Exchange} or the trading history of a symbol
 	 *               (typically managed by {@link com.univocity.trader.simulation.SimulatedExchange}).
 	 *
 	 * @return an indication to {@code BUY}, {@code SELL} or do nothing (i.e. {@code NEUTRAL}). Any other value will be ignored by the

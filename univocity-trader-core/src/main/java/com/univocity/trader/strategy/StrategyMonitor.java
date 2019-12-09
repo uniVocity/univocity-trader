@@ -6,7 +6,7 @@ import com.univocity.trader.indicators.*;
 
 /**
  * Class responsible for monitoring trades made by a {@link Trader}, after a {@link Strategy} returns a {@link Signal}.
- * It can contain {@link Indicator}s to help deciding what to do on every tick received from the {@link com.univocity.trader.Exchange}.
+ * It can contain {@link Indicator}s to help deciding what to do on every tick received from the {@link com.univocity.trader.exchange.Exchange}.
  *
  * Once a {@code BUY} is received, and no position is open, {@link #discardBuy(Strategy)} will be invoked to confirm if it is a good time to
  * buy. If it is, a position is open and {@link #bought()} will be called.
