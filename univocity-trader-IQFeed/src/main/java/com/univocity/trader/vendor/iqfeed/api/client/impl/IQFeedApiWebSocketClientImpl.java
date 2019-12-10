@@ -28,16 +28,24 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
     private final WebSocket webSocketClient;
 
     public IQFeedApiWebSocketClientImpl(AsyncHttpClient client, String host, String port, IQFeedApiWebSocketListener<?> listener){
-        processor = new IQFeedProcessor();
-        this.client = client;
-        listener.setProcessor(processor);
-        webSocketClient = createNewWebSocket(host, port, listener);
+        try {
+            processor = new IQFeedProcessor();
+            this.client = client;
+            listener.setProcessor(processor);
+            webSocketClient = createNewWebSocket(host, port, listener);
+        } catch (Exception e){
+            log.error(e.getMessage());
+        }
     }
 
     public void sendRequest(String request){
         if(this.webSocketClient.isOpen()){
-            this.webSocketClient.sendTextFrame(request);
-            log.info("Univocity-IQFeed OUT: " + request);
+            try {
+                this.webSocketClient.sendTextFrame(request);
+                log.info("Univocity-IQFeed OUT: " + request);
+            } catch (Exception e){
+                log.error(e.getMessage());
+            }
         }
     }
 
@@ -54,8 +62,8 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
         return candles;
     }
 
-    public List<Candlestick> getHistoricalCandlestickBars(String request) {
-        this.sendRequest(request);
+    public List<Candlestick> getHistoricalCandlestickBars(IQFeedHistoricalRequest request) {
+        this.sendRequest(request.toString());
         List<Candlestick> candles = this.processor.getCandles();
         return candles;
     }

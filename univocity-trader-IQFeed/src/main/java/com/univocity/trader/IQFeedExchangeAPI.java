@@ -18,6 +18,12 @@ import org.asynchttpclient.*;
 import org.slf4j.*;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.net.UnknownHostException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,9 +42,22 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     // TODO: ask about maxFrameSize
     private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 655356);
     private String iqPortalPath = IQFeedApiConstants.IQPORTAL_PATH;
+    private String host;
+    private String port;
+    private String product;
+    private String version;
+    private String login;
+    private String pass;
 
-    public IQFeedClientAccountApi connectToIQFeedAccount(String product, String version, String login, String pass, boolean autoConnect,
+    public IQFeedClientAccountApi connectToIQFeedAccount(String host, String port, String product, String version, String login, String pass, boolean autoConnect,
                                                    boolean saveLoginInfo ){
+        this.host = host;
+        this.port = port;
+        this.product = product;
+        this.version = version;
+        this.login = login;
+        this.pass = pass;
+
         if(!iqPortal){
             try {
                 Runtime.getRuntime().exec(iqPortalPath, null, new File(iqPortalPath));
@@ -47,7 +66,8 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
                 logger.info(e.getMessage());
             }
         }
-        return new IQFeedClientAccountApi(iqPortalPath, product, version, login, pass, this, true, true);
+        return new IQFeedClientAccountApi(iqPortalPath, product, host, port, version, login, pass, this,
+                true, true, asyncHttpClient);
     }
 
 
@@ -67,33 +87,71 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     @Override
     public Candlestick getLatestTick(String symbol, TimeInterval interval){
         // TODO: implement
-        List<Candlestick> candles = socketClient().getCandlestickBars(symbol, interval, 1, null, null);
+        List<Candlestick> candles = socketClient().getCandlestickBars();
         if(candles != null && candles.size() > 0) {
             return candles.get(0);
         }
         return null;
+    }
+
+    @Override
+    public Map<String, Double> getLatestPrices(){
+        return new HashMap<>();
+    }
+
+    @Override
+    public double getLatestPrice(String assetSymbol, String fundSymbol){
+        return new Double(0);
     }
 
     @Override
     public List<Candlestick> getLatestTicks(String symbol, TimeInterval interval){
         // TODO: implement
-        List<Candlestick> candles = socketClient().getCandlestickBars(symbol, interval, 1, null, null);
-        if(candles != null && candles.size() > 0) {
-            return candles.get(0);
+        ChronoUnit timeUnit ;
+        switch(TimeInterval.getUnitStr(interval.unit)){
+            case "d":
+                timeUnit = ChronoUnit.DAYS;
+                break;
+            case "h":
+                timeUnit = ChronoUnit.HOURS;
+                break;
+            case "m":
+                timeUnit = ChronoUnit.MINUTES;
+                break;
+            case "s":
+                timeUnit = ChronoUnit.SECONDS;
+                break;
+            case "ms":
+                timeUnit = ChronoUnit.MILLIS;
+                break;
         }
-        return null;
+        StringBuilder requestIDBuilder = new StringBuilder("IQFeedLatestTicksRequest_" + Instant.now().toString());
+        requestIDBuilder.append("_symbol:" + symbol + "_interval:" + interval.toString());
+        IQFeedHistoricalRequest request = new IQFeedHistoricalRequestBuilder()
+                .setRequestID(requestIDBuilder.toString())
+                .setSymbol(symbol)
+                .setIntervalType(interval)
+                .setBeginDateTime(Instant.now().minus(100L, timeUnit).toEpochMilli())
+                .setEndDateTime(Instant.now().toEpochMilli())
+                .build();
+
+        List<Candlestick> candles = socketClient().getHistoricalCandlestickBars(request);
+        return candles;
     }
 
     //TODO: implement
     @Override
     public List<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime){
+        StringBuilder requestIDBuilder = new StringBuilder("IQFeedHistoricalRequest_" + Instant.now().toString());
+        requestIDBuilder.append("_symbol:" + symbol+ "_interval:" + interval.toString() + "_start:" + startTime + "_end:" + endTime);
         IQFeedHistoricalRequest request = new IQFeedHistoricalRequestBuilder()
+                .setRequestID(requestIDBuilder.toString())
                 .setSymbol(symbol)
                 .setIntervalType(interval)
                 .setBeginDateTime(startTime)
                 .setEndDateTime(endTime)
                 .build();
-        return socketClient.getCandlestickBars(request);
+        return socketClient.getHistoricalCandlestickBars(request);
     }
     // TODO: add callback for connection login via IQFeed
 
@@ -108,6 +166,17 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
                 Double.parseDouble(c.getClose()),
                 Double.parseDouble(c.getVolume())
         );
+    }
+
+    public PreciseCandle generatePreciseCandle(Candlestick c){
+        return new PreciseCandle(
+                c.getOpenTime(),
+                c.getCloseTime(),
+                new BigDecimal(c.getOpen()),
+                new BigDecimal(c.getHigh()),
+                new BigDecimal(c.getLow()),
+                new BigDecimal(c.getClose()),
+                new BigDecimal(c.getVolume()));
     }
 
 //    @Override
@@ -131,17 +200,6 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
 
     @Override
     public void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candlestick> consumer){
-        CandlestickInterval interval = CandlestickInterval.fromTimeInterval(tickInterval);
-        logger.info("Opening IQFeed {} live stream for: {}", tickInterval, symbols);
-        socketClientCloseable = socketClient().onCandlestickEvent(symbols, interval, new IQFeedApiCallback<>(){
-
-            @Override
-            public void onResponse(CandlestickEvent response){consumer.tickReceived(response.getSymbol(), response);}
-
-            public void onFailure(Throwable cause) { consumer.streamError(cause);}
-
-            public void onClose() { consumer.streamClosed(); }
-        });
     }
 
     @Override
@@ -155,8 +213,14 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
 
     private IQFeedApiWebSocketClient socketClient(){
         if(socketClient == null){
-            IQFeedApiClientFactory factory = IQFeedApiClientFactory.newInstance(asyncHttpClient);
-            socketClient = factory.newWebSocketClient();
+            IQFeedApiClientFactory factory = IQFeedApiClientFactory.newInstance(
+                    IQFeedApiConstants.IQPORTAL_PATH,
+            IQFeedApiConstants.IQPRODUCT,
+            IQFeedApiConstants.IQVERSION,
+            IQFeedApiConstants.IQLOGIN,
+            IQFeedApiConstants.IQPASS,
+            true, true, asyncHttpClient);
+            socketClient = factory.newWebSocketClient(IQFeedApiConstants.HOST, IQFeedApiConstants.PORT);
         }
         return socketClient;
     }
