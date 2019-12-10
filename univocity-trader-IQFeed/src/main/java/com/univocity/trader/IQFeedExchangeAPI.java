@@ -1,7 +1,5 @@
 package com.univocity.trader;
 
-import com.sun.org.slf4j.internal.Logger;
-import com.sun.org.slf4j.internal.LoggerFactory;
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.TimeInterval;
@@ -84,13 +82,15 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
         return null;
     }
 
+    // TODO: implement
+    @Override
+    public Map<String, SymbolInformation> getSymbolInformation(){
+      return new HashMap<>();
+    };
+
     @Override
     public Candlestick getLatestTick(String symbol, TimeInterval interval){
         // TODO: implement
-        List<Candlestick> candles = socketClient().getCandlestickBars();
-        if(candles != null && candles.size() > 0) {
-            return candles.get(0);
-        }
         return null;
     }
 
@@ -107,7 +107,7 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     @Override
     public List<Candlestick> getLatestTicks(String symbol, TimeInterval interval){
         // TODO: implement
-        ChronoUnit timeUnit ;
+        ChronoUnit timeUnit  = null;
         switch(TimeInterval.getUnitStr(interval.unit)){
             case "d":
                 timeUnit = ChronoUnit.DAYS;

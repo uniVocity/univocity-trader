@@ -8,6 +8,7 @@ import com.univocity.trader.vendor.iqfeed.api.client.domain.market.Candlestick;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequest;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import org.apache.commons.lang3.ObjectUtils;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.netty.handler.WebSocketHandler;
 import org.asynchttpclient.ws.WebSocket;
@@ -23,12 +24,12 @@ import java.util.stream.Collectors;
 public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, Closeable {
 
     private static final Logger log = LoggerFactory.getLogger(IQFeedApiWebSocketClientImpl.class);
-    private final IQFeedProcessor processor;
-    private final AsyncHttpClient client;
-    private final WebSocket webSocketClient;
+    private IQFeedProcessor processor = null;
+    private AsyncHttpClient client = null;
+    private WebSocket webSocketClient = null;
 
     public IQFeedApiWebSocketClientImpl(AsyncHttpClient client, String host, String port, IQFeedApiWebSocketListener<?> listener){
-        try {
+        if(client != null) try {
             processor = new IQFeedProcessor();
             this.client = client;
             listener.setProcessor(processor);
