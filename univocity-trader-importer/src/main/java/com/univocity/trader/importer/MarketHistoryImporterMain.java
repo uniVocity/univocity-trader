@@ -14,10 +14,11 @@ import org.apache.commons.cli.Options;
 
 import com.univocity.trader.candles.Candle;
 import com.univocity.trader.candles.CandleRepository;
+import com.univocity.trader.config.impl.ConfigFileUnivocityConfigurationImpl;
 import com.univocity.trader.exchange.Exchange;
 import com.univocity.trader.exchange.ExchangeFactory;
+import com.univocity.trader.guice.UnivocityFactory;
 import com.univocity.trader.indicators.base.TimeInterval;
-import com.univocity.trader.utils.UnivocityConfiguration;
 
 public class MarketHistoryImporterMain {
    /**
@@ -97,8 +98,8 @@ public class MarketHistoryImporterMain {
           */
          final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
          if (null != configFileName) {
-            UnivocityConfiguration.setConfigfileName(configFileName);
-            final Exchange<Candle> exchange = ExchangeFactory.getInstance().getExchange(UnivocityConfiguration.getInstance().getExchangeClass());
+            ConfigFileUnivocityConfigurationImpl.setConfigfileName(configFileName);
+            final Exchange<Candle> exchange = ExchangeFactory.getInstance().getExchange(UnivocityFactory.getInstance().getUnivocityConfiguration().getExchangeClass());
             final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
             for (final String[] pair : ALL_PAIRS) {
                final String symbol = pair[0] + pair[1];

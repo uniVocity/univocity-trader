@@ -27,8 +27,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.RowMapper;
 
-import com.univocity.trader.datasource.ThreadLocalDataSourceFactory;
 import com.univocity.trader.exchange.Exchange;
+import com.univocity.trader.guice.UnivocityFactory;
 import com.univocity.trader.indicators.base.TimeInterval;
 
 public class CandleRepository {
@@ -39,7 +39,7 @@ public class CandleRepository {
       Candle out = new Candle(rs.getLong(1), rs.getLong(2), rs.getDouble(3), rs.getDouble(4), rs.getDouble(5), rs.getDouble(6), rs.getDouble(7));
       return out;
    };
-   private static final DataSource dataSource = ThreadLocalDataSourceFactory.getInstance().getDataSource();
+   private static final DataSource dataSource = UnivocityFactory.getInstance().getDataSourceFactory().getDataSource();
    private static final ThreadLocal<JdbcTemplate> db = ThreadLocal.withInitial(() -> new JdbcTemplate(dataSource));
 
    public static JdbcTemplate db() {

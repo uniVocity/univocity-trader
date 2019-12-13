@@ -17,16 +17,18 @@ import com.univocity.trader.account.DefaultOrderManager;
 import com.univocity.trader.account.OrderBook;
 import com.univocity.trader.account.OrderRequest;
 import com.univocity.trader.candles.Candle;
+import com.univocity.trader.config.UnivocityConfiguration;
+import com.univocity.trader.config.impl.ConfigFileUnivocityConfigurationImpl;
 import com.univocity.trader.exchange.Exchange;
 import com.univocity.trader.exchange.ExchangeFactory;
 import com.univocity.trader.exchange.binance.api.client.domain.market.Candlestick;
+import com.univocity.trader.guice.UnivocityFactory;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.notification.OrderExecutionToLog;
 import com.univocity.trader.strategy.example.ExampleStrategy;
 import com.univocity.trader.strategy.example.ExampleStrategyMonitor;
 import com.univocity.trader.utils.MailUtil;
 import com.univocity.trader.utils.Symbol;
-import com.univocity.trader.utils.UnivocityConfiguration;
 
 class LiveTraderMain {
    /**
@@ -54,12 +56,12 @@ class LiveTraderMain {
           */
          final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
          if (null != configFileName) {
-            UnivocityConfiguration.setConfigfileName(configFileName);
-            final Exchange<Candlestick> exchange = ExchangeFactory.getInstance().getExchange(UnivocityConfiguration.getInstance().getExchangeClass());
+            final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
+            ConfigFileUnivocityConfigurationImpl.setConfigfileName(configFileName);
+            final Exchange<Candlestick> exchange = ExchangeFactory.getInstance().getExchange(univocityConfiguration.getExchangeClass());
             LiveTrader<Candlestick> binance = null;
             try {
                binance = new LiveTrader<Candlestick>(exchange, TimeInterval.minutes(1), MailUtil.getEmailConfig());
-               final UnivocityConfiguration univocityConfiguration = UnivocityConfiguration.getInstance();
                final String apiKey = univocityConfiguration.getExchangeAPIKey();
                final String secret = univocityConfiguration.getExchangeAPISecret();
                final Client client = binance.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), "USDT", apiKey, secret);

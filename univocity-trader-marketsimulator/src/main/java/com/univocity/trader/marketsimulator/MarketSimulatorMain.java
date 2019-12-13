@@ -10,12 +10,12 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import com.univocity.trader.account.SimpleTradingFees;
+import com.univocity.trader.config.impl.ConfigFileUnivocityConfigurationImpl;
 import com.univocity.trader.notification.OrderExecutionToLog;
 import com.univocity.trader.notification.SimpleStrategyStatistics;
 import com.univocity.trader.simulation.MarketSimulator;
 import com.univocity.trader.strategy.example.ExampleStrategy;
 import com.univocity.trader.strategy.example.ExampleStrategyMonitor;
-import com.univocity.trader.utils.UnivocityConfiguration;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -46,7 +46,7 @@ public class MarketSimulatorMain {
           */
          final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
          if (null != configFileName) {
-            UnivocityConfiguration.setConfigfileName(configFileName);
+            ConfigFileUnivocityConfigurationImpl.setConfigfileName(configFileName);
             final MarketSimulator simulation = new MarketSimulator("USDT");
             simulation.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH");
             simulation.strategies().add(ExampleStrategy::new);

@@ -14,60 +14,73 @@
 	<name>univocity-trader-core</name>
 	<packaging>jar</packaging>
 
+	<properties>
+		<commons-lang3.version>3.9</commons-lang3.version>
+		<commons-codec.version>1.13</commons-codec.version>
+		<spring.version>5.2.2.RELEASE</spring.version>
+		<mysql.version>5.1.45</mysql.version>
+		<guice.version>4.2.2</guice.version>
+	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>com.squareup.retrofit2</groupId>
 			<artifactId>retrofit</artifactId>
-			<version>2.6.2</version>
+			<version>${retrofit.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.squareup.retrofit2</groupId>
 			<artifactId>converter-jackson</artifactId>
-			<version>2.6.2</version>
+			<version>${retrofit.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.asynchttpclient</groupId>
 			<artifactId>async-http-client</artifactId>
-			<version>2.10.2</version>
+			<version>${asynchttpclient.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.asynchttpclient</groupId>
 			<artifactId>async-http-client-extras-retrofit2</artifactId>
-			<version>2.10.2</version>
+			<version>${asynchttpclient.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
-			<version>1.10</version>
+			<version>${commons-codec.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.6</version>
+			<version>${commons-lang3.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.45</version>
+			<version>${mysql.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.integration</groupId>
 			<artifactId>spring-integration-mail</artifactId>
-			<version>5.2.0.RELEASE</version>
+			<version>${spring.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-jdbc</artifactId>
-			<version>5.2.0.RELEASE</version>
+			<version>${spring.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>mail</artifactId>
 			<version>1.4.7</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
+			<version>${guice.version}</version>
 		</dependency>
 	</dependencies>
 
