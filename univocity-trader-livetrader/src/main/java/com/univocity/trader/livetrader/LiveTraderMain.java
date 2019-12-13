@@ -19,6 +19,8 @@ import com.univocity.trader.account.OrderRequest;
 import com.univocity.trader.candles.Candle;
 import com.univocity.trader.config.UnivocityConfiguration;
 import com.univocity.trader.config.impl.ConfigFileUnivocityConfigurationImpl;
+import com.univocity.trader.currency.Currencies;
+import com.univocity.trader.currency.Currency;
 import com.univocity.trader.exchange.Exchange;
 import com.univocity.trader.exchange.ExchangeFactory;
 import com.univocity.trader.exchange.binance.api.client.domain.market.Candlestick;
@@ -28,13 +30,16 @@ import com.univocity.trader.notification.OrderExecutionToLog;
 import com.univocity.trader.strategy.example.ExampleStrategy;
 import com.univocity.trader.strategy.example.ExampleStrategyMonitor;
 import com.univocity.trader.utils.MailUtil;
-import com.univocity.trader.utils.Symbol;
 
 class LiveTraderMain {
    /**
     * configfile option
     */
    private static final String CONFIG_OPTION = "config";
+   /**
+    * currency
+    */
+   private static final String CURRENCY_OPTION = "currency";
 
    public static void main(String... args) {
       System.out.println("Univocity Live Trader");
@@ -42,7 +47,9 @@ class LiveTraderMain {
        * options
        */
       final Options options = new Options();
-      final Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(true).desc("config file").build();
+      Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(true).desc("config file").build();
+      options.addOption(oo);
+      oo = Option.builder().argName(CURRENCY_OPTION).longOpt(CURRENCY_OPTION).type(String.class).hasArg().required(true).desc("currency").build();
       options.addOption(oo);
       /*
        * parse
@@ -55,36 +62,45 @@ class LiveTraderMain {
           * get the file
           */
          final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
-         if (null != configFileName) {
-            final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
-            ConfigFileUnivocityConfigurationImpl.setConfigfileName(configFileName);
-            final Exchange<Candlestick> exchange = ExchangeFactory.getInstance().getExchange(univocityConfiguration.getExchangeClass());
-            LiveTrader<Candlestick> binance = null;
-            try {
-               binance = new LiveTrader<Candlestick>(exchange, TimeInterval.minutes(1), MailUtil.getEmailConfig());
-               final String apiKey = univocityConfiguration.getExchangeAPIKey();
-               final String secret = univocityConfiguration.getExchangeAPISecret();
-               final Client client = binance.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), "USDT", apiKey, secret);
-               client.tradeWith(Symbol.BTC.name(), Symbol.ETH.name(), Symbol.XRP.name(), Symbol.ADA.name());
-               client.strategies().add(ExampleStrategy::new);
-               client.monitors().add(ExampleStrategyMonitor::new);
-               client.account().maximumInvestmentAmountPerAsset(20);
-               client.account().setOrderManager(new DefaultOrderManager() {
-                  @Override
-                  public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
-                     switch (order.getSide()) {
-                        case BUY:
-                           order.setPrice(order.getPrice().multiply(new BigDecimal("0.9"))); // 10% less
-                           break;
-                        case SELL:
-                           order.setPrice(order.getPrice().multiply(new BigDecimal("1.1"))); // 10% more
+         /*
+          * get the currency
+          */
+         final String currencyName = cmd.getOptionValue(CURRENCY_OPTION);
+         if ((null != configFileName) && (null != currencyName)) {
+            final Currency currency = Currencies.getInstance().find(currencyName);
+            if (null != currency) {
+               final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
+               ConfigFileUnivocityConfigurationImpl.setConfigfileName(configFileName);
+               final Exchange<Candlestick> exchange = ExchangeFactory.getInstance().getExchange(univocityConfiguration.getExchangeClass());
+               LiveTrader<Candlestick> binance = null;
+               try {
+                  binance = new LiveTrader<Candlestick>(exchange, TimeInterval.minutes(1), MailUtil.getEmailConfig());
+                  final String apiKey = univocityConfiguration.getExchangeAPIKey();
+                  final String secret = univocityConfiguration.getExchangeAPISecret();
+                  final Client client = binance.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), "USDT", apiKey, secret);
+                  client.tradeWith(currency.getSymbol());
+                  client.strategies().add(ExampleStrategy::new);
+                  client.monitors().add(ExampleStrategyMonitor::new);
+                  client.account().maximumInvestmentAmountPerAsset(20);
+                  client.account().setOrderManager(new DefaultOrderManager() {
+                     @Override
+                     public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
+                        switch (order.getSide()) {
+                           case BUY:
+                              order.setPrice(order.getPrice().multiply(new BigDecimal("0.9"))); // 10% less
+                              break;
+                           case SELL:
+                              order.setPrice(order.getPrice().multiply(new BigDecimal("1.1"))); // 10% more
+                        }
                      }
-                  }
-               });
-               client.listeners().add(new OrderExecutionToLog());
-               binance.run();
-            } finally {
-               binance.close();
+                  });
+                  client.listeners().add(new OrderExecutionToLog());
+                  binance.run();
+               } finally {
+                  binance.close();
+               }
+            } else {
+               System.out.println("Unknown currency " + currency);
             }
          }
       } catch (final Exception e) {
