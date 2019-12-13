@@ -143,11 +143,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 		available = Math.min(maxAmountPerTrade, Math.min(maxAmount, available));
 
-		if (available < minimumInvestment) {
-			return 0.0;
-		}
 		final double freeAmount = getAmount(fundSymbol);
-		return Math.min(available, freeAmount);
+		double out = Math.min(available, freeAmount);
+		if (out < minimumInvestment) {
+			out = 0.0;
+		}
+
+		return out;
 	}
 
 	public double allocateFunds(String assetSymbol) {
