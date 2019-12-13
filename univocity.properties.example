@@ -19,3 +19,6 @@ exchange.class=com.univocity.trader.exchange.binance.BinanceExchange
 exchange.clientid="<YOUR E-MAIL>"
 exchange.apikey=<YOUR BINANCE API KEY>"
 exchange.secret=<YOUR BINANCE API SECRET>"
+
+# max queries per minute
+exchange.queryrate=1200

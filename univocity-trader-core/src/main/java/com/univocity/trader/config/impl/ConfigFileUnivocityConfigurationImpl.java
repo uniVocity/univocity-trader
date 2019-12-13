@@ -41,6 +41,11 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    private String exchangeAPISecret;
    private String exchangeClass;
    private String exchangeClientId;
+   private int exchangeQueryRate;
+
+   public int getExchangeQueryRate() {
+      return exchangeQueryRate;
+   }
 
    public ConfigFileUnivocityConfigurationImpl() {
       try {
@@ -70,6 +75,7 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
          exchangeAPISecret = properties.getProperty("exchange.secret");
          exchangeClass = properties.getProperty("exchange.class");
          exchangeClientId = properties.getProperty("exchange.clientid");
+         exchangeQueryRate = Integer.parseInt(properties.getProperty("exchange.queryrate"));
       } catch (final Exception e) {
          e.printStackTrace();
       }

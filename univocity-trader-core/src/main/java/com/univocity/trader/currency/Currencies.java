@@ -70,4 +70,29 @@ public class Currencies {
    public int size() {
       return this.currencies.size();
    }
+
+   public String[] fromList(String currenciesList) {
+      String[] cl = currenciesList.split(",");
+      for (int i = 0; i < cl.length; i++) {
+         String symbol = cl[i].trim();
+         Currency currency = this.find(symbol);
+         if (null == currency) {
+            throw new IllegalStateException();
+         } else {
+            cl[i] = symbol;
+         }
+      }
+      return cl;
+   }
+
+   public String[] makePairs(String[] currencies1, String[] currencies2) {
+      String[] ret = new String[currencies1.length * currencies2.length];
+      int idx = 0;
+      for (int i = 0; i < currencies1.length; i++) {
+         for (int j = 0; j < currencies2.length; j++) {
+            ret[idx++] = currencies1[i] + currencies2[j];
+         }
+      }
+      return ret;
+   }
 }

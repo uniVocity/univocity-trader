@@ -20,6 +20,8 @@ public interface UnivocityConfiguration {
 
    String getExchangeClientId();
 
+   int getExchangeQueryRate();
+
    String getMailPassword();
 
    int getMailPort();
