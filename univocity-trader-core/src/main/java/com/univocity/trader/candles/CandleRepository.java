@@ -217,7 +217,9 @@ public class CandleRepository {
             out = new ArrayList<>((int) cacheSize);
          }
       } else {
-         out = new ArrayBlockingQueue<>(5000) {
+         out = new ArrayBlockingQueue<Candle>(5000) {
+            private static final long serialVersionUID = 1L;
+
             public boolean add(Candle e) {
                try {
                   super.put(e);

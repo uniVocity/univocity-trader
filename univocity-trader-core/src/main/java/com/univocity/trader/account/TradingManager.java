@@ -1,271 +1,268 @@
 package com.univocity.trader.account;
 
-import com.univocity.trader.*;
-import com.univocity.trader.candles.*;
+import static com.univocity.trader.account.Order.Side.BUY;
+
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.univocity.trader.SymbolPriceDetails;
+import com.univocity.trader.TradingFees;
+import com.univocity.trader.candles.Candle;
 import com.univocity.trader.exchange.Exchange;
-import com.univocity.trader.indicators.base.*;
-import com.univocity.trader.notification.*;
-import com.univocity.trader.simulation.*;
-import com.univocity.trader.utils.*;
-import org.apache.commons.lang3.*;
-import org.slf4j.*;
-
-import java.util.*;
-
-import static com.univocity.trader.account.Order.Side.*;
+import com.univocity.trader.indicators.base.TimeInterval;
+import com.univocity.trader.notification.OrderExecutionToEmail;
+import com.univocity.trader.notification.OrderListener;
+import com.univocity.trader.simulation.Parameters;
+import com.univocity.trader.utils.InstancesProvider;
 
 public class TradingManager {
+   private static final Logger log = LoggerFactory.getLogger(TradingManager.class);
+   private static final long FIFTEEN_SECONDS = TimeInterval.seconds(15).ms;
+   private final String symbol;
+   final String assetSymbol;
+   final String fundSymbol;
+   private final AccountManager tradingAccount;
+   protected Trader trader;
+   private Exchange<?> exchange;
+   private final OrderListener[] notifications;
+   protected Client<?> client;
+   private OrderExecutionToEmail emailNotifier;
+   private final SymbolPriceDetails priceDetails;
 
-	private static final Logger log = LoggerFactory.getLogger(TradingManager.class);
+   public TradingManager(Exchange<?> exchange, SymbolPriceDetails priceDetails, AccountManager account, InstancesProvider<OrderListener> listenerProvider, String assetSymbol, String fundSymbol,
+         Parameters params) {
+      if (exchange == null) {
+         throw new IllegalArgumentException("Exchange implementation cannot be null");
+      }
+      if (priceDetails == null) {
+         priceDetails = new SymbolPriceDetails(exchange);
+      }
+      if (account == null) {
+         throw new IllegalArgumentException("Account manager cannot be null");
+      }
+      if (StringUtils.isBlank(assetSymbol)) {
+         throw new IllegalArgumentException("Symbol of instrument to buy cannot be blank (examples: 'MSFT', 'BTC', 'EUR')");
+      }
+      if (StringUtils.isBlank(fundSymbol)) {
+         throw new IllegalArgumentException("Currency cannot be blank (examples: 'USD', 'EUR', 'USDT', 'ETH')");
+      }
+      this.exchange = exchange;
+      this.tradingAccount = account;
+      this.assetSymbol = assetSymbol;
+      this.fundSymbol = fundSymbol;
+      this.symbol = assetSymbol + fundSymbol;
+      this.priceDetails = priceDetails.switchToSymbol(symbol);
+      this.notifications = listenerProvider != null ? listenerProvider.create(symbol, params) : new OrderListener[0];
+      this.emailNotifier = getEmailNotifier();
+      account.register(this);
+   }
 
-	private static final long FIFTEEN_SECONDS = TimeInterval.seconds(15).ms;
+   public SymbolPriceDetails getPriceDetails() {
+      return priceDetails;
+   }
 
-	private final String symbol;
-	final String assetSymbol;
-	final String fundSymbol;
-	private final AccountManager tradingAccount;
-	protected Trader trader;
-	private Exchange<?> exchange;
-	private final OrderListener[] notifications;
-	protected Client client;
-	private OrderExecutionToEmail emailNotifier;
-	private final SymbolPriceDetails priceDetails;
+   public String getFundSymbol() {
+      return fundSymbol;
+   }
 
-	public TradingManager(Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, InstancesProvider<OrderListener> listenerProvider, String assetSymbol, String fundSymbol, Parameters params) {
-		if (exchange == null) {
-			throw new IllegalArgumentException("Exchange implementation cannot be null");
-		}
-		if (priceDetails == null) {
-			priceDetails = new SymbolPriceDetails(exchange);
-		}
-		if (account == null) {
-			throw new IllegalArgumentException("Account manager cannot be null");
-		}
-		if (StringUtils.isBlank(assetSymbol)) {
-			throw new IllegalArgumentException("Symbol of instrument to buy cannot be blank (examples: 'MSFT', 'BTC', 'EUR')");
-		}
-		if (StringUtils.isBlank(fundSymbol)) {
-			throw new IllegalArgumentException("Currency cannot be blank (examples: 'USD', 'EUR', 'USDT', 'ETH')");
-		}
-		this.exchange = exchange;
-		this.tradingAccount = account;
-		this.assetSymbol = assetSymbol;
-		this.fundSymbol = fundSymbol;
-		this.symbol = assetSymbol + fundSymbol;
-		this.priceDetails = priceDetails.switchToSymbol(symbol);
+   public String getAssetSymbol() {
+      return assetSymbol;
+   }
 
-		this.notifications = listenerProvider != null ? listenerProvider.create(symbol, params) : new OrderListener[0];
-		this.emailNotifier = getEmailNotifier();
-		account.register(this);
-	}
+   public double getLatestPrice() {
+      return getLatestPrice(assetSymbol, fundSymbol);
+   }
 
-	public SymbolPriceDetails getPriceDetails() {
-		return priceDetails;
-	}
+   public Candle getLatestCandle() {
+      return trader.getCandle();
+   }
 
-	public String getFundSymbol() {
-		return fundSymbol;
-	}
+   public double getLatestPrice(String assetSymbol, String fundSymbol) {
+      Candle lastCandle = getLatestCandle();
+      if (lastCandle != null && (System.currentTimeMillis() - lastCandle.closeTime) < FIFTEEN_SECONDS) {
+         return lastCandle.close;
+      }
+      return exchange.getLatestPrice(assetSymbol, fundSymbol);
+   }
 
-	public String getAssetSymbol() {
-		return assetSymbol;
-	}
+   public String getSymbol() {
+      return symbol;
+   }
 
-	public double getLatestPrice() {
-		return getLatestPrice(assetSymbol, fundSymbol);
-	}
+   public Map<String, Double> getAllPrices() {
+      return exchange.getLatestPrices();
+   }
 
-	public Candle getLatestCandle() {
-		return trader.getCandle();
-	}
+   public boolean hasAssets(Candle c) {
+      double minimum = getPriceDetails().getMinimumOrderAmount(c.close);
+      return getAssets() * c.close > minimum;
+   }
 
-	public double getLatestPrice(String assetSymbol, String fundSymbol) {
-		Candle lastCandle = getLatestCandle();
-		if (lastCandle != null && (System.currentTimeMillis() - lastCandle.closeTime) < FIFTEEN_SECONDS) {
-			return lastCandle.close;
-		}
-		return exchange.getLatestPrice(assetSymbol, fundSymbol);
-	}
+   public final boolean buy(double quantity) {
+      return processOrder(trader, tradingAccount.buy(assetSymbol, fundSymbol, quantity));
+   }
 
-	public String getSymbol() {
-		return symbol;
-	}
+   private boolean processOrder(Trader trader, Order order) {
+      if (order != null) {
+         trader.notifyTrade(trader.getCandle(), order);
+         return true;
+      }
+      return false;
+   }
 
-	public Map<String, Double> getAllPrices() {
-		return exchange.getLatestPrices();
-	}
+   // public boolean switchTo(String ticker, Signal trade, String exitSymbol) {
+   // String targetSymbol = exitSymbol + fundSymbol;
+   // double targetUnitPrice = getLatestPrice(exitSymbol, fundSymbol);
+   // if (targetUnitPrice <= 0.0) {
+   // return false;
+   // }
+   //
+   // final Trader purchaseTrader = getTraderOf(targetSymbol);
+   // if (trader != null) {
+   // double quantityToSell = tradingAccount.allocateFunds(exitSymbol, assetSymbol);
+   // double saleUnitPrice = trader.getLastClosingPrice();
+   // double saleAmount = quantityToSell * saleUnitPrice;
+   // double quantityToBuy = saleAmount / targetUnitPrice;
+   //
+   // trader.setExitReason("Switching from " + ticker + " to " + targetSymbol);
+   //
+   // if (trade == SELL) {
+   // return processOrder(trader, tradingAccount.sell(assetSymbol, exitSymbol, quantityToSell));
+   // } else {
+   // return processOrder(purchaseTrader, tradingAccount.buy(exitSymbol, assetSymbol, quantityToBuy));
+   // }
+   // }
+   // return false;
+   // }
+   public boolean sell(double quantity) {
+      if (quantity <= 0.0) {
+         return false;
+      }
+      return processOrder(trader, tradingAccount.sell(assetSymbol, fundSymbol, quantity));
+   }
 
-	public boolean hasAssets(Candle c) {
-		double minimum = getPriceDetails().getMinimumOrderAmount(c.close);
-		return getAssets() * c.close > minimum;
-	}
+   public double getAssets() {
+      return tradingAccount.getAmount(assetSymbol);
+   }
 
-	public final boolean buy(double quantity) {
-		return processOrder(trader, tradingAccount.buy(assetSymbol, fundSymbol, quantity));
-	}
+   public double getCash() {
+      return tradingAccount.getAmount(fundSymbol);
+   }
 
-	private boolean processOrder(Trader trader, Order order) {
-		if (order != null) {
-			trader.notifyTrade(trader.getCandle(), order);
-			return true;
-		}
-		return false;
-	}
+   public double allocateFunds() {
+      return tradingAccount.allocateFunds(assetSymbol);
+   }
 
+   public double getTotalFundsInReferenceCurrency() {
+      return tradingAccount.getTotalFundsInReferenceCurrency();
+   }
 
-//	public boolean switchTo(String ticker, Signal trade, String exitSymbol) {
-//		String targetSymbol = exitSymbol + fundSymbol;
-//		double targetUnitPrice = getLatestPrice(exitSymbol, fundSymbol);
-//		if (targetUnitPrice <= 0.0) {
-//			return false;
-//		}
-//
-//		final Trader purchaseTrader = getTraderOf(targetSymbol);
-//		if (trader != null) {
-//			double quantityToSell = tradingAccount.allocateFunds(exitSymbol, assetSymbol);
-//			double saleUnitPrice = trader.getLastClosingPrice();
-//			double saleAmount = quantityToSell * saleUnitPrice;
-//			double quantityToBuy = saleAmount / targetUnitPrice;
-//
-//			trader.setExitReason("Switching from " + ticker + " to " + targetSymbol);
-//
-//			if (trade == SELL) {
-//				return processOrder(trader, tradingAccount.sell(assetSymbol, exitSymbol, quantityToSell));
-//			} else {
-//				return processOrder(purchaseTrader, tradingAccount.buy(exitSymbol, assetSymbol, quantityToBuy));
-//			}
-//		}
-//		return false;
-//	}
+   public double getTotalFundsIn(String symbol) {
+      return tradingAccount.getTotalFundsIn(symbol);
+   }
 
-	public boolean sell(double quantity) {
-		if (quantity <= 0.0) {
-			return false;
-		}
-		return processOrder(trader, tradingAccount.sell(assetSymbol, fundSymbol, quantity));
-	}
+   public boolean exitExistingPositions(String exitSymbol, Candle c) {
+      boolean exited = false;
+      for (TradingManager action : tradingAccount.getAllTradingManagers()) {
+         if (action != this && action.hasAssets(c) && action.trader.switchTo(exitSymbol, c, action.symbol)) {
+            exited = true;
+            break;
+         }
+      }
+      return exited;
+   }
 
-	public double getAssets() {
-		return tradingAccount.getAmount(assetSymbol);
-	}
+   public boolean waitingForBuyOrderToFill() {
+      return tradingAccount.waitingForFill(assetSymbol, BUY);
+   }
 
-	public double getCash() {
-		return tradingAccount.getAmount(fundSymbol);
-	}
+   public final Map<String, Balance> updateBalances() {
+      return tradingAccount.updateBalances();
+   }
 
-	public double allocateFunds() {
-		return tradingAccount.allocateFunds(assetSymbol);
-	}
+   public String getReferenceCurrencySymbol() {
+      return tradingAccount.getReferenceCurrencySymbol();
+   }
 
-	public double getTotalFundsInReferenceCurrency() {
-		return tradingAccount.getTotalFundsInReferenceCurrency();
-	}
+   public Trader getTrader() {
+      return this.trader;
+   }
 
-	public double getTotalFundsIn(String symbol) {
-		return tradingAccount.getTotalFundsIn(symbol);
-	}
+   public boolean isBuyLocked() {
+      return tradingAccount.isBuyLocked(assetSymbol);
+   }
 
-	public boolean exitExistingPositions(String exitSymbol, Candle c) {
-		boolean exited = false;
-		for (TradingManager action : tradingAccount.getAllTradingManagers()) {
-			if (action != this && action.hasAssets(c) && action.trader.switchTo(exitSymbol, c, action.symbol)) {
-				exited = true;
-				break;
-			}
-		}
-		return exited;
-	}
+   public AccountManager getAccount() {
+      return tradingAccount;
+   }
 
-	public boolean waitingForBuyOrderToFill() {
-		return tradingAccount.waitingForFill(assetSymbol, BUY);
-	}
+   public void cancelStaleOrdersFor(Trader trader) {
+      tradingAccount.cancelStaleOrdersFor(trader);
+   }
 
-	public final Map<String, Balance> updateBalances() {
-		return tradingAccount.updateBalances();
+   public TradingFees getTradingFees() {
+      return tradingAccount.getTradingFees();
+   }
 
-	}
+   public void sendBalanceEmail(String title, Client<?> client) {
+      getEmailNotifier().sendBalanceEmail(title, client);
+   }
 
-	public String getReferenceCurrencySymbol() {
-		return tradingAccount.getReferenceCurrencySymbol();
-	}
+   public OrderExecutionToEmail getEmailNotifier() {
+      if (emailNotifier == null) {
+         for (int i = 0; i < notifications.length; i++) {
+            if (notifications[i] instanceof OrderExecutionToEmail) {
+               emailNotifier = (OrderExecutionToEmail) notifications[i];
+               break;
+            }
+         }
+         if (emailNotifier == null) {
+            emailNotifier = new OrderExecutionToEmail();
+         }
+         emailNotifier.initialize(this);
+      }
+      return emailNotifier;
+   }
 
-	public Trader getTrader() {
-		return this.trader;
-	}
+   void notifyOrderSubmitted(Order order) {
+      for (int i = 0; i < notifications.length; i++) {
+         try {
+            notifications[i].orderSubmitted(order, trader, client);
+         } catch (Exception e) {
+            log.error("Error sending orderSubmitted notification for order: " + order, e);
+         }
+      }
+   }
 
-	public boolean isBuyLocked() {
-		return tradingAccount.isBuyLocked(assetSymbol);
-	}
+   void notifyOrderFinalized(Order order) {
+      for (int i = 0; i < notifications.length; i++) {
+         try {
+            notifications[i].orderFinalized(order, trader, client);
+         } catch (Exception e) {
+            log.error("Error sending orderFinalized notification for order: " + order, e);
+         }
+      }
+   }
 
-	public AccountManager getAccount() {
-		return tradingAccount;
-	}
+   void notifySimulationEnd() {
+      for (int i = 0; i < notifications.length; i++) {
+         try {
+            notifications[i].simulationEnded(trader, client);
+         } catch (Exception e) {
+            log.error("Error sending onSimulationEnd notification", e);
+         }
+      }
+   }
 
-	public void cancelStaleOrdersFor(Trader trader) {
-		tradingAccount.cancelStaleOrdersFor(trader);
-	}
-
-	public TradingFees getTradingFees() {
-		return tradingAccount.getTradingFees();
-	}
-
-	public void sendBalanceEmail(String title, Client client) {
-		getEmailNotifier().sendBalanceEmail(title, client);
-	}
-
-	public OrderExecutionToEmail getEmailNotifier() {
-		if (emailNotifier == null) {
-			for (int i = 0; i < notifications.length; i++) {
-				if (notifications[i] instanceof OrderExecutionToEmail) {
-					emailNotifier = (OrderExecutionToEmail) notifications[i];
-					break;
-				}
-			}
-			if (emailNotifier == null) {
-				emailNotifier = new OrderExecutionToEmail();
-			}
-			emailNotifier.initialize(this);
-		}
-		return emailNotifier;
-	}
-
-	void notifyOrderSubmitted(Order order) {
-		for (int i = 0; i < notifications.length; i++) {
-			try {
-				notifications[i].orderSubmitted(order, trader, client);
-			} catch (Exception e) {
-				log.error("Error sending orderSubmitted notification for order: " + order, e);
-			}
-		}
-	}
-
-	void notifyOrderFinalized(Order order) {
-		for (int i = 0; i < notifications.length; i++) {
-			try {
-				notifications[i].orderFinalized(order, trader, client);
-			} catch (Exception e) {
-				log.error("Error sending orderFinalized notification for order: " + order, e);
-			}
-		}
-	}
-
-	void notifySimulationEnd() {
-		for (int i = 0; i < notifications.length; i++) {
-			try {
-				notifications[i].simulationEnded(trader, client);
-			} catch (Exception e) {
-				log.error("Error sending onSimulationEnd notification", e);
-			}
-		}
-	}
-
-	public void updateOpenOrders(String symbol, Candle candle) {
-		if (tradingAccount.isSimulated()) {
-			tradingAccount.updateOpenOrders(symbol, candle);
-		}
-	}
-
-//	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
-//		return exchange.isDirectSwitchSupported(currentAssetSymbol, targetAssetSymbol);
-//	}
+   public void updateOpenOrders(String symbol, Candle candle) {
+      if (tradingAccount.isSimulated()) {
+         tradingAccount.updateOpenOrders(symbol, candle);
+      }
+   }
+   // boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
+   // return exchange.isDirectSwitchSupported(currentAssetSymbol, targetAssetSymbol);
+   // }
 }

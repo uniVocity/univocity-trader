@@ -10,7 +10,7 @@ import com.univocity.trader.strategy.Engine;
 public class CandleProcessor<T> {
    private static final Logger log = LoggerFactory.getLogger(CandleProcessor.class);
    private final Engine consumer;
-   private final Exchange exchange;
+   private final Exchange<T> exchange;
 
    public CandleProcessor(Engine consumer, Exchange<T> exchange) {
       this.consumer = consumer;

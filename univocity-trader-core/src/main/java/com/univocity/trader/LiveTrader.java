@@ -105,7 +105,7 @@ public class LiveTrader<T> implements Closeable {
    private void initialize() {
       if (allPairs == null) {
          allPairs = new TreeMap<>();
-         for (Client client : clients) {
+         for (Client<T> client : clients) {
             client.initialize(exchange, mailSender);
             allPairs.putAll(client.getSymbolPairs());
          }
@@ -220,9 +220,9 @@ public class LiveTrader<T> implements Closeable {
       }
    }
 
-   public Client addClient(String email, ZoneId timezone, String referenceCurrencySymbol, String apiKey, String secret) {
+   public Client<T> addClient(String email, ZoneId timezone, String referenceCurrencySymbol, String apiKey, String secret) {
       ClientAccount account = exchange.connectToAccount(apiKey, secret);
-      Client client = new Client(email, timezone, referenceCurrencySymbol, account);
+      Client<T> client = new Client<T>(email, timezone, referenceCurrencySymbol, account);
       clients.add(client);
       return client;
    }
