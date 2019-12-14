@@ -9,9 +9,9 @@
 		<version>${revision}</version>
 	</parent>
 
-	<artifactId>univocity-trader-examplestrategy</artifactId>
+	<artifactId>univocity-trader-trivialstrategy</artifactId>
 
-	<name>univocity-trader-examplestrategy</name>
+	<name>univocity-trader-trivialstrategy</name>
 	<packaging>jar</packaging>
 
 	<dependencies>

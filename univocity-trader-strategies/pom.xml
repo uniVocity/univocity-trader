@@ -22,5 +22,6 @@
 
 	<modules>
 		<module>univocity-trader-examplestrategy</module>
+		<module>univocity-trader-trivialstrategy</module>
 	</modules>
 </project>
