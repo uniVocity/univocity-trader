@@ -1,5 +1,7 @@
 package com.univocity.trader.config;
 
+import java.time.LocalDateTime;
+
 /**
  * @author tom@khubla.com
  */
@@ -34,9 +36,13 @@ public interface UnivocityConfiguration {
 
    String getMailUsername();
 
-   boolean isMailSSL();
+   LocalDateTime getSimulationEnd();
+
+   LocalDateTime getSimulationStart();
 
    Class<?> getStrategyClass();
 
    Class<?>[] getStrategyMonitorClasses();
+
+   boolean isMailSSL();
 }

@@ -1,7 +1,5 @@
 package com.univocity.trader.marketsimulator;
 
-import java.time.LocalDate;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -80,8 +78,8 @@ public class MarketSimulatorMain {
             // .maximumInvestmentPercentagePerAsset(50.0, "BTC", "LTC")
             // .maximumInvestmentAmountPerAsset(200, "XRP")
             ;
-            simulation.setSimulationStart(LocalDate.of(2018, 7, 1).atStartOfDay());
-            simulation.setSimulationEnd(LocalDate.of(2019, 7, 1).atStartOfDay());
+            simulation.setSimulationStart(univocityConfiguration.getSimulationStart());
+            simulation.setSimulationEnd(univocityConfiguration.getSimulationEnd());
             simulation.listeners().add(new OrderExecutionToLog());
             final SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
             simulation.listeners().add(stats);

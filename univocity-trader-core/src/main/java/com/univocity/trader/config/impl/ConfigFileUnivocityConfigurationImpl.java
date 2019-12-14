@@ -1,6 +1,8 @@
 package com.univocity.trader.config.impl;
 
 import java.io.FileInputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 import com.univocity.trader.config.UnivocityConfiguration;
@@ -17,6 +19,10 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
     * name of config file
     */
    private static String configfileName = CONFIGFILE;
+   /**
+    * datetime format
+    */
+   private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
    public static String getConfigfileName() {
       return configfileName;
@@ -44,18 +50,8 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    private int exchangeQueryRate;
    private Class<?> strategyClass;
    private Class<?>[] strategyMonitorClasses;
-
-   public Class<?>[] getStrategyMonitorClasses() {
-      return strategyMonitorClasses;
-   }
-
-   public Class<?> getStrategyClass() {
-      return strategyClass;
-   }
-
-   public int getExchangeQueryRate() {
-      return exchangeQueryRate;
-   }
+   private LocalDateTime simulationStart;
+   private LocalDateTime simulationEnd;
 
    public ConfigFileUnivocityConfigurationImpl() {
       try {
@@ -90,17 +86,24 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
           * strategy
           */
          strategyClass = (null != properties.getProperty("strategy.class") ? Class.forName(properties.getProperty("strategy.class")) : null);
-         String strategyMonitorClassesList = properties.getProperty("strategymonitor.classes");
+         final String strategyMonitorClassesList = properties.getProperty("strategymonitor.classes");
          if (null != strategyMonitorClassesList) {
-            String[] ss = strategyMonitorClassesList.split(",");
+            final String[] ss = strategyMonitorClassesList.split(",");
             strategyMonitorClasses = new Class<?>[ss.length];
             int i = 0;
-            for (String s : ss) {
+            for (final String s : ss) {
                strategyMonitorClasses[i++] = Class.forName(s.trim());
             }
          } else {
             strategyMonitorClasses = null;
          }
+         /*
+          * simulation
+          */
+         final String simulationStartString = properties.getProperty("simulation.start");
+         simulationStart = LocalDateTime.parse(simulationStartString, formatter);
+         final String simulationEndString = properties.getProperty("simulation.end");
+         simulationEnd = LocalDateTime.parse(simulationEndString, formatter);
       } catch (final Exception e) {
          e.printStackTrace();
       }
@@ -147,6 +150,11 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    }
 
    @Override
+   public int getExchangeQueryRate() {
+      return exchangeQueryRate;
+   }
+
+   @Override
    public String getMailPassword() {
       return mailPassword;
    }
@@ -174,6 +182,26 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    @Override
    public String getMailUsername() {
       return mailUsername;
+   }
+
+   @Override
+   public LocalDateTime getSimulationEnd() {
+      return simulationEnd;
+   }
+
+   @Override
+   public LocalDateTime getSimulationStart() {
+      return simulationStart;
+   }
+
+   @Override
+   public Class<?> getStrategyClass() {
+      return strategyClass;
+   }
+
+   @Override
+   public Class<?>[] getStrategyMonitorClasses() {
+      return strategyMonitorClasses;
    }
 
    @Override
