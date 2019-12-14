@@ -65,7 +65,10 @@ public class MarketSimulatorMain {
             final MarketSimulator simulation = new MarketSimulator("USDT");
             simulation.tradeWith(currencies);
             simulation.strategies().add(StrategyFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
-            simulation.monitors().add(StrategyFactory.getInstance().getStrategyMonitorSupplier(univocityConfiguration.getStrategyMonitorClass()));
+            for (Class<?> clazz : univocityConfiguration.getStrategyMonitorClasses()) {
+               System.out.println("Monitor: " + clazz.getName());
+               simulation.monitors().add(StrategyFactory.getInstance().getStrategyMonitorSupplier(clazz));
+            }
             simulation.setTradingFees(SimpleTradingFees.percentage(0.1));
             // simulation.symbolInformation("ADAUSDT").minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
             // simulation.symbolInformation("BTCUSDT").minimumAssetsPerOrder(0.001).priceDecimalPlaces(8).quantityDecimalPlaces(8);

@@ -43,10 +43,10 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    private String exchangeClientId;
    private int exchangeQueryRate;
    private Class<?> strategyClass;
-   private Class<?> strategyMonitorClass;
+   private Class<?>[] strategyMonitorClasses;
 
-   public Class<?> getStrategyMonitorClass() {
-      return strategyMonitorClass;
+   public Class<?>[] getStrategyMonitorClasses() {
+      return strategyMonitorClasses;
    }
 
    public Class<?> getStrategyClass() {
@@ -90,7 +90,17 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
           * strategy
           */
          strategyClass = (null != properties.getProperty("strategy.class") ? Class.forName(properties.getProperty("strategy.class")) : null);
-         strategyMonitorClass = (null != properties.getProperty("strategymonitor.class")) ? Class.forName(properties.getProperty("strategymonitor.class")) : null;
+         String strategyMonitorClassesList = properties.getProperty("strategymonitor.classes");
+         if (null != strategyMonitorClassesList) {
+            String[] ss = strategyMonitorClassesList.split(",");
+            strategyMonitorClasses = new Class<?>[ss.length];
+            int i = 0;
+            for (String s : ss) {
+               strategyMonitorClasses[i++] = Class.forName(s.trim());
+            }
+         } else {
+            strategyMonitorClasses = null;
+         }
       } catch (final Exception e) {
          e.printStackTrace();
       }

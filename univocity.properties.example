@@ -25,4 +25,6 @@ exchange.queryrate=1200
 
 # strategy
 strategy.class=com.univocity.trader.strategy.example.ExampleStrategy
-strategymonitor.class=com.univocity.trader.strategy.example.ExampleStrategyMonitor
+strategymonitor.classes=com.univocity.trader.strategy.example.ExampleStrategyMonitor
+# strategymonitor.classes=com.univocity.trader.strategy.simple.ProfitabilityStrategyMonitor, com.univocity.trader.strategy.simple.TradingfeeStrategyMonitor
+

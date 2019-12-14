@@ -23,5 +23,6 @@
 	<modules>
 		<module>univocity-trader-examplestrategy</module>
 		<module>univocity-trader-trivialstrategy</module>
+		<module>univocity-trader-simplestrategymonitors</module>
 	</modules>
 </project>

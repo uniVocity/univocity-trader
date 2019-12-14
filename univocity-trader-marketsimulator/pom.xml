@@ -25,6 +25,11 @@
 			<artifactId>univocity-trader-trivialstrategy</artifactId>
 			<version>${revision}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.univocity</groupId>
+			<artifactId>univocity-trader-simplestrategymonitors</artifactId>
+			<version>${revision}</version>
+		</dependency>
  		<dependency>
 			<groupId>com.univocity</groupId>
 			<artifactId>univocity-trader-binance</artifactId>

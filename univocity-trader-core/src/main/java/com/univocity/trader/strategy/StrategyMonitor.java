@@ -1,15 +1,15 @@
 package com.univocity.trader.strategy;
 
-import com.univocity.trader.account.*;
-import com.univocity.trader.candles.*;
-import com.univocity.trader.indicators.*;
+import com.univocity.trader.account.Trader;
+import com.univocity.trader.candles.Candle;
+import com.univocity.trader.indicators.Signal;
 
 /**
  * Class responsible for monitoring trades made by a {@link Trader}, after a {@link Strategy} returns a {@link Signal}.
  * It can contain {@link Indicator}s to help deciding what to do on every tick received from the {@link com.univocity.trader.exchange.Exchange}.
  *
  * Once a {@code BUY} is received, and no position is open, {@link #discardBuy(Strategy)} will be invoked to confirm if it is a good time to
- * buy. If it is, a position is open and {@link #bought()} will be called.
+ * buy. If it is, a position is opened and {@link #bought()} will be called.
  *
  * After that, {@link #handleStop(Signal, Strategy)} will be invoked after every tick received from the exchange, to allow closing the trade.
  *
@@ -32,111 +32,118 @@ import com.univocity.trader.indicators.*;
  * @see Strategy
  */
 public abstract class StrategyMonitor extends IndicatorGroup {
+   /**
+    * The object which contains all details pertinent to the current instrument being traded (e.g. {@link Trader#getChange()},
+    * {@link Trader#getLastClosingPrice()}, {@link Trader#getBoughtPrice()}, etc)
+    */
+   protected Trader trader;
 
-	/**
-	 * The object which contains all details pertinent to the current instrument being traded (e.g. {@link Trader#getChange()},
-	 * {@link Trader#getLastClosingPrice()}, {@link Trader#getBoughtPrice()}, etc)
-	 */
-	protected Trader trader;
+   /**
+    * Tests the current trade status to determine whether or not it should be exited. Will exit a trade regardless of any {@link Signal} emitted
+    * by a {@link Strategy}
+    *
+    * @param signal   the latest signal emitted by the given strategy
+    * @param strategy the strategy that originated the given signal
+    *
+    * @return {@code null} if the trade is to remain open or a {@code String} with a message indicating the reason for exiting the trade. This message
+    * will then be returned by {@link Trader#exitReason()} and can be included in logs or e-mails (as implemented in
+    * {@link com.univocity.trader.notification.OrderExecutionToEmail}).
+    */
+   public String handleStop(Signal signal, Strategy strategy) {
+      return null;
+   }
 
-	/**
-	 * Tests the current trade status to determine whether or not it should be exited. Will exit a trade regardless of any {@link Signal} emitted
-	 * by a {@link Strategy}
-	 *
-	 * @param signal   the latest signal emitted by the given strategy
-	 * @param strategy the strategy that originated the given signal
-	 *
-	 * @return {@code null} if the trade is to remain open or a {@code String} with a message indicating the reason for exiting the trade. This message
-	 * will then be returned by {@link Trader#exitReason()} and can be included in logs or e-mails (as implemented in
-	 * {@link com.univocity.trader.notification.OrderExecutionToEmail}).
-	 */
-	public String handleStop(Signal signal, Strategy strategy) {
-		return null;
-	}
+   /**
+    * Checks if the {@code BUY} signal emitted by a given {@link Strategy} must be discarded, preventing the {@link #trader} to buy.
+    *
+    * @param strategy the strategy that emitted a {@code BUY} signal
+    *
+    * @return {@code false} if the {@link #trader} is allowed to buy into the instrument it is responsible for; {@code true} if
+    * the {@code BUY} signal should be ignored.
+    */
+   public boolean discardBuy(Strategy strategy) {
+      return false;
+   }
 
-	/**
-	 * Checks if the {@code BUY} signal emitted by a given {@link Strategy} must be discarded, preventing the {@link #trader} to buy.
-	 *
-	 * @param strategy the strategy the emitted a {@code BUY} signal
-	 *
-	 * @return {@code false} if the {@link #trader} is allowed to buy into the instrument it is responsible for; {@code true} if
-	 * the {@code BUY} signal should be ignored.
-	 */
-	public boolean discardBuy(Strategy strategy) {
-		return false;
-	}
+   /**
+   * Checks if the {@code SELL} signal emitted by a given {@link Strategy} must be discarded, preventing the {@link #trader} to sell.
+   *
+   * @param candle latest candle
+   *
+   * @return {@code false} if the {@link #trader} is allowed to sell the instrument it is responsible for; {@code true} if
+   * the {@code SELL} signal should be ignored.
+   */
+   public boolean discardSell(Candle candle) {
+      return false;
+   }
 
-	/**
-	 * Indicates whether this monitor allows signals from multiple strategies, i.e. if more than one {@link Strategy} is being used,
-	 * one can emit {@code BUY} signals and another {@code SELL} signals, and both will be accepted. If disallowed, once a {@link Strategy}
-	 * enters a trade the signals emitted by another {@link Strategy} will be ignored.
-	 *
-	 * @return {@code false} if the {@link Strategy} that opens a trade must be the same {@link Strategy} that closes it, otherwise {@code true}
-	 */
-	public boolean allowMixedStrategies() {
-		return true;
-	}
+   /**
+    * Indicates whether this monitor allows signals from multiple strategies, i.e. if more than one {@link Strategy} is being used,
+    * one can emit {@code BUY} signals and another {@code SELL} signals, and both will be accepted. If disallowed, once a {@link Strategy}
+    * enters a trade the signals emitted by another {@link Strategy} will be ignored.
+    *
+    * @return {@code false} if the {@link Strategy} that opens a trade must be the same {@link Strategy} that closes it, otherwise {@code true}
+    */
+   public boolean allowMixedStrategies() {
+      return true;
+   }
 
-	/**
-	 * Notifies that the latest price movement reached its highest positive point so far.
-	 *
-	 * @param change the positive rate of return of the current trade (as a percentage value greater than 0.0 and in a scale of 100)
-	 */
-	public void highestProfit(double change) {
+   /**
+    * Notifies that the latest price movement reached its highest positive point so far.
+    *
+    * @param change the positive rate of return of the current trade (as a percentage value greater than 0.0 and in a scale of 100)
+    */
+   public void highestProfit(double change) {
+   }
 
-	}
+   /**
+    * Notifies that the latest price movement reached its lowest negative point so far.
+    *
+    * @param change the negative rate of return of the current trade (as a percentage value between -100.0 and 0.0)
+    */
+   public void worstLoss(double change) {
+   }
 
-	/**
-	 * Notifies that the latest price movement reached its lowest negative point so far.
-	 *
-	 * @param change the negative rate of return of the current trade (as a percentage value between -100.0 and 0.0)
-	 */
-	public void worstLoss(double change) {
+   /**
+    * Notifies that the {@link #trader} bought some quantity of symbol {@link Trader#getSymbol()}
+    */
+   public void bought() {
+   }
 
-	}
+   /**
+    * Notifies that any instruments of symbol {@link Trader#getSymbol()} held by the {@link #trader} were sold.
+    */
+   public void sold() {
+   }
 
-	/**
-	 * Notifies that the {@link #trader} bought some quantity of symbol {@link Trader#getSymbol()}
-	 */
-	public void bought() {
+   /**
+    * Confirms that the current trade can be closed.
+    *
+    * @return {@code true} if the current trade can be exited, otherwise {@code false}
+    */
+   public boolean allowExit() {
+      return true;
+   }
 
-	}
+   /**
+    * Checks if the current open position can be closed to release funds for another trade in another instrument to be opened.
+    *
+    * @param exitSymbol   the symbol of the instrument to be bought in case the current open trade can be closed (e.g. BTC, USD).
+    * @param candle       the latest candle of the exit symbol ticker
+    * @param candleTicker the full ticker of the given candle (e.g. BTCETH, EURUSD)
+    *
+    * @return a flag indicating whether or not the current trade can be exited and the position reallocated to the given exit symbol.
+    */
+   public boolean allowTradeSwitch(String exitSymbol, Candle candle, String candleTicker) {
+      return false;
+   }
 
-	/**
-	 * Notifies that any instruments of symbol {@link Trader#getSymbol()} held by the {@link #trader} were sold.
-	 */
-	public void sold() {
-
-	}
-
-	/**
-	 * Confirms that the current trade can be closed.
-	 *
-	 * @return {@code true} if the current trade can be exited, otherwise {@code false}
-	 */
-	public boolean allowExit() {
-		return true;
-	}
-
-	/**
-	 * Checks if the current open position can be closed to release funds for another trade in another instrument to be opened.
-	 *
-	 * @param exitSymbol   the symbol of the instrument to be bought in case the current open trade can be closed (e.g. BTC, USD).
-	 * @param candle       the latest candle of the exit symbol ticker
-	 * @param candleTicker the full ticker of the given candle (e.g. BTCETH, EURUSD)
-	 *
-	 * @return a flag indicating whether or not the current trade can be exited and the position reallocated to the given exit symbol.
-	 */
-	public boolean allowTradeSwitch(String exitSymbol, Candle candle, String candleTicker) {
-		return false;
-	}
-
-	/**
-	 * Assigns the trader responsible for managing trades to this monitor.
-	 *
-	 * @param trader the object responsible for all trading decisions performed against an instrument.
-	 */
-	public void setTrader(Trader trader) {
-		this.trader = trader;
-	}
+   /**
+    * Assigns the trader responsible for managing trades to this monitor.
+    *
+    * @param trader the object responsible for all trading decisions performed against an instrument.
+    */
+   public void setTrader(Trader trader) {
+      this.trader = trader;
+   }
 }

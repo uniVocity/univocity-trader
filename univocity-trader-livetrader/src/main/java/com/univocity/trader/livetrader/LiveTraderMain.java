@@ -78,7 +78,10 @@ class LiveTraderMain {
                final Client client = binance.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), "USDT", apiKey, secret);
                client.tradeWith(currencies);
                client.strategies().add(StrategyFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
-               client.monitors().add(StrategyFactory.getInstance().getStrategyMonitorSupplier(univocityConfiguration.getStrategyMonitorClass()));
+               for (Class<?> clazz : univocityConfiguration.getStrategyMonitorClasses()) {
+                  System.out.println("Monitor: " + clazz.getName());
+                  client.monitors().add(StrategyFactory.getInstance().getStrategyMonitorSupplier(clazz));
+               }
                client.account().maximumInvestmentAmountPerAsset(20);
                client.account().setOrderManager(new DefaultOrderManager() {
                   @Override

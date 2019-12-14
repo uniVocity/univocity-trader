@@ -38,5 +38,5 @@ public interface UnivocityConfiguration {
 
    Class<?> getStrategyClass();
 
-   Class<?> getStrategyMonitorClass();
+   Class<?>[] getStrategyMonitorClasses();
 }
