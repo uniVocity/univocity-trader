@@ -38,6 +38,8 @@ public interface UnivocityConfiguration {
 
    LocalDateTime getSimulationEnd();
 
+   String getSimulationReferenceCurrency();
+
    LocalDateTime getSimulationStart();
 
    Class<?> getStrategyClass();

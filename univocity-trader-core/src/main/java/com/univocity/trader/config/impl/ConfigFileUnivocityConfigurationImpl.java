@@ -52,6 +52,7 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    private Class<?>[] strategyMonitorClasses;
    private LocalDateTime simulationStart;
    private LocalDateTime simulationEnd;
+   private String simulationReferenceCurrency;
 
    public ConfigFileUnivocityConfigurationImpl() {
       try {
@@ -104,6 +105,7 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
          simulationStart = LocalDateTime.parse(simulationStartString, formatter);
          final String simulationEndString = properties.getProperty("simulation.end");
          simulationEnd = LocalDateTime.parse(simulationEndString, formatter);
+         simulationReferenceCurrency = properties.getProperty("simulation.referencecurrency");
       } catch (final Exception e) {
          e.printStackTrace();
       }
@@ -187,6 +189,11 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    @Override
    public LocalDateTime getSimulationEnd() {
       return simulationEnd;
+   }
+
+   @Override
+   public String getSimulationReferenceCurrency() {
+      return simulationReferenceCurrency;
    }
 
    @Override

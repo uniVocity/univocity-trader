@@ -60,7 +60,7 @@ public class MarketSimulatorMain {
             ConfigFileUnivocityConfigurationImpl.setConfigfileName(configFileName);
             final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
             System.out.println("Strategy: " + univocityConfiguration.getStrategyClass().getName());
-            final MarketSimulator simulation = new MarketSimulator("USDT");
+            final MarketSimulator simulation = new MarketSimulator(univocityConfiguration.getSimulationReferenceCurrency());
             simulation.tradeWith(currencies);
             simulation.strategies().add(StrategyFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
             for (Class<?> clazz : univocityConfiguration.getStrategyMonitorClasses()) {
@@ -73,7 +73,7 @@ public class MarketSimulatorMain {
             // simulation.symbolInformation("LTCUSDT").minimumAssetsPerOrder(0.1).priceDecimalPlaces(8).quantityDecimalPlaces(8);
             // simulation.symbolInformation("XRPUSDT").minimumAssetsPerOrder(50.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
             // simulation.symbolInformation("ETHUSDT").minimumAssetsPerOrder(0.01).priceDecimalPlaces(8).quantityDecimalPlaces(8);
-            simulation.account().setAmount("USDT", 1000.0).minimumInvestmentAmountPerTrade(10.0);
+            simulation.account().setAmount(univocityConfiguration.getSimulationReferenceCurrency(), 1000.0).minimumInvestmentAmountPerTrade(10.0);
             // .maximumInvestmentPercentagePerAsset(30.0, "ADA", "ETH")
             // .maximumInvestmentPercentagePerAsset(50.0, "BTC", "LTC")
             // .maximumInvestmentAmountPerAsset(200, "XRP")

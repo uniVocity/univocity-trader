@@ -31,3 +31,5 @@ strategymonitor.classes=com.univocity.trader.strategy.example.ExampleStrategyMon
 # simulation
 simulation.start=2018-07-01 00:00
 simulation.end=2019-07-01 00:00
+simulation.referencecurrency=USDT
+
