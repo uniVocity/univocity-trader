@@ -27,12 +27,12 @@ public class LiveTraderRunner {
       final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
       System.out.println("Strategy: " + univocityConfiguration.getStrategyClass().getName());
       final Exchange<Candlestick> exchange = ExchangeFactory.getInstance().getExchange(univocityConfiguration.getExchangeClass());
-      LiveTrader<Candlestick> binance = null;
+      LiveTrader<Candlestick> liveTrader = null;
       try {
-         binance = new LiveTrader<Candlestick>(exchange, TimeInterval.minutes(1), MailUtil.getEmailConfig());
+         liveTrader = new LiveTrader<Candlestick>(exchange, TimeInterval.minutes(1), MailUtil.getEmailConfig());
          final String apiKey = univocityConfiguration.getExchangeAPIKey();
          final String secret = univocityConfiguration.getExchangeAPISecret();
-         final Client<?> client = binance.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), "USDT", apiKey, secret);
+         final Client<?> client = liveTrader.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), "USDT", apiKey, secret);
          client.tradeWith(currencies);
          client.strategies().add(StrategyFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
          for (final Class<?> clazz : univocityConfiguration.getStrategyMonitorClasses()) {
@@ -53,9 +53,9 @@ public class LiveTraderRunner {
             }
          });
          client.listeners().add(new OrderExecutionToLog());
-         binance.run();
+         liveTrader.run();
       } finally {
-         binance.close();
+         liveTrader.close();
       }
    }
 }
