@@ -1,7 +1,5 @@
 package com.univocity.trader.exchange;
 
-import java.lang.reflect.InvocationTargetException;
-
 /**
  * @author tom@khubla.com
  */
@@ -16,10 +14,13 @@ public class ExchangeFactory {
    }
 
    // some day, Guice
-   public <T> Exchange<T> getExchange(Class<?> clazz)
-         throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+   public <T> Exchange<T> getExchange(Class<?> clazz) {
       if (null != clazz) {
-         return (Exchange<T>) clazz.getDeclaredConstructor().newInstance();
+         try {
+            return (Exchange<T>) clazz.getDeclaredConstructor().newInstance();
+         } catch (Exception e) {
+            return null;
+         }
       }
       return null;
    }
