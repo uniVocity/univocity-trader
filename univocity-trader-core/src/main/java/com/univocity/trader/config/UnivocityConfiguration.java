@@ -16,7 +16,7 @@ public interface UnivocityConfiguration {
 
    String getExchangeAPISecret();
 
-   String getExchangeClass();
+   Class<?> getExchangeClass();
 
    String getExchangeClientId();
 
@@ -35,4 +35,8 @@ public interface UnivocityConfiguration {
    String getMailUsername();
 
    boolean isMailSSL();
+
+   Class<?> getStrategyClass();
+
+   Class<?> getStrategyMonitorClass();
 }

@@ -22,3 +22,7 @@ exchange.secret=<YOUR BINANCE API SECRET>"
 
 # max queries per minute
 exchange.queryrate=1200
+
+# strategy
+strategy.class=com.univocity.trader.strategy.example.ExampleStrategy
+strategymonitor.class=com.univocity.trader.strategy.example.ExampleStrategyMonitor

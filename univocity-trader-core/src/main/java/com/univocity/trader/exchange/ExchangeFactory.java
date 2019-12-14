@@ -16,9 +16,8 @@ public class ExchangeFactory {
    }
 
    // some day, Guice
-   public <T> Exchange<T> getExchange(String className)
+   public <T> Exchange<T> getExchange(Class<?> clazz)
          throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
-      final Class<?> clazz = Class.forName(className);
       if (null != clazz) {
          return (Exchange<T>) clazz.getDeclaredConstructor().newInstance();
       }

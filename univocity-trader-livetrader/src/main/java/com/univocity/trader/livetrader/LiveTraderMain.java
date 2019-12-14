@@ -26,8 +26,7 @@ import com.univocity.trader.exchange.binance.api.client.domain.market.Candlestic
 import com.univocity.trader.guice.UnivocityFactory;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.notification.OrderExecutionToLog;
-import com.univocity.trader.strategy.example.ExampleStrategy;
-import com.univocity.trader.strategy.example.ExampleStrategyMonitor;
+import com.univocity.trader.strategy.StrategyFactory;
 import com.univocity.trader.utils.MailUtil;
 
 class LiveTraderMain {
@@ -77,8 +76,8 @@ class LiveTraderMain {
                final String secret = univocityConfiguration.getExchangeAPISecret();
                final Client client = binance.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), "USDT", apiKey, secret);
                client.tradeWith(currencies);
-               client.strategies().add(ExampleStrategy::new);
-               client.monitors().add(ExampleStrategyMonitor::new);
+               client.strategies().add(StrategyFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
+               client.monitors().add(StrategyFactory.getInstance().getStrategyMonitorSupplier(univocityConfiguration.getStrategyMonitorClass()));
                client.account().maximumInvestmentAmountPerAsset(20);
                client.account().setOrderManager(new DefaultOrderManager() {
                   @Override

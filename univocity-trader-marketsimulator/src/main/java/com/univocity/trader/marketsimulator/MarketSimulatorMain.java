@@ -10,13 +10,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import com.univocity.trader.account.SimpleTradingFees;
+import com.univocity.trader.config.UnivocityConfiguration;
 import com.univocity.trader.config.impl.ConfigFileUnivocityConfigurationImpl;
 import com.univocity.trader.currency.Currencies;
+import com.univocity.trader.guice.UnivocityFactory;
 import com.univocity.trader.notification.OrderExecutionToLog;
 import com.univocity.trader.notification.SimpleStrategyStatistics;
 import com.univocity.trader.simulation.MarketSimulator;
-import com.univocity.trader.strategy.example.ExampleStrategy;
-import com.univocity.trader.strategy.example.ExampleStrategyMonitor;
+import com.univocity.trader.strategy.StrategyFactory;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -59,10 +60,11 @@ public class MarketSimulatorMain {
          if ((null != configFileName) && (null != currenciesList)) {
             final String[] currencies = Currencies.getInstance().fromList(currenciesList);
             ConfigFileUnivocityConfigurationImpl.setConfigfileName(configFileName);
+            final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
             final MarketSimulator simulation = new MarketSimulator("USDT");
             simulation.tradeWith(currencies);
-            simulation.strategies().add(ExampleStrategy::new);
-            simulation.monitors().add(ExampleStrategyMonitor::new);
+            simulation.strategies().add(StrategyFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
+            simulation.monitors().add(StrategyFactory.getInstance().getStrategyMonitorSupplier(univocityConfiguration.getStrategyMonitorClass()));
             simulation.setTradingFees(SimpleTradingFees.percentage(0.1));
             // simulation.symbolInformation("ADAUSDT").minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
             // simulation.symbolInformation("BTCUSDT").minimumAssetsPerOrder(0.001).priceDecimalPlaces(8).quantityDecimalPlaces(8);

@@ -39,9 +39,19 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    private String mailSender;
    private String exchangeAPIKey;
    private String exchangeAPISecret;
-   private String exchangeClass;
+   private Class<?> exchangeClass;
    private String exchangeClientId;
    private int exchangeQueryRate;
+   private Class<?> strategyClass;
+   private Class<?> strategyMonitorClass;
+
+   public Class<?> getStrategyMonitorClass() {
+      return strategyMonitorClass;
+   }
+
+   public Class<?> getStrategyClass() {
+      return strategyClass;
+   }
 
    public int getExchangeQueryRate() {
       return exchangeQueryRate;
@@ -73,9 +83,14 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
           */
          exchangeAPIKey = properties.getProperty("exchange.apikey");
          exchangeAPISecret = properties.getProperty("exchange.secret");
-         exchangeClass = properties.getProperty("exchange.class");
+         exchangeClass = Class.forName(properties.getProperty("exchange.class"));
          exchangeClientId = properties.getProperty("exchange.clientid");
          exchangeQueryRate = Integer.parseInt(properties.getProperty("exchange.queryrate"));
+         /*
+          * strategy
+          */
+         strategyClass = Class.forName(properties.getProperty("strategy.class"));
+         strategyMonitorClass = Class.forName(properties.getProperty("strategymonitor.class"));
       } catch (final Exception e) {
          e.printStackTrace();
       }
@@ -112,7 +127,7 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    }
 
    @Override
-   public String getExchangeClass() {
+   public Class<?> getExchangeClass() {
       return exchangeClass;
    }
 
