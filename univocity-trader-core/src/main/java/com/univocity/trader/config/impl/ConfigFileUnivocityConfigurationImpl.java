@@ -83,14 +83,14 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
           */
          exchangeAPIKey = properties.getProperty("exchange.apikey");
          exchangeAPISecret = properties.getProperty("exchange.secret");
-         exchangeClass = Class.forName(properties.getProperty("exchange.class"));
+         exchangeClass = (null != properties.getProperty("exchange.class") ? Class.forName(properties.getProperty("exchange.class")) : null);
          exchangeClientId = properties.getProperty("exchange.clientid");
          exchangeQueryRate = Integer.parseInt(properties.getProperty("exchange.queryrate"));
          /*
           * strategy
           */
-         strategyClass = Class.forName(properties.getProperty("strategy.class"));
-         strategyMonitorClass = Class.forName(properties.getProperty("strategymonitor.class"));
+         strategyClass = (null != properties.getProperty("strategy.class") ? Class.forName(properties.getProperty("strategy.class")) : null);
+         strategyMonitorClass = (null != properties.getProperty("strategymonitor.class")) ? Class.forName(properties.getProperty("strategymonitor.class")) : null;
       } catch (final Exception e) {
          e.printStackTrace();
       }

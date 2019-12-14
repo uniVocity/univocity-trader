@@ -1,49 +1,55 @@
 package com.univocity.trader.strategy.trivial;
 
-import com.univocity.trader.candles.*;
-import com.univocity.trader.indicators.*;
-import com.univocity.trader.indicators.base.*;
-import com.univocity.trader.simulation.*;
-import com.univocity.trader.strategy.*;
+import java.util.HashSet;
+import java.util.Set;
 
-import java.util.*;
+import com.univocity.trader.candles.Candle;
+import com.univocity.trader.indicators.MovingAverage;
+import com.univocity.trader.indicators.Signal;
+import com.univocity.trader.indicators.base.TimeInterval;
+import com.univocity.trader.strategy.Indicator;
+import com.univocity.trader.strategy.IndicatorStrategy;
 
+/**
+ * @author tom@khubla.com
+ */
 public class TrivialStrategy extends IndicatorStrategy {
+   private static final double GOAL = 0.05;
+   private final Set<Indicator> indicators = new HashSet<>();
+   private final MovingAverage ma;
 
-	private final Set<Indicator> indicators = new HashSet<>();
+   public TrivialStrategy() {
+      indicators.add(ma = new MovingAverage(20, TimeInterval.minutes(5)));
+   }
 
-	private final BollingerBand boll5m;
-	private final BollingerBand boll1h;
+   @Override
+   protected Set<Indicator> getAllIndicators() {
+      return indicators;
+   }
 
-	public TrivialStrategy() {
-		indicators.add(boll5m = new BollingerBand(TimeInterval.minutes(5)));
-		indicators.add(boll1h = new BollingerBand(TimeInterval.hours(1)));
-	}
+   @Override
+   public Signal getSignal(Candle candle) {
+      if (ma.getValue() > 0) {
+         double delta = delta(candle.high, ma.getValue());
+         if (delta > GOAL) {
+            if (candle.high < ma.getValue()) {
+               /*
+                * market is below average by delta%
+                */
+               return Signal.BUY;
+            }
+            if (candle.low > ma.getValue()) {
+               /*
+                * market is above average by delta%
+                */
+            }
+            return Signal.SELL;
+         }
+      }
+      return Signal.NEUTRAL;
+   }
 
-	@Override
-	protected Set<Indicator> getAllIndicators() {
-		return indicators;
-	}
-
-	@Override
-	public Signal getSignal(Candle candle) {
-		if (candle.high < boll1h.getLowerBand()) { //price jumped below lower band on the 1 hour time frame
-			if (candle.low > boll5m.getLowerBand()) { //on the 5 minute time frame, the lowest price of the candle is above the lower band.
-				if (candle.close < boll5m.getMiddleBand()) { //still on the 5 minute time frame, the close price of the candle is under the middle band
-					if (boll5m.movingUp()) { // if the slope of the 5 minute bollinger band is starting to point up, BUY
-						return Signal.BUY;
-					}
-				}
-			}
-		}
-
-		if (candle.high > boll1h.getUpperBand()) { //candle hitting the upper band on the 1 hour time frame
-			if (candle.low < boll5m.getMiddleBand()) { //on the 5 minute time frame, the lowest price of the candle is under the middle band
-				if (boll5m.movingDown()) { // if the slope of the 5 minute bollinger band is starting to point down, SELL
-					return Signal.SELL;
-				}
-			}
-		}
-		return Signal.NEUTRAL;
-	}
+   private double delta(double i1, double i2) {
+      return (Math.abs((i1 - i2) / i1));
+   }
 }

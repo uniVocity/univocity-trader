@@ -61,6 +61,7 @@ public class MarketSimulatorMain {
             final String[] currencies = Currencies.getInstance().fromList(currenciesList);
             ConfigFileUnivocityConfigurationImpl.setConfigfileName(configFileName);
             final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
+            System.out.println("Strategy: " + univocityConfiguration.getStrategyClass().getName());
             final MarketSimulator simulation = new MarketSimulator("USDT");
             simulation.tradeWith(currencies);
             simulation.strategies().add(StrategyFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));

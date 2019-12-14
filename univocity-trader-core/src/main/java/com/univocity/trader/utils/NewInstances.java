@@ -1,63 +1,70 @@
 package com.univocity.trader.utils;
 
-import com.univocity.trader.simulation.*;
-import org.apache.commons.lang3.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
-import java.util.*;
-import java.util.function.*;
+import org.apache.commons.lang3.ArrayUtils;
+
+import com.univocity.trader.simulation.Parameters;
 
 public class NewInstances<T> implements InstancesProvider<T> {
+   private final T[] empty;
+   private final List<InstanceProvider<T>> providers = new ArrayList<>();
 
-	private final T[] empty;
-	private final List<InstanceProvider<T>> providers = new ArrayList<>();
+   public NewInstances(T[] empty) {
+      this.empty = empty;
+   }
 
-	public NewInstances(T[] empty) {
-		this.empty = empty;
-	}
+   public final NewInstances<T> add(Supplier<T> instanceSupplier) {
+      if (null != instanceSupplier) {
+         add((s, p) -> instanceSupplier.get());
+      }
+      return this;
+   }
 
-	public final NewInstances<T> add(Supplier<T> instanceSupplier) {
-		add((s, p) -> instanceSupplier.get());
-		return this;
-	}
+   public final NewInstances<T> add(Function<String, T> nonParameterizedInstance) {
+      add((s, p) -> nonParameterizedInstance.apply(s));
+      return this;
+   }
 
-	public final NewInstances<T> add(Function<String, T> nonParameterizedInstance) {
-		add((s, p) -> nonParameterizedInstance.apply(s));
-		return this;
-	}
+   public final NewInstances<T> add(InstanceProvider<T> parameterizedInstance) {
+      providers.add(parameterizedInstance);
+      return this;
+   }
 
-	public final NewInstances<T> add(InstanceProvider<T> parameterizedInstance) {
-		providers.add(parameterizedInstance);
-		return this;
-	}
+   @Override
+   public final T[] create(String symbol, Parameters params) {
+      if (providers.isEmpty()) {
+         return empty;
+      }
+      T[] out = Arrays.copyOf(empty, providers.size());
+      for (int i = 0; i < out.length; i++) {
+         out[i] = providers.get(i).create(symbol, params);
+      }
+      return out;
+   }
 
-	@Override
-	public final T[] create(String symbol, Parameters params) {
-		if (providers.isEmpty()) {
-			return empty;
-		}
-		T[] out = Arrays.copyOf(empty, providers.size());
-		for (int i = 0; i < out.length; i++) {
-			out[i] = providers.get(i).create(symbol, params);
-		}
-		return out;
-	}
+   public static <T> T[] getInstances(String symbol, Parameters params, InstancesProvider<T> provider, String description, boolean mandatory, Set<Object> allInstances) {
+      T[] instancesToUse = provider.create(symbol, params);
+      if (ArrayUtils.isEmpty(instancesToUse) && mandatory) {
+         throw new IllegalStateException("Can't execute market simulation. No " + description + " provided for symbol " + symbol);
+      }
+      for (T instance : instancesToUse) {
+         if (allInstances.contains(instance)) {
+            throw new IllegalStateException("Can't execute market simulation. " + description + " instance provided for symbol " + symbol + " is already in use. Make sure to build a *new* "
+                  + description + " object for each symbol.");
+         } else {
+            allInstances.add(instance);
+         }
+      }
+      return instancesToUse;
+   }
 
-	public static <T> T[] getInstances(String symbol, Parameters params, InstancesProvider<T> provider, String description, boolean mandatory, Set<Object> allInstances) {
-		T[] instancesToUse = provider.create(symbol, params);
-		if (ArrayUtils.isEmpty(instancesToUse) && mandatory) {
-			throw new IllegalStateException("Can't execute market simulation. No " + description + " provided for symbol " + symbol);
-		}
-		for (T instance : instancesToUse) {
-			if (allInstances.contains(instance)) {
-				throw new IllegalStateException("Can't execute market simulation. " + description + " instance provided for symbol " + symbol + " is already in use. Make sure to build a *new* " + description + " object for each symbol.");
-			} else {
-				allInstances.add(instance);
-			}
-		}
-		return instancesToUse;
-	}
-
-	public void clear(){
-		providers.clear();
-	}
+   public void clear() {
+      providers.clear();
+   }
 }

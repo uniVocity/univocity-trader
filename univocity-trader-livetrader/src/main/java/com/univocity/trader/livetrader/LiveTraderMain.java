@@ -68,6 +68,7 @@ class LiveTraderMain {
             final String[] currencies = Currencies.getInstance().fromList(currenciesList);
             final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
             ConfigFileUnivocityConfigurationImpl.setConfigfileName(configFileName);
+            System.out.println("Strategy: " + univocityConfiguration.getStrategyClass().getName());
             final Exchange<Candlestick> exchange = ExchangeFactory.getInstance().getExchange(univocityConfiguration.getExchangeClass());
             LiveTrader<Candlestick> binance = null;
             try {
