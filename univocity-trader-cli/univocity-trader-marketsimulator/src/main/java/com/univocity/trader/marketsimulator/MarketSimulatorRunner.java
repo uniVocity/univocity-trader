@@ -10,12 +10,18 @@ import com.univocity.trader.simulation.MarketSimulator;
 public class MarketSimulatorRunner {
    public void simulate() {
       final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
-      System.out.println("Strategy: " + univocityConfiguration.getStrategyClass().getName());
+      System.out.println("Strategy:\t" + univocityConfiguration.getStrategyClass().getSimpleName());
+      System.out.println("Ref Currency:\t" + univocityConfiguration.getExchangeReferenceCurrency());
+      System.out.println("Currencies:");
+      for (String c : univocityConfiguration.getExchangeCurrencies()) {
+         System.out.println("\t\t" + c);
+      }
       final MarketSimulator simulation = new MarketSimulator(univocityConfiguration.getSimulationReferenceCurrency());
       simulation.tradeWith(univocityConfiguration.getExchangeCurrencies());
       simulation.strategies().add(UnivocityFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
+      System.out.println("Monitors:");
       for (final Class<?> clazz : univocityConfiguration.getStrategyMonitorClasses()) {
-         System.out.println("Monitor: " + clazz.getName());
+         System.out.println("\t\t" + clazz.getSimpleName());
          simulation.monitors().add(UnivocityFactory.getInstance().getStrategyMonitorSupplier(clazz));
       }
       simulation.setTradingFees(SimpleTradingFees.percentage(0.1));
@@ -29,6 +35,8 @@ public class MarketSimulatorRunner {
       // .maximumInvestmentPercentagePerAsset(50.0, "BTC", "LTC")
       // .maximumInvestmentAmountPerAsset(200, "XRP")
       ;
+      System.out.println("Start:\t\t" + univocityConfiguration.getSimulationStart().toString());
+      System.out.println("End:\t\t" + univocityConfiguration.getSimulationEnd().toString());
       simulation.setSimulationStart(univocityConfiguration.getSimulationStart());
       simulation.setSimulationEnd(univocityConfiguration.getSimulationEnd());
       simulation.listeners().add(new OrderExecutionToLog());

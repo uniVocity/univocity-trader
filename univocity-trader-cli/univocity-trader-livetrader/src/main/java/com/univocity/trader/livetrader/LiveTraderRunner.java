@@ -20,7 +20,7 @@ import com.univocity.trader.notification.OrderExecutionToLog;
 public class LiveTraderRunner {
    public void run() {
       final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
-      System.out.println("Strategy: " + univocityConfiguration.getStrategyClass().getName());
+      System.out.println("Strategy: " + univocityConfiguration.getStrategyClass().getSimpleName());
       final Exchange<Candlestick> exchange = UnivocityFactory.getInstance().getExchange(univocityConfiguration.getExchangeClass());
       LiveTrader<Candlestick> liveTrader = null;
       try {
@@ -31,7 +31,7 @@ public class LiveTraderRunner {
          client.tradeWith(univocityConfiguration.getExchangeCurrencies());
          client.strategies().add(UnivocityFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
          for (final Class<?> clazz : univocityConfiguration.getStrategyMonitorClasses()) {
-            System.out.println("Monitor: " + clazz.getName());
+            System.out.println("Monitor: " + clazz.getSimpleName());
             client.monitors().add(UnivocityFactory.getInstance().getStrategyMonitorSupplier(clazz));
          }
          client.account().maximumInvestmentAmountPerAsset(20);
