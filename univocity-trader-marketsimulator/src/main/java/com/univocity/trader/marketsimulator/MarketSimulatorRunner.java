@@ -3,11 +3,10 @@ package com.univocity.trader.marketsimulator;
 import com.univocity.trader.account.SimpleTradingFees;
 import com.univocity.trader.config.UnivocityConfiguration;
 import com.univocity.trader.currency.Currencies;
-import com.univocity.trader.guice.UnivocityFactory;
+import com.univocity.trader.factory.UnivocityFactory;
 import com.univocity.trader.notification.OrderExecutionToLog;
 import com.univocity.trader.notification.SimpleStrategyStatistics;
 import com.univocity.trader.simulation.MarketSimulator;
-import com.univocity.trader.strategy.StrategyFactory;
 
 public class MarketSimulatorRunner {
    public void simulate(String currenciesList) {
@@ -16,10 +15,10 @@ public class MarketSimulatorRunner {
       System.out.println("Strategy: " + univocityConfiguration.getStrategyClass().getName());
       final MarketSimulator simulation = new MarketSimulator(univocityConfiguration.getSimulationReferenceCurrency());
       simulation.tradeWith(currencies);
-      simulation.strategies().add(StrategyFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
+      simulation.strategies().add(UnivocityFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
       for (final Class<?> clazz : univocityConfiguration.getStrategyMonitorClasses()) {
          System.out.println("Monitor: " + clazz.getName());
-         simulation.monitors().add(StrategyFactory.getInstance().getStrategyMonitorSupplier(clazz));
+         simulation.monitors().add(UnivocityFactory.getInstance().getStrategyMonitorSupplier(clazz));
       }
       simulation.setTradingFees(SimpleTradingFees.percentage(0.1));
       // simulation.symbolInformation("ADAUSDT").minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);

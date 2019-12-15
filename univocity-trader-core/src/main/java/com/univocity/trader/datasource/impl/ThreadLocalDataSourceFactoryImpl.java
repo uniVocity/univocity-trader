@@ -6,7 +6,7 @@ import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
 import com.univocity.trader.config.UnivocityConfiguration;
 import com.univocity.trader.datasource.DataSourceFactory;
-import com.univocity.trader.guice.UnivocityFactory;
+import com.univocity.trader.factory.UnivocityFactory;
 
 /**
  * @author tom@khubla.com
