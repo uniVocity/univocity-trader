@@ -1,8 +1,7 @@
-package com.univocity.trader.utils;
+package com.univocity.trader.email;
 
 import com.univocity.trader.config.UnivocityConfiguration;
 import com.univocity.trader.guice.UnivocityFactory;
-import com.univocity.trader.notification.MailSenderConfig;
 
 /**
  * @author tom@khubla.com

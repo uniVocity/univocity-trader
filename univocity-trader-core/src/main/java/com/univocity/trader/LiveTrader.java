@@ -21,10 +21,10 @@ import com.univocity.trader.account.Client;
 import com.univocity.trader.candles.Candle;
 import com.univocity.trader.candles.CandleRepository;
 import com.univocity.trader.candles.TickConsumer;
+import com.univocity.trader.email.MailSenderConfig;
+import com.univocity.trader.email.SmtpMailSender;
 import com.univocity.trader.exchange.Exchange;
 import com.univocity.trader.indicators.base.TimeInterval;
-import com.univocity.trader.notification.MailSenderConfig;
-import com.univocity.trader.notification.SmtpMailSender;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>

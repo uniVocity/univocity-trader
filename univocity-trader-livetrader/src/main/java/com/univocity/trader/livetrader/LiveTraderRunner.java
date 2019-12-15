@@ -12,6 +12,7 @@ import com.univocity.trader.account.OrderRequest;
 import com.univocity.trader.candles.Candle;
 import com.univocity.trader.config.UnivocityConfiguration;
 import com.univocity.trader.currency.Currencies;
+import com.univocity.trader.email.MailUtil;
 import com.univocity.trader.exchange.Exchange;
 import com.univocity.trader.exchange.ExchangeFactory;
 import com.univocity.trader.exchange.binance.api.client.domain.market.Candlestick;
@@ -19,7 +20,6 @@ import com.univocity.trader.guice.UnivocityFactory;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.notification.OrderExecutionToLog;
 import com.univocity.trader.strategy.StrategyFactory;
-import com.univocity.trader.utils.MailUtil;
 
 public class LiveTraderRunner {
    public void run(String currenciesList) {

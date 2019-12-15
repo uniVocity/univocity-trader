@@ -5,7 +5,7 @@
  *
  */
 
-package com.univocity.trader.notification;
+package com.univocity.trader.email;
 
 import org.apache.commons.lang3.*;
 import org.slf4j.*;

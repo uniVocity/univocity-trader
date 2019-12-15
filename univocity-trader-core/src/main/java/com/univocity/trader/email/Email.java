@@ -5,7 +5,7 @@
  *
  */
 
-package com.univocity.trader.notification;
+package com.univocity.trader.email;
 
 public class Email {
 

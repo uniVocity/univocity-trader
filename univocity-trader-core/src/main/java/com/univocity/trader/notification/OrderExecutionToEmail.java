@@ -17,6 +17,9 @@ import com.univocity.trader.account.Client;
 import com.univocity.trader.account.Order;
 import com.univocity.trader.account.Trader;
 import com.univocity.trader.account.TradingManager;
+import com.univocity.trader.email.Email;
+import com.univocity.trader.email.MailSenderConfig;
+import com.univocity.trader.email.SmtpMailSender;
 
 public class OrderExecutionToEmail implements OrderListener {
    private static final Logger log = LoggerFactory.getLogger(NotificationHandler.class);
