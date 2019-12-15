@@ -618,7 +618,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		for (Map.Entry<String, Order> entry : pendingOrders.entrySet()) {
 			Order order = entry.getValue();
 			OrderManager orderManager = orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER);
-			if (orderManager.cancelToReleaseFundsFor(order, trader)) {
+			if (orderManager.cancelToReleaseFundsFor(order, traderOf(order), trader)) {
 				order.cancel();
 				if (order.getStatus() == CANCELLED) {
 					cancelOrder(orderManager, order);
