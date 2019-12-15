@@ -50,12 +50,12 @@ public class SimulatedClientAccount implements ClientAccount {
 		if (orderDetails.getSide() == BUY && availableFunds - fees >= orderAmount - 0.000000001) {
 			locked = orderDetails.getTotalOrderAmount();
 			account.lockAmount(fundsSymbol, locked);
-			order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, BUY, orderType);
+			order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, BUY, orderType, orderDetails.getTime());
 
 		} else if (orderDetails.getSide() == SELL && availableAssets >= quantity) {
 			locked = orderDetails.getQuantity();
 			account.lockAmount(assetsSymbol, locked);
-			order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL, orderType);
+			order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL, orderType, orderDetails.getTime());
 		}
 
 		if (order != null) {
@@ -65,11 +65,10 @@ public class SimulatedClientAccount implements ClientAccount {
 		return order;
 	}
 
-	protected DefaultOrder createOrder(String assetsSymbol, String fundSymbol, double quantity, double price, Order.Side orderSide, Order.Type orderType) {
-		DefaultOrder out = new DefaultOrder(assetsSymbol, fundSymbol, orderSide);
+	protected DefaultOrder createOrder(String assetsSymbol, String fundSymbol, double quantity, double price, Order.Side orderSide, Order.Type orderType, long closeTime) {
+		DefaultOrder out = new DefaultOrder(assetsSymbol, fundSymbol, orderSide, closeTime);
 		out.setPrice(BigDecimal.valueOf(price));
 		out.setQuantity(BigDecimal.valueOf(quantity));
-		out.setTime(System.currentTimeMillis());
 		out.setType(orderType);
 		out.setStatus(Order.Status.NEW);
 		out.setExecutedQuantity(BigDecimal.ZERO);
@@ -137,11 +136,11 @@ public class SimulatedClientAccount implements ClientAccount {
 	protected void fillOrder(Order order, Candle candle) {
 		DefaultOrder o = (DefaultOrder) order;
 		if (order.getType() == LIMIT) {
-//			if ((order.getSide() == BUY && order.getPrice().doubleValue() >= candle.low)
-//					|| (order.getSide() == SELL && order.getPrice().doubleValue() <= candle.high)) {
+			if ((order.getSide() == BUY && order.getPrice().doubleValue() >= candle.low)
+					|| (order.getSide() == SELL && order.getPrice().doubleValue() <= candle.high)) {
 				o.setStatus(Order.Status.FILLED);
 				o.setExecutedQuantity(order.getQuantity());
-//			}
+			}
 		} else if (order.getType() == MARKET) {
 			o.setStatus(Order.Status.FILLED);
 			o.setExecutedQuantity(order.getQuantity());

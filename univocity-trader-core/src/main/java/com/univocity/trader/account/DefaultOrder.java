@@ -8,18 +8,16 @@ public class DefaultOrder extends OrderRequest implements Order {
 
 	private String orderId;
 	private BigDecimal executedQuantity;
-	private Long time;
 	private Order.Status status;
 
-	public DefaultOrder(String assetSymbol, String fundSymbol, Side side) {
-		super(assetSymbol, fundSymbol, side);
+	public DefaultOrder(String assetSymbol, String fundSymbol, Side side, long time) {
+		super(assetSymbol, fundSymbol, side, time);
 	}
 
 	public DefaultOrder(Order order) {
-		super(order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide());
+		super(order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), order.getTime());
 		this.setOrderId(order.getOrderId());
 		this.setType(order.getType());
-		this.setTime(order.getTime());
 		this.setQuantity(round(order.getQuantity()));
 		this.setPrice(round(order.getPrice()));
 	}
@@ -61,14 +59,6 @@ public class DefaultOrder extends OrderRequest implements Order {
 		this.status = status;
 	}
 
-	public Long getTime() {
-		return time;
-	}
-
-	public void setTime(Long time) {
-		this.time = time;
-	}
-
 	@Override
 	public void cancel() {
 		this.status = Status.CANCELLED;
@@ -80,6 +70,6 @@ public class DefaultOrder extends OrderRequest implements Order {
 
 	@Override
 	public String toString() {
-		return print();
+		return print(System.currentTimeMillis());
 	}
 }

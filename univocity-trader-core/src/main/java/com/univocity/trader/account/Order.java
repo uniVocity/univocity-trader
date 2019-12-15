@@ -20,6 +20,10 @@ public interface Order {
 		return System.currentTimeMillis() - getTime();
 	}
 
+	default long getTimeElapsed(long latestClose) {
+		return latestClose - getTime();
+	}
+
 	String getOrderId();
 
 	BigDecimal getPrice();
@@ -32,7 +36,7 @@ public interface Order {
 
 	Type getType();
 
-	Long getTime();
+	long getTime();
 
 	Status getStatus();
 
@@ -42,7 +46,7 @@ public interface Order {
 		return getStatus() == Status.CANCELLED;
 	}
 
-	default BigDecimal getRemainingQuantity(){
+	default BigDecimal getRemainingQuantity() {
 		return round(getQuantity().subtract(getExecutedQuantity()));
 	}
 
@@ -58,7 +62,7 @@ public interface Order {
 		return getStatus() == Status.FILLED || getStatus() == Status.CANCELLED;
 	}
 
-	default String print() {
+	default String print(long latestClose) {
 		StringBuilder description = new StringBuilder();
 
 		description
@@ -105,7 +109,7 @@ public interface Order {
 
 		description
 				.append(". Open for ")
-				.append(TimeInterval.getFormattedDuration(getTimeElapsed()));
+				.append(TimeInterval.getFormattedDuration(getTimeElapsed(latestClose)));
 
 		description.append('.');
 		return description.toString();

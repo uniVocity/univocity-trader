@@ -417,11 +417,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	private OrderRequest prepareOrder(TradingManager tradingManager, Order.Side side, double quantity) {
 		SymbolPriceDetails priceDetails = tradingManager.getPriceDetails();
-		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side);
+		long time = tradingManager.getLatestCandle().closeTime;
+		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side, time);
 		orderPreparation.setPrice(priceDetails.priceToBigDecimal(tradingManager.getLatestPrice()));
 		orderPreparation.setQuantity(priceDetails.adjustQuantityScale(quantity));
 
 		OrderBook book = account.getOrderBook(tradingManager.getSymbol(), 0);
+
 
 		OrderManager orderCreator = orderManagers.getOrDefault(tradingManager.getSymbol(), DEFAULT_ORDER_MANAGER);
 		if (orderCreator != null) {
@@ -569,10 +571,10 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		if (old.getExecutedQuantity().compareTo(order.getExecutedQuantity()) != 0) {
 			logOrderStatus("", order);
 			updateBalances();
-			orderManager.updated(order);
+			orderManager.updated(order, traderOf(order));
 		} else {
 			logOrderStatus("Unchanged ", order);
-			orderManager.unchanged(order);
+			orderManager.unchanged(order, traderOf(order));
 		}
 
 		//order manager could have cancelled the order
@@ -588,18 +590,22 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			updateBalances();
 		} finally {
 			try {
-				orderManager.finalized(order);
+				orderManager.finalized(order, traderOf(order));
 			} finally {
 				getTradingManagerOf(order.getSymbol()).notifyOrderFinalized(order);
 			}
 		}
 	}
 
+	private Trader traderOf(Order order){
+		return getTraderOfSymbol(order.getSymbol());
+	}
+
 	private void cancelOrder(OrderManager orderManager, Order order) {
 		account.cancel(order);
 		order = account.updateOrderStatus(order);
 		pendingOrders.remove(order.getOrderId());
-		orderManager.finalized(order);
+		orderManager.finalized(order, traderOf(order));
 		logOrderStatus("Cancellation via order manager: ", order);
 		updateBalances();
 	}

@@ -52,18 +52,18 @@ public class DefaultOrderManager implements OrderManager {
 	}
 
 	@Override
-	public void finalized(Order order) {
+	public void finalized(Order order, Trader trader) {
+//		System.out.println(order.print(trader.getCandle().closeTime));
+	}
+
+	@Override
+	public void updated(Order order, Trader trader) {
 
 	}
 
 	@Override
-	public void updated(Order order) {
-
-	}
-
-	@Override
-	public void unchanged(Order order) {
-		if (order.getTimeElapsed() >= maxTimeToKeepOrderOpen.ms) {
+	public void unchanged(Order order, Trader trader) {
+		if (order.getTimeElapsed(trader.getCandle().closeTime) >= maxTimeToKeepOrderOpen.ms) {
 			order.cancel();
 			return;
 		}
@@ -71,7 +71,7 @@ public class DefaultOrderManager implements OrderManager {
 
 	@Override
 	public boolean cancelToReleaseFundsFor(Order order, Trader trader) {
-		if (order.getTimeElapsed() > maxTimeToKeepOrderOpen.ms / 2) {
+		if (order.getTimeElapsed(trader.getCandle().closeTime) > maxTimeToKeepOrderOpen.ms / 2) {
 			order.cancel();
 			return true;
 		}
