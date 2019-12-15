@@ -24,8 +24,8 @@ exchange.secret=<YOUR BINANCE API SECRET>"
 exchange.queryrate=1200
 
 # currencies
-exchange.currencies="BTC"
-exchange.referenceCurrency="USDT"
+exchange.currencies=BTC
+exchange.referenceCurrency=USDT
 
 # strategy
 strategy.class=com.univocity.trader.strategy.example.ExampleStrategy
