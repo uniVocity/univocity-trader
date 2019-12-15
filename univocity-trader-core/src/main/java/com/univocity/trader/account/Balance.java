@@ -11,6 +11,7 @@ public class Balance {
 	private BigDecimal locked = BigDecimal.ZERO;
 	private double freeAmount = -1.0;
 
+	public static final MathContext ROUND_MC = new MathContext(8, RoundingMode.FLOOR);
 
 	public Balance(String symbol) {
 		this.symbol = symbol;
@@ -18,7 +19,7 @@ public class Balance {
 
 	public Balance(String symbol, double free) {
 		this.symbol = symbol;
-		this.free = new BigDecimal(free);
+		this.free = BigDecimal.valueOf(free);
 	}
 
 	public String getSymbol() {
@@ -37,7 +38,7 @@ public class Balance {
 	}
 
 	public void setFree(BigDecimal free) {
-		this.free = free == null ? BigDecimal.ZERO : free;
+		this.free = round(free == null ? BigDecimal.ZERO : free);
 		this.freeAmount = -1.0;
 	}
 
@@ -46,11 +47,11 @@ public class Balance {
 	}
 
 	public void setLocked(BigDecimal locked) {
-		this.locked = locked == null ? BigDecimal.ZERO : locked;
+		this.locked = round(locked == null ? BigDecimal.ZERO : locked);
 	}
 
 	public BigDecimal getTotal() {
-		return free.add(locked);
+		return round(free.add(locked));
 	}
 
 	@Override
@@ -61,4 +62,13 @@ public class Balance {
 				", locked=" + locked +
 				'}';
 	}
+
+	public static final BigDecimal round(BigDecimal bd){
+		return bd.round(ROUND_MC);
+	}
+
+	public static final String roundStr(BigDecimal bd){
+		return round(bd).toPlainString();
+	}
+
 }

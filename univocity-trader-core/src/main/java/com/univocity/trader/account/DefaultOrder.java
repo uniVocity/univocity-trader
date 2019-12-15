@@ -2,6 +2,8 @@ package com.univocity.trader.account;
 
 import java.math.*;
 
+import static com.univocity.trader.account.Balance.*;
+
 public class DefaultOrder extends OrderRequest implements Order {
 
 	private String orderId;
@@ -18,8 +20,8 @@ public class DefaultOrder extends OrderRequest implements Order {
 		this.setOrderId(order.getOrderId());
 		this.setType(order.getType());
 		this.setTime(order.getTime());
-		this.setQuantity(order.getQuantity());
-		this.setPrice(order.getPrice());
+		this.setQuantity(round(order.getQuantity()));
+		this.setPrice(round(order.getPrice()));
 	}
 
 	@Override
@@ -37,7 +39,17 @@ public class DefaultOrder extends OrderRequest implements Order {
 	}
 
 	public void setExecutedQuantity(BigDecimal executedQuantity) {
-		this.executedQuantity = executedQuantity;
+		this.executedQuantity = round(executedQuantity);
+	}
+
+	@Override
+	public void setPrice(BigDecimal price) {
+		super.setPrice(round(price));
+	}
+
+	@Override
+	public void setQuantity(BigDecimal quantity) {
+		super.setQuantity(round(quantity));
 	}
 
 	@Override
@@ -68,12 +80,6 @@ public class DefaultOrder extends OrderRequest implements Order {
 
 	@Override
 	public String toString() {
-		return "DefaultOrder{" +
-				"orderId='" + orderId + '\'' +
-				", executedQuantity=" + executedQuantity +
-				", price=" + getPrice().toPlainString() +
-				", time=" + time +
-				", status=" + status +
-				'}';
+		return print();
 	}
 }
