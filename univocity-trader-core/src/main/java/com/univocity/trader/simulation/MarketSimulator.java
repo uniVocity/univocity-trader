@@ -1,139 +1,135 @@
 package com.univocity.trader.simulation;
 
-import com.univocity.trader.*;
-import com.univocity.trader.account.*;
-import com.univocity.trader.candles.*;
-import com.univocity.trader.strategy.*;
-import org.slf4j.*;
+import static com.univocity.trader.indicators.base.TimeInterval.MINUTE;
 
-import java.time.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import static com.univocity.trader.indicators.base.TimeInterval.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.univocity.trader.SymbolPriceDetails;
+import com.univocity.trader.account.AccountManager;
+import com.univocity.trader.account.TradingManager;
+import com.univocity.trader.candles.Candle;
+import com.univocity.trader.candles.CandleRepository;
+import com.univocity.trader.strategy.Engine;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class MarketSimulator extends AbstractSimulator {
+   private static final Logger log = LoggerFactory.getLogger(MarketSimulator.class);
+   private final Map<String, Engine> symbolHandlers = new HashMap<>();
+   private int activeQueryLimit = 15;
+   private boolean cachingEnabled = false;
 
-	private static final Logger log = LoggerFactory.getLogger(MarketSimulator.class);
+   public MarketSimulator(String referenceCurrency) {
+      super(referenceCurrency);
+   }
 
-	private final Map<String, Engine> symbolHandlers = new HashMap<>();
-	private int activeQueryLimit = 15;
-	private boolean cachingEnabled = false;
+   public boolean isCachingEnabled() {
+      return cachingEnabled;
+   }
 
-	public MarketSimulator(String referenceCurrency) {
-		super(referenceCurrency);
-	}
+   public void setCachingEnabled(boolean cachingEnabled) {
+      this.cachingEnabled = cachingEnabled;
+   }
 
-	public boolean isCachingEnabled() {
-		return cachingEnabled;
-	}
+   public int getActiveQueryLimit() {
+      return activeQueryLimit;
+   }
 
-	public void setCachingEnabled(boolean cachingEnabled) {
-		this.cachingEnabled = cachingEnabled;
-	}
+   public void setActiveQueryLimit(int activeQueryLimit) {
+      this.activeQueryLimit = activeQueryLimit;
+   }
 
-	public int getActiveQueryLimit() {
-		return activeQueryLimit;
-	}
+   public void run() {
+      run(Parameters.NULL);
+   }
 
-	public void setActiveQueryLimit(int activeQueryLimit) {
-		this.activeQueryLimit = activeQueryLimit;
-	}
-
-	public void run() {
-		run(Parameters.NULL);
-	}
-
-	public void run(Parameters parameters) {
-		AccountManager account = getAccount();
-		symbolHandlers.clear();
-
-		Set<Object> allInstances = new HashSet<>();
-		for (String[] pair : account.getTradedPairs()) {
-			String assetSymbol = pair[0];
-			String fundSymbol = pair[1];
-
-			SimulatedExchange exchange = new SimulatedExchange(account);
-			exchange.setSymbolInformation(this.symbolInformation);
-			SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange);
-//			exchange.setMainTradeSymbols(mainTradeSymbols);
-			TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, account, listeners, assetSymbol, fundSymbol, parameters);
-
-			Engine engine = new Engine(tradingManager, strategies, monitors, parameters, allInstances);
-			symbolHandlers.put(engine.getSymbol(), engine);
-		}
-
-		allInstances.clear();
-
-		ConcurrentHashMap<String, Enumeration<Candle>> markets = new ConcurrentHashMap<>();
-		HashMap<String, Candle> pending = new HashMap<>();
-
-		LocalDateTime start = getSimulationStart();
-		LocalDateTime end = getSimulationEnd();
-		final long startTime = getStartTime();
-		final long endTime = getEndTime();
-
-
-		int activeQueries = 0;
-		Map<String, CompletableFuture<Enumeration<Candle>>> futures = new HashMap<>();
-		ExecutorService executor = Executors.newCachedThreadPool();
-		for (Engine engine : symbolHandlers.values()) {
-			activeQueries++;
-			boolean loadAllDataFirst = cachingEnabled || activeQueries > activeQueryLimit;
-
-			futures.put(engine.getSymbol(), CompletableFuture.supplyAsync(
-					() -> CandleRepository.iterate(engine.getSymbol(), start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor)
-			);
-		}
-
-		futures.forEach((symbol, candles) -> {
-			try {
-				markets.put(symbol, candles.get());
-			} catch (Exception e) {
-				log.error("Error querying " + symbol + " candles from database", e);
-			}
-		});
-
-		executor.shutdown();
-
-//		Map<String, Long> counts = new TreeMap<>();
-		for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
-			for (Map.Entry<String, Enumeration<Candle>> e : markets.entrySet()) {
-				String symbol = e.getKey();
-				Enumeration<Candle> it = e.getValue();
-				Candle candle = pending.get(symbol);
-				if (candle != null) {
-					if (candle.openTime + 1 >= clock && candle.openTime <= clock + MINUTE.ms - 1) {
-						symbolHandlers.get(symbol).process(candle, false);
-//						counts.compute(symbol, (p, c) -> c == null ? 1 : c + 1);
-						pending.remove(symbol);
-						if (it.hasMoreElements()) {
-							Candle next = it.nextElement();
-							if (next != null) {
-								pending.put(symbol, next);
-								if (next.openTime + 1 >= clock && next.openTime <= clock + MINUTE.ms - 1) {
-									clock -= MINUTE.ms;
-								}
-							}
-						}
-					}
-				} else {
-					if (it.hasMoreElements()) {
-						Candle next = it.nextElement();
-						if (next != null) {
-							pending.put(symbol, next);
-						}
-					}
-				}
-			}
-		}
-//		System.out.println("Processed candle counts:" + counts);
-
-		System.out.println("Real time trading simulation from " + start + " to " + end);
-		System.out.print(account.toString());
-		System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
-	}
+   public void run(Parameters parameters) {
+      AccountManager account = getAccount();
+      symbolHandlers.clear();
+      Set<Object> allInstances = new HashSet<>();
+      for (String[] pair : account.getTradedPairs()) {
+         String assetSymbol = pair[0];
+         String fundSymbol = pair[1];
+         SimulatedExchange exchange = new SimulatedExchange(account);
+         exchange.setSymbolInformation(this.symbolInformation);
+         SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange);
+         // exchange.setMainTradeSymbols(mainTradeSymbols);
+         TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, account, listeners, assetSymbol, fundSymbol, parameters);
+         Engine engine = new Engine(tradingManager, strategies, monitors, parameters, allInstances);
+         symbolHandlers.put(engine.getSymbol(), engine);
+      }
+      allInstances.clear();
+      ConcurrentHashMap<String, Enumeration<Candle>> markets = new ConcurrentHashMap<>();
+      HashMap<String, Candle> pending = new HashMap<>();
+      LocalDateTime start = getSimulationStart();
+      LocalDateTime end = getSimulationEnd();
+      final long startTime = getStartTime();
+      final long endTime = getEndTime();
+      int activeQueries = 0;
+      Map<String, CompletableFuture<Enumeration<Candle>>> futures = new HashMap<>();
+      ExecutorService executor = Executors.newCachedThreadPool();
+      for (Engine engine : symbolHandlers.values()) {
+         activeQueries++;
+         boolean loadAllDataFirst = cachingEnabled || activeQueries > activeQueryLimit;
+         futures.put(engine.getSymbol(),
+               CompletableFuture.supplyAsync(() -> CandleRepository.iterate(engine.getSymbol(), start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor));
+      }
+      futures.forEach((symbol, candles) -> {
+         try {
+            markets.put(symbol, candles.get());
+         } catch (Exception e) {
+            log.error("Error querying " + symbol + " candles from database", e);
+         }
+      });
+      executor.shutdown();
+      // Map<String, Long> counts = new TreeMap<>();
+      for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
+         for (Map.Entry<String, Enumeration<Candle>> e : markets.entrySet()) {
+            String symbol = e.getKey();
+            Enumeration<Candle> it = e.getValue();
+            Candle candle = pending.get(symbol);
+            if (candle != null) {
+               if (candle.openTime + 1 >= clock && candle.openTime <= clock + MINUTE.ms - 1) {
+                  symbolHandlers.get(symbol).process(candle, false);
+                  // counts.compute(symbol, (p, c) -> c == null ? 1 : c + 1);
+                  pending.remove(symbol);
+                  if (it.hasMoreElements()) {
+                     Candle next = it.nextElement();
+                     if (next != null) {
+                        pending.put(symbol, next);
+                        if (next.openTime + 1 >= clock && next.openTime <= clock + MINUTE.ms - 1) {
+                           clock -= MINUTE.ms;
+                        }
+                     }
+                  }
+               }
+            } else {
+               if (it.hasMoreElements()) {
+                  Candle next = it.nextElement();
+                  if (next != null) {
+                     pending.put(symbol, next);
+                  }
+               }
+            }
+         }
+      }
+      // System.out.println("Processed candle counts:" + counts);
+      System.out.println("Real time trading simulation from " + start + " to " + end);
+      System.out.print(account.toString());
+      System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
+   }
 }

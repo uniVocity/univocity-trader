@@ -38,9 +38,9 @@ public class ProfitabilityStrategyMonitor extends StrategyMonitor {
          /*
           * reject sales where we make less than MINIMUM_PROFIT profit
           */
-         log.debug("trade profitability of {}% rejected", String.format("%.3f", diffpct * 100));
          return true;
       }
+      log.debug("trade profitability of {}% accepted", String.format("%.3f", diffpct * 100));
       return false;
    }
 }
