@@ -33,7 +33,7 @@ public class TradingfeeStrategyMonitor extends StrategyMonitor {
          /*
           * reject sales where we pay more than MAX_FEES in fees
           */
-         log.debug("trading fees of {} rejected", feepct);
+         log.debug("trading fees of  of {}% rejected", String.format("%.3f", feepct * 100));
          return true;
       }
       return false;

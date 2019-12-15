@@ -12,7 +12,10 @@ import com.univocity.trader.strategy.Indicator;
 import com.univocity.trader.strategy.StrategyMonitor;
 
 public class ProfitabilityStrategyMonitor extends StrategyMonitor {
-   private static final double MINIMUM_PROFIT = 0.10;
+   /*
+    * 1% ensures that we don't make losing sales, and lets the strategy class determine to sell or not
+    */
+   private static final double MINIMUM_PROFIT = 0.01;
    private static final Logger log = LoggerFactory.getLogger(ProfitabilityStrategyMonitor.class);
 
    public ProfitabilityStrategyMonitor() {
@@ -35,7 +38,7 @@ public class ProfitabilityStrategyMonitor extends StrategyMonitor {
          /*
           * reject sales where we make less than MINIMUM_PROFIT profit
           */
-         log.debug("trade profitability of {} rejected", diffpct);
+         log.debug("trade profitability of {}% rejected", String.format("%.3f", diffpct * 100));
          return true;
       }
       return false;
