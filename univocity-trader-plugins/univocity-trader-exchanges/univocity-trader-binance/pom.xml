@@ -36,11 +36,6 @@
 			<version>${asynchttpclient.version}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.univocity</groupId>
-			<artifactId>univocity-trader-core</artifactId>
-			<version>${revision}</version>
-		</dependency>
 	</dependencies>
 
 </project>

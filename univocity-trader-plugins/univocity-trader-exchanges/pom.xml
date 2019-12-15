@@ -11,16 +11,16 @@
 
 	<parent>
 		<groupId>com.univocity</groupId>
-		<artifactId>univocity-trader</artifactId>
+		<artifactId>univocity-trader-plugins</artifactId>
 		<version>${revision}</version>
 	</parent>
 
-	<artifactId>univocity-trader-orderlisteners</artifactId>
+	<artifactId>univocity-trader-exchanges</artifactId>
 
-	<name>univocity-trader-orderlisteners</name>
+	<name>univocity-trader-exchanges</name>
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>univocity-trader-simplestrategystatistics</module>
+		<module>univocity-trader-binance</module>
 	</modules>
 </project>

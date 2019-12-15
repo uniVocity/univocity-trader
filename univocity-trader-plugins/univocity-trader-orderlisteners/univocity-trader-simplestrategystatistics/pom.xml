@@ -5,21 +5,13 @@
 
 	<parent>
 		<groupId>com.univocity</groupId>
-		<artifactId>univocity-trader-strategies</artifactId>
+		<artifactId>univocity-trader-orderlisteners</artifactId>
 		<version>${revision}</version>
 	</parent>
 
-	<artifactId>univocity-trader-examplestrategy</artifactId>
+	<artifactId>univocity-trader-simplestrategystatistics</artifactId>
 
-	<name>univocity-trader-examplestrategy</name>
+	<name>univocity-trader-simplestrategystatistics</name>
 	<packaging>jar</packaging>
-
-	<dependencies>
-		<dependency>
-			<groupId>com.univocity</groupId>
-			<artifactId>univocity-trader-core</artifactId>
-			<version>${revision}</version>
-		</dependency>
-	</dependencies>
 
 </project>

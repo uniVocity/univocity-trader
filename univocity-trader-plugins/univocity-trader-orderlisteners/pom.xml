@@ -11,18 +11,16 @@
 
 	<parent>
 		<groupId>com.univocity</groupId>
-		<artifactId>univocity-trader</artifactId>
+		<artifactId>univocity-trader-plugins</artifactId>
 		<version>${revision}</version>
 	</parent>
 
-	<artifactId>univocity-trader-strategies</artifactId>
+	<artifactId>univocity-trader-orderlisteners</artifactId>
 
-	<name>univocity-trader-strategies</name>
+	<name>univocity-trader-orderlisteners</name>
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>univocity-trader-examplestrategy</module>
-		<module>univocity-trader-trivialstrategy</module>
-		<module>univocity-trader-simplestrategymonitors</module>
+		<module>univocity-trader-simplestrategystatistics</module>
 	</modules>
 </project>
