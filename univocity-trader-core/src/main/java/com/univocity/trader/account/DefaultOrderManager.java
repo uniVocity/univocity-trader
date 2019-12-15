@@ -6,21 +6,17 @@ import com.univocity.trader.indicators.base.*;
 import org.slf4j.*;
 
 import java.math.*;
-import java.util.*;
-import java.util.concurrent.*;
 
 public class DefaultOrderManager implements OrderManager {
 
 	private static final Logger log = LoggerFactory.getLogger(DefaultOrderManager.class);
 	private final TimeInterval maxTimeToKeepOrderOpen;
 
-	private Map<String, Long> unchangedOrders = new ConcurrentHashMap<>();
-
-	public DefaultOrderManager(){
+	public DefaultOrderManager() {
 		this(TimeInterval.minutes(10));
 	}
 
-	public DefaultOrderManager(TimeInterval maxTimeToKeepOrderOpen){
+	public DefaultOrderManager(TimeInterval maxTimeToKeepOrderOpen) {
 		this.maxTimeToKeepOrderOpen = maxTimeToKeepOrderOpen;
 	}
 
@@ -56,30 +52,26 @@ public class DefaultOrderManager implements OrderManager {
 	}
 
 	@Override
-	public void finalized(Order order) {
-		unchangedOrders.remove(order.getOrderId());
+	public void finalized(Order order, Trader trader) {
+//		System.out.println(order.print(trader.getCandle().closeTime));
 	}
 
 	@Override
-	public void updated(Order order) {
-		unchangedOrders.remove(order.getOrderId());
+	public void updated(Order order, Trader trader) {
+
 	}
 
 	@Override
-	public void unchanged(Order order) {
-		Long previousTime = unchangedOrders.get(order.getOrderId());
-		if (previousTime != null) {
-			if(order.getTimeElapsed() - previousTime >= maxTimeToKeepOrderOpen.ms){
-				order.cancel();
-				return;
-			}
+	public void unchanged(Order order, Trader trader) {
+		if (order.getTimeElapsed(trader.getCandle().closeTime) >= maxTimeToKeepOrderOpen.ms) {
+			order.cancel();
+			return;
 		}
-		unchangedOrders.put(order.getOrderId(), order.getTimeElapsed());
 	}
 
 	@Override
-	public boolean cancelToReleaseFundsFor(Order order, Trader trader) {
-		if(order.getTimeElapsed() > maxTimeToKeepOrderOpen.ms / 2){
+	public boolean cancelToReleaseFundsFor(Order order, Trader currentTrader, Trader newSymbolTrader) {
+		if (order.getTimeElapsed(currentTrader.getCandle().closeTime) > maxTimeToKeepOrderOpen.ms / 2) {
 			order.cancel();
 			return true;
 		}

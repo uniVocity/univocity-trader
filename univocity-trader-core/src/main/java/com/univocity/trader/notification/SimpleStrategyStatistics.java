@@ -38,7 +38,7 @@ public class SimpleStrategyStatistics implements OrderListener {
          firstCandle = this.trader.getCandle();
       }
       if (order.getSide() == SELL) {
-         double change = trader.getPriceChangePct() - trader.getBreakEvenChange(order.getTotalSpent().doubleValue());
+         double change = trader.getPriceChangePct() - trader.getBreakEvenChange(order.getTotalTraded().doubleValue());
          if (!Double.isNaN(change)) {
             parameterReturns.computeIfAbsent(trader.getParameters().toString(), s -> new ArrayList<>()).add(change);
          }

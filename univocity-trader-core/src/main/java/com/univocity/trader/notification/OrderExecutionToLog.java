@@ -19,11 +19,11 @@ public class OrderExecutionToLog implements OrderListener {
       if (log.isDebugEnabled()) {
          SymbolPriceDetails f = trader.getPriceDetails();
          String type = StringUtils.rightPad(order.getSide().toString(), 8);
-         String details = trader.getCandle().getFormattedCloseTimeWithYear() + " " + trader.getSymbol() + " " + type + " " + trader.getLastClosingPrice() + " @ $";
+         String details = trader.getCandle().getFormattedCloseTimeWithYear() + " " + trader.getSymbol() + " " + type + " " + f.quantityToString(order.getQuantity()) + " @ $";
          if (order.getSide() == BUY) {
-            details += f.priceToString(order.getPrice()) + " (" + f.quantityToString(order.getQuantity()) + " units. Total spent: $" + f.priceToString(order.getTotalSpent()) + ")";
+            details += f.priceToString(order.getPrice()) + " (Total spent: $" + f.priceToString(order.getTotalOrderAmount()) + ")";
          } else {
-            details += trader.getCandle().close + " (" + trader.getFormattedPriceChangePct() + ") ";
+            details += f.priceToString(trader.getCandle().close) + " (" + trader.getFormattedPriceChangePct() + ") ";
             details += trader.exitReason();
             details += " >> " + trader.tradeLength() + " ticks >> [Min: $" + f.priceToString(trader.getMinPrice()) + " (" + trader.getFormattedMinChangePct() + ") - Max: $"
                   + f.priceToString(trader.getMaxPrice()) + " (" + trader.getFormattedMaxChangePct() + ")]";

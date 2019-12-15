@@ -10,12 +10,14 @@ public class OrderRequest {
 	private final String assetsSymbol;
 	private final String fundsSymbol;
 	private final Order.Side side;
+	private final long time;
 
 	private BigDecimal price = BigDecimal.ZERO;
 	private BigDecimal quantity = BigDecimal.ZERO;
 	private Order.Type type = Order.Type.LIMIT;
 
-	public OrderRequest(String assetsSymbol, String fundsSymbol, Order.Side side) {
+	public OrderRequest(String assetsSymbol, String fundsSymbol, Order.Side side, long time) {
+		this.time = time;
 		if (StringUtils.isBlank(assetsSymbol)) {
 			throw new IllegalArgumentException("Assets symbol cannot be null/blank");
 		}
@@ -72,6 +74,10 @@ public class OrderRequest {
 
 	public BigDecimal getTotalOrderAmount() {
 		return price.multiply(quantity);
+	}
+
+	public long getTime() {
+		return time;
 	}
 
 	@Override

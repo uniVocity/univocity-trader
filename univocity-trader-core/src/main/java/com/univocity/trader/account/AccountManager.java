@@ -12,6 +12,7 @@ import java.util.concurrent.*;
 import java.util.function.*;
 
 import static com.univocity.trader.account.Allocation.*;
+import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
@@ -65,6 +66,52 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return balances.getOrDefault(symbol, Balance.ZERO).getFreeAmount();
 	}
 
+	public Balance getBalance(String symbol) {
+		return balances.computeIfAbsent(symbol, Balance::new);
+	}
+
+	public void subtractFromFreeBalance(String symbol, final BigDecimal amount) {
+		Balance balance = getBalance(symbol);
+		BigDecimal result = round(balance.getFree().subtract(amount));
+		if (amount.compareTo(BigDecimal.ZERO) < 0) {
+			if (result.setScale(2, RoundingMode.HALF_UP).compareTo(BigDecimal.ZERO) < 0) {
+				throw new IllegalStateException("Can't subtract " + amount + " from " + symbol + "'s current free balance of: " + balance.getFree() + ". Insufficient funds.");
+			} else {
+				result = BigDecimal.ZERO;
+			}
+		}
+		balance.setFree(result);
+	}
+
+	public void subtractFromLockedBalance(String symbol, final BigDecimal amount) {
+		Balance balance = getBalance(symbol);
+		BigDecimal result = round(balance.getLocked().subtract(amount));
+		if (result.compareTo(BigDecimal.ZERO) < 0) {
+			if (result.setScale(2, RoundingMode.HALF_UP).compareTo(BigDecimal.ZERO) < 0) {
+				throw new IllegalStateException("Can't subtract " + amount + " from " + symbol + "'s current locked balance of: " + balance.getLocked() + ". Insufficient funds.");
+			} else {
+				result = BigDecimal.ZERO;
+			}
+		}
+		balance.setLocked(result);
+	}
+
+	private void addToLockedBalance(String symbol, BigDecimal amount) {
+		Balance balance = balances.get(symbol);
+		if (balance == null) {
+			throw new IllegalStateException("Can't lock " + amount + " " + symbol + ". No balance available.");
+		}
+		amount = balance.getLocked().add(amount);
+		balance.setLocked(amount);
+	}
+
+
+	public void addToFreeBalance(String symbol, BigDecimal amount) {
+		Balance balance = getBalance(symbol);
+		amount = balance.getFree().add(amount);
+		balance.setFree(amount);
+	}
+
 	@Override
 	public synchronized AccountManager setAmount(String symbol, double amount) {
 		if (supportedSymbols.contains(symbol) || symbol.equals(referenceCurrencySymbol)) {
@@ -74,28 +121,14 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		throw reportUnknownSymbol("Can't set funds", symbol);
 	}
 
-	@Override
-	public synchronized AccountManager lockAmount(String symbol, double amount) {
+	public synchronized AccountManager lockAmount(String symbol, BigDecimal amount) {
 		if (supportedSymbols.contains(symbol) || symbol.equals(referenceCurrencySymbol)) {
-			Balance balance = balances.get(symbol);
-			if (balance == null) {
-				throw new IllegalStateException("Can't lock " + amount + " " + symbol + ". No balance available.");
-			}
-			BigDecimal locked = new BigDecimal(amount, new MathContext(8, RoundingMode.HALF_UP));
-			locked = balance.getLocked().add(locked);
-
-			BigDecimal free = balance.getFree().subtract(locked);
-			if (BigDecimal.ZERO.compareTo(free) > 0) {
-				throw new IllegalStateException("Can't lock " + amount + " " + symbol + ". Not enough free balance available.");
-			}
-
-			balance.setLocked(locked);
-			balance.setFree(free);
+			subtractFromFreeBalance(symbol, amount);
+			addToLockedBalance(symbol, amount);
 			return this;
 		}
 		throw reportUnknownSymbol("Can't set funds", symbol);
 	}
-
 
 	private IllegalArgumentException reportUnknownSymbol(String message, String symbol) {
 		throw new IllegalArgumentException(message + ". Account is not managing '" + symbol + "'. Allowed symbols are: " + supportedSymbols + " and " + referenceCurrencySymbol);
@@ -384,11 +417,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	private OrderRequest prepareOrder(TradingManager tradingManager, Order.Side side, double quantity) {
 		SymbolPriceDetails priceDetails = tradingManager.getPriceDetails();
-		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side);
+		long time = tradingManager.getLatestCandle().closeTime;
+		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side, time);
 		orderPreparation.setPrice(priceDetails.priceToBigDecimal(tradingManager.getLatestPrice()));
 		orderPreparation.setQuantity(priceDetails.adjustQuantityScale(quantity));
 
 		OrderBook book = account.getOrderBook(tradingManager.getSymbol(), 0);
+
 
 		OrderManager orderCreator = orderManagers.getOrDefault(tradingManager.getSymbol(), DEFAULT_ORDER_MANAGER);
 		if (orderCreator != null) {
@@ -480,7 +515,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 					TimeInterval.getFormattedDuration(System.currentTimeMillis() - order.getTime()),
 					order.getOrderId(),
 					order.getQuantity().setScale(8, RoundingMode.FLOOR).toPlainString(),
-					order.getTotalSpent().setScale(8, RoundingMode.FLOOR).toPlainString(),
+					order.getTotalTraded().setScale(8, RoundingMode.FLOOR).toPlainString(),
 					order.getTotalOrderAmount().setScale(8, RoundingMode.FLOOR).toPlainString(),
 					order.getFundsSymbol());
 		}
@@ -533,13 +568,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			pendingOrders.put(order.getOrderId(), order);
 		}
 
-		if (s == PARTIALLY_FILLED && old.getExecutedQuantity().compareTo(order.getExecutedQuantity()) != 0) {
+		if (old.getExecutedQuantity().compareTo(order.getExecutedQuantity()) != 0) {
 			logOrderStatus("", order);
 			updateBalances();
-			orderManager.updated(order);
+			orderManager.updated(order, traderOf(order));
 		} else {
 			logOrderStatus("Unchanged ", order);
-			orderManager.unchanged(order);
+			orderManager.unchanged(order, traderOf(order));
 		}
 
 		//order manager could have cancelled the order
@@ -555,18 +590,22 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			updateBalances();
 		} finally {
 			try {
-				orderManager.finalized(order);
+				orderManager.finalized(order, traderOf(order));
 			} finally {
 				getTradingManagerOf(order.getSymbol()).notifyOrderFinalized(order);
 			}
 		}
 	}
 
+	private Trader traderOf(Order order){
+		return getTraderOfSymbol(order.getSymbol());
+	}
+
 	private void cancelOrder(OrderManager orderManager, Order order) {
 		account.cancel(order);
 		order = account.updateOrderStatus(order);
 		pendingOrders.remove(order.getOrderId());
-		orderManager.finalized(order);
+		orderManager.finalized(order, traderOf(order));
 		logOrderStatus("Cancellation via order manager: ", order);
 		updateBalances();
 	}
@@ -579,7 +618,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		for (Map.Entry<String, Order> entry : pendingOrders.entrySet()) {
 			Order order = entry.getValue();
 			OrderManager orderManager = orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER);
-			if (orderManager.cancelToReleaseFundsFor(order, trader)) {
+			if (orderManager.cancelToReleaseFundsFor(order, traderOf(order), trader)) {
 				order.cancel();
 				if (order.getStatus() == CANCELLED) {
 					cancelOrder(orderManager, order);
