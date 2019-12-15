@@ -71,20 +71,6 @@ public class Currencies {
       return this.currencies.size();
    }
 
-   public String[] fromList(String currenciesList) {
-      String[] cl = currenciesList.split(",");
-      for (int i = 0; i < cl.length; i++) {
-         String symbol = cl[i].trim();
-         Currency currency = this.find(symbol);
-         if (null == currency) {
-            throw new IllegalStateException();
-         } else {
-            cl[i] = symbol;
-         }
-      }
-      return cl;
-   }
-
    public String[] makePairs(String[] currencies1, String[] currencies2) {
       String[] ret = new String[currencies1.length * currencies2.length];
       int idx = 0;

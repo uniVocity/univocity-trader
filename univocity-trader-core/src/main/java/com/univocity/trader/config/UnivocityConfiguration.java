@@ -22,7 +22,11 @@ public interface UnivocityConfiguration {
 
    String getExchangeClientId();
 
+   String[] getExchangeCurrencies();
+
    int getExchangeQueryRate();
+
+   String getExchangeReferenceCurrency();
 
    String getMailPassword();
 

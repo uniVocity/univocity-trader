@@ -14,10 +14,6 @@ class LiveTraderMain {
     * configfile option
     */
    private static final String CONFIG_OPTION = "config";
-   /**
-    * currencies
-    */
-   private static final String CURRENCIES_OPTION = "currencies";
 
    public static void main(String... args) {
       System.out.println("Univocity Live Trader");
@@ -26,8 +22,6 @@ class LiveTraderMain {
        */
       final Options options = new Options();
       Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(true).desc("config file").build();
-      options.addOption(oo);
-      oo = Option.builder().argName(CURRENCIES_OPTION).longOpt(CURRENCIES_OPTION).type(String.class).hasArg().required(true).desc("currencies").build();
       options.addOption(oo);
       /*
        * parse
@@ -40,14 +34,10 @@ class LiveTraderMain {
           * get the file
           */
          final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
-         /*
-          * get the currencies
-          */
-         final String currenciesList = cmd.getOptionValue(CURRENCIES_OPTION);
-         if ((null != configFileName) && (null != currenciesList)) {
+         if (null != configFileName) {
             ConfigFileUnivocityConfigurationImpl.setConfigfileName(configFileName);
             final LiveTraderRunner liveTraderRunner = new LiveTraderRunner();
-            liveTraderRunner.run(currenciesList);
+            liveTraderRunner.run();
          }
       } catch (final Exception e) {
          e.printStackTrace();

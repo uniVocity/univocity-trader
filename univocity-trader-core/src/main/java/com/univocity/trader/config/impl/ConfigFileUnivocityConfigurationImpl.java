@@ -6,6 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 import com.univocity.trader.config.UnivocityConfiguration;
+import com.univocity.trader.currency.Currencies;
+import com.univocity.trader.currency.Currency;
 
 /**
  * @author tom@khubla.com
@@ -48,6 +50,8 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    private Class<?> exchangeClass;
    private String exchangeClientId;
    private int exchangeQueryRate;
+   private String[] exchangeCurrencies;
+   private String exchangeReferenceCurrency;
    private Class<?> strategyClass;
    private Class<?>[] strategyMonitorClasses;
    private LocalDateTime simulationStart;
@@ -83,6 +87,8 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
          exchangeClass = (null != properties.getProperty("exchange.class") ? Class.forName(properties.getProperty("exchange.class")) : null);
          exchangeClientId = properties.getProperty("exchange.clientid");
          exchangeQueryRate = Integer.parseInt(properties.getProperty("exchange.queryrate"));
+         exchangeCurrencies = parseCurrencyList(properties.getProperty("exchange.currencies"));
+         exchangeReferenceCurrency = properties.getProperty("exchange.referenceCurrency");
          /*
           * strategy
           */
@@ -152,8 +158,18 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    }
 
    @Override
+   public String[] getExchangeCurrencies() {
+      return exchangeCurrencies;
+   }
+
+   @Override
    public int getExchangeQueryRate() {
       return exchangeQueryRate;
+   }
+
+   @Override
+   public String getExchangeReferenceCurrency() {
+      return exchangeReferenceCurrency;
    }
 
    @Override
@@ -214,5 +230,19 @@ public class ConfigFileUnivocityConfigurationImpl implements UnivocityConfigurat
    @Override
    public boolean isMailSSL() {
       return mailSSL;
+   }
+
+   private String[] parseCurrencyList(String currenciesList) {
+      final String[] cl = currenciesList.split(",");
+      for (int i = 0; i < cl.length; i++) {
+         final String symbol = cl[i].trim();
+         final Currency currency = Currencies.getInstance().find(symbol);
+         if (null == currency) {
+            throw new IllegalStateException();
+         } else {
+            cl[i] = symbol;
+         }
+      }
+      return cl;
    }
 }

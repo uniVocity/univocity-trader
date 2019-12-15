@@ -2,19 +2,17 @@ package com.univocity.trader.marketsimulator;
 
 import com.univocity.trader.account.SimpleTradingFees;
 import com.univocity.trader.config.UnivocityConfiguration;
-import com.univocity.trader.currency.Currencies;
 import com.univocity.trader.factory.UnivocityFactory;
 import com.univocity.trader.notification.OrderExecutionToLog;
 import com.univocity.trader.orderlistener.simplestrategystatistics.SimpleStrategyStatistics;
 import com.univocity.trader.simulation.MarketSimulator;
 
 public class MarketSimulatorRunner {
-   public void simulate(String currenciesList) {
-      final String[] currencies = Currencies.getInstance().fromList(currenciesList);
+   public void simulate() {
       final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
       System.out.println("Strategy: " + univocityConfiguration.getStrategyClass().getName());
       final MarketSimulator simulation = new MarketSimulator(univocityConfiguration.getSimulationReferenceCurrency());
-      simulation.tradeWith(currencies);
+      simulation.tradeWith(univocityConfiguration.getExchangeCurrencies());
       simulation.strategies().add(UnivocityFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
       for (final Class<?> clazz : univocityConfiguration.getStrategyMonitorClasses()) {
          System.out.println("Monitor: " + clazz.getName());

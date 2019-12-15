@@ -11,7 +11,6 @@ import com.univocity.trader.account.OrderBook;
 import com.univocity.trader.account.OrderRequest;
 import com.univocity.trader.candles.Candle;
 import com.univocity.trader.config.UnivocityConfiguration;
-import com.univocity.trader.currency.Currencies;
 import com.univocity.trader.exchange.Exchange;
 import com.univocity.trader.exchange.binance.api.client.domain.market.Candlestick;
 import com.univocity.trader.factory.UnivocityFactory;
@@ -19,8 +18,7 @@ import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.notification.OrderExecutionToLog;
 
 public class LiveTraderRunner {
-   public void run(String currenciesList) {
-      final String[] currencies = Currencies.getInstance().fromList(currenciesList);
+   public void run() {
       final UnivocityConfiguration univocityConfiguration = UnivocityFactory.getInstance().getUnivocityConfiguration();
       System.out.println("Strategy: " + univocityConfiguration.getStrategyClass().getName());
       final Exchange<Candlestick> exchange = UnivocityFactory.getInstance().getExchange(univocityConfiguration.getExchangeClass());
@@ -29,8 +27,8 @@ public class LiveTraderRunner {
          liveTrader = new LiveTrader<Candlestick>(exchange, TimeInterval.minutes(1), UnivocityFactory.getInstance().getEmailConfig());
          final String apiKey = univocityConfiguration.getExchangeAPIKey();
          final String secret = univocityConfiguration.getExchangeAPISecret();
-         final Client<?> client = liveTrader.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), "USDT", apiKey, secret);
-         client.tradeWith(currencies);
+         final Client<?> client = liveTrader.addClient(univocityConfiguration.getExchangeClientId(), ZoneId.systemDefault(), univocityConfiguration.getExchangeReferenceCurrency(), apiKey, secret);
+         client.tradeWith(univocityConfiguration.getExchangeCurrencies());
          client.strategies().add(UnivocityFactory.getInstance().getStrategySupplier(univocityConfiguration.getStrategyClass()));
          for (final Class<?> clazz : univocityConfiguration.getStrategyMonitorClasses()) {
             System.out.println("Monitor: " + clazz.getName());
