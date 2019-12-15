@@ -17,17 +17,29 @@ import com.univocity.trader.strategy.Tuneable;
 /**
  * @author tom@khubla.com
  */
+/**
+ * attempt to buy when market below average and sell when its above average
+ */
 public class TrivialStrategy extends IndicatorStrategy implements Tuneable {
+   /**
+    * logger
+    */
    private static final Logger log = LoggerFactory.getLogger(TrivialStrategy.class);
-   private static final double DEFAULT_BUY_GOAL = 0.05;
-   private static final double DEFAULT_SELL_GOAL = 0.05;
+   private static final double DEFAULT_BUY_GOAL = 0.10;
+   private static final double DEFAULT_SELL_GOAL = 0.03;
    private double buygoal = DEFAULT_BUY_GOAL;
    private double sellgoal = DEFAULT_SELL_GOAL;
+   /**
+    * indicators
+    */
    private final Set<Indicator> indicators = new HashSet<>();
-   private final MovingAverage ma;
+   /**
+    * moving averages
+    */
+   private final MovingAverage ma1day;
 
    public TrivialStrategy() {
-      indicators.add(ma = new MovingAverage(20, TimeInterval.minutes(5)));
+      indicators.add(ma1day = new MovingAverage(10, TimeInterval.days(1)));
    }
 
    private double delta(double i1, double i2) {
@@ -49,22 +61,23 @@ public class TrivialStrategy extends IndicatorStrategy implements Tuneable {
 
    @Override
    public Signal getSignal(Candle candle) {
-      if (ma.getValue() > 0) {
-         final double delta = delta(candle.high, ma.getValue());
-         if (delta > buygoal) {
-            if (candle.high < ma.getValue()) {
-               log.debug("market is below average by {}%", String.format("%.3f", delta * 100));
+      if (ma1day.getValue() > 0) {
+         final double deltaH = delta(candle.high, ma1day.getValue());
+         final double deltaL = delta(candle.low, ma1day.getValue());
+         if (deltaH > buygoal) {
+            if (candle.high < ma1day.getValue()) {
+               // log.debug("market is below average by {}%", String.format("%.3f", delta * 100));
                /*
-                * market is below average by delta%
+                * market is below average by delta% and increasing
                 */
                return Signal.BUY;
             }
          }
-         if (delta > sellgoal) {
-            if (candle.low > ma.getValue()) {
-               log.debug("market is above average by {}%", String.format("%.3f", delta * 100));
+         if (deltaL > sellgoal) {
+            if (candle.low > ma1day.getValue()) {
+               // log.debug("market is above average by {}%", String.format("%.3f", delta * 100));
                /*
-                * market is above average by delta%
+                * market is above average by delta% and decreasing
                 */
                return Signal.SELL;
             }

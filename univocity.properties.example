@@ -30,8 +30,7 @@ exchange.referenceCurrency=USDT
 # strategy
 strategy.class=com.univocity.trader.strategy.example.ExampleStrategy
 strategymonitor.classes=com.univocity.trader.strategy.example.ExampleStrategyMonitor
-# strategymonitor.classes=com.univocity.trader.strategy.simple.ProfitabilityStrategyMonitor, com.univocity.trader.strategy.simple.TradingfeeStrategyMonitor
-
+#strategymonitor.classes=com.univocity.trader.strategy.simple.ProfitabilityStrategyMonitor
 # simulation
 simulation.start=2018-07-01 00:00
 simulation.end=2019-07-01 00:00
