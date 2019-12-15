@@ -5,7 +5,7 @@ import com.univocity.trader.config.UnivocityConfiguration;
 import com.univocity.trader.currency.Currencies;
 import com.univocity.trader.factory.UnivocityFactory;
 import com.univocity.trader.notification.OrderExecutionToLog;
-import com.univocity.trader.notification.SimpleStrategyStatistics;
+import com.univocity.trader.orderlistener.simplestrategystatistics.SimpleStrategyStatistics;
 import com.univocity.trader.simulation.MarketSimulator;
 
 public class MarketSimulatorRunner {

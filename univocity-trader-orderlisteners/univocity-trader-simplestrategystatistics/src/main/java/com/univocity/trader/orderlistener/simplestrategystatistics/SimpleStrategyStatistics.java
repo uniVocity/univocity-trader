@@ -1,4 +1,4 @@
-package com.univocity.trader.notification;
+package com.univocity.trader.orderlistener.simplestrategystatistics;
 
 import static com.univocity.trader.account.Order.Side.SELL;
 import static com.univocity.trader.candles.Candle.CHANGE_FORMAT;
@@ -13,6 +13,7 @@ import com.univocity.trader.account.Client;
 import com.univocity.trader.account.Order;
 import com.univocity.trader.account.Trader;
 import com.univocity.trader.candles.Candle;
+import com.univocity.trader.notification.OrderListener;
 
 public class SimpleStrategyStatistics implements OrderListener {
    private Map<String, List<Double>> parameterReturns = new TreeMap<>();

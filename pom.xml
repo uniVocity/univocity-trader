@@ -38,6 +38,7 @@
 		<module>univocity-trader-importer</module>
 		<module>univocity-trader-exchanges</module>
 		<module>univocity-trader-strategies</module>
+		<module>univocity-trader-orderlisteners</module>
 		<module>univocity-trader-livetrader</module>
 		<module>univocity-trader-marketsimulator</module>
 	</modules>
