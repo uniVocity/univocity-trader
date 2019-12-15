@@ -3,6 +3,9 @@ package com.univocity.trader.strategy.trivial;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.univocity.trader.candles.Candle;
 import com.univocity.trader.indicators.MovingAverage;
 import com.univocity.trader.indicators.Signal;
@@ -15,6 +18,7 @@ import com.univocity.trader.strategy.Tuneable;
  * @author tom@khubla.com
  */
 public class TrivialStrategy extends IndicatorStrategy implements Tuneable {
+   private static final Logger log = LoggerFactory.getLogger(TrivialStrategy.class);
    private static final double DEFAULT_BUY_GOAL = 0.05;
    private static final double DEFAULT_SELL_GOAL = 0.05;
    private double buygoal = DEFAULT_BUY_GOAL;
@@ -49,6 +53,7 @@ public class TrivialStrategy extends IndicatorStrategy implements Tuneable {
          final double delta = delta(candle.high, ma.getValue());
          if (delta > buygoal) {
             if (candle.high < ma.getValue()) {
+               log.debug("market is below average by {}%", String.format("%.3f", delta * 100));
                /*
                 * market is below average by delta%
                 */
@@ -57,11 +62,12 @@ public class TrivialStrategy extends IndicatorStrategy implements Tuneable {
          }
          if (delta > sellgoal) {
             if (candle.low > ma.getValue()) {
+               log.debug("market is above average by {}%", String.format("%.3f", delta * 100));
                /*
                 * market is above average by delta%
                 */
+               return Signal.SELL;
             }
-            return Signal.SELL;
          }
       }
       return Signal.NEUTRAL;
