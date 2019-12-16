@@ -29,7 +29,7 @@ public class LiveBinanceTrader {
 //		TODO: configure your database connection as needed. The following options are available:
 
 //		(a) Load configuration file
-//		Configuration.load();                                //tries to open a univocity.properties file
+//		Configuration.load();                                //tries to open a univocity-trader.properties file
 //		Configuration.loadFromCommandLine(args);		      //opens a file provided via the command line
 //		Configuration.load("/path/to/config", "other.file"); //tries to find specific configuration files
 

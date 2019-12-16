@@ -16,7 +16,7 @@ public class Configuration extends ConfigurationGroup {
 	 */
 	private static final String CONFIG_OPTION = "config";
 
-	private static final String CONFIGURATION_FILE = "univocity.properties";
+	private static final String CONFIGURATION_FILE = "univocity-trader.properties";
 	private static String[] configurationFiles = new String[]{CONFIGURATION_FILE};
 
 	private static Configuration instance;
