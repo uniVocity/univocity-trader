@@ -686,18 +686,15 @@ This will show more useful details on the logs for the live environment.
 Don't forget to pass along the your e-mail server details so you can receive e-mails (gmail works great for that)
 
 ```java
-private static final MailSenderConfig getEmailConfig() {
- MailSenderConfig out = new MailSenderConfig();
- 
- out.setReplyToAddress("dev@univocity.com");
- out.setSmtpHost("smtp.gmail.com");
- out.setSmtpTlsSsl(true);
- out.setSmtpPort(587);
- out.setSmtpUsername("<YOU>@gmail.com");
- out.setSmtpPassword("<YOUR SMTP PASSWORD>".toCharArray());
- out.setSmtpSender("<YOU>>@gmail.com");
- 
- return out;
+private static final EmailConfiguration getEmailConfig() {
+    return UnivocityConfiguration.configure().email()
+            .replyToAddress("dev@univocity.com")
+            .smtpHost("smtp.gmail.com")
+            .smtpSSL(true)
+            .smtpPort(587)
+            .smtpUsername("<YOU>@gmail.com")
+            .smtpPassword("<YOUR SMTP PASSWORD>")
+            .smtpSender("<YOU>>@gmail.com");
 } 
 ```
 

@@ -1,6 +1,7 @@
 package com.univocity.trader.candles;
 
 import com.univocity.trader.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
@@ -49,15 +50,26 @@ public class CandleRepository {
 	}
 
 	private static DataSource defaultDataSource() {
+		DatabaseConfiguration config = UnivocityConfiguration.configure().database();
+		if (!config.isConfigured()) {
+			config
+					.jdbcDriver("com.mysql.jdbc.Driver")
+					.jdbcUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull&useSSL=false")
+					.user("root");
+		}
+
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName(config.jdbcDriver());
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
 		}
 
 		SingleConnectionDataSource ds = new SingleConnectionDataSource();
-		ds.setUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull&useSSL=false");
-		ds.setUsername("root");
+		ds.setUrl(config.jdbcUrl());
+		ds.setUsername(config.user());
+		if (config.password() != null) {
+			ds.setPassword(new String(config.password()));
+		}
 		ds.setSuppressClose(true);
 		return ds;
 	}

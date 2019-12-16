@@ -2,6 +2,7 @@ package com.univocity.trader;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
 import org.slf4j.*;
@@ -92,7 +93,7 @@ public abstract class LiveTrader<T> implements Closeable {
 		}
 	}
 
-	public LiveTrader(Exchange<T> exchange, TimeInterval tickInterval, MailSenderConfig mailSenderConfig) {
+	public LiveTrader(Exchange<T> exchange, TimeInterval tickInterval, EmailConfiguration mailSenderConfig) {
 		Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 		this.exchange = exchange;
 		this.tickInterval = tickInterval;

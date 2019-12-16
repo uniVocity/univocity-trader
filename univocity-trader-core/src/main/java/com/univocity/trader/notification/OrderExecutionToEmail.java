@@ -3,6 +3,7 @@ package com.univocity.trader.notification;
 import com.sun.nio.sctp.*;
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
+import com.univocity.trader.config.*;
 import org.slf4j.*;
 
 import java.util.*;
@@ -28,7 +29,7 @@ public class OrderExecutionToEmail implements OrderListener {
 		this.mailSender = mailSender;
 	}
 
-	public OrderExecutionToEmail(MailSenderConfig mailSenderConfig) {
+	public OrderExecutionToEmail(EmailConfiguration mailSenderConfig) {
 		this(new SmtpMailSender(mailSenderConfig));
 	}
 

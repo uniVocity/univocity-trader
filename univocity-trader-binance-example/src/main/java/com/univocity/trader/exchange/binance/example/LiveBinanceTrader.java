@@ -3,37 +3,46 @@ package com.univocity.trader.exchange.binance.example;
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.binance.*;
-import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
-import com.univocity.trader.strategy.*;
 
 import java.math.*;
 import java.time.*;
 
-import static com.univocity.trader.indicators.Signal.*;
-
 public class LiveBinanceTrader {
 
-	private static final MailSenderConfig getEmailConfig() {
-		MailSenderConfig out = new MailSenderConfig();
-
-		out.setReplyToAddress("dev@univocity.com");
-		out.setSmtpHost("smtp.gmail.com");
-		out.setSmtpTlsSsl(true);
-		out.setSmtpPort(587);
-		out.setSmtpUsername("<YOU>@gmail.com");
-		out.setSmtpPassword("<YOUR SMTP PASSWORD>".toCharArray());
-		out.setSmtpSender("<YOU>>@gmail.com");
-
-		return out;
+	private static final EmailConfiguration getEmailConfig() {
+		return UnivocityConfiguration.configure().email()
+				.replyToAddress("dev@univocity.com")
+				.smtpHost("smtp.gmail.com")
+				.smtpSSL(true)
+				.smtpPort(587)
+				.smtpUsername("<YOU>@gmail.com")
+				.smtpPassword("<YOUR SMTP PASSWORD>")
+				.smtpSender("<YOU>>@gmail.com");
 	}
 
 	public static void main(String... args) {
-		//TODO: configure your database connection as needed.
-		//DataSource ds = ?
-		//CandleRepository.setDataSource(ds);
+
+//		TODO: configure your database connection as needed. The following options are available:
+
+//		(a) Load configuration file
+//		UnivocityConfiguration.load();                                //tries to open a univocity.properties file
+//		UnivocityConfiguration.loadFromCommandLine(args);		      //opens a file provided via the command line
+//		UnivocityConfiguration.load("/path/to/config", "other.file"); //tries to find specific configuration files
+
+//		(b) Configuration code
+//		UnivocityConfiguration.configure().database()
+//				.jdbcDriver("my.database.DriverClass")
+//				.jdbcUrl("jdbc:mydb://localhost:5555/database")
+//				.user("admin")
+//				.password("qwerty");
+
+//		(c) Use your own DataSource implementation:
+//		DataSource ds = ?
+//		CandleRepository.setDataSource(ds);
 
 		BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1), getEmailConfig());
 

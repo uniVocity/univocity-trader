@@ -61,21 +61,23 @@ public class MarketHistoryLoader {
 	};
 
 	public static void main(String... args) {
-		//TODO: configure your database connection here.
-		try {
-			Class.forName("com.mysql.jdbc.Driver");
-		} catch (Exception e) {
-			throw new IllegalStateException(e);
-		}
+//		TODO: configure your database connection as needed. The following options are available:
 
-		SingleConnectionDataSource ds = new SingleConnectionDataSource();
-		ds.setUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull&useSSL=false");
-		ds.setUsername("root"); // or the appropriate user name
-		ds.setPassword("YOUR-PASSWORD"); // omit this line if you have no password
-		ds.setSuppressClose(true);
+//		(a) Load configuration file
+//		UnivocityConfiguration.load();                                //tries to open a univocity.properties file
+//		UnivocityConfiguration.loadFromCommandLine(args);		      //opens a file provided via the command line
+//		UnivocityConfiguration.load("/path/to/config", "other.file"); //tries to find specific configuration files
 
-		//CandleRepository manages everything for us.
-		CandleRepository.setDataSource(ds);
+//		(b) Configuration code
+//		UnivocityConfiguration.configure().database()
+//				.jdbcDriver("my.database.DriverClass")
+//				.jdbcUrl("jdbc:mydb://localhost:5555/database")
+//				.user("admin")
+//				.password("qwerty");
+
+//		(c) Use your own DataSource implementation:
+//		DataSource ds = ?
+//		CandleRepository.setDataSource(ds);
 
 		BinanceExchange exchange = new BinanceExchange();
 		final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);

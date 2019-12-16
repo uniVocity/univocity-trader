@@ -7,6 +7,7 @@
 
 package com.univocity.trader.notification;
 
+import com.univocity.trader.config.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
 import org.springframework.mail.*;
@@ -20,14 +21,14 @@ public class SmtpMailSender {
 	private static final Logger log = LoggerFactory.getLogger(SmtpMailSender.class);
 
 	private JavaMailSender mailSender;
-	private MailSenderConfig config;
+	private EmailConfiguration config;
 
-	public SmtpMailSender(MailSenderConfig config) {
+	public SmtpMailSender(EmailConfiguration config) {
 		this.config = config;
 	}
 
 	public String getSenderAddress(){
-		return config.getSmtpSender();
+		return config.smtpSender();
 	}
 
 	public Email newEmail(String[] to, String title, String content) {
@@ -37,9 +38,9 @@ public class SmtpMailSender {
 		}
 
 		Email email = new Email();
-		email.setReplyTo(config.getReplyToAddress());
+		email.setReplyTo(config.replyToAddress());
 		email.setBody(content);
-		email.setFrom(config.getSmtpSender());
+		email.setFrom(config.smtpSender());
 		email.setTitle(title);
 		email.setTo(to);
 		return email;
@@ -68,16 +69,16 @@ public class SmtpMailSender {
 			synchronized (this) {
 				if (mailSender == null) {
 					JavaMailSenderImpl sender = new JavaMailSenderImpl();
-					sender.setHost(config.getSmtpHost());
+					sender.setHost(config.smtpHost());
 
 					Properties properties = new Properties();
 					properties.put("mail.transport.protocol", "smtps");
-					if (config.isSmtpTlsSsl()) {
+					if (config.smtpSSL()) {
 						properties.put("mail.smtps.starttls.enable", true);
 					}
 					properties.put("mail.smtps.auth", true);
 
-					Integer port = config.getSmtpPort();
+					Integer port = config.smtpPort();
 					if (port != null && port != 0) {
 						properties.put("mail.smtps.socketFactory.port", port);
 						sender.setPort(port);
@@ -86,8 +87,8 @@ public class SmtpMailSender {
 					properties.put("mail.smtps.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 					properties.put("mail.smtps.socketFactory.fallback", false);
 
-					final String user = config.getSmtpUsername();
-					final char[] password = config.getSmtpPassword();
+					final String user = config.smtpUsername();
+					final char[] password = config.smtpPassword();
 
 					Session session = Session.getInstance(properties, new Authenticator() {
 						@Override
