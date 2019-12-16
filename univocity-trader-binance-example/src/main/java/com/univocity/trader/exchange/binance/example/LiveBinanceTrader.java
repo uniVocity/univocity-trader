@@ -25,7 +25,7 @@ public class LiveBinanceTrader {
 	}
 
 	public static void main(String... args) {
-		
+
 //		TODO: configure your database connection as needed. The following options are available:
 
 //		(a) Load configuration file
