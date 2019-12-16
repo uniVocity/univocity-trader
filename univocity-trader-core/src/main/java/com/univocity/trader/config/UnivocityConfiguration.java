@@ -64,12 +64,12 @@ public class UnivocityConfiguration extends ConfigurationGroup {
 		}
 	}
 
-	public static boolean loadFromCommandLine(String... args) {
+	public static UnivocityConfiguration loadFromCommandLine(String... args) {
 		/*
 		 * options
 		 */
 		final Options options = new Options();
-		final Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(false).desc("config file").build();
+		final Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(true).desc("config file").build();
 		options.addOption(oo);
 		/*
 		 * parse
@@ -84,18 +84,17 @@ public class UnivocityConfiguration extends ConfigurationGroup {
 			 */
 			configFileName = cmd.getOptionValue(CONFIG_OPTION);
 			if (null != configFileName) {
-				configurationFiles = new String[]{configFileName};
-				configure();
+				load(configFileName);
+				return getInstance();
 			}
 		} catch (final Exception e) {
-			configurationFiles = new String[]{CONFIGURATION_FILE};
 			if (configFileName != null) {
 				log.error("Error loading configuration file: " + configFileName, e);
 			}
 			new HelpFormatter().printHelp("posix", options);
-
+			System.exit(0);
 		}
-		return false;
+		return configure();
 	}
 
 	private boolean loadedFromFile = false;

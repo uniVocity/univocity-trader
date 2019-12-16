@@ -696,7 +696,8 @@ public class PropertyBasedConfiguration {
 		if (!values.containsKey(property)) {
 			return defaultValue;
 		}
-		return getInteger(property);
+		Integer out = getInteger(property);
+		return out == null ? defaultValue : out;
 	}
 
 	/**

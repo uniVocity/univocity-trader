@@ -23,8 +23,10 @@ public class EmailConfiguration extends ConfigurationGroup {
 		smtpSSL = properties.getBoolean("mail.smtp.ssl", false);
 		smtpPort = properties.getInteger("mail.smtp.port", 0);
 		smtpUsername = properties.getProperty("mail.smtp.username");
-		smtpPassword = properties.getProperty("mail.smtp.password").toCharArray();
 		smtpSender = properties.getProperty("mail.smtp.sender");
+
+		String pwd = properties.getProperty("mail.smtp.password");
+		smtpPassword = pwd == null ? null : pwd.toCharArray();
 	}
 
 	public int smtpPort() {
