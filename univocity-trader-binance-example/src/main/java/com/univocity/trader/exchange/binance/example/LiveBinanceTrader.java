@@ -14,7 +14,7 @@ import java.time.*;
 public class LiveBinanceTrader {
 
 	private static final EmailConfiguration getEmailConfig() {
-		return UnivocityConfiguration.configure().email()
+		return Configuration.configure().email()
 				.replyToAddress("dev@univocity.com")
 				.smtpHost("smtp.gmail.com")
 				.smtpSSL(true)
@@ -29,12 +29,12 @@ public class LiveBinanceTrader {
 //		TODO: configure your database connection as needed. The following options are available:
 
 //		(a) Load configuration file
-//		UnivocityConfiguration.load();                                //tries to open a univocity.properties file
-//		UnivocityConfiguration.loadFromCommandLine(args);		      //opens a file provided via the command line
-//		UnivocityConfiguration.load("/path/to/config", "other.file"); //tries to find specific configuration files
+//		Configuration.load();                                //tries to open a univocity.properties file
+//		Configuration.loadFromCommandLine(args);		      //opens a file provided via the command line
+//		Configuration.load("/path/to/config", "other.file"); //tries to find specific configuration files
 
 //		(b) Configuration code
-//		UnivocityConfiguration.configure().database()
+//		Configuration.configure().database()
 //				.jdbcDriver("my.database.DriverClass")
 //				.jdbcUrl("jdbc:mydb://localhost:5555/database")
 //				.user("admin")

@@ -7,13 +7,13 @@ import java.util.function.*;
  */
 abstract class ConfigurationGroup {
 
-	private final Supplier<UnivocityConfiguration> parent;
+	private final Supplier<Configuration> parent;
 
-	ConfigurationGroup(UnivocityConfiguration parent) {
+	ConfigurationGroup(Configuration parent) {
 		this(() -> parent);
 	}
 
-	ConfigurationGroup(Supplier<UnivocityConfiguration> parent) {
+	ConfigurationGroup(Supplier<Configuration> parent) {
 		this.parent = parent;
 	}
 

@@ -50,7 +50,7 @@ public class CandleRepository {
 	}
 
 	private static DataSource defaultDataSource() {
-		DatabaseConfiguration config = UnivocityConfiguration.configure().database();
+		DatabaseConfiguration config = Configuration.configure().database();
 		if (!config.isConfigured()) {
 			config
 					.jdbcDriver("com.mysql.jdbc.Driver")

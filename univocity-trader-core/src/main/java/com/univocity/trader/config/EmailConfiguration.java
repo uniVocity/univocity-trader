@@ -12,7 +12,7 @@ public class EmailConfiguration extends ConfigurationGroup {
 	private char[] smtpPassword;
 	private String smtpSender = null;
 
-	EmailConfiguration(UnivocityConfiguration parent) {
+	EmailConfiguration(Configuration parent) {
 		super(parent);
 	}
 

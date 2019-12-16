@@ -687,7 +687,7 @@ Don't forget to pass along the your e-mail server details so you can receive e-m
 
 ```java
 private static final EmailConfiguration getEmailConfig() {
-    return UnivocityConfiguration.configure().email()
+    return Configuration.configure().email()
             .replyToAddress("dev@univocity.com")
             .smtpHost("smtp.gmail.com")
             .smtpSSL(true)

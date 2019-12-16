@@ -8,9 +8,8 @@ import java.util.*;
 /**
  * @author tom@khubla.com
  */
-//TODO: rename
-public class UnivocityConfiguration extends ConfigurationGroup {
-	private static final Logger log = LoggerFactory.getLogger(UnivocityConfiguration.class);
+public class Configuration extends ConfigurationGroup {
+	private static final Logger log = LoggerFactory.getLogger(Configuration.class);
 
 	/**
 	 * 'config file' option for command-line
@@ -20,27 +19,27 @@ public class UnivocityConfiguration extends ConfigurationGroup {
 	private static final String CONFIGURATION_FILE = "univocity.properties";
 	private static String[] configurationFiles = new String[]{CONFIGURATION_FILE};
 
-	private static UnivocityConfiguration instance;
+	private static Configuration instance;
 
-	public static UnivocityConfiguration getInstance() {
+	public static Configuration getInstance() {
 		if (instance == null) {
 			throw new IllegalStateException("Configuration not defined. Use 'configure()', 'load(file)' or 'loadFromCommandLine()' to define your configuration");
 		}
 		return instance;
 	}
 
-	public static synchronized UnivocityConfiguration configure() {
+	public static synchronized Configuration configure() {
 		if (instance != null) {
 			return instance;
 		}
-		return instance = new UnivocityConfiguration(false);
+		return instance = new Configuration(false);
 	}
 
-	public static synchronized UnivocityConfiguration load() {
+	public static synchronized Configuration load() {
 		return load(CONFIGURATION_FILE);
 	}
 
-	public static synchronized UnivocityConfiguration load(String filePath, String... alternativeFilePaths) {
+	public static synchronized Configuration load(String filePath, String... alternativeFilePaths) {
 		String[] original = configurationFiles.clone();
 
 		configurationFiles = new String[alternativeFilePaths.length + 1];
@@ -53,7 +52,7 @@ public class UnivocityConfiguration extends ConfigurationGroup {
 				instance.reload();
 				return instance;
 			}
-			return instance = new UnivocityConfiguration(true);
+			return instance = new Configuration(true);
 		} catch (Throwable t) {
 			configurationFiles = original;
 			if (t instanceof IllegalConfigurationException) {
@@ -64,7 +63,7 @@ public class UnivocityConfiguration extends ConfigurationGroup {
 		}
 	}
 
-	public static UnivocityConfiguration loadFromCommandLine(String... args) {
+	public static Configuration loadFromCommandLine(String... args) {
 		/*
 		 * options
 		 */
@@ -84,8 +83,7 @@ public class UnivocityConfiguration extends ConfigurationGroup {
 			 */
 			configFileName = cmd.getOptionValue(CONFIG_OPTION);
 			if (null != configFileName) {
-				load(configFileName);
-				return getInstance();
+				return load(configFileName);
 			}
 		} catch (final Exception e) {
 			if (configFileName != null) {
@@ -101,7 +99,7 @@ public class UnivocityConfiguration extends ConfigurationGroup {
 	final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(this);
 	final EmailConfiguration emailConfiguration = new EmailConfiguration(this);
 
-	private UnivocityConfiguration(boolean loadFromFile) {
+	private Configuration(boolean loadFromFile) {
 		super(() -> instance);
 		if (loadFromFile) {
 			loadedFromFile = true;

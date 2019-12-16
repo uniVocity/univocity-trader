@@ -9,7 +9,7 @@ public class DatabaseConfiguration extends ConfigurationGroup {
 	private char[] password;
 	private String jdbcDriver;
 
-	DatabaseConfiguration(UnivocityConfiguration parent) {
+	DatabaseConfiguration(Configuration parent) {
 		super(parent);
 	}
 
