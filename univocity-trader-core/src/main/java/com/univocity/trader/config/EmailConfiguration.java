@@ -18,15 +18,18 @@ public class EmailConfiguration extends ConfigurationGroup {
 
 	@Override
 	protected void readProperties(PropertyBasedConfiguration properties) {
-		replyToAddress = properties.getProperty("mail.reply.to");
-		smtpHost = properties.getProperty("mail.smtp.host");
-		smtpSSL = properties.getBoolean("mail.smtp.ssl", false);
-		smtpPort = properties.getInteger("mail.smtp.port", 0);
-		smtpUsername = properties.getProperty("mail.smtp.username");
-		smtpSender = properties.getProperty("mail.smtp.sender");
+		boolean mailingConfigured = properties.containsAnyProperties("mail.reply.to", "mail.smtp.host", "mail.smtp.ssl", "mail.smtp.port", "mail.smtp.username", "mail.smtp.sender", "mail.smtp.password");
+		if (mailingConfigured) {
+			replyToAddress = properties.getProperty("mail.reply.to");
+			smtpHost = properties.getProperty("mail.smtp.host");
+			smtpSSL = properties.getBoolean("mail.smtp.ssl", false);
+			smtpPort = properties.getInteger("mail.smtp.port", 0);
+			smtpUsername = properties.getProperty("mail.smtp.username");
+			smtpSender = properties.getProperty("mail.smtp.sender");
 
-		String pwd = properties.getProperty("mail.smtp.password");
-		smtpPassword = pwd == null ? null : pwd.toCharArray();
+			String pwd = properties.getProperty("mail.smtp.password");
+			smtpPassword = pwd == null ? null : pwd.toCharArray();
+		}
 	}
 
 	public int smtpPort() {

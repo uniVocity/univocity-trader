@@ -2,6 +2,7 @@ package com.univocity.trader.config;
 
 import org.apache.commons.lang3.*;
 
+import java.time.*;
 import java.util.*;
 
 public class AccountConfiguration<T extends AccountConfiguration<T>> {
@@ -50,7 +51,7 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> {
 		readAccountProperties(accountId, properties);
 	}
 
-	protected void readAccountProperties(String accountId, PropertyBasedConfiguration properties){
+	protected void readAccountProperties(String accountId, PropertyBasedConfiguration properties) {
 
 	}
 
@@ -64,7 +65,7 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> {
 
 	public T email(String email) {
 		this.email = email;
-		return (T)this;
+		return (T) this;
 	}
 
 	public String referenceCurrency() {
@@ -73,19 +74,11 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> {
 
 	public T referenceCurrency(String referenceCurrency) {
 		this.referenceCurrency = referenceCurrency;
-		return (T)this;
+		return (T) this;
 	}
 
 	public TimeZone timeZone() {
 		return timeZone;
-	}
-
-	public T timeZone(String timeZone) {
-		this.timeZone = getTimeZone(timeZone);
-		if (this.timeZone == null) {
-			throw new IllegalArgumentException("Unsupported time zone: '" + timeZone + "." + supportedTimezoneDescription);
-		}
-		return (T)this;
 	}
 
 	private TimeZone getTimeZone(String tz) {
@@ -97,8 +90,21 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> {
 		return null;
 	}
 
+	public T timeZone(String timeZone) {
+		this.timeZone = getTimeZone(timeZone);
+		if (this.timeZone == null) {
+			throw new IllegalArgumentException("Unsupported time zone: '" + timeZone + "." + supportedTimezoneDescription);
+		}
+		return (T) this;
+	}
+
+	public T timeZone(ZoneId zoneId) {
+		this.timeZone = TimeZone.getTimeZone(zoneId);
+		return (T) this;
+	}
+
 	public T timeZone(TimeZone timeZone) {
 		this.timeZone = timeZone;
-		return (T)this;
+		return (T) this;
 	}
 }
