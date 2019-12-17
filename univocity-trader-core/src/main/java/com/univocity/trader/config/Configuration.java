@@ -52,7 +52,7 @@ public abstract class Configuration<T extends AccountConfiguration<T>> extends C
 	}
 
 	@Override
-	protected void addConfigurationGroup(List<ConfigurationGroup> groups) {
+	protected final void addConfigurationGroups(List<ConfigurationGroup> groups) {
 		groups.add(databaseConfiguration);
 		groups.add(emailConfiguration);
 		groups.add(accountList);

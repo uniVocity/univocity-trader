@@ -24,9 +24,10 @@ public class AccountList<T extends AccountConfiguration<T>> extends Configuratio
 				}
 				account(accountId).readProperties(accountId, properties);
 			}
+		} else {
+			//look for an account without ID.
+			account().readProperties("", properties);
 		}
-		//always assume an account without ID. We'll get rid of it if not configured
-		account().readProperties("", properties);
 	}
 
 	@Override
@@ -39,6 +40,11 @@ public class AccountList<T extends AccountConfiguration<T>> extends Configuratio
 	}
 
 	public final T account() {
+		if (accounts.size() == 1) {
+			return accounts.values().iterator().next();
+		} else if (accounts.size() > 1) {
+			throw new IllegalArgumentException("Please provide an account ID when multiple accounts are in use. Available accounts: " + accounts.keySet());
+		}
 		return account("");
 	}
 }

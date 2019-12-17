@@ -35,6 +35,7 @@ public final class ConfigurationManager {
 
 	private ConfigurationRoot initialize(boolean loadFromFile) {
 		instance = staticInstanceSupplier.get();
+		instance.loadConfigurationGroups();
 		if (loadFromFile) {
 			loadedFromFile = true;
 			reload();
