@@ -6,13 +6,9 @@ import com.univocity.trader.exchange.binance.api.client.domain.market.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
 
-public class BinanceTrader extends LiveTrader<Candlestick> {
+public class BinanceTrader extends LiveTrader<Candlestick, BinanceClientConfiguration> {
 
 	public BinanceTrader(TimeInterval tickInterval) {
-		this(tickInterval, null);
-	}
-
-	public BinanceTrader(TimeInterval tickInterval, EmailConfiguration mailSenderConfig) {
-		super(new BinanceExchange(), tickInterval, mailSenderConfig);
+		super(new BinanceExchange(), tickInterval);
 	}
 }

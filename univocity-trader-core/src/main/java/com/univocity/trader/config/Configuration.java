@@ -1,128 +1,93 @@
 package com.univocity.trader.config;
 
-import org.apache.commons.cli.*;
-import org.slf4j.*;
-
 import java.util.*;
+import java.util.function.*;
 
-/**
- * @author tom@khubla.com
- */
-public class Configuration extends ConfigurationGroup {
-	private static final Logger log = LoggerFactory.getLogger(Configuration.class);
+public abstract class Configuration<T extends ClientConfiguration<T>> extends ConfigurationRoot {
 
-	/**
-	 * 'config file' option for command-line
-	 */
-	private static final String CONFIG_OPTION = "config";
+	private static final Configuration instance = new Configuration() {
+		@Override
+		protected ConfigurationGroup[] getAdditionalConfigurationGroups() {
+			return null;
+		}
 
-	private static final String CONFIGURATION_FILE = "univocity-trader.properties";
-	private static String[] configurationFiles = new String[]{CONFIGURATION_FILE};
+		@Override
+		protected ClientConfiguration newClientConfiguration() {
+			return new ClientConfiguration();
+		}
+	};
 
-	private static Configuration instance;
+	protected static final ConfigurationManager manager = new ConfigurationManager();
+
+	private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(this);
+	private final EmailConfiguration emailConfiguration = new EmailConfiguration(this);
+	private final ClientList<T> clientList = new ClientList<T>(this, () -> newClientConfiguration());
+
+	private static Supplier<ConfigurationRoot> staticInstanceSupplier = () -> instance;
+	private static String defaultConfigurationFile = "univocity-trader.properties";
+
+	protected Configuration() {
+		initialize();
+	}
+
+	protected void initialize() {
+		manager.initialize(staticInstanceSupplier, defaultConfigurationFile);
+	}
+
+	protected static void initialize(Supplier<ConfigurationRoot> staticInstanceSupplier, String defaultConfigurationFile) {
+		Configuration.staticInstanceSupplier = staticInstanceSupplier;
+		Configuration.defaultConfigurationFile = defaultConfigurationFile;
+	}
 
 	public static Configuration getInstance() {
-		if (instance == null) {
-			throw new IllegalStateException("Configuration not defined. Use 'configure()', 'load(file)' or 'loadFromCommandLine()' to define your configuration");
-		}
-		return instance;
+		return (Configuration) manager.getInstance();
 	}
 
-	public static synchronized Configuration configure() {
-		if (instance != null) {
-			return instance;
-		}
-		return instance = new Configuration(false);
+	public static Configuration configure() {
+		return (Configuration) manager.configure();
 	}
 
-	public static synchronized Configuration load() {
-		return load(CONFIGURATION_FILE);
+	public static Configuration load() {
+		return (Configuration) manager.load();
 	}
 
-	public static synchronized Configuration load(String filePath, String... alternativeFilePaths) {
-		String[] original = configurationFiles.clone();
-
-		configurationFiles = new String[alternativeFilePaths.length + 1];
-		configurationFiles[0] = filePath;
-		System.arraycopy(alternativeFilePaths, 0, configurationFiles, 1, alternativeFilePaths.length);
-
-		try {
-			Utils.noBlanks(configurationFiles, "Path to configuration file cannot be blank/null");
-			if (instance != null) {
-				instance.reload();
-				return instance;
-			}
-			return instance = new Configuration(true);
-		} catch (Throwable t) {
-			configurationFiles = original;
-			if (t instanceof IllegalConfigurationException) {
-				throw (IllegalConfigurationException) t;
-			} else {
-				throw new IllegalConfigurationException("Unable to load configuration from " + Arrays.toString(configurationFiles), t);
-			}
-		}
+	public static Configuration load(String filePath, String... alternativeFilePaths) {
+		return (Configuration) manager.load(filePath, alternativeFilePaths);
 	}
 
 	public static Configuration loadFromCommandLine(String... args) {
-		/*
-		 * options
-		 */
-		final Options options = new Options();
-		final Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(true).desc("config file").build();
-		options.addOption(oo);
-		/*
-		 * parse
-		 */
-		final CommandLineParser parser = new DefaultParser();
-		String configFileName = null;
-		CommandLine cmd = null;
-		try {
-			cmd = parser.parse(options, args);
-			/*
-			 * get the file
-			 */
-			configFileName = cmd.getOptionValue(CONFIG_OPTION);
-			if (null != configFileName) {
-				return load(configFileName);
-			}
-		} catch (final Exception e) {
-			if (configFileName != null) {
-				log.error("Error loading configuration file: " + configFileName, e);
-			}
-			new HelpFormatter().printHelp("posix", options);
-			System.exit(0);
-		}
-		return configure();
-	}
-
-	private boolean loadedFromFile = false;
-	final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(this);
-	final EmailConfiguration emailConfiguration = new EmailConfiguration(this);
-
-	private Configuration(boolean loadFromFile) {
-		super(() -> instance);
-		if (loadFromFile) {
-			loadedFromFile = true;
-			reload();
-		}
-	}
-
-	public void reload() {
-		if (!loadedFromFile) {
-			return;
-		}
-		PropertyBasedConfiguration properties = new PropertyBasedConfiguration(configurationFiles);
-		readProperties(properties);
+		return (Configuration) manager.loadFromCommandLine(args);
 	}
 
 	@Override
-	void readProperties(PropertyBasedConfiguration properties) {
-		databaseConfiguration.readProperties(properties);
-		emailConfiguration.readProperties(properties);
+	protected void addConfigurationGroup(List<ConfigurationGroup> groups) {
+		groups.add(databaseConfiguration);
+		groups.add(emailConfiguration);
+		groups.add(clientList);
+
+		ConfigurationGroup[] additionalGroups = getAdditionalConfigurationGroups();
+		if (additionalGroups != null) {
+			Collections.addAll(groups, additionalGroups);
+		}
 	}
 
-	@Override
-	public boolean isConfigured() {
-		return databaseConfiguration.isConfigured();
+	protected abstract ConfigurationGroup[] getAdditionalConfigurationGroups();
+
+	public DatabaseConfiguration database() {
+		return databaseConfiguration;
 	}
+
+	public EmailConfiguration email() {
+		return emailConfiguration;
+	}
+
+	public T client() {
+		return clientList.client();
+	}
+
+	public T client(String clientId) {
+		return clientList.client(clientId);
+	}
+
+	protected abstract T newClientConfiguration();
 }

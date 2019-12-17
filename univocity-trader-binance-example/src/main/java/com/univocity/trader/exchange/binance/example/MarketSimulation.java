@@ -2,6 +2,7 @@ package com.univocity.trader.exchange.binance.example;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.exchange.binance.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 

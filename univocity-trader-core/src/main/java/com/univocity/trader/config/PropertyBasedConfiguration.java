@@ -334,7 +334,37 @@ public class PropertyBasedConfiguration {
 	 * @throws IllegalConfigurationException if the property is not present in the configuration.
 	 */
 	public final String getProperty(String property) throws IllegalConfigurationException {
+		return getProperty(false, property);
+	}
+
+	/**
+	 * Returns the value associated with a property in the configuration, if the property exists.
+	 *
+	 * @param property the property name
+	 *
+	 * @return the property value
+	 *
+	 * @throws IllegalConfigurationException if the property is not present in the configuration.
+	 */
+	public final String getOptionalProperty(String property) throws IllegalConfigurationException {
+		return getProperty(true, property);
+	}
+
+	/**
+	 * Returns the value associated with a property in the configuration
+	 *
+	 * @param optional flag indicating whether the property is optional
+	 * @param property the property name
+	 *
+	 * @return the property value
+	 *
+	 * @throws IllegalConfigurationException if the property is not present in the configuration.
+	 */
+	public final String getProperty(boolean optional, String property) throws IllegalConfigurationException {
 		if (!values.containsKey(property)) {
+			if (optional) {
+				return null;
+			}
 			throw new IllegalConfigurationException("Invalid configuration in " + getPropertiesDescription() + ". Property '" + property + "' could not be found.");
 		}
 
@@ -711,8 +741,37 @@ public class PropertyBasedConfiguration {
 	 * @throws IllegalConfigurationException if the property is not present in the configuration.
 	 */
 	public final List<String> getList(String property) {
-		return getList(property, ",");
+		return getList(false, property, ",");
 	}
+
+	/**
+	 * Returns an optional {@code List} of values associated with a property in the configuration, if it is present.
+	 * Assumes the values are separated by comma.
+	 *
+	 * @param property the property name
+	 *
+	 * @return the list of values associated with the given property value
+	 *
+	 * @throws IllegalConfigurationException if the property is not present in the configuration.
+	 */
+	public final List<String> getOptionalList(String property) {
+		return getList(true, property, ",");
+	}
+
+	/**
+	 * Returns an optional {@code List} of values associated with a property in the configuration, if the property exists.
+	 *
+	 * @param property  the property name
+	 * @param separator the separator that delimits individual values associated with the property.
+	 *
+	 * @return the list of values associated with the given property value
+	 *
+	 * @throws IllegalConfigurationException if the property is not present in the configuration.
+	 */
+	private final List<String> getOptionalList(String property, String separator) {
+		return getList(true, property, separator);
+	}
+
 
 	/**
 	 * Returns a {@code List} of values associated with a property in the configuration
@@ -724,8 +783,23 @@ public class PropertyBasedConfiguration {
 	 *
 	 * @throws IllegalConfigurationException if the property is not present in the configuration.
 	 */
-	public final List<String> getList(String property, String separator) {
-		String value = getProperty(property);
+	private final List<String> getList(String property, String separator) {
+		return getList(false, property, separator);
+	}
+
+	/**
+	 * Returns a {@code List} of values associated with a property in the configuration
+	 *
+	 * @param optional  flag indicating whether the property is optional
+	 * @param property  the property name
+	 * @param separator the separator that delimits individual values associated with the property.
+	 *
+	 * @return the list of values associated with the given property value
+	 *
+	 * @throws IllegalConfigurationException if the property is not present in the configuration.
+	 */
+	private final List<String> getList(boolean optional, String property, String separator) {
+		String value = getProperty(optional, property);
 		ArrayList out = new ArrayList<String>();
 		if (value == null) {
 			return out;
@@ -768,4 +842,46 @@ public class PropertyBasedConfiguration {
 		return Boolean.valueOf(value);
 	}
 
+	/**
+	 * Tests whether the configuration contains a given property key
+	 *
+	 * @param property the property whose presence in the configuration will be tested
+	 *
+	 * @return {@code true} if the given property exists in the configuration, otherwise {@code false}
+	 */
+	public boolean containsProperty(String property) {
+		return properties.containsKey(property);
+	}
+
+	/**
+	 * Tests whether the configuration contains all property keys of a given list
+	 *
+	 * @param properties the properties whose presence in the configuration will be tested
+	 *
+	 * @return {@code true} if all of the given properties exist in the configuration, otherwise {@code false}
+	 */
+	public boolean containsAllProperties(String... properties) {
+		for (String p : properties) {
+			if (!containsProperty(p)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Tests whether the configuration contains any property keys of a given list
+	 *
+	 * @param properties the properties whose presence in the configuration will be tested
+	 *
+	 * @return {@code true} if all of the given properties exist in the configuration, otherwise {@code false}
+	 */
+	public boolean containsAnyProperties(String... properties) {
+		for (String p : properties) {
+			if (containsProperty(p)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

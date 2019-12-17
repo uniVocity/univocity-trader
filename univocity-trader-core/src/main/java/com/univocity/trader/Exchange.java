@@ -2,6 +2,7 @@ package com.univocity.trader;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -24,7 +25,7 @@ import java.util.*;
  * @see com.univocity.trader.simulation.SimulatedExchange
  * @see com.univocity.trader.simulation.SimulatedClientAccount
  */
-public interface Exchange<T> {
+public interface Exchange<T, C extends ClientConfiguration<C>> {
 
 	/**
 	 * Provides the latest exchange-specific candle/tick for a given symbol at the given time interval.
@@ -159,12 +160,11 @@ public interface Exchange<T> {
 	/**
 	 * Opens a client account with the given {@code apiKey} and {@code secret}, which authorizes the {@link Client} to trade and update their account balance.
 	 *
-	 * @param apiKey the public API key provided by the exchange for a given account
-	 * @param secret the secret key provided by the exchange for the {@link Client} account
+	 * @param clientConfiguration the configuration of a client account (typically with API key and secret) to be used to connect to the desired account.
 	 *
 	 * @return an exchange-specific implementation of the {@link ClientAccount} interface, which allows the {@link Client} to trade through this framework.
 	 */
-	ClientAccount connectToAccount(String apiKey, String secret);
+	ClientAccount connectToAccount(C clientConfiguration);
 
 	/**
 	 * Handles errors from the exchange server that might be produced when polling for latest prices in case the live stream becomes unavailable, slow or

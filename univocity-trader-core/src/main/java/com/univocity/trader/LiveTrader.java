@@ -19,7 +19,7 @@ import static com.univocity.trader.indicators.base.TimeInterval.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public abstract class LiveTrader<T> implements Closeable {
+public abstract class LiveTrader<T, C extends ClientConfiguration<C>> implements Closeable {
 
 	private static final Logger log = LoggerFactory.getLogger(LiveTrader.class);
 
@@ -27,7 +27,7 @@ public abstract class LiveTrader<T> implements Closeable {
 
 	private String allClientPairs;
 	private final Map<String, Long> symbols = new ConcurrentHashMap<>();
-	private final Exchange<T> exchange;
+	private final Exchange<T, C> exchange;
 	private final TimeInterval tickInterval;
 	private final SmtpMailSender mailSender;
 	private long lastHour;
@@ -93,11 +93,13 @@ public abstract class LiveTrader<T> implements Closeable {
 		}
 	}
 
-	public LiveTrader(Exchange<T> exchange, TimeInterval tickInterval, EmailConfiguration mailSenderConfig) {
+	public LiveTrader(Exchange<T, C> exchange, TimeInterval tickInterval) {
 		Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 		this.exchange = exchange;
 		this.tickInterval = tickInterval;
-		this.mailSender = mailSenderConfig == null ? null : new SmtpMailSender(mailSenderConfig);
+
+		EmailConfiguration mail = Configuration.getInstance().email();
+		this.mailSender = mail.isConfigured() ? null : new SmtpMailSender(mail);
 	}
 
 	private void initialize() {
@@ -225,9 +227,12 @@ public abstract class LiveTrader<T> implements Closeable {
 		}
 	}
 
-	public Client addClient(String email, ZoneId timezone, String referenceCurrencySymbol, String apiKey, String secret) {
-		ClientAccount account = exchange.connectToAccount(apiKey, secret);
-		Client client = new Client(email, timezone, referenceCurrencySymbol, account);
+	public Client addClient(C clientConfiguration) {
+		ClientAccount account = exchange.connectToAccount(clientConfiguration);
+		String email = clientConfiguration.email();
+		TimeZone timezone = clientConfiguration.timeZone();
+		String referenceCurrencySymbol = clientConfiguration.referenceCurrency();
+		Client client = new Client(email, timezone.toZoneId(), referenceCurrencySymbol, account);
 		clients.add(client);
 		return client;
 	}

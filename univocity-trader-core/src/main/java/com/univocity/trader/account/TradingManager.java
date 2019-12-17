@@ -24,7 +24,7 @@ public class TradingManager {
 	final String fundSymbol;
 	private final AccountManager tradingAccount;
 	protected Trader trader;
-	private Exchange<?> exchange;
+	private Exchange<?, ?> exchange;
 	private final OrderListener[] notifications;
 	protected Client client;
 	private OrderExecutionToEmail emailNotifier;

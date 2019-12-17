@@ -5,27 +5,23 @@ import java.util.function.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-abstract class ConfigurationGroup {
+public abstract class ConfigurationGroup<T extends ConfigurationRoot> {
 
-	private final Supplier<Configuration> parent;
+	private final Supplier<T> parent;
 
-	ConfigurationGroup(Configuration parent) {
+	protected ConfigurationGroup(T parent) {
 		this(() -> parent);
 	}
 
-	ConfigurationGroup(Supplier<Configuration> parent) {
+	protected ConfigurationGroup(Supplier<T> parent) {
 		this.parent = parent;
 	}
 
-	public DatabaseConfiguration database() {
-		return parent.get().databaseConfiguration;
+	protected T getParent() {
+		return parent.get();
 	}
 
-	public EmailConfiguration email() {
-		return parent.get().emailConfiguration;
-	}
+	protected abstract void readProperties(PropertyBasedConfiguration properties);
 
-	abstract void readProperties(PropertyBasedConfiguration properties);
-
-	abstract public boolean isConfigured();
+	public abstract boolean isConfigured();
 }

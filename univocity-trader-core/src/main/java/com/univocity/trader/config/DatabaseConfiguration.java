@@ -9,12 +9,12 @@ public class DatabaseConfiguration extends ConfigurationGroup {
 	private char[] password;
 	private String jdbcDriver;
 
-	DatabaseConfiguration(Configuration parent) {
+	DatabaseConfiguration(ConfigurationRoot parent) {
 		super(parent);
 	}
 
 	@Override
-	void readProperties(PropertyBasedConfiguration properties) {
+	protected void readProperties(PropertyBasedConfiguration properties) {
 		jdbcDriver = properties.getProperty("database.jdbc.driver");
 		jdbcUrl = properties.getProperty("database.jdbc.url");
 		user = properties.getProperty("database.user");

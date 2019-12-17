@@ -44,12 +44,16 @@ public class LiveBinanceTrader {
 //		DataSource ds = ?
 //		CandleRepository.setDataSource(ds);
 
-		BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1), getEmailConfig());
+		BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1));
 
-		String apiKey = "<YOUR BINANCE API KEY>";
-		String secret = "<YOUR BINANCE API SECRET>";
+		BinanceClientConfiguration clientConfig = Binance.configure().client()
+				.email("<YOUR E-MAIL")
+				.timeZone("system")
+				.referenceCurrency("USDT")
+				.apiKey("<YOUR BINANCE API KEY>")
+				.secret("<YOUR BINANCE API SECRET>");
 
-		Client client = binance.addClient("<YOUR E-MAIL>", ZoneId.systemDefault(), "USDT", apiKey, secret);
+		Client client = binance.addClient(clientConfig);
 		client.tradeWith("BTC", "ETH", "XRP", "ADA");
 
 		client.strategies().add(ExampleStrategy::new);

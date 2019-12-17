@@ -40,7 +40,7 @@ public class Client<T> extends DefaultConfiguration {
 		return getAccount();
 	}
 
-	public void initialize(Exchange<T> exchange, SmtpMailSender mailSender) {
+	public void initialize(Exchange<T, ?> exchange, SmtpMailSender mailSender) {
 		this.exchange = exchange;
 		if (symbolPairs.isEmpty()) {
 			throw new IllegalStateException("No trade symbols defined for client " + email);

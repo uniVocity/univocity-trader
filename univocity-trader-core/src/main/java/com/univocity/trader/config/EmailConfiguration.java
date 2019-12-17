@@ -12,12 +12,12 @@ public class EmailConfiguration extends ConfigurationGroup {
 	private char[] smtpPassword;
 	private String smtpSender = null;
 
-	EmailConfiguration(Configuration parent) {
+	EmailConfiguration(ConfigurationRoot parent) {
 		super(parent);
 	}
 
 	@Override
-	void readProperties(PropertyBasedConfiguration properties) {
+	protected void readProperties(PropertyBasedConfiguration properties) {
 		replyToAddress = properties.getProperty("mail.reply.to");
 		smtpHost = properties.getProperty("mail.smtp.host");
 		smtpSSL = properties.getBoolean("mail.smtp.ssl", false);

@@ -3,11 +3,12 @@ package com.univocity.trader.simulation;
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 
 import java.util.*;
 
-public class SimulatedExchange implements Exchange<Candle> {
+public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfiguration> {
 
 	private final AccountManager account;
 	private final Map<String, SymbolInformation> symbolInformation = new TreeMap<>();
@@ -114,7 +115,10 @@ public class SimulatedExchange implements Exchange<Candle> {
 
 
 	@Override
-	public ClientAccount connectToAccount(String apiKey, String secret) {
+	public ClientAccount connectToAccount(SimulatedClientConfiguration clientConfiguration) {
 		throw new UnsupportedOperationException();
 	}
+}
+class SimulatedClientConfiguration extends ClientConfiguration<SimulatedClientConfiguration> {
+
 }

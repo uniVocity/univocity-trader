@@ -12,7 +12,7 @@ public class CandleProcessor<T> {
 	private final Engine consumer;
 	private final Exchange exchange;
 
-	public CandleProcessor(Engine consumer, Exchange<T> exchange) {
+	public CandleProcessor(Engine consumer, Exchange<T, ?> exchange) {
 		this.consumer = consumer;
 		this.exchange = exchange;
 	}
