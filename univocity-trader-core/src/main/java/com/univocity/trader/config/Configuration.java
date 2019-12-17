@@ -17,26 +17,18 @@ public abstract class Configuration<T extends AccountConfiguration<T>> extends C
 		}
 	};
 
-	protected static final ConfigurationManager manager = new ConfigurationManager();
+	protected static final ConfigurationManager manager = new ConfigurationManager(() -> instance, "univocity-trader.properties");
 
 	private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(this);
 	private final EmailConfiguration emailConfiguration = new EmailConfiguration(this);
 	private final AccountList<T> accountList = new AccountList<T>(this, () -> newAccountConfiguration());
 
-	private static Supplier<ConfigurationRoot> staticInstanceSupplier = () -> instance;
-	private static String defaultConfigurationFile = "univocity-trader.properties";
-
 	protected Configuration() {
-		initialize();
-	}
 
-	protected void initialize() {
-		manager.initialize(staticInstanceSupplier, defaultConfigurationFile);
 	}
 
 	protected static void initialize(Supplier<ConfigurationRoot> staticInstanceSupplier, String defaultConfigurationFile) {
-		Configuration.staticInstanceSupplier = staticInstanceSupplier;
-		Configuration.defaultConfigurationFile = defaultConfigurationFile;
+		manager.initialize(staticInstanceSupplier, defaultConfigurationFile);
 	}
 
 	public static Configuration getInstance() {

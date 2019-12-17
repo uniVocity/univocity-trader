@@ -23,8 +23,8 @@ public final class ConfigurationManager {
 	private ConfigurationRoot instance;
 	private boolean loadedFromFile = false;
 
-	protected ConfigurationManager() {
-
+	protected ConfigurationManager(Supplier<ConfigurationRoot> staticInstanceSupplier, String defaultConfigurationFile) {
+		initialize(staticInstanceSupplier, defaultConfigurationFile);
 	}
 
 	protected final void initialize(Supplier<ConfigurationRoot> staticInstanceSupplier, String defaultConfigurationFile) {

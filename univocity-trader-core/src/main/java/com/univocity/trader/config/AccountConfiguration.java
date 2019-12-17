@@ -82,10 +82,10 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> {
 	}
 
 	private TimeZone getTimeZone(String tz) {
-		if (tz == null || tz.equals("system")) {
-			timeZone = TimeZone.getDefault();
+		if (tz == null || tz.equalsIgnoreCase("system")) {
+			return timeZone = TimeZone.getDefault();
 		} else if (supportedTimeZones.contains(tz)) {
-			timeZone = TimeZone.getTimeZone(tz);
+			return timeZone = TimeZone.getTimeZone(tz);
 		}
 		return null;
 	}
@@ -93,7 +93,7 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> {
 	public T timeZone(String timeZone) {
 		this.timeZone = getTimeZone(timeZone);
 		if (this.timeZone == null) {
-			throw new IllegalArgumentException("Unsupported time zone: '" + timeZone + "." + supportedTimezoneDescription);
+			throw new IllegalArgumentException("Unsupported time zone: '" + timeZone + "'." + supportedTimezoneDescription);
 		}
 		return (T) this;
 	}
