@@ -3,6 +3,7 @@ package com.univocity.trader;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.config.AccountConfiguration;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
 import org.slf4j.*;
@@ -19,7 +20,7 @@ import static com.univocity.trader.indicators.base.TimeInterval.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public abstract class LiveTrader<T, C extends ClientConfiguration<C>> implements Closeable {
+public abstract class LiveTrader<T, C extends AccountConfiguration<C>> implements Closeable {
 
 	private static final Logger log = LoggerFactory.getLogger(LiveTrader.class);
 

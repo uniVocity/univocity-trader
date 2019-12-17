@@ -3,7 +3,7 @@ package com.univocity.trader.config;
 import java.util.*;
 import java.util.function.*;
 
-public abstract class Configuration<T extends ClientConfiguration<T>> extends ConfigurationRoot {
+public abstract class Configuration<T extends AccountConfiguration<T>> extends ConfigurationRoot {
 
 	private static final Configuration instance = new Configuration() {
 		@Override
@@ -12,8 +12,8 @@ public abstract class Configuration<T extends ClientConfiguration<T>> extends Co
 		}
 
 		@Override
-		protected ClientConfiguration newClientConfiguration() {
-			return new ClientConfiguration();
+		protected AccountConfiguration newAccountConfiguration() {
+			return new AccountConfiguration();
 		}
 	};
 
@@ -21,7 +21,7 @@ public abstract class Configuration<T extends ClientConfiguration<T>> extends Co
 
 	private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(this);
 	private final EmailConfiguration emailConfiguration = new EmailConfiguration(this);
-	private final ClientList<T> clientList = new ClientList<T>(this, () -> newClientConfiguration());
+	private final AccountList<T> accountList = new AccountList<T>(this, () -> newAccountConfiguration());
 
 	private static Supplier<ConfigurationRoot> staticInstanceSupplier = () -> instance;
 	private static String defaultConfigurationFile = "univocity-trader.properties";
@@ -63,7 +63,7 @@ public abstract class Configuration<T extends ClientConfiguration<T>> extends Co
 	protected void addConfigurationGroup(List<ConfigurationGroup> groups) {
 		groups.add(databaseConfiguration);
 		groups.add(emailConfiguration);
-		groups.add(clientList);
+		groups.add(accountList);
 
 		ConfigurationGroup[] additionalGroups = getAdditionalConfigurationGroups();
 		if (additionalGroups != null) {
@@ -81,13 +81,13 @@ public abstract class Configuration<T extends ClientConfiguration<T>> extends Co
 		return emailConfiguration;
 	}
 
-	public T client() {
-		return clientList.client();
+	public T account() {
+		return accountList.account();
 	}
 
-	public T client(String clientId) {
-		return clientList.client(clientId);
+	public T account(String accountId) {
+		return accountList.account(accountId);
 	}
 
-	protected abstract T newClientConfiguration();
+	protected abstract T newAccountConfiguration();
 }

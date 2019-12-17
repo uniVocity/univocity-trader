@@ -2,7 +2,7 @@ package com.univocity.trader;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.config.*;
+import com.univocity.trader.config.AccountConfiguration;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -25,7 +25,7 @@ import java.util.*;
  * @see com.univocity.trader.simulation.SimulatedExchange
  * @see com.univocity.trader.simulation.SimulatedClientAccount
  */
-public interface Exchange<T, C extends ClientConfiguration<C>> {
+public interface Exchange<T, C extends AccountConfiguration<C>> {
 
 	/**
 	 * Provides the latest exchange-specific candle/tick for a given symbol at the given time interval.

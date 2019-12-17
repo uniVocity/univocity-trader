@@ -5,7 +5,7 @@ import com.univocity.trader.config.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class Binance extends Configuration<BinanceClientConfiguration> {
+public class Binance extends Configuration<Account> {
 
 	private static final Binance instance = new Binance();
 
@@ -42,7 +42,7 @@ public class Binance extends Configuration<BinanceClientConfiguration> {
 	}
 
 	@Override
-	protected BinanceClientConfiguration newClientConfiguration() {
-		return new BinanceClientConfiguration();
+	protected Account newAccountConfiguration() {
+		return new Account();
 	}
 }

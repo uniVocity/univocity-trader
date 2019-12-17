@@ -6,20 +6,20 @@ import org.apache.commons.lang3.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class BinanceClientConfiguration extends ClientConfiguration<BinanceClientConfiguration> {
+public class Account extends AccountConfiguration<Account> {
 
 	private String apiKey;
 	private char[] secret;
 
-	public BinanceClientConfiguration() {
+	public Account() {
 		super();
 	}
 
 	@Override
-	protected void readClientProperties(String clientId, PropertyBasedConfiguration properties) {
-		apiKey = properties.getProperty(clientId + "api.key");
+	protected void readAccountProperties(String accountId, PropertyBasedConfiguration properties) {
+		apiKey = properties.getProperty(accountId + "api.key");
 
-		String s = properties.getProperty(clientId + "api.secret");
+		String s = properties.getProperty(accountId + "api.secret");
 		secret = s == null ? null : s.toCharArray();
 	}
 
@@ -27,16 +27,16 @@ public class BinanceClientConfiguration extends ClientConfiguration<BinanceClien
 		return apiKey;
 	}
 
-	public BinanceClientConfiguration apiKey(String apiKey) {
+	public Account apiKey(String apiKey) {
 		this.apiKey = apiKey;
 		return this;
 	}
 
-	public BinanceClientConfiguration secret(String secret) {
+	public Account secret(String secret) {
 		return secret(secret.toCharArray());
 	}
 
-	public BinanceClientConfiguration secret(char[] secret) {
+	public Account secret(char[] secret) {
 		this.secret = secret;
 		return this;
 	}

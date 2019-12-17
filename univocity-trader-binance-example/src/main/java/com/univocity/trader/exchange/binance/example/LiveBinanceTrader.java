@@ -9,7 +9,6 @@ import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
 
 import java.math.*;
-import java.time.*;
 
 public class LiveBinanceTrader {
 
@@ -46,7 +45,7 @@ public class LiveBinanceTrader {
 
 		BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1));
 
-		BinanceClientConfiguration clientConfig = Binance.configure().client()
+		Account clientConfig = Binance.configure().account()
 				.email("<YOUR E-MAIL")
 				.timeZone("system")
 				.referenceCurrency("USDT")

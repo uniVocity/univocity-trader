@@ -8,6 +8,7 @@ import com.univocity.trader.account.OrderRequest;
 import com.univocity.trader.exchange.binance.api.client.*;
 import com.univocity.trader.exchange.binance.api.client.domain.*;
 import com.univocity.trader.exchange.binance.api.client.domain.account.*;
+import com.univocity.trader.exchange.binance.api.client.domain.account.Account;
 import com.univocity.trader.exchange.binance.api.client.domain.account.request.*;
 import com.univocity.trader.exchange.binance.api.client.domain.market.*;
 import com.univocity.trader.exchange.binance.api.client.exception.*;

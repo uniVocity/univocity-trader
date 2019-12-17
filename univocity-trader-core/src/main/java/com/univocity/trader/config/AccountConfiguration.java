@@ -4,7 +4,7 @@ import org.apache.commons.lang3.*;
 
 import java.util.*;
 
-public class ClientConfiguration<T extends ClientConfiguration<T>> {
+public class AccountConfiguration<T extends AccountConfiguration<T>> {
 
 	private static final Set<String> supportedTimeZones = new TreeSet<>(List.of(TimeZone.getAvailableIDs()));
 	private static final String supportedTimezoneDescription;
@@ -22,35 +22,35 @@ public class ClientConfiguration<T extends ClientConfiguration<T>> {
 	private String referenceCurrency;
 	private TimeZone timeZone;
 
-	protected ClientConfiguration() {
+	protected AccountConfiguration() {
 	}
 
 	protected final void readProperties(PropertyBasedConfiguration properties) {
 
 	}
 
-	protected final void readProperties(String clientId, PropertyBasedConfiguration properties) {
-		if (!clientId.isBlank()) {
-			clientId = clientId + ".";
+	protected final void readProperties(String accountId, PropertyBasedConfiguration properties) {
+		if (!accountId.isBlank()) {
+			accountId = accountId + ".";
 		}
-		email = properties.getProperty(clientId + "email");
-		referenceCurrency = properties.getProperty(clientId + "reference.currency");
+		email = properties.getProperty(accountId + "email");
+		referenceCurrency = properties.getProperty(accountId + "reference.currency");
 
-		String tz = properties.getProperty(clientId + "timezone");
+		String tz = properties.getProperty(accountId + "timezone");
 		timeZone = getTimeZone(tz);
 		if (timeZone == null) {
 			String msg = "Unsupported timezone '" + tz + "' set ";
-			if (clientId.isBlank()) {
+			if (accountId.isBlank()) {
 				msg += "in 'timezone' property.";
 			} else {
-				msg += "for '" + clientId + "timezone' property.";
+				msg += "for '" + accountId + "timezone' property.";
 			}
 			throw new IllegalConfigurationException(msg + supportedTimezoneDescription);
 		}
-		readClientProperties(clientId, properties);
+		readAccountProperties(accountId, properties);
 	}
 
-	protected void readClientProperties(String clientId, PropertyBasedConfiguration properties){
+	protected void readAccountProperties(String accountId, PropertyBasedConfiguration properties){
 
 	}
 

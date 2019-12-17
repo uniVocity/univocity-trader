@@ -3,7 +3,7 @@ package com.univocity.trader.simulation;
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.config.*;
+import com.univocity.trader.config.AccountConfiguration;
 import com.univocity.trader.indicators.base.*;
 
 import java.util.*;
@@ -119,6 +119,6 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 		throw new UnsupportedOperationException();
 	}
 }
-class SimulatedClientConfiguration extends ClientConfiguration<SimulatedClientConfiguration> {
+class SimulatedClientConfiguration extends AccountConfiguration<SimulatedClientConfiguration> {
 
 }
