@@ -30,6 +30,11 @@ public class NewInstances<T> implements InstancesProvider<T> {
 		return this;
 	}
 
+	public final NewInstances<T> add(Class<T> instanceType) {
+		providers.add(new ReflectiveInstanceProvider(instanceType));
+		return this;
+	}
+
 	@Override
 	public final T[] create(String symbol, Parameters params) {
 		if (providers.isEmpty()) {

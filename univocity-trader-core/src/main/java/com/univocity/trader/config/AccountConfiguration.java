@@ -23,6 +23,10 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> {
 	private String referenceCurrency;
 	private TimeZone timeZone;
 
+	private final Set<String> strategies = new LinkedHashSet<>();
+	private final Set<String> monitors = new LinkedHashSet<>();
+	private final Set<String> listeners = new LinkedHashSet<>();
+
 	protected AccountConfiguration() {
 	}
 
@@ -48,6 +52,11 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> {
 			}
 			throw new IllegalConfigurationException(msg + supportedTimezoneDescription);
 		}
+
+		properties.getList(accountId+"strategies");
+		properties.getList(accountId+"monitors");
+		properties.getList(accountId+"listeners");
+
 		readAccountProperties(accountId, properties);
 	}
 
