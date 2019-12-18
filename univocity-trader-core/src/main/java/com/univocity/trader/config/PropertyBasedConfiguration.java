@@ -751,11 +751,21 @@ public class PropertyBasedConfiguration {
 	 * @param property the property name
 	 *
 	 * @return the list of values associated with the given property value
-	 *
-	 * @throws IllegalConfigurationException if the property is not present in the configuration.
 	 */
 	public final List<String> getOptionalList(String property) {
 		return getList(true, property, ",");
+	}
+
+	/**
+	 * Returns an optional {@code LinkedHashSet} of values associated with a property in the configuration, if it is present.
+	 * Assumes the values are separated by comma.
+	 *
+	 * @param property the property name
+	 *
+	 * @return a sorted set of values associated with the given property value
+	 */
+	public final LinkedHashSet<String> getOptionalSet(String property) {
+		return new LinkedHashSet<>(getOptionalList(property));
 	}
 
 	/**

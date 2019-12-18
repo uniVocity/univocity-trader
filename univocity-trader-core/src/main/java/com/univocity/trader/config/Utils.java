@@ -15,11 +15,15 @@
  ******************************************************************************/
 package com.univocity.trader.config;
 
+import io.github.classgraph.*;
+import org.apache.commons.lang3.*;
+
 import java.io.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.stream.*;
 
 import static java.lang.reflect.Array.*;
 import static java.sql.Connection.*;
@@ -1218,6 +1222,69 @@ public class Utils {
 			}
 		}
 		return c;
+	}
+
+	/**
+	 * Finds all classes that extend from a given class or implement a given interface.
+	 *
+	 * @param classesToSearch a map where the key is the parent class/interface and the set of values are the names
+	 *                        of the classes to find which extend from the given class or implement the given interface.
+	 *                        The names don't have to contain the full package and in this case the classpath will
+	 *                        search for a matching name.
+	 *
+	 * @return the search results in a map where the key is each parent class/interface given in the {@code classesToSearch} map
+	 * and the values are the a set the classes found, where each class has the name given in the original {@code classesToSearch} map.
+	 */
+	public static Map<Class<?>, LinkedHashSet<Class<?>>> findClasses(Map<Class<?>, LinkedHashSet<String>> classesToSearch) {
+		Map<Class<?>, LinkedHashSet<Class<?>>> out = new HashMap<>();
+
+		try (ScanResult scanResult = new ClassGraph().enableClassInfo().ignoreClassVisibility().scan()) {
+			classesToSearch.forEach((k, v) -> findClasses(scanResult, k, v, out));
+		}
+
+		return out;
+	}
+
+	private static void findClasses(ScanResult scanResult, Class<?> parentType, LinkedHashSet<String> classNames, Map<Class<?>, LinkedHashSet<Class<?>>> out) {
+		ClassInfoList subclasses = parentType.isInterface() ? scanResult.getClassesImplementing(parentType.getName()) : scanResult.getSubclasses(parentType.getName());
+
+		List<Class<?>> loadedClasses = subclasses.stream()
+				.filter(subClass -> subClass.isStandardClass() && !subClass.isAbstract() && !subClass.isAnonymousInnerClass())
+				.filter(subClass -> StringUtils.endsWithAny(subClass.getName(), classNames.toArray(new String[0])))
+				.map(ClassInfo::loadClass)
+				.collect(Collectors.toList());
+		;
+
+		LinkedHashSet<Class<?>> sorted = new LinkedHashSet<>();
+		for (String name : classNames) {
+			boolean found = false;
+			Iterator<Class<?>> it = loadedClasses.iterator();
+			while (it.hasNext()) {
+				Class<?> c = it.next();
+				if (c.getName().endsWith(name)) {
+					it.remove();
+					found = true;
+					sorted.add(c);
+					break;
+				}
+			}
+			if (!found) {
+				throw new IllegalArgumentException("Could not find class '" + name + "'");
+			}
+		}
+
+		if (!loadedClasses.isEmpty()) {
+			StringBuilder simpleNames = new StringBuilder();
+			for (Class c : loadedClasses) {
+				if (simpleNames.length() > 0) {
+					simpleNames.append(", ");
+				}
+				simpleNames.append(c.getSimpleName());
+			}
+			throw new IllegalStateException("Loaded multiple classes with the same name: " + simpleNames + ". Please provide the class package to disambiguate");
+		}
+
+		out.put(parentType, sorted);
 	}
 
 }

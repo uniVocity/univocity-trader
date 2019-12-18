@@ -1,5 +1,8 @@
 package com.univocity.trader.config;
 
+import com.univocity.trader.notification.*;
+import com.univocity.trader.strategy.*;
+import com.univocity.trader.utils.*;
 import org.apache.commons.lang3.*;
 
 import java.time.*;
@@ -23,9 +26,9 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> {
 	private String referenceCurrency;
 	private TimeZone timeZone;
 
-	private final Set<String> strategies = new LinkedHashSet<>();
-	private final Set<String> monitors = new LinkedHashSet<>();
-	private final Set<String> listeners = new LinkedHashSet<>();
+	protected final NewInstances<Strategy> strategies = new NewInstances<>(new Strategy[0]);
+	protected final NewInstances<StrategyMonitor> monitors = new NewInstances<>(new StrategyMonitor[0]);
+	protected final Instances<OrderListener> listeners = new Instances<>(new OrderListener[0]);
 
 	protected AccountConfiguration() {
 	}
@@ -53,11 +56,36 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> {
 			throw new IllegalConfigurationException(msg + supportedTimezoneDescription);
 		}
 
-		properties.getList(accountId+"strategies");
-		properties.getList(accountId+"monitors");
-		properties.getList(accountId+"listeners");
+		Map<Class<?>, LinkedHashSet<String>> classesToSearch = new HashMap<>();
+		classesToSearch.put(Strategy.class, properties.getOptionalSet(accountId + "strategies"));
+		classesToSearch.put(StrategyMonitor.class, properties.getOptionalSet(accountId + "monitors"));
+		classesToSearch.put(OrderListener.class, properties.getOptionalSet(accountId + "listeners"));
+
+		classesToSearch.values().removeIf(Set::isEmpty);
+
+		Map<Class<?>, LinkedHashSet<Class<?>>> searchResult = Utils.findClasses(classesToSearch);
+
+		for (var e : searchResult.entrySet()) {
+			if (e.getKey() == Strategy.class) {
+				addImplementation(strategies, e.getValue());
+			} else if (e.getKey() == StrategyMonitor.class) {
+				addImplementation(monitors, e.getValue());
+			} else if (e.getKey() == OrderListener.class) {
+				addImplementation(listeners, e.getValue());
+			}
+		}
+
+//		strategies.addAll();
+//		monitors.addAll(properties.getOptionalList(accountId+"monitors"));
+//		listeners.addAll(properties.getOptionalList(accountId+"listeners"));
 
 		readAccountProperties(accountId, properties);
+	}
+
+	private void addImplementation(NewInstances instances, Collection<Class<?>> classes) {
+		for (Class c : classes) {
+			instances.add(c);
+		}
 	}
 
 	protected void readAccountProperties(String accountId, PropertyBasedConfiguration properties) {
