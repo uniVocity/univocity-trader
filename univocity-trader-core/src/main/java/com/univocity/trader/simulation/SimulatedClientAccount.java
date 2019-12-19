@@ -30,6 +30,9 @@ public class SimulatedClientAccount implements ClientAccount {
 
 	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, TradingFees tradingFees) {
 		this.account = new AccountManager(this, accountConfiguration);
+		if(tradingFees == null){
+			throw new IllegalArgumentException("Trading fees cannot be null");
+		}
 		this.tradingFees = tradingFees;
 	}
 

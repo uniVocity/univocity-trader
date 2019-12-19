@@ -55,11 +55,17 @@ public abstract class AbstractSimulator {
 
 	protected void resetBalances() {
 		account.resetBalances();
+		double[] total = new double[]{0};
 		simulation.initialAmounts().forEach((symbol, amount) -> {
 			if (symbol.equals("")) {
 				symbol = account.configuration().referenceCurrency();
 			}
 			account.setAmount(symbol, amount);
+			total[0] += amount;
 		});
+
+		if (total[0] == 0.0) {
+			throw new IllegalStateException("Cannot execute simulation without initial funds to trade with");
+		}
 	}
 }

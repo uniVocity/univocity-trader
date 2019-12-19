@@ -126,7 +126,7 @@ public class Simulation extends ConfigurationGroup implements Cloneable {
 
 	@Override
 	protected void readProperties(PropertyBasedConfiguration properties) {
-		tradingFees(parseTradingFees(properties.getProperty("simulation.trade.fees")));
+		tradingFees(parseTradingFees(properties.getOptionalProperty("simulation.trade.fees")));
 		simulationStart(parseDateTime(properties, "simulation.start"));
 		simulationEnd(parseDateTime(properties, "simulation.end"));
 		cacheCandles(properties.getBoolean("simulation.cache.candles", false));
@@ -135,8 +135,6 @@ public class Simulation extends ConfigurationGroup implements Cloneable {
 	}
 
 	private void parseInitialFunds(PropertyBasedConfiguration properties) {
-		properties.getList("simulation.initial.funds"); //triggers validation and ensures property is declared.
-
 		Function<String, Double> f = (amount) -> {
 			try {
 				return Double.valueOf(amount);
@@ -165,11 +163,14 @@ public class Simulation extends ConfigurationGroup implements Cloneable {
 	}
 
 	private LocalDateTime parseDateTime(PropertyBasedConfiguration properties, String propertyName) {
-		return parseDateTime(properties.getProperty(propertyName), propertyName);
+		return parseDateTime(properties.getOptionalProperty(propertyName), propertyName);
 	}
 
 
 	private TradingFees parseTradingFees(String fees) {
+		if(fees == null){
+			return null;
+		}
 		try {
 			if (Character.isDigit(fees.charAt(0))) {
 				if (fees.endsWith("%")) {
