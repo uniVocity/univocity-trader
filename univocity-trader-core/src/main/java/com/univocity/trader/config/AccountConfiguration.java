@@ -36,6 +36,7 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 	private String email;
 	private String referenceCurrency;
 	private TimeZone timeZone;
+	protected boolean parsingProperties = false;
 
 	protected NewInstances<Strategy> strategies = new NewInstances<>(new Strategy[0]);
 	protected NewInstances<StrategyMonitor> monitors = new NewInstances<>(new StrategyMonitor[0]);
@@ -55,48 +56,61 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 	}
 
 	protected final void readProperties(String accountId, PropertyBasedConfiguration properties) {
-		if (!accountId.isBlank()) {
-			accountId = accountId + ".";
-		}
-		email = properties.getProperty(accountId + "email");
-		referenceCurrency = properties.getProperty(accountId + "reference.currency");
-
-		String tz = properties.getProperty(accountId + "timezone");
-		timeZone = getTimeZone(tz);
-		if (timeZone == null) {
-			String msg = "Unsupported timezone '" + tz + "' set ";
-			if (accountId.isBlank()) {
-				msg += "in 'timezone' property.";
-			} else {
-				msg += "for '" + accountId + "timezone' property.";
+		parsingProperties = true;
+		try {
+			if (!accountId.isBlank()) {
+				accountId = accountId + ".";
 			}
-			throw new IllegalConfigurationException(msg + supportedTimezoneDescription);
-		}
+			email = properties.getProperty(accountId + "email");
+			referenceCurrency = properties.getProperty(accountId + "reference.currency");
 
-		Map<Class<?>, LinkedHashSet<String>> classesToSearch = new HashMap<>();
-		classesToSearch.put(Strategy.class, properties.getOptionalSet(accountId + "strategies"));
-		classesToSearch.put(StrategyMonitor.class, properties.getOptionalSet(accountId + "monitors"));
-		classesToSearch.put(OrderListener.class, properties.getOptionalSet(accountId + "listeners"));
-
-		classesToSearch.values().removeIf(Set::isEmpty);
-
-		Map<Class<?>, LinkedHashSet<Class<?>>> searchResult = Utils.findClasses(classesToSearch);
-
-		for (var e : searchResult.entrySet()) {
-			if (e.getKey() == Strategy.class) {
-				addImplementation(strategies, e.getValue());
-			} else if (e.getKey() == StrategyMonitor.class) {
-				addImplementation(monitors, e.getValue());
-			} else if (e.getKey() == OrderListener.class) {
-				addImplementation(listeners, e.getValue());
+			String tz = properties.getProperty(accountId + "timezone");
+			timeZone = getTimeZone(tz);
+			if (timeZone == null) {
+				String msg = "Unsupported timezone '" + tz + "' set ";
+				if (accountId.isBlank()) {
+					msg += "in 'timezone' property.";
+				} else {
+					msg += "for '" + accountId + "timezone' property.";
+				}
+				throw new IllegalConfigurationException(msg + supportedTimezoneDescription);
 			}
+
+			parseAllocationProperty(properties, accountId + "trade.minimum.amount", this::minimumInvestmentAmountPerTrade);
+			parseAllocationProperty(properties, accountId + "trade.maximum.amount", this::maximumInvestmentAmountPerTrade);
+			parseAllocationProperty(properties, accountId + "trade.maximum.percentage", this::maximumInvestmentPercentagePerTrade);
+			parseAllocationProperty(properties, accountId + "asset.maximum.amount", this::maximumInvestmentAmountPerAsset);
+			parseAllocationProperty(properties, accountId + "asset.maximum.percentage", this::maximumInvestmentPercentagePerAsset);
+
+			Map<Class<?>, LinkedHashSet<String>> classesToSearch = new HashMap<>();
+			classesToSearch.put(Strategy.class, properties.getOptionalSet(accountId + "strategies"));
+			classesToSearch.put(StrategyMonitor.class, properties.getOptionalSet(accountId + "monitors"));
+			classesToSearch.put(OrderListener.class, properties.getOptionalSet(accountId + "listeners"));
+
+			classesToSearch.values().removeIf(Set::isEmpty);
+
+			Map<Class<?>, LinkedHashSet<Class<?>>> searchResult = Utils.findClasses(classesToSearch);
+
+			for (var e : searchResult.entrySet()) {
+				if (e.getKey() == Strategy.class) {
+					addImplementation(strategies, e.getValue());
+				} else if (e.getKey() == StrategyMonitor.class) {
+					addImplementation(monitors, e.getValue());
+				} else if (e.getKey() == OrderListener.class) {
+					addImplementation(listeners, e.getValue());
+				}
+			}
+
+			parseInstancePerGroupProperty(properties, accountId + "order.manager", OrderManager.class, this::orderManager);
+
+			//		strategies.addAll();
+			//		monitors.addAll(properties.getOptionalList(accountId+"monitors"));
+			//		listeners.addAll(properties.getOptionalList(accountId+"listeners"));
+
+			readExchangeAccountProperties(accountId, properties);
+		} finally {
+			parsingProperties = false;
 		}
-
-//		strategies.addAll();
-//		monitors.addAll(properties.getOptionalList(accountId+"monitors"));
-//		listeners.addAll(properties.getOptionalList(accountId+"listeners"));
-
-		readAccountProperties(accountId, properties);
 	}
 
 	private void addImplementation(NewInstances instances, Collection<Class<?>> classes) {
@@ -105,8 +119,52 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 		}
 	}
 
-	protected void readAccountProperties(String accountId, PropertyBasedConfiguration properties) {
+	protected void readExchangeAccountProperties(String accountId, PropertyBasedConfiguration properties) {
 
+	}
+
+	private <T> void parseGroupSetting(PropertyBasedConfiguration properties, String propertyName, Function<String, T> valueTransform, BiConsumer<T, String[]> consumer) {
+		//e.g. trade.minimum.amount=[ADA;XRP]50.5, [BTC]100, 30
+		List<String> settingsPerGroup = properties.getOptionalList(propertyName);
+		for (String settingPerGroup : settingsPerGroup) {
+			String assetList = StringUtils.substringBetween(settingPerGroup, "[", "]");
+			String[] assets = EMPTY_STRING_ARRAY;
+			if (StringUtils.isNotBlank(assetList)) {
+				assetList = assetList.trim();
+				assets = StringUtils.split(assetList, ';');
+
+				settingPerGroup = StringUtils.substringAfter(settingPerGroup, "]");
+				if (settingPerGroup.isBlank()) {
+					throw new IllegalConfigurationException("No allocation defined in property '" + propertyName + "' after asset symbols '" + assetList + "'");
+				}
+			}
+			settingPerGroup = settingPerGroup.trim();
+			T result = valueTransform.apply(settingPerGroup);
+			consumer.accept(result, assets);
+		}
+	}
+
+	private void parseAllocationProperty(PropertyBasedConfiguration properties, String propertyName, BiConsumer<Double, String[]> consumer) {
+		Function<String, Double> f = (String allocation) -> {
+			try {
+				return Double.valueOf(allocation);
+			} catch (NumberFormatException ex) {
+				throw new IllegalConfigurationException("Invalid allocation value '" + allocation + "' defined in property '" + propertyName + "'", ex);
+			}
+		};
+		parseGroupSetting(properties, propertyName, f, consumer);
+	}
+
+	private <T> void parseInstancePerGroupProperty(PropertyBasedConfiguration properties, String propertyName, Class<T> parent, BiConsumer<T, String[]> consumer) {
+		Function<String, T> f = (String className) -> {
+			try {
+				Class<? extends T> clazz = (Class<? extends T>) Utils.findClass(parent, className);
+				return Utils.getDefaultConstructor(clazz).newInstance();
+			} catch (Exception ex) {
+				throw new IllegalConfigurationException("Unable to load class '" + className + "' defined in property '" + propertyName + "'", ex);
+			}
+		};
+		parseGroupSetting(properties, propertyName, f, consumer);
 	}
 
 	public boolean isConfigured() {
@@ -249,12 +307,13 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 		return updateAllocation("minimum expenditure per trade", minimumAmount, symbols, (allocation) -> allocation.setMinimumAmountPerTrade(minimumAmount));
 	}
 
-	private T updateAllocation(String description, double param, String[] symbols, Function<Allocation, Allocation> f) {
+	private T updateAllocation(String description, double param, String[]
+			symbols, Function<Allocation, Allocation> f) {
 		if (symbols.length == 0) {
 			symbols = supportedSymbols.toArray(new String[0]);
 		}
 		for (String symbol : symbols) {
-			if (supportedSymbols.contains(symbol)) {
+			if (supportedSymbols.contains(symbol) || parsingProperties) {
 				allocations.compute(symbol, (s, allocation) -> allocation == null ? f.apply(new Allocation()) : f.apply(allocation));
 			} else {
 				reportUnknownSymbol("Can't allocate " + description + " for '" + symbol + "' to " + param, symbol, this);

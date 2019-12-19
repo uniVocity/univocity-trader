@@ -1229,8 +1229,8 @@ public class Utils {
 	 *
 	 * @param classesToSearch a map where the key is the parent class/interface and the set of values are the names
 	 *                        of the classes to find which extend from the given class or implement the given interface.
-	 *                        The names don't have to contain the full package and in this case the classpath will
-	 *                        search for a matching name.
+	 *                        The names don't have to contain the full package and in this case the classpath will be
+	 *                        traversed to find a matching name.
 	 *
 	 * @return the search results in a map where the key is each parent class/interface given in the {@code classesToSearch} map
 	 * and the values are the a set the classes found, where each class has the name given in the original {@code classesToSearch} map.
@@ -1245,7 +1245,26 @@ public class Utils {
 		return out;
 	}
 
-	private static void findClasses(ScanResult scanResult, Class<?> parentType, LinkedHashSet<String> classNames, Map<Class<?>, LinkedHashSet<Class<?>>> out) {
+	/**
+	 * Finds a class that extends from a given class or implement a given interface.
+	 *
+	 * @param parent      the parent class/interface whose subclasses/implementations will be searched
+	 * @param classToFind Name of the class to find which extends from the given class or implements the given interface.
+	 *                    The name doesn't have to contain the full package and in this case the classpath will be
+	 *                    searched to fina a matching name.
+	 *
+	 * @return the class found, or {@code null}
+	 *
+	 * @throws IllegalStateException    if multiple classes are found.
+	 * @throws IllegalArgumentException if no class is found.
+	 */
+	public static Class<?> findClass(Class<?> parent, String classToFind) {
+		try (ScanResult scanResult = new ClassGraph().enableClassInfo().ignoreClassVisibility().scan()) {
+			return search(scanResult, parent, Collections.singleton(classToFind)).iterator().next();
+		}
+	}
+
+	private static LinkedHashSet<Class<?>> search(ScanResult scanResult, Class<?> parentType, Set<String> classNames) {
 		ClassInfoList subclasses = parentType.isInterface() ? scanResult.getClassesImplementing(parentType.getName()) : scanResult.getSubclasses(parentType.getName());
 
 		List<Class<?>> loadedClasses = subclasses.stream()
@@ -1284,7 +1303,11 @@ public class Utils {
 			throw new IllegalStateException("Loaded multiple classes with the same name: " + simpleNames + ". Please provide the class package to disambiguate");
 		}
 
-		out.put(parentType, sorted);
+		return sorted;
+	}
+
+	private static void findClasses(ScanResult scanResult, Class<?> parentType, LinkedHashSet<String> classNames, Map<Class<?>, LinkedHashSet<Class<?>>> out) {
+		out.put(parentType, search(scanResult, parentType, classNames));
 	}
 
 	public static IllegalArgumentException reportUnknownSymbol(String symbol, AccountConfiguration<?> account) {
@@ -1293,7 +1316,7 @@ public class Utils {
 
 	public static IllegalArgumentException reportUnknownSymbol(String message, String symbol, AccountConfiguration<?> account) {
 		String msg = "Account is not managing '" + symbol + "'. Allowed symbols are: " + account.symbols() + " and " + account.referenceCurrency();
-		if(message != null) {
+		if (message != null) {
 			throw new IllegalArgumentException(message + ". " + msg);
 		} else {
 			throw new IllegalArgumentException(msg);

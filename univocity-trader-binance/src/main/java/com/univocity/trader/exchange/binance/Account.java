@@ -16,7 +16,7 @@ public class Account extends AccountConfiguration<Account> {
 	}
 
 	@Override
-	protected void readAccountProperties(String accountId, PropertyBasedConfiguration properties) {
+	protected void readExchangeAccountProperties(String accountId, PropertyBasedConfiguration properties) {
 		apiKey = properties.getProperty(accountId + "api.key");
 
 		String s = properties.getProperty(accountId + "api.secret");

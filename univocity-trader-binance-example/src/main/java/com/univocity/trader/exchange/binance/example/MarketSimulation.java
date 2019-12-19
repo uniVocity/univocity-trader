@@ -39,7 +39,7 @@ public class MarketSimulation {
 				.referenceCurrency("USDT")
 				.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH")
 				.minimumInvestmentAmountPerTrade(10.0)
-//				.maximumInvestmentPercentagePerAsset(30.0, "ADA", "ETH")
+				.maximumInvestmentPercentagePerAsset(30.0, "ADA", "ETH")
 //				.maximumInvestmentPercentagePerAsset(50.0, "BTC", "LTC")
 //				.maximumInvestmentAmountPerAsset(200, "XRP")
 		;
