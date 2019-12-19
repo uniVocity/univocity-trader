@@ -1287,5 +1287,18 @@ public class Utils {
 		out.put(parentType, sorted);
 	}
 
+	public static IllegalArgumentException reportUnknownSymbol(String symbol, AccountConfiguration<?> account) {
+		throw reportUnknownSymbol(null, symbol, account);
+	}
+
+	public static IllegalArgumentException reportUnknownSymbol(String message, String symbol, AccountConfiguration<?> account) {
+		String msg = "Account is not managing '" + symbol + "'. Allowed symbols are: " + account.symbols() + " and " + account.referenceCurrency();
+		if(message != null) {
+			throw new IllegalArgumentException(message + ". " + msg);
+		} else {
+			throw new IllegalArgumentException(msg);
+		}
+	}
+
 }
 

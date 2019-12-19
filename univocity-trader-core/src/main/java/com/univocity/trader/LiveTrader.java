@@ -20,7 +20,7 @@ import static com.univocity.trader.indicators.base.TimeInterval.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public abstract class LiveTrader<T, C extends AccountConfiguration<C>> implements Closeable {
+public abstract class LiveTrader<T, A extends AccountConfiguration<A>> implements Closeable {
 
 	private static final Logger log = LoggerFactory.getLogger(LiveTrader.class);
 
@@ -28,7 +28,7 @@ public abstract class LiveTrader<T, C extends AccountConfiguration<C>> implement
 
 	private String allClientPairs;
 	private final Map<String, Long> symbols = new ConcurrentHashMap<>();
-	private final Exchange<T, C> exchange;
+	private final Exchange<T, A> exchange;
 	private final TimeInterval tickInterval;
 	private final SmtpMailSender mailSender;
 	private long lastHour;
@@ -94,7 +94,7 @@ public abstract class LiveTrader<T, C extends AccountConfiguration<C>> implement
 		}
 	}
 
-	public LiveTrader(Exchange<T, C> exchange, TimeInterval tickInterval) {
+	public LiveTrader(Exchange<T, A> exchange, TimeInterval tickInterval) {
 		Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 		this.exchange = exchange;
 		this.tickInterval = tickInterval;
@@ -228,12 +228,9 @@ public abstract class LiveTrader<T, C extends AccountConfiguration<C>> implement
 		}
 	}
 
-	public Client addClient(C clientConfiguration) {
-		ClientAccount account = exchange.connectToAccount(clientConfiguration);
-		String email = clientConfiguration.email();
-		TimeZone timezone = clientConfiguration.timeZone();
-		String referenceCurrencySymbol = clientConfiguration.referenceCurrency();
-		Client client = new Client(email, timezone.toZoneId(), referenceCurrencySymbol, account);
+	public Client addClient(A accountConfiguration) {
+		ClientAccount account = exchange.connectToAccount(accountConfiguration);
+		Client client = new Client(account, accountConfiguration);
 		clients.add(client);
 		return client;
 	}

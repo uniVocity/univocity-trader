@@ -6,10 +6,10 @@ import org.apache.commons.lang3.*;
 import java.util.*;
 import java.util.function.*;
 
-public class NewInstances<T> implements InstancesProvider<T> {
+public class NewInstances<T> implements InstancesProvider<T>, Cloneable {
 
 	private final T[] empty;
-	private final List<InstanceProvider<T>> providers = new ArrayList<>();
+	private List<InstanceProvider<T>> providers = new ArrayList<>();
 
 	public NewInstances(T[] empty) {
 		this.empty = empty;
@@ -62,7 +62,18 @@ public class NewInstances<T> implements InstancesProvider<T> {
 		return instancesToUse;
 	}
 
-	public void clear(){
+	public void clear() {
 		providers.clear();
+	}
+
+	@Override
+	public NewInstances<T> clone() {
+		try {
+			NewInstances<T>  out = (NewInstances<T>) super.clone();
+			out.providers = new ArrayList<>(this.providers);
+			return out;
+		} catch (CloneNotSupportedException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 }

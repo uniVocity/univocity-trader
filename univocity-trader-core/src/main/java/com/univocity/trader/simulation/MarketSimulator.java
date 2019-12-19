@@ -3,6 +3,7 @@ package com.univocity.trader.simulation;
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.strategy.*;
 import org.slf4j.*;
 
@@ -23,8 +24,9 @@ public class MarketSimulator extends AbstractSimulator {
 	private int activeQueryLimit = 15;
 	private boolean cachingEnabled = false;
 
-	public MarketSimulator(String referenceCurrency) {
-		super(referenceCurrency);
+
+	public MarketSimulator(AccountConfiguration<?> accountConfiguration) {
+		super(accountConfiguration);
 	}
 
 	public boolean isCachingEnabled() {
@@ -48,8 +50,8 @@ public class MarketSimulator extends AbstractSimulator {
 	}
 
 	public void run(Parameters parameters) {
-		AccountManager account = getAccount();
 		symbolHandlers.clear();
+		resetBalances();
 
 		Set<Object> allInstances = new HashSet<>();
 		for (String[] pair : account.getTradedPairs()) {
@@ -60,9 +62,9 @@ public class MarketSimulator extends AbstractSimulator {
 			exchange.setSymbolInformation(this.symbolInformation);
 			SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange);
 //			exchange.setMainTradeSymbols(mainTradeSymbols);
-			TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, account, listeners, assetSymbol, fundSymbol, parameters);
+			TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, account, assetSymbol, fundSymbol, parameters);
 
-			Engine engine = new Engine(tradingManager, strategies, monitors, parameters, allInstances);
+			Engine engine = new Engine(tradingManager, parameters, allInstances);
 			symbolHandlers.put(engine.getSymbol(), engine);
 		}
 

@@ -2,6 +2,7 @@ package com.univocity.trader.exchange.binance.example;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.config.AccountConfiguration;
 import com.univocity.trader.exchange.binance.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
@@ -33,12 +34,27 @@ public class MarketSimulation {
 //		DataSource ds = ?
 //		CandleRepository.setDataSource(ds);
 
-		MarketSimulator simulation = new MarketSimulator("USDT");
-		simulation.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH");
+		AccountConfiguration<?> account = Configuration.configure().account();
+		account
+				.referenceCurrency("USDT")
+				.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH")
+				.minimumInvestmentAmountPerTrade(10.0)
+//				.maximumInvestmentPercentagePerAsset(30.0, "ADA", "ETH")
+//				.maximumInvestmentPercentagePerAsset(50.0, "BTC", "LTC")
+//				.maximumInvestmentAmountPerAsset(200, "XRP")
+		;
 
-		simulation.strategies().add(ExampleStrategy::new);
-		simulation.monitors().add(ExampleStrategyMonitor::new);
+		account.strategies().add(ExampleStrategy::new);
+		account.monitors().add(ExampleStrategyMonitor::new);
 
+		SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
+
+		account.listeners()
+				.add(stats)
+				.add(new OrderExecutionToLog());
+
+		MarketSimulator simulation = new MarketSimulator(account);
+		//simulation.setAmount("USDT", 1000.0);
 		simulation.setTradingFees(SimpleTradingFees.percentage(0.1));
 //		simulation.symbolInformation("ADAUSDT").minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
 //		simulation.symbolInformation("BTCUSDT").minimumAssetsPerOrder(0.001).priceDecimalPlaces(8).quantityDecimalPlaces(8);
@@ -46,20 +62,8 @@ public class MarketSimulation {
 //		simulation.symbolInformation("XRPUSDT").minimumAssetsPerOrder(50.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
 //		simulation.symbolInformation("ETHUSDT").minimumAssetsPerOrder(0.01).priceDecimalPlaces(8).quantityDecimalPlaces(8);
 
-		simulation.account()
-				.setAmount("USDT", 1000.0)
-				.minimumInvestmentAmountPerTrade(10.0);
-//				.maximumInvestmentPercentagePerAsset(30.0, "ADA", "ETH")
-//				.maximumInvestmentPercentagePerAsset(50.0, "BTC", "LTC")
-//				.maximumInvestmentAmountPerAsset(200, "XRP")
-		;
-
 		simulation.setSimulationStart(LocalDate.of(2018, 7, 1).atStartOfDay());
 		simulation.setSimulationEnd(LocalDate.of(2019, 7, 1).atStartOfDay());
-
-		simulation.listeners().add(new OrderExecutionToLog());
-		SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
-		simulation.listeners().add(stats);
 
 		simulation.run();
 

@@ -15,4 +15,9 @@ public class Instances<T> extends NewInstances<T> {
 		add((s, p) -> reusableInstance);
 		return this;
 	}
+
+	@Override
+	public Instances<T> clone() {
+		return (Instances<T>) super.clone();
+	}
 }

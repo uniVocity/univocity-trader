@@ -3,6 +3,7 @@ package com.univocity.trader.simulation;
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 
 import java.math.*;
 import java.util.*;
@@ -27,9 +28,9 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	public SimulatedClientAccount(String referenceCurrencySymbol, TradingFees tradingFees) {
+	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, TradingFees tradingFees) {
+		this.account = new AccountManager(this, accountConfiguration);
 		this.tradingFees = tradingFees;
-		this.account = new AccountManager(referenceCurrencySymbol, this);
 	}
 
 	@Override
@@ -72,6 +73,8 @@ public class SimulatedClientAccount implements ClientAccount {
 		out.setType(orderType);
 		out.setStatus(Order.Status.NEW);
 		out.setExecutedQuantity(BigDecimal.ZERO);
+//		out.setStatus(Order.Status.FILLED);
+//		out.setExecutedQuantity(new BigDecimal(quantity));
 		out.setOrderId(UUID.randomUUID().toString());
 
 		return out;

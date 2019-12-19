@@ -1,8 +1,8 @@
-package com.univocity.trader.account;
+package com.univocity.trader.config;
 
-public class Allocation {
+public class Allocation implements Cloneable{
 
-	public static Allocation NO_LIMITS = new Allocation();
+	static Allocation NO_LIMITS = new Allocation();
 
 	private double maximumAmountPerAsset = Integer.MAX_VALUE;
 	private double maximumPercentagePerAsset = 100.0;
@@ -69,5 +69,14 @@ public class Allocation {
 
 	private static double adjustAmount(double maximumAmount){
 		return Math.max(maximumAmount, 0.0);
+	}
+
+	@Override
+	public Allocation clone() {
+		try {
+			return (Allocation) super.clone();
+		} catch (CloneNotSupportedException e){
+			throw new IllegalStateException(e);
+		}
 	}
 }

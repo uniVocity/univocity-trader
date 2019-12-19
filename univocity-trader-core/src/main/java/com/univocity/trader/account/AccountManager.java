@@ -2,28 +2,26 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.simulation.*;
+import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
 import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.*;
 
-import static com.univocity.trader.account.Allocation.*;
 import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
+import static com.univocity.trader.config.Utils.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 public class AccountManager implements ClientAccount, SimulatedAccountConfiguration {
 	private static final Logger log = LoggerFactory.getLogger(AccountManager.class);
-	private static final OrderManager DEFAULT_ORDER_MANAGER = new DefaultOrderManager();
 
-	private final Set<String> supportedSymbols = new TreeSet<>();
-	private Map<String, String[]> tradedPairs = new ConcurrentHashMap<>();
-	private final Map<String, Allocation> allocations = new ConcurrentHashMap<>();
+	private final AccountConfiguration<?> configuration;
 	private final Map<String, Order> pendingOrders = new ConcurrentHashMap<>();
 	private final Set<String> lockedPairs = ConcurrentHashMap.newKeySet();
 
@@ -35,21 +33,17 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	private final ClientAccount account;
 	private final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
-	private String referenceCurrencySymbol;
-	private final Map<String, OrderManager> orderManagers = new ConcurrentHashMap<>();
 
-	public AccountManager(String referenceCurrencySymbol, ClientAccount account) {
+	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration) {
+		if (StringUtils.isBlank(configuration.referenceCurrency())) {
+			throw new IllegalConfigurationException("Please configure the reference currency symbol using 'configuration.referenceCurrency(String)'");
+		}
+		if (configuration.symbolPairs().isEmpty()) {
+			throw new IllegalConfigurationException("Please configure traded symbol pairs using 'configuration.tradeWith(...)'");
+		}
+
 		this.account = account;
-		this.referenceCurrencySymbol = referenceCurrencySymbol;
-	}
-
-	public void setTradedPairs(Collection<String[]> symbols) {
-		tradedPairs.clear();
-		symbols.forEach(p -> {
-			tradedPairs.put(p[0] + p[1], p);
-			supportedSymbols.add(p[0]);
-			supportedSymbols.add(p[1]);
-		});
+		this.configuration = configuration.clone();
 	}
 
 	public Map<String, Balance> getBalances() {
@@ -61,7 +55,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return balances;
 	}
 
-	@Override
+	/**
+	 * Returns the amount held in the account for the given symbol.
+	 *
+	 * @param symbol the symbol whose amount will be returned
+	 *
+	 * @return the amount held for the given symbol.
+	 */
 	public double getAmount(String symbol) {
 		return balances.getOrDefault(symbol, Balance.ZERO).getFreeAmount();
 	}
@@ -114,30 +114,28 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	@Override
 	public synchronized AccountManager setAmount(String symbol, double amount) {
-		if (supportedSymbols.contains(symbol) || symbol.equals(referenceCurrencySymbol)) {
+		if (configuration.isSymbolSupported(symbol)) {
 			balances.put(symbol, new Balance(symbol, amount));
 			return this;
 		}
-		throw reportUnknownSymbol("Can't set funds", symbol);
+		throw reportUnknownSymbol("Can't set funds", symbol, configuration);
 	}
 
 	public synchronized AccountManager lockAmount(String symbol, BigDecimal amount) {
-		if (supportedSymbols.contains(symbol) || symbol.equals(referenceCurrencySymbol)) {
+		if (configuration.isSymbolSupported(symbol)) {
 			subtractFromFreeBalance(symbol, amount);
 			addToLockedBalance(symbol, amount);
 			return this;
 		}
-		throw reportUnknownSymbol("Can't set funds", symbol);
+		throw reportUnknownSymbol("Can't set funds", symbol, configuration);
 	}
 
-	private IllegalArgumentException reportUnknownSymbol(String message, String symbol) {
-		throw new IllegalArgumentException(message + ". Account is not managing '" + symbol + "'. Allowed symbols are: " + supportedSymbols + " and " + referenceCurrencySymbol);
-	}
+
 
 	public double allocateFunds(String assetSymbol, String fundSymbol) {
 		TradingManager tradingManager = getTradingManagerOf(assetSymbol + fundSymbol);
 		if (tradingManager == null) {
-			Trader trader = getTraderOf(assetSymbol + referenceCurrencySymbol);
+			Trader trader = getTraderOf(assetSymbol + configuration.referenceCurrency());
 			if (trader != null) {
 				tradingManager = trader.tradingManager;
 				//fundSymbol = tradingManager.getFundSymbol();
@@ -146,12 +144,11 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			}
 		}
 
-		double minimumInvestment = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMinimumAmountPerTrade();
-		double percentage = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumPercentagePerAsset() / 100.0;
-		double maxAmount = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumAmountPerAsset();
-
-		double percentagePerTrade = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumPercentagePerTrade() / 100.0;
-		double maxAmountPerTrade = allocations.getOrDefault(assetSymbol, NO_LIMITS).getMaximumAmountPerTrade();
+		double minimumInvestment = configuration.minimumInvestmentAmountPerTrade(assetSymbol);
+		double percentage = configuration.maximumInvestmentPercentagePerAsset(assetSymbol) / 100.0;
+		double maxAmount = configuration.maximumInvestmentAmountPerAsset(assetSymbol);
+		double percentagePerTrade = configuration.maximumInvestmentPercentagePerTrade(assetSymbol) / 100.0;
+		double maxAmountPerTrade = configuration.maximumInvestmentAmountPerTrade(assetSymbol);
 
 		if (percentage == 0.0 || maxAmount == 0.0) {
 			return 0.0;
@@ -189,43 +186,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return allocateFunds(assetSymbol, getReferenceCurrencySymbol());
 	}
 
-	public synchronized AccountConfiguration maximumInvestmentPercentagePerAsset(double percentage, String... symbols) {
-		return updateAllocation("percentage of account", percentage, symbols, (allocation) -> allocation.setMaximumPercentagePerAsset(percentage));
-	}
-
-
-	public synchronized AccountConfiguration maximumInvestmentAmountPerAsset(double maximumAmount, String... symbols) {
-		return updateAllocation("maximum expenditure of account", maximumAmount, symbols, (allocation) -> allocation.setMaximumAmountPerAsset(maximumAmount));
-	}
-
-	public synchronized AccountConfiguration maximumInvestmentPercentagePerTrade(double percentage, String... symbols) {
-		return updateAllocation("percentage of account per trade", percentage, symbols, (allocation) -> allocation.setMaximumPercentagePerTrade(percentage));
-	}
-
-	public synchronized AccountConfiguration maximumInvestmentAmountPerTrade(double maximumAmount, String... symbols) {
-		return updateAllocation("maximum expenditure per trade", maximumAmount, symbols, (allocation) -> allocation.setMaximumAmountPerTrade(maximumAmount));
-	}
-
-	public synchronized AccountConfiguration minimumInvestmentAmountPerTrade(double minimumAmount, String... symbols) {
-		return updateAllocation("minimum expenditure per trade", minimumAmount, symbols, (allocation) -> allocation.setMinimumAmountPerTrade(minimumAmount));
-	}
-
-	private AccountConfiguration updateAllocation(String description, double param, String[] symbols, Function<Allocation, Allocation> f) {
-		if (symbols.length == 0) {
-			symbols = supportedSymbols.toArray(new String[0]);
-		}
-		for (String symbol : symbols) {
-			if (supportedSymbols.contains(symbol)) {
-				allocations.compute(symbol, (s, allocation) -> allocation == null ? f.apply(new Allocation()) : f.apply(allocation));
-			} else {
-				reportUnknownSymbol("Can't allocate " + description + " for '" + symbol + "' to " + param, symbol);
-			}
-		}
-		return this;
-	}
-
 	public synchronized double getTotalFundsInReferenceCurrency() {
-		return getTotalFundsIn(referenceCurrencySymbol);
+		return getTotalFundsIn(configuration.referenceCurrency());
 	}
 
 	public synchronized double getTotalFundsIn(String currency) {
@@ -330,7 +292,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 		Map<String, Balance> updatedBalances = account.updateBalances();
 		if (updatedBalances != null && updatedBalances != balances) {
-			updatedBalances.keySet().retainAll(supportedSymbols);
+			updatedBalances.keySet().retainAll(configuration.symbols());
 			this.balances.clear();
 			this.balances.putAll(updatedBalances);
 
@@ -343,7 +305,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public String getReferenceCurrencySymbol() {
-		return referenceCurrencySymbol;
+		return configuration.referenceCurrency();
 	}
 
 	public Order buy(String assetSymbol, String fundSymbol, double quantity) {
@@ -425,7 +387,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		OrderBook book = account.getOrderBook(tradingManager.getSymbol(), 0);
 
 
-		OrderManager orderCreator = orderManagers.getOrDefault(tradingManager.getSymbol(), DEFAULT_ORDER_MANAGER);
+		OrderManager orderCreator = configuration.orderManager(tradingManager.getSymbol());
 		if (orderCreator != null) {
 			orderCreator.prepareOrder(priceDetails, book, orderPreparation, tradingManager.getLatestCandle());
 		}
@@ -471,22 +433,12 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public Collection<String[]> getTradedPairs() {
-		return tradedPairs.values();
+		return configuration.tradedWithPairs();
 	}
 
 	@Override
 	public TradingFees getTradingFees() {
 		return account.getTradingFees();
-	}
-
-	public AccountConfiguration setOrderManager(OrderManager orderManager, String... symbols) {
-		if (symbols.length == 0) {
-			symbols = tradedPairs.keySet().toArray(new String[0]);
-		}
-		for (String symbol : symbols) {
-			this.orderManagers.put(symbol, orderManager);
-		}
-		return this;
 	}
 
 	@Override
@@ -533,7 +485,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 		new Thread(() -> {
 			Thread.currentThread().setName("Order " + order.getOrderId() + " monitor:" + order.getSide() + " " + order.getSymbol());
-			OrderManager orderManager = orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER);
+			OrderManager orderManager = configuration.orderManager(order.getSymbol());
 			while (true) {
 				try {
 					try {
@@ -554,7 +506,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public Order updateOrder(Order order) {
-		OrderManager orderManager = orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER);
+		OrderManager orderManager = configuration.orderManager(order.getSymbol());
 		Order old = order;
 		order = account.updateOrderStatus(order);
 
@@ -585,7 +537,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	private void orderFinalized(OrderManager orderManager, Order order) {
-		orderManager = orderManager == null ? orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER) : orderManager;
+		orderManager = orderManager == null ? configuration.orderManager(order.getSymbol()) : orderManager;
 		try {
 			updateBalances();
 		} finally {
@@ -597,7 +549,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 	}
 
-	private Trader traderOf(Order order){
+	private Trader traderOf(Order order) {
 		return getTraderOfSymbol(order.getSymbol());
 	}
 
@@ -617,7 +569,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 		for (Map.Entry<String, Order> entry : pendingOrders.entrySet()) {
 			Order order = entry.getValue();
-			OrderManager orderManager = orderManagers.getOrDefault(order.getSymbol(), DEFAULT_ORDER_MANAGER);
+			OrderManager orderManager = configuration.orderManager(order.getSymbol());
 			if (orderManager.cancelToReleaseFundsFor(order, traderOf(order), trader)) {
 				order.cancel();
 				if (order.getStatus() == CANCELLED) {
@@ -644,5 +596,9 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			return true;
 		}
 		return false;
+	}
+
+	public AccountConfiguration<?> configuration(){
+		return configuration;
 	}
 }

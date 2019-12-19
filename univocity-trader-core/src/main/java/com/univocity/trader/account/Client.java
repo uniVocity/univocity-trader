@@ -2,6 +2,7 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.strategy.*;
@@ -10,7 +11,7 @@ import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class Client<T> extends DefaultConfiguration {
+public class Client<T> {
 
 	private static final Set<Object> allInstances = ConcurrentHashMap.newKeySet();
 
@@ -23,26 +24,19 @@ public class Client<T> extends DefaultConfiguration {
 
 	private final List<CandleProcessor<T>> candleProcessors = new ArrayList<>();
 
+	private final AccountManager accountManager;
 
-	public Client(String email, ZoneId timezone, String referenceCurrencySymbol, ClientAccount account) {
-		super(referenceCurrencySymbol);
-		this.email = email;
-		this.timezone = timezone;
+	public Client(ClientAccount account, AccountConfiguration<?> accountConfiguration) {
+		this.email = accountConfiguration.email();
+		this.timezone = accountConfiguration.timeZone().toZoneId();
 		this.account = account;
-	}
 
-	@Override
-	protected AccountManager createAccount() {
-		return new AccountManager(getReferenceCurrency(), account);
-	}
-
-	public AccountConfiguration account() {
-		return getAccount();
+		this.accountManager = new AccountManager(account, accountConfiguration);
 	}
 
 	public void initialize(Exchange<T, ?> exchange, SmtpMailSender mailSender) {
 		this.exchange = exchange;
-		if (symbolPairs.isEmpty()) {
+		if (accountManager.configuration().symbolPairs().isEmpty()) {
 			throw new IllegalStateException("No trade symbols defined for client " + email);
 		}
 		final SymbolPriceDetails priceDetails = new SymbolPriceDetails(exchange); //loads price information from exchange
@@ -50,21 +44,21 @@ public class Client<T> extends DefaultConfiguration {
 		Set<TradingManager> all = new HashSet<>();
 
 		if (mailSender != null) {
-			this.listeners().add(new OrderExecutionToEmail(mailSender));
+			accountManager.configuration().listeners().add(new OrderExecutionToEmail(mailSender));
 		}
 
 		Set<Object> allInstances = new HashSet<>();
-		for (Map.Entry<String, String[]> e : symbolPairs.entrySet()) {
+		for (Map.Entry<String, String[]> e : accountManager.configuration().symbolPairs().entrySet()) {
 			String assetSymbol = e.getValue()[0];
 			String fundSymbol = e.getValue()[1];
 
-			TradingManager tradingManager = new TradingManager(exchange, priceDetails, getAccount(), listeners, assetSymbol, fundSymbol, Parameters.NULL);
+			TradingManager tradingManager = new TradingManager(exchange, priceDetails, accountManager, assetSymbol, fundSymbol, Parameters.NULL);
 			if (root == null) {
 				root = tradingManager;
 			}
 			all.add(tradingManager);
 
-			Engine engine = new Engine(tradingManager, strategies, monitors, allInstances);
+			Engine engine = new Engine(tradingManager, allInstances);
 
 			CandleProcessor<T> processor = new CandleProcessor<T>(engine, exchange);
 			candleProcessors.add(processor);
@@ -98,6 +92,10 @@ public class Client<T> extends DefaultConfiguration {
 
 	public ZoneId getTimezone() {
 		return timezone;
+	}
+
+	public Map<String, String[]> getSymbolPairs() {
+		return accountManager.configuration().symbolPairs();
 	}
 
 //	private static <T> T[] getInstances(String symbol, Map<String, Supplier<T[]>> provider, String description) {

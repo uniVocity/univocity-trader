@@ -2,9 +2,11 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
+import com.univocity.trader.strategy.*;
 import com.univocity.trader.utils.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
@@ -30,7 +32,7 @@ public class TradingManager {
 	private OrderExecutionToEmail emailNotifier;
 	private final SymbolPriceDetails priceDetails;
 
-	public TradingManager(Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, InstancesProvider<OrderListener> listenerProvider, String assetSymbol, String fundSymbol, Parameters params) {
+	public TradingManager(Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, String assetSymbol, String fundSymbol, Parameters params) {
 		if (exchange == null) {
 			throw new IllegalArgumentException("Exchange implementation cannot be null");
 		}
@@ -53,6 +55,7 @@ public class TradingManager {
 		this.symbol = assetSymbol + fundSymbol;
 		this.priceDetails = priceDetails.switchToSymbol(symbol);
 
+		NewInstances<OrderListener> listenerProvider = Configuration.getInstance().account().listeners();
 		this.notifications = listenerProvider != null ? listenerProvider.create(symbol, params) : new OrderListener[0];
 		this.emailNotifier = getEmailNotifier();
 		account.register(this);

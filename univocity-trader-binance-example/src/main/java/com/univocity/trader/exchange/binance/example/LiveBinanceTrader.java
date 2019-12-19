@@ -52,14 +52,13 @@ public class LiveBinanceTrader {
 				.apiKey("<YOUR BINANCE API KEY>")
 				.secret("<YOUR BINANCE API SECRET>");
 
-		Client client = binance.addClient(clientConfig);
-		client.tradeWith("BTC", "ETH", "XRP", "ADA");
+		clientConfig.strategies().add(ExampleStrategy::new);
+		clientConfig.monitors().add(ExampleStrategyMonitor::new);
+		clientConfig.listeners().add(new OrderExecutionToLog());
 
-		client.strategies().add(ExampleStrategy::new);
-		client.monitors().add(ExampleStrategyMonitor::new);
-
-		client.account().maximumInvestmentAmountPerAsset(20);
-		client.account().setOrderManager(new DefaultOrderManager() {
+		clientConfig.tradeWith("BTC", "ETH", "XRP", "ADA");
+		clientConfig.maximumInvestmentAmountPerAsset(20);
+		clientConfig.orderManager(new DefaultOrderManager() {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
 				switch (order.getSide()) {
@@ -72,9 +71,8 @@ public class LiveBinanceTrader {
 			}
 		});
 
-		client.listeners().add(new OrderExecutionToLog());
+		binance.addClient(clientConfig);
 		binance.run();
 
 	}
-
 }

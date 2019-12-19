@@ -8,6 +8,7 @@ public class Candle implements Comparable<Candle> {
 	private static final ThreadLocal<DateTimeFormatter> DATE_FORMAT = ThreadLocal.withInitial(() -> DateTimeFormatter.ofPattern("MMM dd HH:mm"));
 	private static final ThreadLocal<DateTimeFormatter> DATE_YEAR_FORMAT = ThreadLocal.withInitial(() -> DateTimeFormatter.ofPattern("yyyy MMM dd HH:mm"));
 
+	public static final ThreadLocal<DecimalFormat> MONEY_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00"));
 	public static final ThreadLocal<DecimalFormat> PRICE_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00000000"));
 	public static final ThreadLocal<DecimalFormat> CHANGE_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00%"));
 	public static final ThreadLocal<DecimalFormat> VOLUME_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,###"));

@@ -2,6 +2,7 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.simulation.*;
@@ -58,17 +59,17 @@ public class Trader {
 	 * Creates a new trader for a given symbol. For internal use only.
 	 *
 	 * @param tradingManager  the object responsible for managing the entire trading workflow of a symbol
-	 * @param monitorProvider the provider of {@link StrategyMonitor} instances
 	 * @param params          optional parameter set used for parameter optimization which is passed on to the {@link StrategyMonitor}
 	 *                        instances created by the given monitorProvider
 	 * @param allInstances    all known instances of {@link StrategyMonitor} that have been created so far,
 	 *                        used to validate no single {@link StrategyMonitor} instance is shared among different {@code Trader} instances.
 	 */
-	public Trader(TradingManager tradingManager, InstancesProvider<StrategyMonitor> monitorProvider, Parameters params, Set<Object> allInstances) {
+	public Trader(TradingManager tradingManager, Parameters params, Set<Object> allInstances) {
 		this.parameters = params;
 		this.tradingManager = tradingManager;
 		this.tradingManager.trader = this;
 
+		NewInstances<StrategyMonitor> monitorProvider = Configuration.getInstance().account().monitors();
 		this.monitors = monitorProvider == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters, monitorProvider, "StrategyMonitor", false, allInstances);
 		boolean allowMixedStrategies = true;
 		for (int i = 0; i < this.monitors.length; i++) {
