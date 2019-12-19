@@ -15,6 +15,7 @@ import java.util.concurrent.*;
 import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
+import static com.univocity.trader.config.AccountConfiguration.*;
 import static com.univocity.trader.config.Utils.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
@@ -118,7 +119,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			balances.put(symbol, new Balance(symbol, amount));
 			return this;
 		}
-		throw reportUnknownSymbol("Can't set funds", symbol, configuration);
+		throw configuration.reportUnknownSymbol("Can't set funds", symbol);
 	}
 
 	public synchronized AccountManager lockAmount(String symbol, BigDecimal amount) {
@@ -127,7 +128,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			addToLockedBalance(symbol, amount);
 			return this;
 		}
-		throw reportUnknownSymbol("Can't set funds", symbol, configuration);
+		throw configuration.reportUnknownSymbol("Can't set funds", symbol);
 	}
 
 

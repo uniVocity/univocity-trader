@@ -22,19 +22,9 @@ public class MarketSimulator extends AbstractSimulator {
 
 	private final Map<String, Engine> symbolHandlers = new HashMap<>();
 	private int activeQueryLimit = 15;
-	private boolean cachingEnabled = false;
 
-
-	public MarketSimulator(AccountConfiguration<?> accountConfiguration) {
-		super(accountConfiguration);
-	}
-
-	public boolean isCachingEnabled() {
-		return cachingEnabled;
-	}
-
-	public void setCachingEnabled(boolean cachingEnabled) {
-		this.cachingEnabled = cachingEnabled;
+	public MarketSimulator(AccountConfiguration<?> accountConfiguration, Simulation simulation) {
+		super(accountConfiguration, simulation);
 	}
 
 	public int getActiveQueryLimit() {
@@ -84,7 +74,7 @@ public class MarketSimulator extends AbstractSimulator {
 		ExecutorService executor = Executors.newCachedThreadPool();
 		for (Engine engine : symbolHandlers.values()) {
 			activeQueries++;
-			boolean loadAllDataFirst = cachingEnabled || activeQueries > activeQueryLimit;
+			boolean loadAllDataFirst = simulation.cacheCandles() || activeQueries > activeQueryLimit;
 
 			futures.put(engine.getSymbol(), CompletableFuture.supplyAsync(
 					() -> CandleRepository.iterate(engine.getSymbol(), start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor)

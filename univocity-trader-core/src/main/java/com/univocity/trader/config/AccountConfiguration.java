@@ -135,27 +135,6 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 		consumer.accept(pairs.toArray(new String[0][]));
 	}
 
-	private <T> void parseGroupSetting(PropertyBasedConfiguration properties, String propertyName, Function<String, T> valueTransform, BiConsumer<T, String[]> consumer) {
-		//e.g. trade.minimum.amount=[ADA;XRP]50.5, [BTC]100, 30
-		List<String> settingsPerGroup = properties.getOptionalList(propertyName);
-		for (String settingPerGroup : settingsPerGroup) {
-			String assetList = StringUtils.substringBetween(settingPerGroup, "[", "]");
-			String[] assets = EMPTY_STRING_ARRAY;
-			if (StringUtils.isNotBlank(assetList)) {
-				assetList = assetList.trim();
-				assets = StringUtils.split(assetList, ';');
-
-				settingPerGroup = StringUtils.substringAfter(settingPerGroup, "]");
-				if (settingPerGroup.isBlank()) {
-					throw new IllegalConfigurationException("No allocation defined in property '" + propertyName + "' after asset symbols '" + assetList + "'");
-				}
-			}
-			settingPerGroup = settingPerGroup.trim();
-			T result = valueTransform.apply(settingPerGroup);
-			consumer.accept(result, assets);
-		}
-	}
-
 	private void parseAllocationProperty(PropertyBasedConfiguration properties, String propertyName, BiConsumer<Double, String[]> consumer) {
 		Function<String, Double> f = (String allocation) -> {
 			try {
@@ -170,10 +149,9 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 	private <T> void parseInstancePerGroupProperty(PropertyBasedConfiguration properties, String propertyName, Class<T> parent, BiConsumer<T, String[]> consumer) {
 		Function<String, T> f = (String className) -> {
 			try {
-				Class<? extends T> clazz = (Class<? extends T>) Utils.findClass(parent, className);
-				return Utils.getDefaultConstructor(clazz).newInstance();
+				return findClassAndInstantiate(parent, className);
 			} catch (Exception ex) {
-				throw new IllegalConfigurationException("Unable to load class '" + className + "' defined in property '" + propertyName + "'", ex);
+				throw new IllegalConfigurationException("Error trying to instantiate object of type '" + className + "' defined in property '" + propertyName + "'", ex);
 			}
 		};
 		parseGroupSetting(properties, propertyName, f, consumer);
@@ -328,7 +306,7 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 			if (supportedSymbols.contains(symbol) || parsingProperties) {
 				allocations.compute(symbol, (s, allocation) -> allocation == null ? f.apply(new Allocation()) : f.apply(allocation));
 			} else {
-				reportUnknownSymbol("Can't allocate " + description + " for '" + symbol + "' to " + param, symbol, this);
+				reportUnknownSymbol("Can't allocate " + description + " for '" + symbol + "' to " + param, symbol);
 			}
 		}
 		return (T) this;
@@ -529,4 +507,16 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 //		return out;
 //	}
 
+	public IllegalArgumentException reportUnknownSymbol(String symbol) {
+		throw reportUnknownSymbol(null, symbol);
+	}
+
+	public IllegalArgumentException reportUnknownSymbol(String message, String symbol) {
+		String msg = "Account is not managing '" + symbol + "'. Allowed symbols are: " + symbols() + " and " + referenceCurrency();
+		if (message != null) {
+			throw new IllegalArgumentException(message + ". " + msg);
+		} else {
+			throw new IllegalArgumentException(msg);
+		}
+	}
 }

@@ -21,6 +21,7 @@ public abstract class Configuration<T extends AccountConfiguration<T>> extends C
 
 	private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(this);
 	private final EmailConfiguration emailConfiguration = new EmailConfiguration(this);
+	private final Simulation simulation = new Simulation(this);
 	private final AccountList<T> accountList = new AccountList<T>(this, () -> newAccountConfiguration());
 
 	protected Configuration() {
@@ -56,6 +57,7 @@ public abstract class Configuration<T extends AccountConfiguration<T>> extends C
 		groups.add(databaseConfiguration);
 		groups.add(emailConfiguration);
 		groups.add(accountList);
+		groups.add(simulation);
 
 		ConfigurationGroup[] additionalGroups = getAdditionalConfigurationGroups();
 		if (additionalGroups != null) {
@@ -71,6 +73,10 @@ public abstract class Configuration<T extends AccountConfiguration<T>> extends C
 
 	public EmailConfiguration email() {
 		return emailConfiguration;
+	}
+
+	public Simulation simulation() {
+		return simulation;
 	}
 
 	public T account() {

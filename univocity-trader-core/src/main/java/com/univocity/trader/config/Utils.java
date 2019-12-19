@@ -23,6 +23,7 @@ import java.lang.reflect.*;
 import java.net.*;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.stream.*;
 
 import static java.lang.reflect.Array.*;
@@ -1253,7 +1254,7 @@ public class Utils {
 	 *                    The name doesn't have to contain the full package and in this case the classpath will be
 	 *                    searched to fina a matching name.
 	 *
-	 * @return the class found, or {@code null}
+	 * @return the class found
 	 *
 	 * @throws IllegalStateException    if multiple classes are found.
 	 * @throws IllegalArgumentException if no class is found.
@@ -1261,6 +1262,28 @@ public class Utils {
 	public static Class<?> findClass(Class<?> parent, String classToFind) {
 		try (ScanResult scanResult = new ClassGraph().enableClassInfo().ignoreClassVisibility().scan()) {
 			return search(scanResult, parent, Collections.singleton(classToFind)).iterator().next();
+		}
+	}
+
+	/**
+	 * Finds a class that extends from a given class or implement a given interface, and returns a new instance
+	 * of that class via its (expected default no-arg constructor
+	 *
+	 * @param parent      the parent class/interface whose subclasses/implementations will be searched
+	 * @param classToFind Name of the class to find which extends from the given class or implements the given interface.
+	 *                    The name doesn't have to contain the full package and in this case the classpath will be
+	 *                    searched to fina a matching name.
+	 *
+	 * @return an instance of the class found
+	 *
+	 * @throws IllegalStateException if none or multiple classes are found, or if it's not possible to create a new instance
+	 */
+	public static <T> T findClassAndInstantiate(Class<T> parent, String classToFind) {
+		try {
+			Class<? extends T> clazz = (Class<? extends T>) Utils.findClass(parent, classToFind);
+			return Utils.getDefaultConstructor(clazz).newInstance();
+		} catch (Exception ex) {
+			throw new IllegalStateException("Unable to load class '" + classToFind + "'", ex);
 		}
 	}
 
@@ -1310,18 +1333,25 @@ public class Utils {
 		out.put(parentType, search(scanResult, parentType, classNames));
 	}
 
-	public static IllegalArgumentException reportUnknownSymbol(String symbol, AccountConfiguration<?> account) {
-		throw reportUnknownSymbol(null, symbol, account);
-	}
+	static <T> void parseGroupSetting(PropertyBasedConfiguration properties, String propertyName, Function<String, T> valueTransform, BiConsumer<T, String[]> consumer) {
+		//e.g. trade.minimum.amount=[ADA;XRP]50.5, [BTC]100, 30
+		List<String> settingsPerGroup = properties.getOptionalList(propertyName);
+		for (String settingPerGroup : settingsPerGroup) {
+			String assetList = StringUtils.substringBetween(settingPerGroup, "[", "]");
+			String[] assets = EMPTY_STRING_ARRAY;
+			if (StringUtils.isNotBlank(assetList)) {
+				assetList = assetList.trim();
+				assets = StringUtils.split(assetList, ';');
 
-	public static IllegalArgumentException reportUnknownSymbol(String message, String symbol, AccountConfiguration<?> account) {
-		String msg = "Account is not managing '" + symbol + "'. Allowed symbols are: " + account.symbols() + " and " + account.referenceCurrency();
-		if (message != null) {
-			throw new IllegalArgumentException(message + ". " + msg);
-		} else {
-			throw new IllegalArgumentException(msg);
+				settingPerGroup = StringUtils.substringAfter(settingPerGroup, "]");
+				if (settingPerGroup.isBlank()) {
+					throw new IllegalConfigurationException("No allocation defined in property '" + propertyName + "' after asset symbols '" + assetList + "'");
+				}
+			}
+			settingPerGroup = settingPerGroup.trim();
+			T result = valueTransform.apply(settingPerGroup);
+			consumer.accept(result, assets);
 		}
 	}
-
 }
 
