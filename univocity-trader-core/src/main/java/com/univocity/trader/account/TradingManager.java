@@ -55,7 +55,7 @@ public class TradingManager {
 		this.symbol = assetSymbol + fundSymbol;
 		this.priceDetails = priceDetails.switchToSymbol(symbol);
 
-		NewInstances<OrderListener> listenerProvider = Configuration.getInstance().account().listeners();
+		NewInstances<OrderListener> listenerProvider = account.configuration().listeners();
 		this.notifications = listenerProvider != null ? listenerProvider.create(symbol, params) : new OrderListener[0];
 		this.emailNotifier = getEmailNotifier();
 		account.register(this);

@@ -34,24 +34,25 @@ public class MarketSimulation {
 //		DataSource ds = ?
 //		CandleRepository.setDataSource(ds);
 
-		AccountConfiguration<?> account = Configuration.configure().account();
-		account
-				.referenceCurrency("USDT")
-				.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH")
-				.minimumInvestmentAmountPerTrade(10.0)
-				.maximumInvestmentPercentagePerAsset(30.0, "ADA", "ETH")
+		Account account = Binance.load().account("jbax");
+//		account
+//				.referenceCurrency("USDT")
+//				.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH")
+//				.minimumInvestmentAmountPerTrade(10.0)
+//				.maximumInvestmentPercentagePerAsset(30.0, "ADA", "ETH")
 //				.maximumInvestmentPercentagePerAsset(50.0, "BTC", "LTC")
 //				.maximumInvestmentAmountPerAsset(200, "XRP")
 		;
 
-		account.strategies().add(ExampleStrategy::new);
-		account.monitors().add(ExampleStrategyMonitor::new);
-
+//		account.strategies().add(ExampleStrategy::new);
+//		account.monitors().add(ExampleStrategyMonitor::new);
+//
 		SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
-
+//
 		account.listeners()
 				.add(stats)
-				.add(new OrderExecutionToLog());
+//				.add(new OrderExecutionToLog())
+				;
 
 		MarketSimulator simulation = new MarketSimulator(account);
 		//simulation.setAmount("USDT", 1000.0);

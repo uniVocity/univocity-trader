@@ -36,7 +36,7 @@ public class Engine {
 		this.tradingManager = tradingManager;
 		this.trader = new Trader(tradingManager, parameters, allInstances);
 
-		NewInstances<Strategy> strategies = Configuration.getInstance().account().strategies();
+		NewInstances<Strategy> strategies = tradingManager.getAccount().configuration().strategies();
 		this.strategies = getInstances(tradingManager.getSymbol(), parameters, strategies, "Strategy", true, allInstances);
 
 		Set<IndicatorGroup> groups = new LinkedHashSet<>();

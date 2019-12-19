@@ -76,6 +76,9 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 				throw new IllegalConfigurationException(msg + supportedTimezoneDescription);
 			}
 
+			tradeWith(properties.getOptionalList(accountId + "asset.symbols").toArray(new String[0]));
+			parseTradingPairs(properties, accountId + "trade.pairs", this::tradeWithPair);
+
 			parseAllocationProperty(properties, accountId + "trade.minimum.amount", this::minimumInvestmentAmountPerTrade);
 			parseAllocationProperty(properties, accountId + "trade.maximum.amount", this::maximumInvestmentAmountPerTrade);
 			parseAllocationProperty(properties, accountId + "trade.maximum.percentage", this::maximumInvestmentPercentagePerTrade);
@@ -121,6 +124,15 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 
 	protected void readExchangeAccountProperties(String accountId, PropertyBasedConfiguration properties) {
 
+	}
+
+	private void parseTradingPairs(PropertyBasedConfiguration properties, String propertyName, Consumer<String[][]> consumer) {
+		List<String> pairsList = properties.getOptionalList(propertyName);
+
+		List<String[]> pairs = new ArrayList<>();
+		pairsList.forEach(p -> pairs.add(StringUtils.split(p, '/')));
+
+		consumer.accept(pairs.toArray(new String[0][]));
 	}
 
 	private <T> void parseGroupSetting(PropertyBasedConfiguration properties, String propertyName, Function<String, T> valueTransform, BiConsumer<T, String[]> consumer) {

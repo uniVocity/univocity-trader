@@ -69,7 +69,7 @@ public class Trader {
 		this.tradingManager = tradingManager;
 		this.tradingManager.trader = this;
 
-		NewInstances<StrategyMonitor> monitorProvider = Configuration.getInstance().account().monitors();
+		NewInstances<StrategyMonitor> monitorProvider = tradingManager.getAccount().configuration().monitors();
 		this.monitors = monitorProvider == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters, monitorProvider, "StrategyMonitor", false, allInstances);
 		boolean allowMixedStrategies = true;
 		for (int i = 0; i < this.monitors.length; i++) {
