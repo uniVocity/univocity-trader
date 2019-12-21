@@ -1,55 +1,45 @@
 package com.univocity.trader.config;
 
+import com.univocity.trader.indicators.base.*;
+
 import java.util.*;
-import java.util.function.*;
 
-public abstract class Configuration<T extends AccountConfiguration<T>> extends ConfigurationRoot {
+public abstract class Configuration<C extends Configuration<C, T>, T extends AccountConfiguration<T>> extends ConfigurationRoot {
 
-	private static final Configuration instance = new Configuration() {
-		@Override
-		protected ConfigurationGroup[] getAdditionalConfigurationGroups() {
-			return null;
-		}
-
-		@Override
-		protected AccountConfiguration newAccountConfiguration() {
-			return new AccountConfiguration();
-		}
-	};
-
-	protected static final ConfigurationManager manager = new ConfigurationManager(() -> instance, "univocity-trader.properties");
+	private final ConfigurationManager<C> manager;
 
 	private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(this);
 	private final EmailConfiguration emailConfiguration = new EmailConfiguration(this);
 	private final Simulation simulation = new Simulation(this);
-	private final AccountList<T> accountList = new AccountList<T>(this, () -> newAccountConfiguration());
+	private final AccountList<T> accountList = new AccountList<T>(this, this::newAccountConfiguration);
+	private TimeInterval tickInterval;
 
 	protected Configuration() {
-
+		this("univocity-trader.properties");
 	}
 
-	protected static void initialize(Supplier<ConfigurationRoot> staticInstanceSupplier, String defaultConfigurationFile) {
-		manager.initialize(staticInstanceSupplier, defaultConfigurationFile);
+	protected Configuration(String defaultConfigurationFile) {
+		manager = new ConfigurationManager<C>((C)this, defaultConfigurationFile);
 	}
 
-	public static Configuration getInstance() {
-		return (Configuration) manager.getInstance();
+	public C getInstance() {
+		return manager.getRoot();
 	}
 
-	public static Configuration configure() {
-		return (Configuration) manager.configure();
+	public C configure() {
+		return manager.configure();
 	}
 
-	public static Configuration load() {
-		return (Configuration) manager.load();
+	public C loadConfigurationFromProperties() {
+		return manager.load();
 	}
 
-	public static Configuration load(String filePath, String... alternativeFilePaths) {
-		return (Configuration) manager.load(filePath, alternativeFilePaths);
+	public C loadConfigurationFromProperties(String filePath, String... alternativeFilePaths) {
+		return manager.load(filePath, alternativeFilePaths);
 	}
 
-	public static Configuration loadFromCommandLine(String... args) {
-		return (Configuration) manager.loadFromCommandLine(args);
+	public C loadConfigurationFromCommandLine(String... args) {
+		return manager.loadFromCommandLine(args);
 	}
 
 	@Override
@@ -71,7 +61,7 @@ public abstract class Configuration<T extends AccountConfiguration<T>> extends C
 		return databaseConfiguration;
 	}
 
-	public EmailConfiguration email() {
+	public EmailConfiguration mailSender() {
 		return emailConfiguration;
 	}
 
@@ -85,6 +75,19 @@ public abstract class Configuration<T extends AccountConfiguration<T>> extends C
 
 	public T account(String accountId) {
 		return accountList.account(accountId);
+	}
+
+	public List<T> accounts(){
+		return accountList.accounts();
+	}
+
+	public TimeInterval tickInterval() {
+		return tickInterval;
+	}
+
+	public C tickInterval(TimeInterval tickInterval) {
+		 this.tickInterval = tickInterval;
+		 return (C)this;
 	}
 
 	protected abstract T newAccountConfiguration();

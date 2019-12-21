@@ -196,6 +196,16 @@ public class Simulation extends ConfigurationGroup implements Cloneable {
 		return this;
 	}
 
+	public final Simulation tradingFeeAmount(double amountPerTrade) {
+		this.tradingFees = SimpleTradingFees.amount(amountPerTrade);
+		return this;
+	}
+
+	public final Simulation tradingFeePercentage(double percentagePerTrade) {
+		this.tradingFees = SimpleTradingFees.percentage(percentagePerTrade);
+		return this;
+	}
+
 	public boolean cacheCandles() {
 		return cacheCandles;
 	}

@@ -437,7 +437,6 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return configuration.tradedWithPairs();
 	}
 
-	@Override
 	public TradingFees getTradingFees() {
 		return account.getTradingFees();
 	}

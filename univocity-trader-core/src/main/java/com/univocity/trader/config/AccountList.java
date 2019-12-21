@@ -2,6 +2,7 @@ package com.univocity.trader.config;
 
 import java.util.*;
 import java.util.function.*;
+import java.util.stream.*;
 
 public class AccountList<T extends AccountConfiguration<T>> extends ConfigurationGroup {
 
@@ -46,5 +47,9 @@ public class AccountList<T extends AccountConfiguration<T>> extends Configuratio
 			throw new IllegalArgumentException("Please provide an account ID when multiple accounts are in use. Available accounts: " + accounts.keySet());
 		}
 		return account("");
+	}
+
+	public List<T> accounts() {
+		return accounts.values().stream().filter(AccountConfiguration::isConfigured).collect(Collectors.toList());
 	}
 }

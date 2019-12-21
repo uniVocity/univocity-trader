@@ -4,12 +4,11 @@ import org.apache.commons.cli.*;
 import org.slf4j.*;
 
 import java.util.*;
-import java.util.function.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public final class ConfigurationManager {
+public final class ConfigurationManager<C extends Configuration> {
 	private static final Logger log = LoggerFactory.getLogger(ConfigurationManager.class);
 
 	/**
@@ -19,49 +18,43 @@ public final class ConfigurationManager {
 
 	private String CONFIGURATION_FILE;
 	private String[] configurationFiles;
-	private Supplier<ConfigurationRoot> staticInstanceSupplier;
-	private ConfigurationRoot instance;
+	private final C root;
 	private boolean loadedFromFile = false;
 
-	protected ConfigurationManager(Supplier<ConfigurationRoot> staticInstanceSupplier, String defaultConfigurationFile) {
-		initialize(staticInstanceSupplier, defaultConfigurationFile);
-	}
-
-	protected final void initialize(Supplier<ConfigurationRoot> staticInstanceSupplier, String defaultConfigurationFile) {
-		this.staticInstanceSupplier = staticInstanceSupplier;
+	protected ConfigurationManager(C root, String defaultConfigurationFile) {
+		this.root = root;
 		CONFIGURATION_FILE = defaultConfigurationFile;
 		configurationFiles = new String[]{CONFIGURATION_FILE};
 	}
 
-	private ConfigurationRoot initialize(boolean loadFromFile) {
-		instance = staticInstanceSupplier.get();
-		instance.loadConfigurationGroups();
+	private C initialize(boolean loadFromFile) {
+		root.loadConfigurationGroups();
 		if (loadFromFile) {
 			loadedFromFile = true;
 			reload();
 		}
-		return instance;
+		return root;
 	}
 
-	public final ConfigurationRoot getInstance() {
-		if (instance == null) {
+	public final C getRoot() {
+		if (root == null) {
 			throw new IllegalStateException("Configuration not defined. Use 'configure()', 'load(file)' or 'loadFromCommandLine()' to define your configuration");
 		}
-		return instance;
+		return root;
 	}
 
-	public final synchronized ConfigurationRoot configure() {
-		if (instance != null) {
-			return instance;
+	public final synchronized C configure() {
+		if (root != null) {
+			return root;
 		}
-		return instance = initialize(false);
+		return initialize(false);
 	}
 
-	public final synchronized ConfigurationRoot load() {
+	public final synchronized C load() {
 		return load(CONFIGURATION_FILE);
 	}
 
-	public final synchronized ConfigurationRoot load(String filePath, String... alternativeFilePaths) {
+	public final synchronized C load(String filePath, String... alternativeFilePaths) {
 		String[] original = configurationFiles.clone();
 
 		configurationFiles = new String[alternativeFilePaths.length + 1];
@@ -70,11 +63,11 @@ public final class ConfigurationManager {
 
 		try {
 			Utils.noBlanks(configurationFiles, "Path to configuration file cannot be blank/null");
-			if (instance != null) {
+			if (root != null) {
 				reload();
-				return instance;
+				return root;
 			}
-			return instance = initialize(true);
+			return initialize(true);
 		} catch (Throwable t) {
 			configurationFiles = original;
 			if (t instanceof IllegalConfigurationException) {
@@ -85,7 +78,7 @@ public final class ConfigurationManager {
 		}
 	}
 
-	public final ConfigurationRoot loadFromCommandLine(String... args) {
+	public final C loadFromCommandLine(String... args) {
 		/*
 		 * options
 		 */
@@ -122,7 +115,7 @@ public final class ConfigurationManager {
 			return;
 		}
 		PropertyBasedConfiguration properties = new PropertyBasedConfiguration(configurationFiles);
-		for (ConfigurationGroup child : instance.getConfigurationGroups()) {
+		for (ConfigurationGroup child : root.getConfigurationGroups()) {
 			child.readProperties(properties);
 		}
 	}

@@ -10,21 +10,22 @@ import org.slf4j.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class MarketSimulator extends AbstractSimulator {
+public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A extends AccountConfiguration<A>> extends AbstractSimulator<C, A> {
 
-	private static final Logger log = LoggerFactory.getLogger(MarketSimulator.class);
+	private static final Logger log = LoggerFactory.getLogger(AbstractMarketSimulator.class);
 
-	private final Map<String, Engine> symbolHandlers = new HashMap<>();
+	private final Map<String, Engine[]> symbolHandlers = new HashMap<>();
 	private int activeQueryLimit = 15;
 
-	public MarketSimulator(AccountConfiguration<?> accountConfiguration, Simulation simulation) {
-		super(accountConfiguration, simulation);
+	protected AbstractMarketSimulator(C configuration) {
+		super(configuration);
 	}
 
 	public int getActiveQueryLimit() {
@@ -44,19 +45,25 @@ public class MarketSimulator extends AbstractSimulator {
 		resetBalances();
 
 		Set<Object> allInstances = new HashSet<>();
-		for (String[] pair : account.getTradedPairs()) {
+		getAllPairs().forEach((symbol, pair) -> {
 			String assetSymbol = pair[0];
 			String fundSymbol = pair[1];
 
-			SimulatedExchange exchange = new SimulatedExchange(account);
-			exchange.setSymbolInformation(this.symbolInformation);
-			SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange);
+			AccountManager[] accounts = accounts();
+			Engine[] engines = new Engine[accounts.length];
+			for (int i = 0; i < accounts.length; i++) {
+				SimulatedExchange exchange = new SimulatedExchange(accounts[i]);
+				exchange.setSymbolInformation(this.symbolInformation);
+				SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange);
 //			exchange.setMainTradeSymbols(mainTradeSymbols);
-			TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, account, assetSymbol, fundSymbol, parameters);
 
-			Engine engine = new Engine(tradingManager, parameters, allInstances);
-			symbolHandlers.put(engine.getSymbol(), engine);
-		}
+				TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, accounts[i], assetSymbol, fundSymbol, parameters);
+
+				Engine engine = new Engine(tradingManager, parameters, allInstances);
+			}
+
+			symbolHandlers.put(symbol, engines);
+		});
 
 		allInstances.clear();
 
@@ -72,12 +79,12 @@ public class MarketSimulator extends AbstractSimulator {
 		int activeQueries = 0;
 		Map<String, CompletableFuture<Enumeration<Candle>>> futures = new HashMap<>();
 		ExecutorService executor = Executors.newCachedThreadPool();
-		for (Engine engine : symbolHandlers.values()) {
+		for (String symbol : symbolHandlers.keySet()) {
 			activeQueries++;
 			boolean loadAllDataFirst = simulation.cacheCandles() || activeQueries > activeQueryLimit;
 
-			futures.put(engine.getSymbol(), CompletableFuture.supplyAsync(
-					() -> CandleRepository.iterate(engine.getSymbol(), start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor)
+			futures.put(symbol, CompletableFuture.supplyAsync(
+					() -> CandleRepository.iterate(symbol, start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor)
 			);
 		}
 
@@ -99,7 +106,12 @@ public class MarketSimulator extends AbstractSimulator {
 				Candle candle = pending.get(symbol);
 				if (candle != null) {
 					if (candle.openTime + 1 >= clock && candle.openTime <= clock + MINUTE.ms - 1) {
-						symbolHandlers.get(symbol).process(candle, false);
+						Engine[] engines = symbolHandlers.get(symbol);
+
+						for (int i = 0; i < engines.length; i++) {
+							engines[i].process(candle, false);
+						}
+
 //						counts.compute(symbol, (p, c) -> c == null ? 1 : c + 1);
 						pending.remove(symbol);
 						if (it.hasMoreElements()) {
@@ -125,7 +137,9 @@ public class MarketSimulator extends AbstractSimulator {
 //		System.out.println("Processed candle counts:" + counts);
 
 		System.out.println("Real time trading simulation from " + start + " to " + end);
-		System.out.print(account.toString());
-		System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
+		for (AccountManager account : accounts()) {
+			System.out.print(account.toString());
+			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
+		}
 	}
 }

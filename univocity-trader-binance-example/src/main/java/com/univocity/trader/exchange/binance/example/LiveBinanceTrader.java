@@ -3,25 +3,12 @@ package com.univocity.trader.exchange.binance.example;
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.binance.*;
-import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
 
 import java.math.*;
 
 public class LiveBinanceTrader {
-
-	private static final EmailConfiguration getEmailConfig() {
-		return Configuration.configure().email()
-				.replyToAddress("dev@univocity.com")
-				.smtpHost("smtp.gmail.com")
-				.smtpSSL(true)
-				.smtpPort(587)
-				.smtpUsername("<YOU>@gmail.com")
-				.smtpPassword("<YOUR SMTP PASSWORD>")
-				.smtpSender("<YOU>>@gmail.com");
-	}
 
 	public static void main(String... args) {
 
@@ -43,9 +30,20 @@ public class LiveBinanceTrader {
 //		DataSource ds = ?
 //		CandleRepository.setDataSource(ds);
 
-		BinanceTrader binance = new BinanceTrader(TimeInterval.minutes(1));
+		Binance.Trader trader = Binance.liveTrader();
 
-		Account clientConfig = Binance.configure().account()
+		trader.configure().loadConfigurationFromProperties();
+
+		trader.configure().mailSender()
+				.replyToAddress("dev@univocity.com")
+				.smtpHost("smtp.gmail.com")
+				.smtpSSL(true)
+				.smtpPort(587)
+				.smtpUsername("<YOU>@gmail.com")
+				.smtpPassword("<YOUR SMTP PASSWORD>")
+				.smtpSender("<YOU>>@gmail.com");
+
+		Account clientConfig = trader.configure().account()
 				.email("<YOUR E-MAIL")
 				.timeZone("system")
 				.referenceCurrency("USDT")
@@ -71,8 +69,7 @@ public class LiveBinanceTrader {
 			}
 		});
 
-		binance.addClient(clientConfig);
-		binance.run();
+		trader.run();
 
 	}
 }

@@ -1,39 +1,20 @@
 package com.univocity.trader.exchange.binance;
 
+import com.univocity.trader.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.exchange.binance.api.client.domain.market.*;
+import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.simulation.*;
+
+import java.util.function.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class Binance extends Configuration<Account> {
-
-	private static final Binance instance = new Binance();
-
-	static {
-		Configuration.initialize(() -> instance, "binance.properties");
-	}
+public class Binance extends Configuration<Binance, Account> {
 
 	private Binance() {
-	}
-
-	public static Binance getInstance() {
-		return (Binance) manager.getInstance();
-	}
-
-	public static Binance configure() {
-		return (Binance) manager.configure();
-	}
-
-	public static Binance load() {
-		return (Binance) manager.load();
-	}
-
-	public static Binance load(String filePath, String... alternativeFilePaths) {
-		return (Binance) manager.load(filePath, alternativeFilePaths);
-	}
-
-	public static Binance loadFromCommandLine(String... args) {
-		return (Binance) manager.loadFromCommandLine(args);
+		super("binance.properties");
 	}
 
 	@Override
@@ -45,4 +26,25 @@ public class Binance extends Configuration<Account> {
 	protected Account newAccountConfiguration() {
 		return new Account();
 	}
+
+	public static final class Simulator extends AbstractMarketSimulator<Binance, Account> {
+		private Simulator(Binance configuration) {
+			super(configuration);
+		}
+	}
+
+	public static final class Trader extends LiveTrader<Candlestick, Binance, Account> {
+		private Trader(Binance configuration) {
+			super(new BinanceExchange(), configuration);
+		}
+	}
+
+	public static Simulator simulator() {
+		return new Simulator(new Binance().configure());
+	}
+
+	public static Trader liveTrader() {
+		return new Trader(new Binance().configure());
+	}
+
 }

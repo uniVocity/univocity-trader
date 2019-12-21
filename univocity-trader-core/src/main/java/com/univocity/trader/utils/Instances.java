@@ -1,11 +1,6 @@
 package com.univocity.trader.utils;
 
-import com.univocity.trader.simulation.*;
-import org.apache.commons.lang3.*;
-
-import java.util.*;
-
-public class Instances<T> extends NewInstances<T> {
+public class Instances<T> extends AbstractNewInstances<T, Instances<T>> {
 
 	public Instances(T[] empty) {
 		super(empty);
@@ -14,10 +9,5 @@ public class Instances<T> extends NewInstances<T> {
 	public Instances<T> add(T reusableInstance) {
 		add((s, p) -> reusableInstance);
 		return this;
-	}
-
-	@Override
-	public Instances<T> clone() {
-		return (Instances<T>) super.clone();
 	}
 }

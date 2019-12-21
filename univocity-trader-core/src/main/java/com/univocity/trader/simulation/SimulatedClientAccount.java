@@ -15,7 +15,7 @@ import static com.univocity.trader.account.Order.Type.*;
 public class SimulatedClientAccount implements ClientAccount {
 
 	private Map<String, Set<PendingOrder>> orders = new HashMap<>();
-	private final TradingFees tradingFees;
+	private TradingFees tradingFees;
 	private final AccountManager account;
 
 	private static class PendingOrder {
@@ -28,12 +28,18 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, TradingFees tradingFees) {
+	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration) {
 		this.account = new AccountManager(this, accountConfiguration);
-		if(tradingFees == null){
-			throw new IllegalArgumentException("Trading fees cannot be null");
+	}
+
+	public final TradingFees getTradingFees(){
+		if(this.tradingFees == null) {
+			this.tradingFees = account.getTradingFees();
+			if (this.tradingFees == null) {
+				throw new IllegalArgumentException("Trading fees cannot be null");
+			}
 		}
-		this.tradingFees = tradingFees;
+		return this.tradingFees;
 	}
 
 	@Override
@@ -90,11 +96,6 @@ public class SimulatedClientAccount implements ClientAccount {
 
 	public AccountManager getAccount() {
 		return account;
-	}
-
-	@Override
-	public TradingFees getTradingFees() {
-		return tradingFees;
 	}
 
 	@Override

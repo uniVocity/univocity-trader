@@ -20,7 +20,7 @@ import static com.univocity.trader.indicators.base.TimeInterval.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public abstract class LiveTrader<T, A extends AccountConfiguration<A>> implements Closeable {
+public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends AccountConfiguration<A>> implements Closeable {
 
 	private static final Logger log = LoggerFactory.getLogger(LiveTrader.class);
 
@@ -29,10 +29,11 @@ public abstract class LiveTrader<T, A extends AccountConfiguration<A>> implement
 	private String allClientPairs;
 	private final Map<String, Long> symbols = new ConcurrentHashMap<>();
 	private final Exchange<T, A> exchange;
-	private final TimeInterval tickInterval;
+	private TimeInterval tickInterval;
 	private final SmtpMailSender mailSender;
 	private long lastHour;
 	private Map<String, String[]> allPairs;
+	private C configuration;
 
 	private class PollThread extends Thread {
 		public PollThread() {
@@ -94,16 +95,20 @@ public abstract class LiveTrader<T, A extends AccountConfiguration<A>> implement
 		}
 	}
 
-	public LiveTrader(Exchange<T, A> exchange, TimeInterval tickInterval) {
+	public LiveTrader(Exchange<T, A> exchange, C configuration) {
+		this.configuration = configuration;
 		Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 		this.exchange = exchange;
-		this.tickInterval = tickInterval;
-
-		EmailConfiguration mail = Configuration.getInstance().email();
+		EmailConfiguration mail = configuration.mailSender();
 		this.mailSender = mail.isConfigured() ? null : new SmtpMailSender(mail);
 	}
 
+	public C configure(){
+		return configuration;
+	}
+
 	private void initialize() {
+		this.tickInterval = configuration.tickInterval();
 		if (allPairs == null) {
 			allPairs = new TreeMap<>();
 			for (Client client : clients) {

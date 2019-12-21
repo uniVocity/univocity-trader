@@ -1,12 +1,9 @@
 package com.univocity.trader.exchange.binance.example;
 
-import com.univocity.trader.account.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.binance.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
-
-import java.time.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -33,7 +30,6 @@ public class MarketSimulation {
 //		DataSource ds = ?
 //		CandleRepository.setDataSource(ds);
 
-		Account account = Binance.load().account("jbax");
 //		account
 //				.referenceCurrency("USDT")
 //				.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH")
@@ -48,18 +44,26 @@ public class MarketSimulation {
 //
 		SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
 //
-		account.listeners()
-				.add(stats)
-//				.add(new OrderExecutionToLog())
-		;
-
-		Simulation simulation = Binance.getInstance().simulation();
+//		Account account = Binance.load().account("jbax");
+//		account.listeners()
+//				.add(stats)
+////				.add(new OrderExecutionToLog())
+//		;
+//
+//		Simulation simulation = Binance.getInstance().simulation();
 //		simulation.initialFunds(1000.0);
 //		simulation.tradingFees(SimpleTradingFees.percentage(0.1));
 //		simulation.simulationStart(LocalDate.of(2018, 7, 1).atStartOfDay());
 //		simulation.simulationEnd(LocalDate.of(2019, 7, 1).atStartOfDay());
 
-		MarketSimulator simulator = new MarketSimulator(account, simulation);
+		Binance.Simulator simulator = Binance.simulator();
+		simulator.configure().loadConfigurationFromProperties();
+
+		simulator.configure().account().listeners().add(stats);
+
+		simulator.configure().simulation()
+				.simulationEnd("2019-05-05")
+				.tradingFeePercentage(1.0);
 
 //		simulation.symbolInformation("ADAUSDT").minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
 //		simulation.symbolInformation("BTCUSDT").minimumAssetsPerOrder(0.001).priceDecimalPlaces(8).quantityDecimalPlaces(8);

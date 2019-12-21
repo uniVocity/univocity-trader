@@ -15,12 +15,12 @@ public class AccountManagerTest {
 	private static final double CLOSE = 0.4379;
 
 	private AccountManager getAccountManager() {
-		AccountConfiguration cfg = Configuration.configure().account();
+		GenericAccountConfiguration cfg = new GenericConfiguration().account();
 		cfg
 				.referenceCurrency("USDT")
 				.tradeWithPair("ADA", "BNB");
 
-		SimulatedClientAccount clientAccount = new SimulatedClientAccount(cfg, SimpleTradingFees.percentage(0.0));
+		SimulatedClientAccount clientAccount = new SimulatedClientAccount(cfg);
 		AccountManager account = clientAccount.getAccount();
 
 		TradingManager m = new TradingManager(new SimulatedExchange(account), null, account, "ADA", "USDT", Parameters.NULL);

@@ -18,7 +18,7 @@ import static com.univocity.trader.config.Utils.*;
  * Basic configuration on an account. Allows to define maximum a minimum investment amounts to one or more symbols,
  * as well as assigning {@link OrderManager}s to different symbols.
  */
-public class AccountConfiguration<T extends AccountConfiguration<T>> implements Cloneable {
+public abstract class AccountConfiguration<T extends AccountConfiguration<T>> implements Cloneable {
 
 	private static final OrderManager DEFAULT_ORDER_MANAGER = new DefaultOrderManager();
 	private static final Set<String> supportedTimeZones = new TreeSet<>(List.of(TimeZone.getAvailableIDs()));
@@ -116,7 +116,7 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 		}
 	}
 
-	private void addImplementation(NewInstances instances, Collection<Class<?>> classes) {
+	private void addImplementation(AbstractNewInstances instances, Collection<Class<?>> classes) {
 		for (Class c : classes) {
 			instances.add(c);
 		}
@@ -455,7 +455,7 @@ public class AccountConfiguration<T extends AccountConfiguration<T>> implements 
 	}
 
 	public Map<String, String[]> symbolPairs() {
-		return tradedPairs;
+		return Collections.unmodifiableMap(tradedPairs);
 	}
 
 	public T clearTradingPairs() {
