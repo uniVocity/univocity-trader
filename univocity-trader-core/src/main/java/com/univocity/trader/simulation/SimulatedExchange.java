@@ -120,5 +120,7 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 	}
 }
 class SimulatedClientConfiguration extends AccountConfiguration<SimulatedClientConfiguration> {
-
+	public SimulatedClientConfiguration(String id) {
+		super(id);
+	}
 }

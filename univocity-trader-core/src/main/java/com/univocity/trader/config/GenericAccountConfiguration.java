@@ -15,4 +15,8 @@ import static com.univocity.trader.config.Allocation.*;
 import static com.univocity.trader.config.Utils.*;
 
 public class GenericAccountConfiguration extends AccountConfiguration<GenericAccountConfiguration> {
+
+	public GenericAccountConfiguration(String id) {
+		super(id);
+	}
 }

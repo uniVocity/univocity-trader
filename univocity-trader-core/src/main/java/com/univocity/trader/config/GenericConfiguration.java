@@ -11,7 +11,7 @@ public class GenericConfiguration extends Configuration<GenericConfiguration, Ge
 	}
 
 	@Override
-	protected GenericAccountConfiguration newAccountConfiguration() {
-		return new GenericAccountConfiguration();
+	protected GenericAccountConfiguration newAccountConfiguration(String id) {
+		return new GenericAccountConfiguration(id);
 	}
 }

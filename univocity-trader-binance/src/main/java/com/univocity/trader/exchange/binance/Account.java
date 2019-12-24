@@ -11,8 +11,8 @@ public class Account extends AccountConfiguration<Account> {
 	private String apiKey;
 	private char[] secret;
 
-	public Account() {
-		super();
+	public Account(String id) {
+		super(id);
 	}
 
 	@Override

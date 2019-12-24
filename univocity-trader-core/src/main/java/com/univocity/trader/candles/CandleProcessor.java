@@ -11,8 +11,10 @@ public class CandleProcessor<T> {
 
 	private final Engine consumer;
 	private final Exchange exchange;
+	private final CandleRepository candleRepository;
 
-	public CandleProcessor(Engine consumer, Exchange<T, ?> exchange) {
+	public CandleProcessor(CandleRepository candleRepository, Engine consumer, Exchange<T, ?> exchange) {
+		this.candleRepository = candleRepository;
 		this.consumer = consumer;
 		this.exchange = exchange;
 	}
@@ -38,7 +40,7 @@ public class CandleProcessor<T> {
 			}
 			synchronized (consumer) {
 				PreciseCandle tick = exchange.generatePreciseCandle(realTimeTick);
-				if (!CandleRepository.addToHistory(consumer.getSymbol(), tick, initializing)) {  //already processed, skip.
+				if (!candleRepository.addToHistory(consumer.getSymbol(), tick, initializing)) {  //already processed, skip.
 					return;
 				}
 				Candle candle = exchange.generateCandle(realTimeTick);

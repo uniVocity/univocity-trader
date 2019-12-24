@@ -1,9 +1,7 @@
 package com.univocity.trader.exchange.binance.example;
 
-import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.binance.*;
 import com.univocity.trader.notification.*;
-import com.univocity.trader.simulation.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -42,8 +40,6 @@ public class MarketSimulation {
 //		account.strategies().add(ExampleStrategy::new);
 //		account.monitors().add(ExampleStrategyMonitor::new);
 //
-		SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
-//
 //		Account account = Binance.load().account("jbax");
 //		account.listeners()
 //				.add(stats)
@@ -59,11 +55,12 @@ public class MarketSimulation {
 		Binance.Simulator simulator = Binance.simulator();
 		simulator.configure().loadConfigurationFromProperties();
 
-		simulator.configure().account().listeners().add(stats);
+		simulator.configure().accounts().forEach(a -> a.listeners().add(() -> new SimpleStrategyStatistics()));
+		simulator.configure().accounts().forEach(a -> a.tradingFeePercentage(1.0));
 
 		simulator.configure().simulation()
 				.simulationEnd("2019-05-05")
-				.tradingFeePercentage(1.0);
+		;
 
 //		simulation.symbolInformation("ADAUSDT").minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
 //		simulation.symbolInformation("BTCUSDT").minimumAssetsPerOrder(0.001).priceDecimalPlaces(8).quantityDecimalPlaces(8);
@@ -71,9 +68,6 @@ public class MarketSimulation {
 //		simulation.symbolInformation("XRPUSDT").minimumAssetsPerOrder(50.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
 //		simulation.symbolInformation("ETHUSDT").minimumAssetsPerOrder(0.01).priceDecimalPlaces(8).quantityDecimalPlaces(8);
 
-
 		simulator.run();
-
-		stats.printTradeStats();
 	}
 }

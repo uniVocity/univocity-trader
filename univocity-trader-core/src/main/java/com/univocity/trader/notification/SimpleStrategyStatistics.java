@@ -78,5 +78,9 @@ public class SimpleStrategyStatistics implements OrderListener {
 			}
 		}
 	}
+
+	public void simulationEnded(Trader trader, Client client) {
+		printTradeStats();
+	}
 }
 

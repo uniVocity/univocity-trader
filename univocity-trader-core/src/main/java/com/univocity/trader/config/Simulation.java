@@ -1,7 +1,5 @@
 package com.univocity.trader.config;
 
-import com.univocity.trader.*;
-import com.univocity.trader.account.*;
 import com.univocity.trader.simulation.*;
 import org.apache.commons.lang3.*;
 
@@ -18,7 +16,7 @@ import static com.univocity.trader.config.Utils.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class Simulation extends ConfigurationGroup implements Cloneable {
+public class Simulation implements ConfigurationGroup, Cloneable {
 
 	private static DateTimeFormatter newFormatter(String pattern) {
 		return new DateTimeFormatterBuilder()
@@ -37,7 +35,7 @@ public class Simulation extends ConfigurationGroup implements Cloneable {
 			newFormatter("yyyy"),
 	};
 
-	private TradingFees tradingFees;
+
 	private LocalDateTime simulationStart;
 	private LocalDateTime simulationEnd;
 	private boolean cacheCandles = false;
@@ -50,9 +48,6 @@ public class Simulation extends ConfigurationGroup implements Cloneable {
 //	simulation.initial.funds=[USDT]2000.0,[ADA;ETH]100.0
 //	simulation.parameters.csv=/path/to/your.csv
 
-	public Simulation(ConfigurationRoot parent) {
-		super(parent);
-	}
 
 	public final LocalDateTime simulationStart() {
 		return simulationStart != null ? simulationStart : LocalDateTime.now().minusYears(1);
@@ -125,8 +120,7 @@ public class Simulation extends ConfigurationGroup implements Cloneable {
 
 
 	@Override
-	protected void readProperties(PropertyBasedConfiguration properties) {
-		tradingFees(parseTradingFees(properties.getOptionalProperty("simulation.trade.fees")));
+	public void readProperties(PropertyBasedConfiguration properties) {
 		simulationStart(parseDateTime(properties, "simulation.start"));
 		simulationEnd(parseDateTime(properties, "simulation.end"));
 		cacheCandles(properties.getBoolean("simulation.cache.candles", false));
@@ -150,7 +144,7 @@ public class Simulation extends ConfigurationGroup implements Cloneable {
 			return null;
 		}
 
-		for(DateTimeFormatter formatter : formatters) {
+		for (DateTimeFormatter formatter : formatters) {
 			try {
 				return LocalDateTime.parse(s, formatter);
 			} catch (Exception e) {
@@ -164,46 +158,6 @@ public class Simulation extends ConfigurationGroup implements Cloneable {
 
 	private LocalDateTime parseDateTime(PropertyBasedConfiguration properties, String propertyName) {
 		return parseDateTime(properties.getOptionalProperty(propertyName), propertyName);
-	}
-
-
-	private TradingFees parseTradingFees(String fees) {
-		if(fees == null){
-			return null;
-		}
-		try {
-			if (Character.isDigit(fees.charAt(0))) {
-				if (fees.endsWith("%")) {
-					fees = StringUtils.substringBefore(fees, "%");
-					return SimpleTradingFees.percentage(Double.parseDouble(fees));
-				} else {
-					return SimpleTradingFees.amount(Double.parseDouble(fees));
-				}
-			}
-
-			return Utils.findClassAndInstantiate(TradingFees.class, fees);
-		} catch (Exception ex) {
-			throw new IllegalConfigurationException("Error processing trading fees '" + fees + "' defined in property 'simulation.trade.fees'", ex);
-		}
-	}
-
-	public final TradingFees tradingFees() {
-		return tradingFees;
-	}
-
-	public final Simulation tradingFees(TradingFees tradingFees) {
-		this.tradingFees = tradingFees;
-		return this;
-	}
-
-	public final Simulation tradingFeeAmount(double amountPerTrade) {
-		this.tradingFees = SimpleTradingFees.amount(amountPerTrade);
-		return this;
-	}
-
-	public final Simulation tradingFeePercentage(double percentagePerTrade) {
-		this.tradingFees = SimpleTradingFees.percentage(percentagePerTrade);
-		return this;
 	}
 
 	public boolean cacheCandles() {
@@ -250,7 +204,7 @@ public class Simulation extends ConfigurationGroup implements Cloneable {
 
 	@Override
 	public boolean isConfigured() {
-		return tradingFees != null && !initialFunds.isEmpty();
+		return !initialFunds.isEmpty();
 	}
 
 	@Override

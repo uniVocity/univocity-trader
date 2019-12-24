@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public final class ConfigurationManager<C extends Configuration> {
+public final class ConfigurationManager<C extends Configuration<C, ?>> {
 	private static final Logger log = LoggerFactory.getLogger(ConfigurationManager.class);
 
 	/**
@@ -56,17 +56,13 @@ public final class ConfigurationManager<C extends Configuration> {
 
 	public final synchronized C load(String filePath, String... alternativeFilePaths) {
 		String[] original = configurationFiles.clone();
-
+		loadedFromFile = true;
 		configurationFiles = new String[alternativeFilePaths.length + 1];
 		configurationFiles[0] = filePath;
 		System.arraycopy(alternativeFilePaths, 0, configurationFiles, 1, alternativeFilePaths.length);
 
 		try {
 			Utils.noBlanks(configurationFiles, "Path to configuration file cannot be blank/null");
-			if (root != null) {
-				reload();
-				return root;
-			}
 			return initialize(true);
 		} catch (Throwable t) {
 			configurationFiles = original;

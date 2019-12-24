@@ -4,18 +4,16 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-public class AccountList<T extends AccountConfiguration<T>> extends ConfigurationGroup {
+public class AccountList<T extends AccountConfiguration<T>> implements ConfigurationGroup {
 
 	private Map<String, T> accounts = new LinkedHashMap<>();
-	private final Supplier<T> accountConfigurationSupplier;
+	private final Function<String, T> accountConfigurationSupplier;
 
-	AccountList(ConfigurationRoot parent, Supplier<T> accountConfigurationSupplier) {
-		super(parent);
+	AccountList(Function<String, T> accountConfigurationSupplier) {
 		this.accountConfigurationSupplier = accountConfigurationSupplier;
 	}
 
-	@Override
-	protected void readProperties(PropertyBasedConfiguration properties) {
+	public void readProperties(PropertyBasedConfiguration properties) {
 		List<String> accountIds = properties.getOptionalList("accounts");
 
 		if (!accountIds.isEmpty()) {
@@ -37,7 +35,7 @@ public class AccountList<T extends AccountConfiguration<T>> extends Configuratio
 	}
 
 	public final T account(String accountId) {
-		return accounts.computeIfAbsent(accountId, a -> accountConfigurationSupplier.get());
+		return accounts.computeIfAbsent(accountId, a -> accountConfigurationSupplier.apply(accountId));
 	}
 
 	public final T account() {

@@ -2,7 +2,7 @@ package com.univocity.trader.config;
 
 import org.apache.commons.lang3.*;
 
-public class EmailConfiguration extends ConfigurationGroup {
+public class EmailConfiguration implements ConfigurationGroup {
 
 	private String replyToAddress;
 	private int smtpPort;
@@ -12,12 +12,8 @@ public class EmailConfiguration extends ConfigurationGroup {
 	private char[] smtpPassword;
 	private String smtpSender = null;
 
-	EmailConfiguration(ConfigurationRoot parent) {
-		super(parent);
-	}
-
 	@Override
-	protected void readProperties(PropertyBasedConfiguration properties) {
+	public void readProperties(PropertyBasedConfiguration properties) {
 		boolean mailingConfigured = properties.containsAnyProperties("mail.reply.to", "mail.smtp.host", "mail.smtp.ssl", "mail.smtp.port", "mail.smtp.username", "mail.smtp.sender", "mail.smtp.password");
 		if (mailingConfigured) {
 			replyToAddress = properties.getProperty("mail.reply.to");

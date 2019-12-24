@@ -4,18 +4,27 @@ import com.univocity.trader.indicators.base.*;
 
 import java.util.*;
 
-public abstract class Configuration<C extends Configuration<C, T>, T extends AccountConfiguration<T>> extends ConfigurationRoot {
+public abstract class Configuration<C extends Configuration<C, T>, T extends AccountConfiguration<T>> {
 
+	private final List<ConfigurationGroup> configurationGroups = new ArrayList<>();
 	private final ConfigurationManager<C> manager;
 
-	private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(this);
-	private final EmailConfiguration emailConfiguration = new EmailConfiguration(this);
-	private final Simulation simulation = new Simulation(this);
-	private final AccountList<T> accountList = new AccountList<T>(this, this::newAccountConfiguration);
+	private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration();
+	private final EmailConfiguration emailConfiguration = new EmailConfiguration();
+	private final Simulation simulation = new Simulation();
+	final AccountList<T> accountList = new AccountList<T>(this::newAccountConfiguration);
 	private TimeInterval tickInterval;
 
 	protected Configuration() {
 		this("univocity-trader.properties");
+	}
+
+	final void loadConfigurationGroups(){
+		this.addConfigurationGroups(configurationGroups);
+	}
+
+	final List<ConfigurationGroup> getConfigurationGroups(){
+		return configurationGroups;
 	}
 
 	protected Configuration(String defaultConfigurationFile) {
@@ -42,7 +51,6 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		return manager.loadFromCommandLine(args);
 	}
 
-	@Override
 	protected final void addConfigurationGroups(List<ConfigurationGroup> groups) {
 		groups.add(databaseConfiguration);
 		groups.add(emailConfiguration);
@@ -81,6 +89,10 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		return accountList.accounts();
 	}
 
+	public AccountList<T> accountList(){
+		return accountList;
+	}
+
 	public TimeInterval tickInterval() {
 		return tickInterval;
 	}
@@ -90,5 +102,5 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		 return (C)this;
 	}
 
-	protected abstract T newAccountConfiguration();
+	protected abstract T newAccountConfiguration(String id);
 }

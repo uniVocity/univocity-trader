@@ -80,10 +80,11 @@ public class MarketHistoryLoader {
 //		CandleRepository.setDataSource(ds);
 
 		BinanceExchange exchange = new BinanceExchange();
+		CandleRepository candleRepository = new CandleRepository(Binance.simulator().configure().database());
 		final Instant start = LocalDate.now().minus(6, ChronoUnit.MONTHS).atStartOfDay().toInstant(ZoneOffset.UTC);
 		for (String[] pair : ALL_PAIRS) {
 			String symbol = pair[0] + pair[1];
-			CandleRepository.fillHistoryGaps(exchange, symbol, start, TimeInterval.minutes(1));
+			candleRepository.fillHistoryGaps(exchange, symbol, start, TimeInterval.minutes(1));
 		}
 		System.exit(0);
 	}

@@ -52,7 +52,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		double availableFunds = account.getAmount(fundsSymbol);
 		double availableAssets = account.getAmount(assetsSymbol);
 		double quantity = orderDetails.getQuantity().doubleValue();
-		double fees = orderAmount - tradingFees.takeFee(orderAmount, orderType, orderDetails.getSide());
+		double fees = orderAmount - getTradingFees().takeFee(orderAmount, orderType, orderDetails.getSide());
 
 		BigDecimal locked = null;
 
@@ -164,7 +164,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		final String funds = order.getFundsSymbol();
 
 		double amountTraded = order.getTotalTraded().doubleValue();
-		double fees = amountTraded - tradingFees.takeFee(amountTraded, order.getType(), order.getSide());
+		double fees = amountTraded - getTradingFees().takeFee(amountTraded, order.getType(), order.getSide());
 
 		if (order.getSide() == BUY) {
 			account.addToFreeBalance(asset, order.getExecutedQuantity());

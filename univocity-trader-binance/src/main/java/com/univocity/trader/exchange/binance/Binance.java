@@ -23,8 +23,8 @@ public class Binance extends Configuration<Binance, Account> {
 	}
 
 	@Override
-	protected Account newAccountConfiguration() {
-		return new Account();
+	protected Account newAccountConfiguration(String id) {
+		return new Account(id);
 	}
 
 	public static final class Simulator extends AbstractMarketSimulator<Binance, Account> {

@@ -14,9 +14,11 @@ public class MarketHistory {
 
 	private static final Logger log = LoggerFactory.getLogger(MarketHistory.class);
 	public final String symbol;
+	private final CandleRepository candleRepository;
 
-	public MarketHistory(String symbol) {
+	public MarketHistory(String symbol, CandleRepository candleRepository) {
 		this.symbol = symbol;
+		this.candleRepository = candleRepository;
 	}
 
 	public String getSymbol() {
@@ -32,7 +34,7 @@ public class MarketHistory {
 	}
 
 	public void simulate(Consumer<Candle> consumer, Instant from, Instant to, boolean cache) {
-		Enumeration<Candle> result = CandleRepository.iterate(symbol, from, to, cache);
+		Enumeration<Candle> result = candleRepository.iterate(symbol, from, to, cache);
 		final long start = System.currentTimeMillis();
 		int count = 0;
 		while (result.hasMoreElements()) {
@@ -47,10 +49,10 @@ public class MarketHistory {
 	}
 
 	public Candle last() {
-		return CandleRepository.lastCandle(symbol);
+		return candleRepository.lastCandle(symbol);
 	}
 
 	public long size() {
-		return CandleRepository.countCandles(symbol);
+		return candleRepository.countCandles(symbol);
 	}
 }

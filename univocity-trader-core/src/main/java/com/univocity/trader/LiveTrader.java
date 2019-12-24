@@ -34,6 +34,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 	private long lastHour;
 	private Map<String, String[]> allPairs;
 	private C configuration;
+	private CandleRepository candleRepository;
 
 	private class PollThread extends Thread {
 		public PollThread() {
@@ -109,13 +110,17 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 
 	private void initialize() {
 		this.tickInterval = configuration.tickInterval();
+		if(candleRepository == null) {
+			candleRepository = new CandleRepository(configuration.database());
+		}
 		if (allPairs == null) {
 			allPairs = new TreeMap<>();
 			for (Client client : clients) {
-				client.initialize(exchange, mailSender);
+				client.initialize(candleRepository, exchange, mailSender);
 				allPairs.putAll(client.getSymbolPairs());
 			}
 		}
+
 		updateDatabase();
 	}
 
@@ -131,21 +136,20 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 			tmp.append(symbol);
 		}
 		this.allClientPairs = tmp.toString().toLowerCase();
-
 		//fill history with last 30 days of data
 		for (String symbol : allPairs.keySet()) {
-			CandleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
+			candleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
 		}
 
 		//quick update for the last 30 minutes in case the previous step takes too long and we miss a few ticks
 		for (String symbol : allPairs.keySet()) {
-			CandleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
+			candleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
 			symbols.put(symbol, System.currentTimeMillis());
 		}
 
 		//loads last 30 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
 		for (String symbol : allPairs.keySet()) {
-			Enumeration<Candle> it = CandleRepository.iterate(symbol, Instant.now().minus(30, ChronoUnit.DAYS), Instant.now(), false);
+			Enumeration<Candle> it = candleRepository.iterate(symbol, Instant.now().minus(30, ChronoUnit.DAYS), Instant.now(), false);
 			while (it.hasMoreElements()) {
 				Candle candle = it.nextElement();
 				if (candle != null) {

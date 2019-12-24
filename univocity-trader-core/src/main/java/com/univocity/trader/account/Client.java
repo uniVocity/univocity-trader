@@ -34,7 +34,7 @@ public class Client<T> {
 		this.accountManager = new AccountManager(account, accountConfiguration);
 	}
 
-	public void initialize(Exchange<T, ?> exchange, SmtpMailSender mailSender) {
+	public void initialize(CandleRepository candleRepository, Exchange<T, ?> exchange, SmtpMailSender mailSender) {
 		this.exchange = exchange;
 		if (accountManager.configuration().symbolPairs().isEmpty()) {
 			throw new IllegalStateException("No trade symbols defined for client " + email);
@@ -60,7 +60,7 @@ public class Client<T> {
 
 			Engine engine = new Engine(tradingManager, allInstances);
 
-			CandleProcessor<T> processor = new CandleProcessor<T>(engine, exchange);
+			CandleProcessor<T> processor = new CandleProcessor<T>(candleRepository, engine, exchange);
 			candleProcessors.add(processor);
 		}
 		allInstances.clear();

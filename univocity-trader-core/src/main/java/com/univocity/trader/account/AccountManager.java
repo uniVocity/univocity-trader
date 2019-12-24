@@ -15,8 +15,6 @@ import java.util.concurrent.*;
 import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
-import static com.univocity.trader.config.AccountConfiguration.*;
-import static com.univocity.trader.config.Utils.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 public class AccountManager implements ClientAccount, SimulatedAccountConfiguration {
@@ -132,7 +130,6 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 
-
 	public double allocateFunds(String assetSymbol, String fundSymbol) {
 		TradingManager tradingManager = getTradingManagerOf(assetSymbol + fundSymbol);
 		if (tradingManager == null) {
@@ -192,6 +189,10 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public synchronized double getTotalFundsIn(String currency) {
+		if (allTradingManagers.isEmpty()) {
+			throw new IllegalStateException("Can't calculate total funds in " + currency + " as account '" + configuration.id() + "' doesn't handle this symbol. Available symbols are: " + configuration.symbols());
+		}
+
 		double total = 0.0;
 		Map<String, Double> allPrices = allTradingManagers.values().iterator().next().getAllPrices();
 		Map<String, Balance> positions = balances;
@@ -438,7 +439,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public TradingFees getTradingFees() {
-		return account.getTradingFees();
+		return configuration.tradingFees();
 	}
 
 	@Override
@@ -598,7 +599,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return false;
 	}
 
-	public AccountConfiguration<?> configuration(){
+	public AccountConfiguration<?> configuration() {
 		return configuration;
 	}
 }

@@ -1,5 +1,6 @@
 package com.univocity.trader.config;
 
+import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.strategy.*;
@@ -33,6 +34,7 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 		supportedTimezoneDescription = tmp.toString();
 	}
 
+	private final String id;
 	private String email;
 	private String referenceCurrency;
 	private TimeZone timeZone;
@@ -47,8 +49,10 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 	Map<String, String[]> tradedPairs = new ConcurrentHashMap<>();
 	Set<String> supportedSymbols = new TreeSet<>();
 	Map<String, OrderManager> orderManagers = new ConcurrentHashMap<>();
+	private TradingFees tradingFees = SimpleTradingFees.percentage(0.1);
 
-	protected AccountConfiguration() {
+	protected AccountConfiguration(String id) {
+		this.id = id;
 	}
 
 	protected final void readProperties(PropertyBasedConfiguration properties) {
@@ -85,6 +89,7 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 			parseAllocationProperty(properties, accountId + "asset.maximum.amount", this::maximumInvestmentAmountPerAsset);
 			parseAllocationProperty(properties, accountId + "asset.maximum.percentage", this::maximumInvestmentPercentagePerAsset);
 
+
 			Map<Class<?>, LinkedHashSet<String>> classesToSearch = new HashMap<>();
 			classesToSearch.put(Strategy.class, properties.getOptionalSet(accountId + "strategies"));
 			classesToSearch.put(StrategyMonitor.class, properties.getOptionalSet(accountId + "monitors"));
@@ -103,6 +108,8 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 					addImplementation(listeners, e.getValue());
 				}
 			}
+
+			tradingFees(parseTradingFees(properties, accountId + "trade.fees"));
 
 			parseInstancePerGroupProperty(properties, accountId + "order.manager", OrderManager.class, this::orderManager);
 
@@ -124,6 +131,47 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 
 	protected void readExchangeAccountProperties(String accountId, PropertyBasedConfiguration properties) {
 
+	}
+
+	public final TradingFees tradingFees() {
+		return tradingFees;
+	}
+
+	public final T tradingFees(TradingFees tradingFees) {
+		this.tradingFees = tradingFees;
+		return (T) this;
+	}
+
+
+	public final T tradingFeeAmount(double amountPerTrade) {
+		this.tradingFees = SimpleTradingFees.amount(amountPerTrade);
+		return (T) this;
+	}
+
+	public final T tradingFeePercentage(double percentagePerTrade) {
+		this.tradingFees = SimpleTradingFees.percentage(percentagePerTrade);
+		return (T) this;
+	}
+
+	protected TradingFees parseTradingFees(PropertyBasedConfiguration config, String property) {
+		String fees = config.getOptionalProperty(property);
+		if (fees == null) {
+			return null;
+		}
+		try {
+			if (Character.isDigit(fees.charAt(0))) {
+				if (fees.endsWith("%")) {
+					fees = StringUtils.substringBefore(fees, "%");
+					return SimpleTradingFees.percentage(Double.parseDouble(fees));
+				} else {
+					return SimpleTradingFees.amount(Double.parseDouble(fees));
+				}
+			}
+
+			return Utils.findClassAndInstantiate(TradingFees.class, fees);
+		} catch (Exception ex) {
+			throw new IllegalConfigurationException("Error processing trading fees '" + fees + "' defined in property '" + property + "'", ex);
+		}
 	}
 
 	private void parseTradingPairs(PropertyBasedConfiguration properties, String propertyName, Consumer<String[][]> consumer) {
@@ -159,6 +207,10 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 
 	public boolean isConfigured() {
 		return StringUtils.isNoneBlank(referenceCurrency);
+	}
+
+	public String id() {
+		return id;
 	}
 
 	public String email() {
@@ -512,7 +564,7 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 	}
 
 	public IllegalArgumentException reportUnknownSymbol(String message, String symbol) {
-		String msg = "Account is not managing '" + symbol + "'. Allowed symbols are: " + symbols() + " and " + referenceCurrency();
+		String msg = "Account '" + id + "' is not managing '" + symbol + "'. Allowed symbols are: " + StringUtils.join(symbols(), ", ") + " and " + referenceCurrency();
 		if (message != null) {
 			throw new IllegalArgumentException(message + ". " + msg);
 		} else {

@@ -10,7 +10,6 @@ import org.slf4j.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
@@ -42,6 +41,7 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 
 	public void run(Parameters parameters) {
 		symbolHandlers.clear();
+		AccountManager[] accounts = accounts();
 		resetBalances();
 
 		Set<Object> allInstances = new HashSet<>();
@@ -49,20 +49,30 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 			String assetSymbol = pair[0];
 			String fundSymbol = pair[1];
 
-			AccountManager[] accounts = accounts();
-			Engine[] engines = new Engine[accounts.length];
-			for (int i = 0; i < accounts.length; i++) {
-				SimulatedExchange exchange = new SimulatedExchange(accounts[i]);
+			List<AccountManager> accountsTradingSymbol = new ArrayList<>();
+			for (AccountManager account : accounts) {
+				if (account.configuration().symbolPairs().keySet().contains(symbol)) {
+					accountsTradingSymbol.add(account);
+				}
+			}
+
+			Engine[] engines = new Engine[accountsTradingSymbol.size()];
+			for (int i = 0; i < engines.length; i++) {
+				AccountManager accountManager = accountsTradingSymbol.get(i);
+				SimulatedExchange exchange = new SimulatedExchange(accountManager);
 				exchange.setSymbolInformation(this.symbolInformation);
 				SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange);
 //			exchange.setMainTradeSymbols(mainTradeSymbols);
 
-				TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, accounts[i], assetSymbol, fundSymbol, parameters);
+				TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, accountManager, assetSymbol, fundSymbol, parameters);
 
 				Engine engine = new Engine(tradingManager, parameters, allInstances);
+				engines[i] = engine;
 			}
 
-			symbolHandlers.put(symbol, engines);
+			if (engines.length > 0) {
+				symbolHandlers.put(symbol, engines);
+			}
 		});
 
 		allInstances.clear();
@@ -74,7 +84,7 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 		LocalDateTime end = getSimulationEnd();
 		final long startTime = getStartTime();
 		final long endTime = getEndTime();
-
+		CandleRepository candleRepository = new CandleRepository(configure().database());
 
 		int activeQueries = 0;
 		Map<String, CompletableFuture<Enumeration<Candle>>> futures = new HashMap<>();
@@ -84,7 +94,7 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 			boolean loadAllDataFirst = simulation.cacheCandles() || activeQueries > activeQueryLimit;
 
 			futures.put(symbol, CompletableFuture.supplyAsync(
-					() -> CandleRepository.iterate(symbol, start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor)
+					() -> candleRepository.iterate(symbol, start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor)
 			);
 		}
 
@@ -97,10 +107,12 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 		});
 
 		executor.shutdown();
+		boolean ran = false;
 
 //		Map<String, Long> counts = new TreeMap<>();
 		for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
 			for (Map.Entry<String, Enumeration<Candle>> e : markets.entrySet()) {
+				ran = true;
 				String symbol = e.getKey();
 				Enumeration<Candle> it = e.getValue();
 				Candle candle = pending.get(symbol);
@@ -134,6 +146,10 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 				}
 			}
 		}
+		if(!ran){
+			throw new IllegalStateException("No candles processed in real time trading simulation from " + start + " to " + end);
+		}
+
 //		System.out.println("Processed candle counts:" + counts);
 
 		System.out.println("Real time trading simulation from " + start + " to " + end);

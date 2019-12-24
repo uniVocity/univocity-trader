@@ -2,19 +2,15 @@ package com.univocity.trader.config;
 
 import org.apache.commons.lang3.*;
 
-public class DatabaseConfiguration extends ConfigurationGroup {
+public class DatabaseConfiguration implements ConfigurationGroup {
 
 	private String jdbcUrl;
 	private String user;
 	private char[] password;
 	private String jdbcDriver;
 
-	DatabaseConfiguration(ConfigurationRoot parent) {
-		super(parent);
-	}
-
 	@Override
-	protected void readProperties(PropertyBasedConfiguration properties) {
+	public void readProperties(PropertyBasedConfiguration properties) {
 		jdbcDriver = properties.getProperty("database.jdbc.driver");
 		jdbcUrl = properties.getProperty("database.jdbc.url");
 		user = properties.getProperty("database.user");
@@ -68,4 +64,5 @@ public class DatabaseConfiguration extends ConfigurationGroup {
 	public boolean isConfigured() {
 		return StringUtils.isNoneBlank(jdbcUrl, jdbcDriver, user);
 	}
+
 }

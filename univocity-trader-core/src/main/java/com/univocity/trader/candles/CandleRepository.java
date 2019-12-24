@@ -19,8 +19,6 @@ import static com.univocity.trader.candles.Candle.*;
 
 public class CandleRepository {
 	private static final Logger log = LoggerFactory.getLogger(CandleRepository.class);
-
-	private static final ConcurrentHashMap<String, Collection<Candle>> cachedResults = new ConcurrentHashMap<>();
 	private static final String INSERT = "INSERT INTO candle VALUES (?,?,?,?,?,?,?,?)";
 	private static final RowMapper<Candle> CANDLE_MAPPER = (rs, rowNum) -> {
 		Candle out = new Candle(
@@ -34,23 +32,29 @@ public class CandleRepository {
 		return out;
 	};
 
-	private static Supplier<DataSource> dataSource = CandleRepository::defaultDataSource;
-	private static final ThreadLocal<JdbcTemplate> db = ThreadLocal.withInitial(() -> new JdbcTemplate(getDataSource()));
+	private final ConcurrentHashMap<String, Collection<Candle>> cachedResults = new ConcurrentHashMap<>();
+	private Supplier<DataSource> dataSource = this::defaultDataSource;
+	private final ThreadLocal<JdbcTemplate> db = ThreadLocal.withInitial(() -> new JdbcTemplate(getDataSource()));
 
-	public static DataSource getDataSource() {
+	private final DatabaseConfiguration config;
+
+	public CandleRepository(DatabaseConfiguration config) {
+		this.config = config;
+	}
+
+	public DataSource getDataSource() {
 		return dataSource.get();
 	}
 
-	public static void setDataSource(DataSource dataSource) {
+	public void setDataSource(DataSource dataSource) {
 		setDataSource(() -> dataSource);
 	}
 
-	public static void setDataSource(Supplier<DataSource> dataSource) {
-		CandleRepository.dataSource = dataSource;
+	public void setDataSource(Supplier<DataSource> dataSource) {
+		this.dataSource = dataSource;
 	}
 
-	private static DataSource defaultDataSource() {
-		DatabaseConfiguration config = Configuration.configure().database();
+	private DataSource defaultDataSource() {
 		if (!config.isConfigured()) {
 			config
 					.jdbcDriver("com.mysql.jdbc.Driver")
@@ -74,16 +78,16 @@ public class CandleRepository {
 		return ds;
 	}
 
-	public static JdbcTemplate db() {
+	public JdbcTemplate db() {
 		return db.get();
 	}
 
 
-	private static String buildCandleQuery(String symbol) {
+	private String buildCandleQuery(String symbol) {
 		return "SELECT open_time, close_time, open, high, low, close, volume FROM candle WHERE symbol = '" + symbol + "'";
 	}
 
-	private static PreparedStatement prepareInsert(PreparedStatement ps, String symbol, PreciseCandle tick) throws SQLException {
+	private PreparedStatement prepareInsert(PreparedStatement ps, String symbol, PreciseCandle tick) throws SQLException {
 		ps.setObject(1, symbol);
 		ps.setObject(2, tick.openTime);
 		ps.setObject(3, tick.closeTime);
@@ -95,9 +99,9 @@ public class CandleRepository {
 		return ps;
 	}
 
-	private static final ConcurrentHashMap<String, long[]> recentCandles = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, long[]> recentCandles = new ConcurrentHashMap<>();
 
-	public static boolean addToHistory(String symbol, PreciseCandle tick, boolean initializing) {
+	public boolean addToHistory(String symbol, PreciseCandle tick, boolean initializing) {
 		try {
 			long[] times = recentCandles.get(symbol);
 			if (times != null && times[0] == tick.openTime && times[1] == tick.closeTime) {
@@ -128,7 +132,7 @@ public class CandleRepository {
 		return true;
 	}
 
-	private static Enumeration<Candle> toEnumeration(ArrayBlockingQueue<Candle> queue, boolean[] ended) {
+	private Enumeration<Candle> toEnumeration(ArrayBlockingQueue<Candle> queue, boolean[] ended) {
 		return new Enumeration<>() {
 			@Override
 			public boolean hasMoreElements() {
@@ -155,7 +159,7 @@ public class CandleRepository {
 
 	}
 
-	private static Enumeration<Candle> executeQuery(String symbol, String query, Collection<Candle> out) {
+	private Enumeration<Candle> executeQuery(String symbol, String query, Collection<Candle> out) {
 		boolean[] ended = new boolean[]{false};
 
 		final long start = System.currentTimeMillis();
@@ -191,11 +195,11 @@ public class CandleRepository {
 		}
 	}
 
-	public static void clearCaches() {
+	public void clearCaches() {
 		cachedResults.clear();
 	}
 
-	public static void evictFromCache(String symbol) {
+	public void evictFromCache(String symbol) {
 		log.trace("Evicting cached candles of {}", symbol);
 		Collection<Candle> candles = cachedResults.remove(symbol);
 		if (candles != null) {
@@ -203,7 +207,7 @@ public class CandleRepository {
 		}
 	}
 
-	public static String narrowQueryToTimeInterval(String query, Long from, Long to) {
+	public String narrowQueryToTimeInterval(String query, Long from, Long to) {
 		if (from != null || to != null) {
 			query += " AND ";
 
@@ -221,11 +225,11 @@ public class CandleRepository {
 		return query;
 	}
 
-	public static String narrowQueryToTimeInterval(String query, Instant from, Instant to) {
+	public String narrowQueryToTimeInterval(String query, Instant from, Instant to) {
 		return narrowQueryToTimeInterval(query, from == null ? null : from.toEpochMilli(), to == null ? null : to.toEpochMilli());
 	}
 
-	public static Enumeration<Candle> iterate(String symbol, Instant from, Instant to, boolean cache) {
+	public Enumeration<Candle> iterate(String symbol, Instant from, Instant to, boolean cache) {
 		String query = buildCandleQuery(symbol);
 		query = narrowQueryToTimeInterval(query, from, to);
 		query += " ORDER BY open_time";
@@ -279,7 +283,7 @@ public class CandleRepository {
 		return executeQuery(symbol, query, out);
 	}
 
-	public static <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
+	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
 		log.info("Looking for gaps in history of {} from {}", symbol, getFormattedDateTimeWithYear(from.toEpochMilli()));
 
 		List<T> ticks = exchange.getLatestTicks(symbol, minGap);
@@ -373,7 +377,7 @@ public class CandleRepository {
 		}
 	}
 
-	private static long count(String query, Object... params) {
+	private long count(String query, Object... params) {
 		Long result = db().queryForObject(query, params, Long.class);
 		if (result == null) {
 			return 0;
@@ -381,11 +385,11 @@ public class CandleRepository {
 		return result;
 	}
 
-	private static boolean isKnownGap(String symbol, long start, long end) {
+	private boolean isKnownGap(String symbol, long start, long end) {
 		return count("SELECT COUNT(*) FROM gap WHERE symbol = ? AND open_time = ? AND close_time = ?", symbol.toUpperCase(), start, end) > 0;
 	}
 
-	private static void addGap(String symbol, long start, long end) {
+	private void addGap(String symbol, long start, long end) {
 		try {
 			db().update("INSERT INTO gap VALUES (?,?,?)", symbol.toUpperCase(), start, end);
 		} catch (Exception e) {
@@ -394,21 +398,21 @@ public class CandleRepository {
 	}
 
 
-	public static Set<String> getKnownSymbols() {
+	public Set<String> getKnownSymbols() {
 		return new TreeSet<>(db().queryForList("SELECT DISTINCT symbol FROM candle", String.class));
 	}
 
-	public static long countCandles(String symbol, Instant from, Instant to) {
+	public long countCandles(String symbol, Instant from, Instant to) {
 		String query = "SELECT COUNT(*) FROM candle WHERE symbol = ?";
 		query = narrowQueryToTimeInterval(query, from, to);
 		return count(query, symbol);
 	}
 
-	public static long countCandles(String symbol) {
+	public long countCandles(String symbol) {
 		return countCandles(symbol, null, null);
 	}
 
-	public static Candle lastCandle(String symbol) {
+	public Candle lastCandle(String symbol) {
 		String query = buildCandleQuery(symbol);
 		query += " ORDER BY close_time DESC LIMIT 1";
 		return db().queryForObject(query, CANDLE_MAPPER);
