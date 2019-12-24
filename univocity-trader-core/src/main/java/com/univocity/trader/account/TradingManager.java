@@ -2,11 +2,9 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
-import com.univocity.trader.strategy.*;
 import com.univocity.trader.utils.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
@@ -28,7 +26,7 @@ public class TradingManager {
 	protected Trader trader;
 	private Exchange<?, ?> exchange;
 	private final OrderListener[] notifications;
-	protected Client client;
+	private final Client client;
 	private OrderExecutionToEmail emailNotifier;
 	private final SymbolPriceDetails priceDetails;
 
@@ -49,16 +47,17 @@ public class TradingManager {
 			throw new IllegalArgumentException("Currency cannot be blank (examples: 'USD', 'EUR', 'USDT', 'ETH')");
 		}
 		this.exchange = exchange;
-		this.tradingAccount = account;
+		this.client = account.getClient();
 		this.assetSymbol = assetSymbol;
 		this.fundSymbol = fundSymbol;
 		this.symbol = assetSymbol + fundSymbol;
 		this.priceDetails = priceDetails.switchToSymbol(symbol);
 
-		Instances<OrderListener> listenerProvider = account.configuration().listeners();
+		Instances<OrderListener> listenerProvider = client.getOrderListeners();
 		this.notifications = listenerProvider != null ? listenerProvider.create(symbol, params) : new OrderListener[0];
+		client.registerTradingManager(this);
+		tradingAccount = client.getAccountManager();
 		this.emailNotifier = getEmailNotifier();
-		account.register(this);
 	}
 
 	public SymbolPriceDetails getPriceDetails() {

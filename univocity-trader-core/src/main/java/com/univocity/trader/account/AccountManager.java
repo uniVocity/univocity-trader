@@ -30,6 +30,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	private long lastBalanceSync = 0L;
 	private final Map<String, Balance> balances = new ConcurrentHashMap<>();
 
+	private final Client client;
 	private final ClientAccount account;
 	private final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
 
@@ -42,7 +43,12 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 
 		this.account = account;
-		this.configuration = configuration.clone();
+		this.configuration = configuration;
+		this.client = new Client(account, this);
+	}
+
+	public Client getClient(){
+		return client;
 	}
 
 	public Map<String, Balance> getBalances() {

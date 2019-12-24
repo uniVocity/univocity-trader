@@ -6,6 +6,7 @@ import com.univocity.trader.config.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.strategy.*;
+import com.univocity.trader.utils.*;
 
 import java.time.*;
 import java.util.*;
@@ -15,9 +16,6 @@ public class Client<T> {
 
 	private static final Set<Object> allInstances = ConcurrentHashMap.newKeySet();
 
-	private final String email;
-	private final ZoneId timezone;
-
 	private Exchange exchange;
 	private TradingManager root;
 	private ClientAccount account;
@@ -26,18 +24,31 @@ public class Client<T> {
 
 	private final AccountManager accountManager;
 
-	public Client(ClientAccount account, AccountConfiguration<?> accountConfiguration) {
-		this.email = accountConfiguration.email();
-		this.timezone = accountConfiguration.timeZone().toZoneId();
+	public Client(ClientAccount account, AccountManager accountManager) {
 		this.account = account;
+		this.accountManager = accountManager;
+	}
 
-		this.accountManager = new AccountManager(account, accountConfiguration);
+	public String getId() {
+		return accountManager.configuration().id();
+	}
+
+	void registerTradingManager(TradingManager tradingManager) {
+		accountManager.register(tradingManager);
+	}
+
+	AccountManager getAccountManager(){
+		return accountManager;
+	}
+
+	Instances<OrderListener> getOrderListeners(){
+		return accountManager.configuration().listeners();
 	}
 
 	public void initialize(CandleRepository candleRepository, Exchange<T, ?> exchange, SmtpMailSender mailSender) {
 		this.exchange = exchange;
 		if (accountManager.configuration().symbolPairs().isEmpty()) {
-			throw new IllegalStateException("No trade symbols defined for client " + email);
+			throw new IllegalStateException("No trade symbols defined for client " + accountManager.configuration().id());
 		}
 		final SymbolPriceDetails priceDetails = new SymbolPriceDetails(exchange); //loads price information from exchange
 
@@ -64,10 +75,6 @@ public class Client<T> {
 			candleProcessors.add(processor);
 		}
 		allInstances.clear();
-
-		for (TradingManager a : all) {
-			a.client = this;
-		}
 	}
 
 	public void sendBalanceEmail(String title) {
@@ -87,35 +94,14 @@ public class Client<T> {
 	}
 
 	public String getEmail() {
-		return email;
+		return accountManager.configuration().email();
 	}
 
 	public ZoneId getTimezone() {
-		return timezone;
+		return accountManager.configuration().timeZone().toZoneId();
 	}
 
 	public Map<String, String[]> getSymbolPairs() {
 		return accountManager.configuration().symbolPairs();
 	}
-
-//	private static <T> T[] getInstances(String symbol, Map<String, Supplier<T[]>> provider, String description) {
-//		Supplier<T[]> supplier = provider.get(symbol);
-//		if (supplier == null) {
-//			throw new IllegalStateException("Can't trade. No " + description + " provided for symbol " + symbol);
-//		}
-//
-//		T[] instances = supplier.get();
-//		if (ArrayUtils.isEmpty(instances)) {
-//			throw new IllegalStateException("Can't trade. No " + description + " provided for symbol " + symbol);
-//		}
-//		for (T instance : instances) {
-//			if (allInstances.contains(instance)) {
-//				throw new IllegalStateException("Can't trade " + description + " instance provided for symbol " + symbol + " is already in use. Make sure to build a *new* " + description + " object for each symbol and client.");
-//			} else {
-//				allInstances.add(instance);
-//			}
-//		}
-//		return instances;
-//	}
-
 }

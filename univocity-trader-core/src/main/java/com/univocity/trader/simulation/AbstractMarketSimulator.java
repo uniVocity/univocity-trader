@@ -5,6 +5,7 @@ import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.strategy.*;
+import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
 import java.time.*;
@@ -154,8 +155,14 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 
 		System.out.println("Real time trading simulation from " + start + " to " + end);
 		for (AccountManager account : accounts()) {
+			String id = account.getClient().getId();
+			if(StringUtils.isNotBlank(id)){
+				System.out.println("Client: " + id);
+				System.out.println("------------------");
+			}
 			System.out.print(account.toString());
 			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
+
 		}
 	}
 }

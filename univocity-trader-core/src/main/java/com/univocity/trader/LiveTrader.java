@@ -236,11 +236,4 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 			throw new IllegalStateException(e);
 		}
 	}
-
-	public Client addClient(A accountConfiguration) {
-		ClientAccount account = exchange.connectToAccount(accountConfiguration);
-		Client client = new Client(account, accountConfiguration);
-		clients.add(client);
-		return client;
-	}
 }

@@ -25,7 +25,10 @@ public class OrderExecutionToLog implements OrderListener {
 				details += " >> " + trader.tradeLength() + " ticks >> [Min: $" + f.priceToString(trader.getMinPrice()) + " (" + trader.getFormattedMinChangePct() + ") - Max: $" + f.priceToString(trader.getMaxPrice()) + " (" + trader.getFormattedMaxChangePct() + ")]";
 				details += "\t Holdings ~$" + f.priceToString(trader.holdings()) + " " + trader.getReferenceCurrencySymbol();
 			}
-			log.debug(details);
+			if(StringUtils.isNotBlank(client.getId())){
+				log.debug(client.getId() + ": " + details);
+			}
+
 		}
 	}
 }
