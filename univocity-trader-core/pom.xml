@@ -63,6 +63,11 @@
 			<version>4.8.59</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.opencsv</groupId>
+			<artifactId>opencsv</artifactId>
+			<version>4.6</version>
+		</dependency>
 	</dependencies>
 
 
