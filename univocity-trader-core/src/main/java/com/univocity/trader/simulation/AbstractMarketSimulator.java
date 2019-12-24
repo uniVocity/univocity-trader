@@ -157,8 +157,8 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 		for (AccountManager account : accounts()) {
 			String id = account.getClient().getId();
 			if(StringUtils.isNotBlank(id)){
-				System.out.println("Client: " + id);
 				System.out.println("------------------");
+				System.out.println("Client: " + id);
 			}
 			System.out.print(account.toString());
 			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
