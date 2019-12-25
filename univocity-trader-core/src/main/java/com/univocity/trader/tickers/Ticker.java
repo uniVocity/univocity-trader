@@ -1,4 +1,4 @@
-package com.univocity.trader.currency;
+package com.univocity.trader.tickers;
 
 
 import com.univocity.parsers.annotations.*;
