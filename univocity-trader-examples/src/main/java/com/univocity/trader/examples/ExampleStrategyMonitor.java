@@ -1,20 +1,26 @@
 package com.univocity.trader.examples;
 
+import java.util.*;
+
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
-import java.util.*;
-
 public class ExampleStrategyMonitor extends StrategyMonitor {
-
 	private final Set<Indicator> indicators = new HashSet<>();
-
 	private final InstantaneousTrendline trend;
 	private boolean waitForUptrend = false;
 
 	public ExampleStrategyMonitor() {
 		indicators.add(trend = new InstantaneousTrendline(TimeInterval.minutes(25)));
+	}
+
+	@Override
+	public boolean discardBuy(Strategy strategy) {
+		if (trend.getSignal(trader.getCandle()) == Signal.BUY) {
+			waitForUptrend = false;
+		}
+		return waitForUptrend;
 	}
 
 	@Override
@@ -24,10 +30,9 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
 
 	@Override
 	public String handleStop(Signal signal, Strategy strategy) {
-		double currentReturns = trader.getChange();
-		double bestReturns = trader.getMaxChange();
-
-		if (currentReturns - bestReturns < -2.0) {
+		final double currentReturns = trader.getChange();
+		final double bestReturns = trader.getMaxChange();
+		if ((currentReturns - bestReturns) < -2.0) {
 			if (currentReturns < 0.0) {
 				waitForUptrend = true;
 				return "stop loss";
@@ -35,14 +40,5 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
 			return "exit with some profit";
 		}
 		return null;
-	}
-
-	@Override
-	public boolean discardBuy(Strategy strategy) {
-		if (trend.getSignal(trader.getCandle()) == Signal.BUY) {
-			waitForUptrend = false;
-		}
-
-		return waitForUptrend;
 	}
 }
