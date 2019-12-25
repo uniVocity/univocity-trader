@@ -16,7 +16,8 @@
 	<packaging>jar</packaging>
 
 	<dependencies>
-				<dependency>
+
+		<dependency>
 			<groupId>com.univocity</groupId>
 			<artifactId>univocity-trader-binance</artifactId>
 			<version>${revision}</version>
