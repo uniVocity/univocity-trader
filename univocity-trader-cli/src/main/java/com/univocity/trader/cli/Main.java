@@ -1,5 +1,9 @@
 package com.univocity.trader.cli;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -8,6 +12,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import com.univocity.trader.Exchange;
+import com.univocity.trader.candles.SymbolInformation;
 import com.univocity.trader.config.Configuration;
 import com.univocity.trader.config.Simulation;
 import com.univocity.trader.exchange.binance.Account;
@@ -16,6 +21,8 @@ import com.univocity.trader.exchange.binance.BinanceExchange;
 import com.univocity.trader.markethistory.MarketHistoryUpdater;
 import com.univocity.trader.notification.SimpleStrategyStatistics;
 import com.univocity.trader.simulation.MarketSimulator;
+import com.univocity.trader.tickers.Ticker.Type;
+import com.univocity.trader.tickers.Tickers;
 
 public class Main {
    /**
@@ -120,7 +127,24 @@ public class Main {
    }
 
    private static void updateMarketHistory(Exchange exchange) {
+      String[] pairs = getPairs(exchange);
       final MarketHistoryUpdater marketHistoryUpdater = new MarketHistoryUpdater();
-      marketHistoryUpdater.update(exchange, MarketHistoryUpdater.ALL_PAIRS);
+      marketHistoryUpdater.update(exchange, pairs);
+   }
+
+   private static String[] getPairs(Exchange exchange) {
+      String[] univocitySymbols = Tickers.getInstance().getSymbols(Type.crypto);
+      String[] univocityReference = Tickers.getInstance().getSymbols(Type.reference);
+      String[] univocityPairs = Tickers.getInstance().makePairs(univocitySymbols, univocityReference);
+      Map<String, SymbolInformation> symbolInfo = exchange.getSymbolInformation();
+      List<String> lst = new ArrayList<String>();
+      for (String pair : univocityPairs) {
+         if (symbolInfo.containsKey(pair)) {
+            lst.add(pair);
+         }
+      }
+      String[] ret = new String[lst.size()];
+      lst.toArray(ret);
+      return ret;
    }
 }
