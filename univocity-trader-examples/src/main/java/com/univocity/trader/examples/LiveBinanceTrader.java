@@ -1,4 +1,4 @@
-package com.univocity.trader.exchange.binance.example;
+package com.univocity.trader.examples;
 
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;

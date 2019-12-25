@@ -42,7 +42,7 @@ in class [BinanceExchange](./univocity-trader-binance/src/main/java/com/univocit
 As you can see it's not a lot of work especially if the exchange already provides a Java library for their API.
  
 The full integration code with Binance is in the [univocity-trader-binance](./univocity-trader-binance) project folder, and you can
-quickly adapt the sample code under [univocity-trader-binance-example](./univocity-trader-binance-example) to start trading live.
+quickly adapt the sample code under [univocity-trader-examples](./univocity-trader-examples) to start trading live.
 
 The following guide will show you how to get started using [Binance](https://www.binance.com/en/register?ref=36767892) to populate then
 update a database of historical data and start trading.
@@ -73,7 +73,7 @@ Then create the [candle](./univocity-trader-core/src/main/resources/db/mysql/can
 and [gap](./univocity-trader-core/src/main/resources/db/mysql/gap.sql) tables 
 defined [here](./univocity-trader-core/src/main/resources/db/mysql).
 
-Let's quickly look at the [MarketHistoryLoader](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/MarketHistoryLoader.java)
+Let's quickly look at the [MarketHistoryLoader](./univocity-trader-examples/src/main/java/com/univocity/trader/exchange/binance/example/MarketHistoryLoader.java)
 class, which will connect to [Binance](https://www.binance.com/en/register?ref=36767892) and pull the market history of Bitcoin of the last 6 months in 1 minute candles.
 
 ```java
@@ -108,7 +108,7 @@ Once the database connection is configured with your particular details, you can
 >NOTE: If you are running this from the command line, execute:
 >
 >```
->cd univocity-trader-binance-example
+>cd univocity-trader-examples
 >mvn exec:java -Dexec.mainClass=com.univocity.trader.exchange.binance.example.MarketHistoryLoader
 >```
 
@@ -133,7 +133,7 @@ mysql -u <user> -p trading < db.sql
 
 > NOTE: if you get "too many open files" errors later on, restart mysql after restoring the database.
 
-After the backup is restored, the  [MarketHistoryLoader](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/MarketHistoryLoader.java)
+After the backup is restored, the  [MarketHistoryLoader](./univocity-trader-examples/src/main/java/com/univocity/trader/exchange/binance/example/MarketHistoryLoader.java)
 should finish rather quickly. Re-execute this class whenever you want to update your local database
 with the latest data from Binance.
 
@@ -188,7 +188,7 @@ public class ExampleStrategy extends IndicatorStrategy {
 }
 ```
 
-Let's create the [ExampleStrategy](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategy.java) 
+Let's create the [ExampleStrategy](./univocity-trader-examples/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategy.java) 
 to combine two [BollingerBands](./univocity-trader-core/src/main/java/com/univocity/trader/indicators/BollingerBand.java) in two different time frames:
 
 ```java
@@ -268,7 +268,7 @@ You can also define additional trading pairs such as ADABTC by adding the line:
 simulation.tradeWithPair("ADA", "BTC");
 ```
 
-Add our [ExampleStrategy](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategy.java)
+Add our [ExampleStrategy](./univocity-trader-examples/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategy.java)
 to the simulation. Note that the framework **forces** you to provide functions/suppliers that create new instances
 as required.
 
@@ -310,7 +310,7 @@ print each trade made to the log.
 > NOTE: If you are running from the command line, execute:
 >
 >```
->cd univocity-trader-binance-example
+>cd univocity-trader-examples
 >mvn exec:java -Dexec.mainClass=com.univocity.trader.exchange.binance.example.MarketSimulation
 >```
 
@@ -434,7 +434,7 @@ public abstract class StrategyMonitor extends IndicatorGroup {
 
 We can also use indicators with a [StrategyMonitor](./univocity-trader-core/src/main/java/com/univocity/trader/strategy/StrategyMonitor.java)
 to help determine your actions. 
-[Here](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategyMonitor.java) 
+[Here](./univocity-trader-examples/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategyMonitor.java) 
 is a simple implementation:
 
 ```java
@@ -513,7 +513,7 @@ to see if we can squeeze more profits out of it.
 One basic method of optimization is to update the parameters used by the strategy. You can
 build lists of [Parameters](./univocity-trader-core/src/main/java/com/univocity/trader/simulation/Parameters.java)
 to try and see how returns would change. For example, in the 
-[ExampleStrategy](/univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategy.java),
+[ExampleStrategy](/univocity-trader-examples/src/main/java/com/univocity/trader/exchange/binance/example/ExampleStrategy.java),
 change the constructor to:
 
 ```java
@@ -532,7 +532,7 @@ public ExampleStrategy(Parameters params) {
 }
 ```
 
-We can now change the [MarketSimulation](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/MarketSimulation.java)
+We can now change the [MarketSimulation](./univocity-trader-examples/src/main/java/com/univocity/trader/exchange/binance/example/MarketSimulation.java)
 code to generate a set of parameters to see how better (or worse) the results will be:
 
 
@@ -618,7 +618,7 @@ suggest you to create a new trading account using the link above, and only add f
 I had issues buying crypto directly on Binance, so I suggest using [Coinmama](https://go.coinmama.com/visit/?bta=56730&brand=coinmama)
 to buy your crypto quickly and without major hassles. 
 
-Class [LiveBinanceTrader](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/LiveBinanceTrader.java) 
+Class [LiveBinanceTrader](./univocity-trader-examples/src/main/java/com/univocity/trader/exchange/binance/example/LiveBinanceTrader.java) 
 has code you'd be using to trade with the example strategy shown earlier:
 
 ```java
@@ -667,7 +667,7 @@ public static void main(String... args) {
 ```
 
 Before you execute this class, we suggest you to enable the `trace` log level 
-in the [logback.xml](./univocity-trader-binance-example/src/main/resources/logback.xml) file:
+in the [logback.xml](./univocity-trader-examples/src/main/resources/logback.xml) file:
 
 ```xml
 <configuration>
@@ -699,12 +699,12 @@ private static final EmailConfiguration getEmailConfig() {
 ```
 
 
-You can now run the [LiveBinanceTrader](./univocity-trader-binance-example/src/main/java/com/univocity/trader/exchange/binance/example/LiveBinanceTrader.java).
+You can now run the [LiveBinanceTrader](./univocity-trader-examples/src/main/java/com/univocity/trader/exchange/binance/example/LiveBinanceTrader.java).
 
 > NOTE: If you are running from the command line, execute:
 >
 >```
->cd univocity-trader-binance-example
+>cd univocity-trader-examples
 >mvn exec:java -Dexec.mainClass=com.univocity.trader.exchange.binance.example.LiveBinanceTrader
 >```
 

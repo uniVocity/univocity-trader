@@ -1,13 +1,11 @@
 package com.univocity.trader.markethistory;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
+import com.univocity.trader.*;
+import com.univocity.trader.candles.*;
+import com.univocity.trader.indicators.base.*;
 
-import com.univocity.trader.Exchange;
-import com.univocity.trader.candles.CandleRepository;
-import com.univocity.trader.indicators.base.TimeInterval;
+import java.time.*;
+import java.time.temporal.*;
 
 public class MarketHistoryUpdater {
    public void update(Exchange exchange, String[] symbols) {

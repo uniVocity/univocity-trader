@@ -9,16 +9,16 @@
 		<version>${revision}</version>
 	</parent>
 
-	<artifactId>univocity-trader-binance-example</artifactId>
+	<artifactId>univocity-trader-examples</artifactId>
 	<version>${revision}</version>
 
-	<name>univocity-trader-binance-example</name>
+	<name>univocity-trader-examples</name>
 	<packaging>jar</packaging>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.univocity</groupId>
-			<artifactId>univocity-trader-binance</artifactId>
+			<artifactId>univocity-trader-cli</artifactId>
 			<version>${revision}</version>
 		</dependency>
 	</dependencies>

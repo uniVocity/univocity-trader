@@ -1,8 +1,9 @@
-package com.univocity.trader.strategy;
+package com.univocity.trader.examples;
 
 import java.util.HashSet;
 import java.util.Set;
 
+import com.univocity.trader.strategy.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

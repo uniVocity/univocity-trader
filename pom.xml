@@ -31,8 +31,8 @@
     <modules>
         <module>univocity-trader-core</module>
         <module>univocity-trader-binance</module>
-        <module>univocity-trader-binance-example</module>
         <module>univocity-trader-cli</module>
+        <module>univocity-trader-examples</module>
     </modules>
 
     <issueManagement>

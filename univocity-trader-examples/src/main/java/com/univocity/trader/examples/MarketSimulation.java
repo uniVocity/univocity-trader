@@ -1,12 +1,9 @@
-package com.univocity.trader.exchange.binance.example;
+package com.univocity.trader.examples;
 
-import com.univocity.trader.account.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.binance.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
-
-import java.time.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
