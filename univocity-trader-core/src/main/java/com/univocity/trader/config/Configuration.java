@@ -4,7 +4,9 @@ import com.univocity.trader.indicators.base.*;
 
 import java.util.*;
 
-public abstract class Configuration<C extends Configuration<C, T>, T extends AccountConfiguration<T>> {
+import static com.univocity.trader.indicators.base.TimeInterval.*;
+
+public abstract class Configuration<C extends Configuration<C, T>, T extends AccountConfiguration<T>> implements ConfigurationGroup {
 
 	private final List<ConfigurationGroup> configurationGroups = new ArrayList<>();
 	private final ConfigurationManager<C> manager;
@@ -13,10 +15,10 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	private final EmailConfiguration emailConfiguration = new EmailConfiguration();
 	private final Simulation simulation = new Simulation();
 	final AccountList<T> accountList = new AccountList<T>(this::newAccountConfiguration);
-	private TimeInterval tickInterval;
+	private TimeInterval tickInterval = minutes(1);
 
 	protected Configuration() {
-		this("config/univocity-trader.properties");
+		this("univocity-trader.properties");
 	}
 
 	final void loadConfigurationGroups(){
@@ -48,6 +50,7 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		groups.add(emailConfiguration);
 		groups.add(accountList);
 		groups.add(simulation);
+		groups.add(this);
 
 		ConfigurationGroup[] additionalGroups = getAdditionalConfigurationGroups();
 		if (additionalGroups != null) {
@@ -88,6 +91,16 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	public C tickInterval(TimeInterval tickInterval) {
 		 this.tickInterval = tickInterval;
 		 return (C)this;
+	}
+
+	@Override
+	public boolean isConfigured() {
+		return tickInterval != null;
+	}
+
+	@Override
+	public final void readProperties(PropertyBasedConfiguration properties) {
+		this.tickInterval = TimeInterval.fromString(properties.getProperty("tick.interval"));
 	}
 
 	protected abstract T newAccountConfiguration(String id);

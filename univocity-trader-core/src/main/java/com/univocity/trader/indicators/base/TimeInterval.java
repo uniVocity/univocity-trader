@@ -84,6 +84,28 @@ public class TimeInterval {
 		return duration + unitStr;
 	}
 
+	public static TimeInterval fromString(String interval) {
+		if (interval.toLowerCase().endsWith("ms")) {
+			interval = interval.substring(0, interval.length() - 2);
+			return minutes(Long.parseLong(interval));
+		} else {
+			char unit = interval.toLowerCase().charAt(interval.length() - 1);
+			interval = interval.substring(0, interval.length() - 1);
+			long duration = Long.parseLong(interval);
+			switch (unit) {
+				case 'd':
+					return days(duration);
+				case 'h':
+					return hours(duration);
+				case 'm':
+					return minutes(duration);
+				case 's':
+					return seconds(duration);
+			}
+			throw new IllegalArgumentException("Unparseable interval: " + interval);
+		}
+	}
+
 	public static String getFormattedDuration(TimeInterval interval) {
 		return getFormattedDuration(interval.ms);
 	}
@@ -100,7 +122,7 @@ public class TimeInterval {
 				return pluralize("hour", hours) + " and " + pluralize("minute", minutes);
 			}
 		}
-		if(minutes > 0){
+		if (minutes > 0) {
 			seconds -= minutes * 60;
 			if (seconds == 0) {
 				return pluralize("minute", minutes);

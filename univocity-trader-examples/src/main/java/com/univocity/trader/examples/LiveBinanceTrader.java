@@ -30,8 +30,6 @@ public class LiveBinanceTrader {
 
 		Binance.Trader trader = Binance.trader();
 
-		trader.configure().loadConfigurationFromProperties();
-
 		trader.configure().mailSender()
 				.replyToAddress("dev@univocity.com")
 				.smtpHost("smtp.gmail.com")

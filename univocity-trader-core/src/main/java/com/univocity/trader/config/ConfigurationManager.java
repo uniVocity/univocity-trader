@@ -1,6 +1,5 @@
 package com.univocity.trader.config;
 
-import org.apache.commons.cli.*;
 import org.slf4j.*;
 
 import java.util.*;
@@ -24,7 +23,7 @@ public final class ConfigurationManager<C extends Configuration<C, ?>> {
 	protected ConfigurationManager(C root, String defaultConfigurationFile) {
 		this.root = root;
 		CONFIGURATION_FILE = defaultConfigurationFile;
-		configurationFiles = new String[]{CONFIGURATION_FILE};
+		configurationFiles = new String[]{CONFIGURATION_FILE, "config/" + defaultConfigurationFile};
 	}
 
 	private C initialize(boolean loadFromFile) {
