@@ -18,7 +18,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.univocity</groupId>
-			<artifactId>univocity-trader-binance</artifactId>
+			<artifactId>univocity-trader-cli</artifactId>
 			<version>${revision}</version>
 		</dependency>
 	</dependencies>
