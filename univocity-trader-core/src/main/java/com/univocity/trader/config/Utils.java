@@ -19,6 +19,7 @@ import io.github.classgraph.*;
 import org.apache.commons.lang3.*;
 
 import java.io.*;
+import java.lang.ref.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.nio.charset.*;
@@ -1239,10 +1240,7 @@ public class Utils {
 	public static Map<Class<?>, LinkedHashSet<Class<?>>> findClasses(Map<Class<?>, LinkedHashSet<String>> classesToSearch) {
 		Map<Class<?>, LinkedHashSet<Class<?>>> out = new HashMap<>();
 
-		try (ScanResult scanResult = new ClassGraph().enableClassInfo().ignoreClassVisibility().scan()) {
-			classesToSearch.forEach((k, v) -> findClasses(scanResult, k, v, out));
-		}
-
+		classesToSearch.forEach((k, v) -> findClasses(scanClasses(), k, v, out));
 		return out;
 	}
 
@@ -1260,9 +1258,31 @@ public class Utils {
 	 * @throws IllegalArgumentException if no class is found.
 	 */
 	public static Class<?> findClass(Class<?> parent, String classToFind) {
-		try (ScanResult scanResult = new ClassGraph().enableClassInfo().ignoreClassVisibility().scan()) {
-			return search(scanResult, parent, Collections.singleton(classToFind)).iterator().next();
+		return search(scanClasses(), parent, Collections.singleton(classToFind)).iterator().next();
+	}
+
+	private static WeakReference<ScanResult> classesScanned;
+
+	private static synchronized ScanResult scanClasses() {
+		ScanResult out;
+		if (classesScanned == null || (out = classesScanned.get()) == null) {
+			classesScanned = new WeakReference<>(out = runClassScan()) {
+				@Override
+				public void clear() {
+					super.clear();
+					try {
+						ScanResult.closeAll();
+					} catch (Throwable t) {
+						//ignore.
+					}
+				}
+			};
 		}
+		return out;
+	}
+
+	private static ScanResult runClassScan() {
+		return new ClassGraph().enableClassInfo().ignoreClassVisibility().blacklistPackages("java.*").scan();
 	}
 
 	/**
