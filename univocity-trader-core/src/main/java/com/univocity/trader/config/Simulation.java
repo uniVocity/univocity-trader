@@ -39,6 +39,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	private LocalDateTime simulationStart;
 	private LocalDateTime simulationEnd;
 	private boolean cacheCandles = false;
+	private int activeQueryLimit = 15;
 
 	private Map<String, Double> initialFunds = new ConcurrentHashMap<>();
 
@@ -123,6 +124,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		simulationStart(parseDateTime(properties, "simulation.start"));
 		simulationEnd(parseDateTime(properties, "simulation.end"));
 		cacheCandles(properties.getBoolean("simulation.cache.candles", false));
+		activeQueryLimit(properties.getInteger("simulation.active.query.limit", 15));
 
 		parseInitialFunds(properties);
 	}
@@ -215,5 +217,14 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		} catch (CloneNotSupportedException e) {
 			throw new IllegalStateException(e);
 		}
+	}
+
+	public int activeQueryLimit() {
+		return activeQueryLimit;
+	}
+
+	public Simulation activeQueryLimit(int activeQueryLimit) {
+		this.activeQueryLimit = activeQueryLimit;
+		return this;
 	}
 }

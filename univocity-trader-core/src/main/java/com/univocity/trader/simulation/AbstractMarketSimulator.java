@@ -22,18 +22,9 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 	private static final Logger log = LoggerFactory.getLogger(AbstractMarketSimulator.class);
 
 	private final Map<String, Engine[]> symbolHandlers = new HashMap<>();
-	private int activeQueryLimit = 15;
 
 	protected AbstractMarketSimulator(C configuration) {
 		super(configuration);
-	}
-
-	public int getActiveQueryLimit() {
-		return activeQueryLimit;
-	}
-
-	public void setActiveQueryLimit(int activeQueryLimit) {
-		this.activeQueryLimit = activeQueryLimit;
 	}
 
 	public void run() {
@@ -92,7 +83,7 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 		ExecutorService executor = Executors.newCachedThreadPool();
 		for (String symbol : symbolHandlers.keySet()) {
 			activeQueries++;
-			boolean loadAllDataFirst = simulation.cacheCandles() || activeQueries > activeQueryLimit;
+			boolean loadAllDataFirst = simulation.cacheCandles() || activeQueries > simulation.activeQueryLimit();
 
 			futures.put(symbol, CompletableFuture.supplyAsync(
 					() -> candleRepository.iterate(symbol, start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor)
