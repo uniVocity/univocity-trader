@@ -84,7 +84,7 @@ public class Main {
 					/*
 					 * update market history
 					 */
-					simulator.updateHistory();
+					simulator.backfillHistory();
 				}
 				if (cmd.hasOption(SIMULATE_OPTION)) {
 					/*

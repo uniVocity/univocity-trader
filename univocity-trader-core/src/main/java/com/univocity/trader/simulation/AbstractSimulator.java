@@ -125,20 +125,20 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		}
 	}
 
-	public void updateHistory() {
+	public void backfillHistory() {
 		TreeSet<String> allSymbols = new TreeSet<>();
 		configuration.accounts().forEach(a -> allSymbols.addAll(a.symbolPairs().keySet()));
 		allSymbols.addAll(new CandleRepository(configure().database()).getKnownSymbols());
-		updateHistory(allSymbols);
+		backfillHistory(allSymbols);
 	}
 
-	public void updateHistory(String... symbolsToUpdate) {
+	public void backfillHistory(String... symbolsToUpdate) {
 		LinkedHashSet<String> allSymbols = new LinkedHashSet<>();
 		Collections.addAll(allSymbols, symbolsToUpdate);
-		updateHistory(allSymbols);
+		backfillHistory(allSymbols);
 	}
 
-	public void updateHistory(Collection<String> symbols) {
+	public void backfillHistory(Collection<String> symbols) {
 		CandleRepository candleRepository = new CandleRepository(configure().database());
 		Exchange<?, A> exchange = exchangeSupplier.get();
 		final Instant start = simulation.backfillStart();
