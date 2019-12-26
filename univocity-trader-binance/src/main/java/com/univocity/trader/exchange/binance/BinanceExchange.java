@@ -20,7 +20,7 @@ import java.util.stream.*;
 
 import static com.univocity.trader.exchange.binance.api.client.domain.general.FilterType.*;
 
-public class BinanceExchange implements Exchange<Candlestick, Account> {
+class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private static final Logger log = LoggerFactory.getLogger(BinanceExchange.class);
 
@@ -49,7 +49,11 @@ public class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	@Override
 	public List<Candlestick> getLatestTicks(String symbol, TimeInterval interval) {
-		return restClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval));
+		try {
+			return restClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval));
+		} catch (Exception e) {
+			throw new IllegalStateException("Error returnning latest ticks of " + symbol, e);
+		}
 	}
 
 	@Override

@@ -2,35 +2,36 @@ package com.univocity.trader.cli;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.exchange.binance.*;
-import com.univocity.trader.notification.*;
+import com.univocity.trader.config.*;
+import com.univocity.trader.simulation.*;
 import com.univocity.trader.tickers.Ticker.*;
 import com.univocity.trader.tickers.*;
+import nonapi.io.github.classgraph.utils.*;
 import org.apache.commons.cli.*;
 
 import java.util.*;
 
 public class Main {
 	/**
-	 * configfile option
+	 * configuration file option
 	 */
 	private static final String CONFIG_OPTION = "config";
 	/**
-	 * account option
+	 * exchange option
 	 */
-	private static final String ACCOUNT_OPTION = "account";
+	private static final String EXCHANGE_OPTION = "exchange";
 	/**
-	 * import option
+	 * backfill historical data option
 	 */
-	private static final String IMPORT_OPTION = "import";
+	private static final String BACKFILL_OPTION = "backfill";
 	/**
-	 * simulate option
+	 * simulation option
 	 */
 	private static final String SIMULATE_OPTION = "simulate";
 	/**
-	 * livetrade option
+	 * live trading option
 	 */
-	private static final String LIVETRADE_OPTION = "livetrade";
+	private static final String TRADE_OPTION = "trade";
 
 	private static String[] getPairs(Exchange exchange) {
 		final String[] univocitySymbols = Tickers.getInstance().getSymbols(Type.crypto);
@@ -48,25 +49,21 @@ public class Main {
 		return ret;
 	}
 
-	private static void livetrade(Exchange exchange, Account account) {
-		// TODO
-	}
-
 	public static void main(String... args) {
 		System.out.println("Univocity CLI");
 		/*
 		 * options
 		 */
 		final Options options = new Options();
-		Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(false).desc("config file").build();
+		Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(false).desc("configuration file").build();
 		options.addOption(oo);
-		oo = Option.builder().argName(ACCOUNT_OPTION).longOpt(ACCOUNT_OPTION).type(String.class).hasArg().required(false).desc("account").build();
+		oo = Option.builder().argName(EXCHANGE_OPTION).longOpt(EXCHANGE_OPTION).type(String.class).hasArg().required(true).desc("exchange name").build();
 		options.addOption(oo);
-		oo = Option.builder().argName(IMPORT_OPTION).longOpt(IMPORT_OPTION).hasArg(false).required(false).desc("import").build();
+		oo = Option.builder().argName(BACKFILL_OPTION).longOpt(BACKFILL_OPTION).hasArg(false).required(false).desc("backfill historical data loaded from the exchange").build();
 		options.addOption(oo);
 		oo = Option.builder().argName(SIMULATE_OPTION).longOpt(SIMULATE_OPTION).hasArg(false).required(false).desc("simulate").build();
 		options.addOption(oo);
-		oo = Option.builder().argName(LIVETRADE_OPTION).longOpt(LIVETRADE_OPTION).hasArg(false).required(false).desc("live trade").build();
+		oo = Option.builder().argName(TRADE_OPTION).longOpt(TRADE_OPTION).hasArg(false).required(false).desc("trade live on the given exchange").build();
 		options.addOption(oo);
 		/*
 		 * parse
@@ -87,30 +84,29 @@ public class Main {
 			/*
 			 * TODO we might want to fix this....
 			 */
-			final Exchange exchange = new BinanceExchange();
-			final String accountName = cmd.getOptionValue(ACCOUNT_OPTION);
-			Account account = null;
-			if (null != accountName) {
-//				account = Binance.load(CONFIG_OPTION).account(accountName);
-			}
-			/*
-			 * run command
-			 */
-			if (cmd.hasOption(IMPORT_OPTION)) {
+			final String exchangeName = cmd.getOptionValue(EXCHANGE_OPTION);
+			EntryPoint entryPoint = Utils.findClassAndInstantiate(EntryPoint.class, exchangeName);
+
+			if (cmd.hasOption(TRADE_OPTION)) {
+				livetrade(entryPoint);
+			} else {
+				AbstractMarketSimulator<?, ?> simulator = loadSimulator(entryPoint);
+
 				/*
-				 * update market history
+				 * run command
 				 */
-				updateMarketHistory();
-			} else if (cmd.hasOption(SIMULATE_OPTION)) {
-				/*
-				 * simulate
-				 */
-				simulate(exchange, account);
-			} else if (cmd.hasOption(LIVETRADE_OPTION)) {
-				/*
-				 * live trade
-				 */
-				livetrade(exchange, account);
+				if (cmd.hasOption(BACKFILL_OPTION)) {
+					/*
+					 * update market history
+					 */
+					simulator.updateHistory();
+				}
+				if (cmd.hasOption(SIMULATE_OPTION)) {
+					/*
+					 * simulate
+					 */
+					simulator.run();
+				}
 			}
 		} catch (final Exception e) {
 			e.printStackTrace();
@@ -119,15 +115,12 @@ public class Main {
 		}
 	}
 
-	private static void simulate(Exchange exchange, Account account) {
-		final SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
-		account.listeners().add(stats);
-		final Binance.Simulator simulation = Binance.simulator();
-		simulation.run();
-		stats.printTradeStats();
+	private static void livetrade(EntryPoint entryPoint) {
+		var trader = (LiveTrader<?, ?, ?>) ReflectionUtils.invokeMethod(entryPoint, "trader", true);
+		trader.run();
 	}
 
-	private static void updateMarketHistory() {
-		Binance.simulator().updateHistory();
+	private static AbstractMarketSimulator<?, ?> loadSimulator(EntryPoint entryPoint) {
+		return (AbstractMarketSimulator<?, ?>) ReflectionUtils.invokeMethod(entryPoint, "simulator", true);
 	}
 }
