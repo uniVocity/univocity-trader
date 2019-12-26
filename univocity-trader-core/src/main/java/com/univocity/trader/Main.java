@@ -1,4 +1,4 @@
-package com.univocity.trader.cli;
+package com.univocity.trader;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;

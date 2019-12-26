@@ -18,9 +18,137 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.univocity</groupId>
-			<artifactId>univocity-trader-cli</artifactId>
+			<artifactId>univocity-trader-binance</artifactId>
 			<version>${revision}</version>
 		</dependency>
 	</dependencies>
 
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.1.1</version>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<includeScope>compile</includeScope>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.2.0</version>
+				<configuration>
+					<!-- Excludes external configuration from jar. These will be moved to sit alongside the built jar -->
+					<excludes>
+						<exclude>**/*.bat</exclude>
+						<exclude>**/*.sh</exclude>
+						<exclude>**/*.properties</exclude>
+						<exclude>**/*.xml</exclude>
+					</excludes>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>lib/</classpathPrefix>
+						</manifest>
+						<manifestEntries>
+							<Class-Path>config/</Class-Path>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>install</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<!-- Externalizes config - goes alongside run scripts -->
+							<outputDirectory>${basedir}/target/config</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/resources</directory>
+									<includes>
+										<include>**/*.properties</include>
+										<include>**/*.xml</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-script</id>
+						<phase>install</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/main/resources</directory>
+									<includes>
+										<include>**/*.bat</include>
+										<include>**/*.sh</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<phase>install</phase>
+						<configuration>
+							<tasks>
+								<!-- moves all dependencies to a "lib" folder -->
+								<copy todir="${basedir}/target/lib">
+									<fileset dir="${basedir}/">
+										<include name="*.jar"/>
+									</fileset>
+								</copy>
+								<!-- Zips all scripts, config and lib folders into a package -->
+								<zip destfile="${basedir}/target/univocity-trader-examples.zip">
+									<mappedresources>
+										<fileset dir="${basedir}/target/">
+											<include name="*.bat"/>
+											<include name="*.sh"/>
+											<include name="*.jar"/>
+											<include name="config/**"/>
+											<include name="lib/**"/>
+										</fileset>
+									</mappedresources>
+								</zip>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>
