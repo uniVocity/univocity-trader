@@ -12,7 +12,7 @@ public final class Binance implements EntryPoint {
 
 	public static final class Configuration extends com.univocity.trader.config.Configuration<Configuration, Account> {
 		private Configuration() {
-			super("binance.properties");
+			super("config/binance.properties");
 		}
 
 		@Override

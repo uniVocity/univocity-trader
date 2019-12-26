@@ -16,7 +16,7 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	private TimeInterval tickInterval;
 
 	protected Configuration() {
-		this("univocity-trader.properties");
+		this("config/univocity-trader.properties");
 	}
 
 	final void loadConfigurationGroups(){

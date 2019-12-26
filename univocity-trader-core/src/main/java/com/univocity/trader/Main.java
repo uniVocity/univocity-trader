@@ -1,6 +1,5 @@
 package com.univocity.trader;
 
-import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.simulation.*;
@@ -50,21 +49,16 @@ public class Main {
 	}
 
 	public static void main(String... args) {
-		System.out.println("Univocity CLI");
 		/*
 		 * options
 		 */
 		final Options options = new Options();
-		Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(false).desc("configuration file").build();
-		options.addOption(oo);
-		oo = Option.builder().argName(EXCHANGE_OPTION).longOpt(EXCHANGE_OPTION).type(String.class).hasArg().required(true).desc("exchange name").build();
-		options.addOption(oo);
-		oo = Option.builder().argName(BACKFILL_OPTION).longOpt(BACKFILL_OPTION).hasArg(false).required(false).desc("backfill historical data loaded from the exchange").build();
-		options.addOption(oo);
-		oo = Option.builder().argName(SIMULATE_OPTION).longOpt(SIMULATE_OPTION).hasArg(false).required(false).desc("simulate").build();
-		options.addOption(oo);
-		oo = Option.builder().argName(TRADE_OPTION).longOpt(TRADE_OPTION).hasArg(false).required(false).desc("trade live on the given exchange").build();
-		options.addOption(oo);
+
+		options.addOption(Option.builder().argName(EXCHANGE_OPTION).longOpt(EXCHANGE_OPTION).type(String.class).hasArg().required(true).desc("exchange name").build());
+		options.addOption(Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(false).desc("configuration file").build());
+		options.addOption(Option.builder().argName(BACKFILL_OPTION).longOpt(BACKFILL_OPTION).hasArg(false).required(false).desc("backfill historical data from exchange").build());
+		options.addOption(Option.builder().argName(SIMULATE_OPTION).longOpt(SIMULATE_OPTION).hasArg(false).required(false).desc("simulate").build());
+		options.addOption(Option.builder().argName(TRADE_OPTION).longOpt(TRADE_OPTION).hasArg(false).required(false).desc("trade live on exchange").build());
 		/*
 		 * parse
 		 */
@@ -100,8 +94,9 @@ public class Main {
 				}
 			}
 		} catch (final Exception e) {
-			e.printStackTrace();
+			System.err.println(e.getMessage());
 			final HelpFormatter formatter = new HelpFormatter();
+			formatter.setOptionComparator(null);
 			formatter.printHelp("posix", options);
 		}
 	}
@@ -118,8 +113,8 @@ public class Main {
 		return out;
 	}
 
-	private static void loadConfiguration(Configuration config, String fileName){
-		if(fileName != null){
+	private static void loadConfiguration(Configuration config, String fileName) {
+		if (fileName != null) {
 			config.loadConfigurationFromProperties(fileName);
 		} else {
 			config.loadConfigurationFromProperties();

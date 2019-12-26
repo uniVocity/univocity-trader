@@ -129,13 +129,17 @@
 										<include name="*.jar"/>
 									</fileset>
 								</copy>
+								<move todir="${basedir}/target/lib">
+									<fileset dir="${basedir}/target">
+										<include name="*.jar"/>
+									</fileset>
+								</move>
 								<!-- Zips all scripts, config and lib folders into a package -->
 								<zip destfile="${basedir}/target/univocity-trader-examples.zip">
 									<mappedresources>
 										<fileset dir="${basedir}/target/">
 											<include name="*.bat"/>
 											<include name="*.sh"/>
-											<include name="*.jar"/>
 											<include name="config/**"/>
 											<include name="lib/**"/>
 										</fileset>
