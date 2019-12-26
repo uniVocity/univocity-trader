@@ -36,7 +36,7 @@ public class PropertyBasedConfiguration {
 	private static final Logger log = LoggerFactory.getLogger(PropertyBasedConfiguration.class);
 
 	protected final Properties properties;
-	private final Map<String, String> values = new LinkedHashMap<String, String>();
+	private final Map<String, String> values = new LinkedHashMap<>();
 
 	/**
 	 * Creates a configuration instance from an {@link java.io.InputStream}
@@ -893,5 +893,13 @@ public class PropertyBasedConfiguration {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Returns the names of all properties found in the configuration file.
+	 * @return an unmodifiable set with all properties, in the order they were declared in the file.
+	 */
+	public Set<String> getPropertyNames(){
+		return Collections.unmodifiableSet(values.keySet());
 	}
 }

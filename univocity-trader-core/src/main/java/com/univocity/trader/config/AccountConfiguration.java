@@ -59,16 +59,22 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 
 	}
 
-	protected final void readProperties(String accountId, PropertyBasedConfiguration properties) {
+	protected final void readProperties(final String account, PropertyBasedConfiguration properties) {
+		String accountProperty = properties.getPropertyNames().stream().filter(prop -> prop.startsWith(account)).findFirst().orElse(null);
+		if (accountProperty == null) {
+			return;
+		}
+
+		String accountId = account;
 		parsingProperties = true;
 		try {
 			if (!accountId.isBlank()) {
 				accountId = accountId + ".";
 			}
-			email = properties.getProperty(accountId + "email");
+			email = properties.getOptionalProperty(accountId + "email");
 			referenceCurrency = properties.getProperty(accountId + "reference.currency");
 
-			String tz = properties.getProperty(accountId + "timezone");
+			String tz = properties.getOptionalProperty(accountId + "timezone");
 			timeZone = getTimeZone(tz);
 			if (timeZone == null) {
 				String msg = "Unsupported timezone '" + tz + "' set ";
