@@ -1,0 +1,81 @@
+symbol,type,description
+# crypto currencies
+ADA, crypto, Cardano 
+ALGO, crypto, Algorand
+ATOM, crypto, Cosmos
+AUR, crypto, Auroracoin 
+BAT, crypto
+BCH, crypto, Bitcoin Cash
+BNB, crypto
+BTC, crypto, Bitcoin
+BTT, crypto
+CELR, crypto
+CHZ, crypto
+CHZ, crypto
+COCOS, crypto
+DASH, crypto, Dash
+DOCK, crypto
+DOGE, crypto, Dogecoin
+DUSK, crypto
+ENJ, crypto
+EOS, crypto, EOS
+ERD, crypto
+ETC, crypto, Ethereum Classic
+ETH, crypto, Ethereum
+FET, crypto
+GRC, crypto, Gridcoin
+HOT, crypto
+ICX, crypto
+IOST, crypto
+IOTA, crypto
+KAVA, crypto
+KEY, crypto
+LINK, crypto
+LTC, crypto, Litecoin
+MATIC, crypto
+NANO, crypto
+NEO, crypto, Neo
+NMC, crypto, Namecoin
+MZC, crypto, Maza
+NXT, crypto
+ONE, crypto
+ONT, crypto
+PERL, crypto
+PPC, crypto, Peercoin
+QTUM, crypto
+TRX, crypto
+VET, crypto
+WAVES, crypto, Waves
+WIN, crypto, WINk
+XEM, crypto, Nem
+XLM, crypto, Stellar Lumen
+XMR, crypto, Monero
+XPM, crypto, Primecoin
+XRP, crypto, Ripple
+XTZ, crypto, Tezos
+XVG, crypto, Verge
+ZEC, crypto, ZCash
+ZIL, crypto, Zilliqa
+ZEC, crypto, ZCash
+ZRX, crypto, 0x
+
+# tether
+USDT, reference, US Dollar Tether
+
+# fiat
+CDN, fiat, Canadian Dollar
+USD, fiat, US Dollar
+GBP, fiat, UK Pound
+EUR, fiat, Euro
+RUB, fiat, Russian Ruble
+CNY, fiat, Chinese Yuan
+NGN, fiat, Nigerian Naira 
+UAH, fiat, Ukrainian Hryvnia 
+KZT, fiat, Kazakhstani Tenge
+COP, fiat, Colombian Peso i
+VND, fiat, Vietnamese Dong
+IDR, fiat, Indonesian Rupiah
+BRL, fiat, Brazilian Real
+ARS, fiat, Agentinian Peso
+MXN, fiat, Mexican Peso
+INR, fiat, Indian Rupee
