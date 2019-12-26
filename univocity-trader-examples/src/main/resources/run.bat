@@ -1,2 +1,2 @@
 @echo Starting univocity-trader...
-java -Djava.library.path=lib -cp "lib/*" com.univocity.trader.Main %1 %2 %3 %4
+java -Dlogback.configurationFile=config/logback.xml -Djava.library.path=lib -cp "lib/*" com.univocity.trader.Main %1 %2 %3 %4
