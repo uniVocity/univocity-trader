@@ -124,7 +124,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 
 		String pathToParameters = properties.getOptionalProperty("simulation.parameters.file");
 		if (pathToParameters != null) {
-			File parametersFile = properties.getValidatedFile(pathToParameters, true, true, false, false);
+			File parametersFile = properties.getValidatedFile("simulation.parameters.file", true, true, false, false);
 			String className = properties.getProperty("simulation.parameters.class");
 			Class<? extends Parameters> parametersClass = Utils.findClass(Parameters.class, className);
 			parameters(parametersFile, parametersClass);

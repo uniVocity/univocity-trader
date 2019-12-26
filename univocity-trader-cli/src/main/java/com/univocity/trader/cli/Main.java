@@ -82,12 +82,12 @@ public class Main {
 			/*
 			 * config
 			 */
-			final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
-			if (null != configFileName) {
-				Configuration.load(configFileName);
-			} else {
-				Configuration.load();
-			}
+//			final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
+//			if (null != configFileName) {
+//				Configuration.load(configFileName);
+//			} else {
+//				Configuration.load();
+//			}
 			/*
 			 * TODO we might want to fix this....
 			 */
@@ -95,7 +95,7 @@ public class Main {
 			final String accountName = cmd.getOptionValue(ACCOUNT_OPTION);
 			Account account = null;
 			if (null != accountName) {
-				account = Binance.load(CONFIG_OPTION).account(accountName);
+//				account = Binance.load(CONFIG_OPTION).account(accountName);
 			}
 			/*
 			 * run command
@@ -126,9 +126,8 @@ public class Main {
 	private static void simulate(Exchange exchange, Account account) {
 		final SimpleStrategyStatistics stats = new SimpleStrategyStatistics();
 		account.listeners().add(stats);
-		final Simulation simulation = Binance.getInstance().simulation();
-		final MarketSimulator simulator = new MarketSimulator(account, simulation);
-		simulator.run();
+		final Binance.Simulator simulation = Binance.simulator();
+		simulation.run();
 		stats.printTradeStats();
 	}
 
