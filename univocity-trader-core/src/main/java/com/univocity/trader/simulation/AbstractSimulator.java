@@ -4,7 +4,6 @@ import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
-import com.univocity.trader.indicators.base.*;
 
 import java.time.*;
 import java.util.*;
@@ -143,7 +142,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		Exchange<?, A> exchange = exchangeSupplier.get();
 		final Instant start = simulation.backfillStart();
 		for (String symbol : symbols) {
-			candleRepository.fillHistoryGaps(exchange, symbol, start, TimeInterval.minutes(1));
+			candleRepository.fillHistoryGaps(exchange, symbol, start, configuration.tickInterval());
 		}
 	}
 
