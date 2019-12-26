@@ -1,11 +1,14 @@
 package com.univocity.trader.simulation;
 
+import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.indicators.base.*;
 
 import java.time.*;
 import java.util.*;
+import java.util.function.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
@@ -16,11 +19,13 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 	protected final Simulation simulation;
 	private final C configuration;
 
+	private final Supplier<Exchange<?, A>> exchangeSupplier;
 	private Map<String, String[]> allPairs;
 
-	public AbstractSimulator(C configuration) {
+	public AbstractSimulator(C configuration, Supplier<Exchange<?, A>> exchangeSupplier) {
 		this.configuration = configuration;
 		simulation = configuration.simulation();
+		this.exchangeSupplier = exchangeSupplier;
 	}
 
 	protected AccountManager[] accounts() {
@@ -117,6 +122,28 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		}
 		for (Parameters params : parameters) {
 			executeSimulation(params);
+		}
+	}
+
+	public void updateHistory() {
+		TreeSet<String> allSymbols = new TreeSet<>();
+		configuration.accounts().forEach(a -> allSymbols.addAll(a.symbolPairs().keySet()));
+		allSymbols.addAll(new CandleRepository(configure().database()).getKnownSymbols());
+		updateHistory(allSymbols);
+	}
+
+	public void updateHistory(String... symbolsToUpdate) {
+		LinkedHashSet<String> allSymbols = new LinkedHashSet<>();
+		Collections.addAll(allSymbols, symbolsToUpdate);
+		updateHistory(allSymbols);
+	}
+
+	public void updateHistory(Collection<String> symbols) {
+		CandleRepository candleRepository = new CandleRepository(configure().database());
+		Exchange<?, A> exchange = exchangeSupplier.get();
+		final Instant start = simulation.backfillStart();
+		for (String symbol : symbols) {
+			candleRepository.fillHistoryGaps(exchange, symbol, start, TimeInterval.minutes(1));
 		}
 	}
 

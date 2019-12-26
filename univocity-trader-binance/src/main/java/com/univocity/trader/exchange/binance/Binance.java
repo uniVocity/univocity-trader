@@ -28,7 +28,7 @@ public final class Binance {
 
 	public static final class Simulator extends AbstractMarketSimulator<Configuration, Account> {
 		private Simulator() {
-			super(new Configuration());
+			super(new Configuration(), BinanceExchange::new);
 		}
 	}
 
@@ -42,8 +42,7 @@ public final class Binance {
 		return new Simulator();
 	}
 
-	public static Trader liveTrader() {
+	public static Trader trader() {
 		return new Trader();
 	}
-
 }

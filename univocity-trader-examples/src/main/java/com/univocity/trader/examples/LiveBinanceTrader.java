@@ -28,7 +28,7 @@ public class LiveBinanceTrader {
 //		DataSource ds = ?
 //		CandleRepository.setDataSource(ds);
 
-		Binance.Trader trader = Binance.liveTrader();
+		Binance.Trader trader = Binance.trader();
 
 		trader.configure().loadConfigurationFromProperties();
 

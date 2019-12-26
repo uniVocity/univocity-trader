@@ -40,6 +40,8 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	private LocalDateTime simulationEnd;
 	private boolean cacheCandles = false;
 	private int activeQueryLimit = 15;
+	private int backfillLength = 6;
+	private ChronoUnit backfillUnit = ChronoUnit.MONTHS;
 
 	private Map<String, Double> initialFunds = new ConcurrentHashMap<>();
 	private final List<Parameters> parameters = new ArrayList<>();
@@ -120,6 +122,19 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		cacheCandles(properties.getBoolean("simulation.cache.candles", false));
 		activeQueryLimit(properties.getInteger("simulation.active.query.limit", 15));
 
+
+		String backfill = properties.getOptionalProperty("simulation.history.backfill");
+		if (backfill != null) {
+			char ch = Character.toUpperCase(backfill.charAt(backfill.length() - 1));
+			if (Character.isLetter(ch)) {
+				backfill = backfill.substring(0, backfill.length() - 1);
+				this.backfillUnit = getBackfillUnitFromLetter(ch);
+			} else {
+				this.backfillUnit = ChronoUnit.DAYS;
+			}
+			this.backfillLength = Integer.parseInt(backfill);
+		}
+
 		parseInitialFunds(properties);
 
 		String pathToParameters = properties.getOptionalProperty("simulation.parameters.file");
@@ -129,6 +144,48 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 			Class<? extends Parameters> parametersClass = Utils.findClass(Parameters.class, className);
 			parameters(parametersFile, parametersClass);
 		}
+	}
+
+	private ChronoUnit getBackfillUnitFromLetter(char ch) {
+		switch (ch) {
+			case 'Y':
+				return ChronoUnit.YEARS;
+			case 'M':
+				return ChronoUnit.MONTHS;
+			case 'W':
+				return ChronoUnit.WEEKS;
+			case 'D':
+				return ChronoUnit.DAYS;
+		}
+		throw new IllegalConfigurationException("Invalid backfill length unit '" + ch + "'. Expected one of: Y, M, W, D");
+	}
+
+	public Simulation backfillDays(int lengthInDays) {
+		backfillLength = lengthInDays;
+		backfillUnit = ChronoUnit.DAYS;
+		return this;
+	}
+
+	public Simulation backfillWeeks(int lengthInWeeks) {
+		backfillLength = lengthInWeeks;
+		backfillUnit = ChronoUnit.WEEKS;
+		return this;
+	}
+
+	public Simulation backfillMonths(int lengthInMonths) {
+		backfillLength = lengthInMonths;
+		backfillUnit = ChronoUnit.MONTHS;
+		return this;
+	}
+
+	public Simulation backfillYears(int lengthInYears) {
+		backfillLength = lengthInYears;
+		backfillUnit = ChronoUnit.YEARS;
+		return this;
+	}
+
+	public int getBackfillLength() {
+		return backfillLength;
 	}
 
 	public void parameters(String pathToParametersFile, Class<? extends Parameters> typeOfParameters) {
@@ -239,7 +296,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return this;
 	}
 
-	private void loadParameters(File parametersFile, Class<? extends Parameters> typeOfParameters){
+	private void loadParameters(File parametersFile, Class<? extends Parameters> typeOfParameters) {
 		//TODO: load with univocity-parsers
 	}
 
@@ -255,5 +312,9 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	public Simulation clearParameters() {
 		this.parameters.clear();
 		return this;
+	}
+
+	public Instant backfillStart() {
+		return LocalDate.now().minus(backfillLength, backfillUnit).atStartOfDay().toInstant(ZoneOffset.UTC);
 	}
 }

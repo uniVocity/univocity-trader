@@ -1,18 +1,14 @@
 package com.univocity.trader.cli;
 
-import java.util.*;
-
-import org.apache.commons.cli.*;
-
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.binance.*;
-import com.univocity.trader.markethistory.*;
 import com.univocity.trader.notification.*;
-import com.univocity.trader.simulation.*;
-import com.univocity.trader.tickers.*;
 import com.univocity.trader.tickers.Ticker.*;
+import com.univocity.trader.tickers.*;
+import org.apache.commons.cli.*;
+
+import java.util.*;
 
 public class Main {
 	/**
@@ -104,7 +100,7 @@ public class Main {
 				/*
 				 * update market history
 				 */
-				updateMarketHistory(exchange);
+				updateMarketHistory();
 			} else if (cmd.hasOption(SIMULATE_OPTION)) {
 				/*
 				 * simulate
@@ -131,9 +127,7 @@ public class Main {
 		stats.printTradeStats();
 	}
 
-	private static void updateMarketHistory(Exchange exchange) {
-		final String[] pairs = getPairs(exchange);
-		final MarketHistoryUpdater marketHistoryUpdater = new MarketHistoryUpdater();
-		marketHistoryUpdater.update(exchange, pairs);
+	private static void updateMarketHistory() {
+		Binance.simulator().updateHistory();
 	}
 }

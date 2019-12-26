@@ -11,6 +11,7 @@ import org.slf4j.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
@@ -23,8 +24,8 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 
 	private final Map<String, Engine[]> symbolHandlers = new HashMap<>();
 
-	protected AbstractMarketSimulator(C configuration) {
-		super(configuration);
+	protected AbstractMarketSimulator(C configuration, Supplier<Exchange<?, A>> exchangeSupplier) {
+		super(configuration, exchangeSupplier);
 	}
 
 	protected final void executeSimulation(Parameters parameters) {
@@ -152,4 +153,5 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 
 		}
 	}
+
 }
