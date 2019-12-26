@@ -75,23 +75,14 @@ public class Main {
 			/*
 			 * config
 			 */
-//			final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
-//			if (null != configFileName) {
-//				Configuration.load(configFileName);
-//			} else {
-//				Configuration.load();
-//			}
-			/*
-			 * TODO we might want to fix this....
-			 */
+			final String configFileName = cmd.getOptionValue(CONFIG_OPTION);
 			final String exchangeName = cmd.getOptionValue(EXCHANGE_OPTION);
 			EntryPoint entryPoint = Utils.findClassAndInstantiate(EntryPoint.class, exchangeName);
 
 			if (cmd.hasOption(TRADE_OPTION)) {
-				livetrade(entryPoint);
+				livetrade(entryPoint, configFileName);
 			} else {
-				AbstractMarketSimulator<?, ?> simulator = loadSimulator(entryPoint);
-
+				AbstractMarketSimulator<?, ?> simulator = loadSimulator(entryPoint, configFileName);
 				/*
 				 * run command
 				 */
@@ -115,12 +106,23 @@ public class Main {
 		}
 	}
 
-	private static void livetrade(EntryPoint entryPoint) {
+	private static void livetrade(EntryPoint entryPoint, String configFileName) {
 		var trader = (LiveTrader<?, ?, ?>) ReflectionUtils.invokeMethod(entryPoint, "trader", true);
+		loadConfiguration(trader.configure(), configFileName);
 		trader.run();
 	}
 
-	private static AbstractMarketSimulator<?, ?> loadSimulator(EntryPoint entryPoint) {
-		return (AbstractMarketSimulator<?, ?>) ReflectionUtils.invokeMethod(entryPoint, "simulator", true);
+	private static AbstractMarketSimulator<?, ?> loadSimulator(EntryPoint entryPoint, String configFileName) {
+		var out = (AbstractMarketSimulator<?, ?>) ReflectionUtils.invokeMethod(entryPoint, "simulator", true);
+		loadConfiguration(out.configure(), configFileName);
+		return out;
+	}
+
+	private static void loadConfiguration(Configuration config, String fileName){
+		if(fileName != null){
+			config.loadConfigurationFromProperties(fileName);
+		} else {
+			config.loadConfigurationFromProperties();
+		}
 	}
 }
