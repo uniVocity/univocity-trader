@@ -6,14 +6,11 @@ import com.univocity.trader.indicators.base.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
 import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.datasource.*;
 
-import javax.sql.*;
 import java.sql.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.*;
 
 import static com.univocity.trader.candles.Candle.*;
 
@@ -33,55 +30,15 @@ public class CandleRepository {
 	};
 
 	private final ConcurrentHashMap<String, Collection<Candle>> cachedResults = new ConcurrentHashMap<>();
-	private Supplier<DataSource> dataSource = this::defaultDataSource;
-	private final ThreadLocal<JdbcTemplate> db = ThreadLocal.withInitial(() -> new JdbcTemplate(getDataSource()));
-
-	private final DatabaseConfiguration config;
+	private final ThreadLocal<JdbcTemplate> db;
 
 	public CandleRepository(DatabaseConfiguration config) {
-		this.config = config;
-	}
-
-	public DataSource getDataSource() {
-		return dataSource.get();
-	}
-
-	public void setDataSource(DataSource dataSource) {
-		setDataSource(() -> dataSource);
-	}
-
-	public void setDataSource(Supplier<DataSource> dataSource) {
-		this.dataSource = dataSource;
-	}
-
-	private DataSource defaultDataSource() {
-		if (!config.isConfigured()) {
-			config
-					.jdbcDriver("com.mysql.jdbc.Driver")
-					.jdbcUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull&useSSL=false")
-					.user("root");
-		}
-
-		try {
-			Class.forName(config.jdbcDriver());
-		} catch (Exception e) {
-			throw new IllegalStateException(e);
-		}
-
-		SingleConnectionDataSource ds = new SingleConnectionDataSource();
-		ds.setUrl(config.jdbcUrl());
-		ds.setUsername(config.user());
-		if (config.password() != null) {
-			ds.setPassword(new String(config.password()));
-		}
-		ds.setSuppressClose(true);
-		return ds;
+		this.db = ThreadLocal.withInitial(() -> new JdbcTemplate(config.dataSource()));
 	}
 
 	public JdbcTemplate db() {
 		return db.get();
 	}
-
 
 	private String buildCandleQuery(String symbol) {
 		return "SELECT open_time, close_time, open, high, low, close, volume FROM candle WHERE symbol = '" + symbol + "'";

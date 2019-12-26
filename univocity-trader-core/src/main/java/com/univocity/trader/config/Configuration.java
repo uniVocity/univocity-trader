@@ -85,10 +85,6 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		return accountList.accounts();
 	}
 
-	public AccountList<T> accountList(){
-		return accountList;
-	}
-
 	public TimeInterval tickInterval() {
 		return tickInterval;
 	}

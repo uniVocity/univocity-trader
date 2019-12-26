@@ -1,6 +1,11 @@
 package com.univocity.trader.config;
 
 import org.apache.commons.lang3.*;
+import org.springframework.jdbc.core.*;
+import org.springframework.jdbc.datasource.*;
+
+import javax.sql.*;
+import java.util.function.*;
 
 public class DatabaseConfiguration implements ConfigurationGroup {
 
@@ -8,6 +13,8 @@ public class DatabaseConfiguration implements ConfigurationGroup {
 	private String user;
 	private char[] password;
 	private String jdbcDriver;
+	private Supplier<DataSource> dataSource;
+	private final ThreadLocal<JdbcTemplate> db = ThreadLocal.withInitial(() -> new JdbcTemplate(dataSource()));
 
 	@Override
 	public void readProperties(PropertyBasedConfiguration properties) {
@@ -62,7 +69,60 @@ public class DatabaseConfiguration implements ConfigurationGroup {
 
 	@Override
 	public boolean isConfigured() {
-		return StringUtils.isNoneBlank(jdbcUrl, jdbcDriver, user);
+		return dataSource != null || StringUtils.isNoneBlank(jdbcUrl, jdbcDriver, user);
 	}
 
+	public DataSource dataSource() {
+		if(dataSource == null){
+			return defaultDataSource();
+		}
+		return dataSource.get();
+	}
+
+	private DataSource getDataSource() {
+		if(dataSource == null){
+			return defaultDataSource();
+		}
+		return dataSource.get();
+	}
+
+	public void dataSource(DataSource dataSource) {
+		if (dataSource == null) {
+			throw new IllegalArgumentException("Data source can't be null");
+		}
+		dataSource(() -> dataSource);
+	}
+
+	public void dataSource(Supplier<DataSource> dataSource) {
+		if (dataSource == null) {
+			throw new IllegalArgumentException("Data source can't be null");
+		}
+		if (dataSource.get() == null) {
+			throw new IllegalArgumentException("Data source supplier can't return null");
+		}
+		this.dataSource = dataSource;
+	}
+
+	private DataSource defaultDataSource() {
+		if (!isConfigured()) {
+			jdbcDriver("com.mysql.jdbc.Driver")
+					.jdbcUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull&useSSL=false")
+					.user("root");
+		}
+
+		try {
+			Class.forName(jdbcDriver());
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+
+		SingleConnectionDataSource ds = new SingleConnectionDataSource();
+		ds.setUrl(jdbcUrl());
+		ds.setUsername(user());
+		if (password() != null) {
+			ds.setPassword(new String(password()));
+		}
+		ds.setSuppressClose(true);
+		return ds;
+	}
 }
