@@ -43,10 +43,6 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		return manager.load(filePath, alternativeFilePaths);
 	}
 
-	public C loadConfigurationFromCommandLine(String... args) {
-		return manager.loadFromCommandLine(args);
-	}
-
 	protected final void addConfigurationGroups(List<ConfigurationGroup> groups) {
 		groups.add(databaseConfiguration);
 		groups.add(emailConfiguration);

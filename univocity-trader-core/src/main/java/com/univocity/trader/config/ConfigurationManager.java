@@ -74,38 +74,6 @@ public final class ConfigurationManager<C extends Configuration<C, ?>> {
 		}
 	}
 
-	public final C loadFromCommandLine(String... args) {
-		/*
-		 * options
-		 */
-		final Options options = new Options();
-		final Option oo = Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(true).desc("config file").build();
-		options.addOption(oo);
-		/*
-		 * parse
-		 */
-		final CommandLineParser parser = new DefaultParser();
-		String configFileName = null;
-		CommandLine cmd = null;
-		try {
-			cmd = parser.parse(options, args);
-			/*
-			 * get the file
-			 */
-			configFileName = cmd.getOptionValue(CONFIG_OPTION);
-			if (null != configFileName) {
-				return load(configFileName);
-			}
-		} catch (final Exception e) {
-			if (configFileName != null) {
-				log.error("Error loading configuration file: " + configFileName, e);
-			}
-			new HelpFormatter().printHelp("posix", options);
-			System.exit(0);
-		}
-		return configure();
-	}
-
 	public final void reload() {
 		if (!loadedFromFile) {
 			return;
