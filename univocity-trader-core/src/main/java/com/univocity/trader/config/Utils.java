@@ -1257,8 +1257,8 @@ public class Utils {
 	 * @throws IllegalStateException    if multiple classes are found.
 	 * @throws IllegalArgumentException if no class is found.
 	 */
-	public static Class<?> findClass(Class<?> parent, String classToFind) {
-		return search(scanClasses(), parent, Collections.singleton(classToFind)).iterator().next();
+	public static <T> Class<? extends T> findClass(Class<T> parent, String classToFind) {
+		return (Class<? extends T>)search(scanClasses(), parent, Collections.singleton(classToFind)).iterator().next();
 	}
 
 	private static WeakReference<ScanResult> classesScanned;

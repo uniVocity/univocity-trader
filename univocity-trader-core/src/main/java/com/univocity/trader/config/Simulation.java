@@ -42,13 +42,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	private int activeQueryLimit = 15;
 
 	private Map<String, Double> initialFunds = new ConcurrentHashMap<>();
-
-	private File parametersFile;
-	private Class<? extends Parameters> parametersType;
-
-//	simulation.initial.funds=[USDT]2000.0,[ADA;ETH]100.0
-//	simulation.parameters.csv=/path/to/your.csv
-
+	private final List<Parameters> parameters = new ArrayList<>();
 
 	public final LocalDateTime simulationStart() {
 		return simulationStart != null ? simulationStart : LocalDateTime.now().minusYears(1);
@@ -127,6 +121,23 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		activeQueryLimit(properties.getInteger("simulation.active.query.limit", 15));
 
 		parseInitialFunds(properties);
+
+		String pathToParameters = properties.getOptionalProperty("simulation.parameters.file");
+		if (pathToParameters != null) {
+			File parametersFile = properties.getValidatedFile(pathToParameters, true, true, false, false);
+			String className = properties.getProperty("simulation.parameters.class");
+			Class<? extends Parameters> parametersClass = Utils.findClass(Parameters.class, className);
+			parameters(parametersFile, parametersClass);
+		}
+	}
+
+	public void parameters(String pathToParametersFile, Class<? extends Parameters> typeOfParameters) {
+		parameters(new File(pathToParametersFile), typeOfParameters);
+	}
+
+	public Simulation parameters(File parametersFile, Class<? extends Parameters> typeOfParameters) {
+		loadParameters(parametersFile, typeOfParameters);
+		return this;
 	}
 
 	private void parseInitialFunds(PropertyBasedConfiguration properties) {
@@ -225,6 +236,24 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 
 	public Simulation activeQueryLimit(int activeQueryLimit) {
 		this.activeQueryLimit = activeQueryLimit;
+		return this;
+	}
+
+	private void loadParameters(File parametersFile, Class<? extends Parameters> typeOfParameters){
+		//TODO: load with univocity-parsers
+	}
+
+	public List<Parameters> parameters() {
+		return parameters;
+	}
+
+	public Simulation addParameters(Parameters parameters) {
+		this.parameters.add(parameters);
+		return this;
+	}
+
+	public Simulation clearParameters() {
+		this.parameters.clear();
 		return this;
 	}
 }

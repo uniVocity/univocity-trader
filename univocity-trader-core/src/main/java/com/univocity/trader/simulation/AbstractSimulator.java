@@ -6,7 +6,6 @@ import com.univocity.trader.config.*;
 
 import java.time.*;
 import java.util.*;
-import java.util.function.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
@@ -107,7 +106,19 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		return getAllPairs().values();
 	}
 
-	public C configure(){
+	public C configure() {
 		return configuration;
 	}
+
+	public final void run() {
+		List<Parameters> parameters = simulation.parameters();
+		if (parameters.isEmpty()) {
+			parameters = Collections.singletonList(Parameters.NULL);
+		}
+		for (Parameters params : parameters) {
+			executeSimulation(params);
+		}
+	}
+
+	protected abstract void executeSimulation(Parameters parameters);
 }

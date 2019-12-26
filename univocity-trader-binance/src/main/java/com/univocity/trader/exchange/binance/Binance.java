@@ -26,7 +26,6 @@ public final class Binance {
 		}
 	}
 
-
 	public static final class Simulator extends AbstractMarketSimulator<Configuration, Account> {
 		private Simulator() {
 			super(new Configuration());

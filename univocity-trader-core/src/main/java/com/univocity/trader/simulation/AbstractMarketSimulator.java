@@ -27,11 +27,7 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 		super(configuration);
 	}
 
-	public void run() {
-		run(Parameters.NULL);
-	}
-
-	public void run(Parameters parameters) {
+	protected final void executeSimulation(Parameters parameters) {
 		symbolHandlers.clear();
 		AccountManager[] accounts = accounts();
 		resetBalances();
