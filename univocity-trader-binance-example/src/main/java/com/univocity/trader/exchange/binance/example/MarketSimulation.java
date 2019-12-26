@@ -55,13 +55,6 @@ public class MarketSimulation {
 		Binance.Simulator simulator = Binance.simulator();
 		simulator.configure().loadConfigurationFromProperties();
 
-		simulator.configure().accounts().forEach(a -> a.listeners().add(() -> new SimpleStrategyStatistics()));
-		simulator.configure().accounts().forEach(a -> a.tradingFeePercentage(1.0));
-
-		simulator.configure().simulation()
-				.simulationEnd("2019-05-05")
-		;
-
 //		simulation.symbolInformation("ADAUSDT").minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
 //		simulation.symbolInformation("BTCUSDT").minimumAssetsPerOrder(0.001).priceDecimalPlaces(8).quantityDecimalPlaces(8);
 //		simulation.symbolInformation("LTCUSDT").minimumAssetsPerOrder(0.1).priceDecimalPlaces(8).quantityDecimalPlaces(8);

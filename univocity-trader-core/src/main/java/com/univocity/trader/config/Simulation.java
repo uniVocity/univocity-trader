@@ -118,7 +118,6 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return this;
 	}
 
-
 	@Override
 	public void readProperties(PropertyBasedConfiguration properties) {
 		simulationStart(parseDateTime(properties, "simulation.start"));

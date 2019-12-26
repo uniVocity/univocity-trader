@@ -22,9 +22,6 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 	public AbstractSimulator(C configuration) {
 		this.configuration = configuration;
 		simulation = configuration.simulation();
-
-//		SimulatedClientAccount clientAccount = createAccountInstance(accountConfiguration, this.simulation.tradingFees());
-//		account = clientAccount.getAccount();
 	}
 
 	protected AccountManager[] accounts() {

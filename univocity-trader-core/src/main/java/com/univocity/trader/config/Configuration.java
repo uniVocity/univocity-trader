@@ -31,10 +31,6 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		manager = new ConfigurationManager<C>((C)this, defaultConfigurationFile);
 	}
 
-	public C getInstance() {
-		return manager.getRoot();
-	}
-
 	public C configure() {
 		return manager.configure();
 	}
