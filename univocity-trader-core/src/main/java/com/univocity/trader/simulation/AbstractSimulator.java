@@ -38,8 +38,8 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		return accounts;
 	}
 
-	protected SimulatedClientAccount createAccountInstance(A accountConfiguration) {
-		return new SimulatedClientAccount(accountConfiguration);
+	private SimulatedClientAccount createAccountInstance(A accountConfiguration) {
+		return new SimulatedClientAccount(accountConfiguration, configuration.simulation());
 	}
 
 	public final SymbolInformation symbolInformation(String symbol) {

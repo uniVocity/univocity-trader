@@ -50,7 +50,6 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 	Map<String, String[]> tradedPairs = new ConcurrentHashMap<>();
 	Set<String> supportedSymbols = new TreeSet<>();
 	Map<String, OrderManager> orderManagers = new ConcurrentHashMap<>();
-	private TradingFees tradingFees = SimpleTradingFees.percentage(0.1);
 
 	protected AccountConfiguration(String id) {
 		this.id = id;
@@ -115,9 +114,6 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 					addImplementation(listeners, e.getValue());
 				}
 			}
-
-			tradingFees(parseTradingFees(properties, accountId + "trade.fees"));
-
 			parseInstancePerGroupProperty(properties, accountId + "order.manager", OrderManager.class, this::orderManager);
 
 			//		strategies.addAll();
@@ -138,47 +134,6 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 
 	protected void readExchangeAccountProperties(String accountId, PropertyBasedConfiguration properties) {
 
-	}
-
-	public final TradingFees tradingFees() {
-		return tradingFees;
-	}
-
-	public final T tradingFees(TradingFees tradingFees) {
-		this.tradingFees = tradingFees;
-		return (T) this;
-	}
-
-
-	public final T tradingFeeAmount(double amountPerTrade) {
-		this.tradingFees = SimpleTradingFees.amount(amountPerTrade);
-		return (T) this;
-	}
-
-	public final T tradingFeePercentage(double percentagePerTrade) {
-		this.tradingFees = SimpleTradingFees.percentage(percentagePerTrade);
-		return (T) this;
-	}
-
-	protected TradingFees parseTradingFees(PropertyBasedConfiguration config, String property) {
-		String fees = config.getOptionalProperty(property);
-		if (fees == null) {
-			return null;
-		}
-		try {
-			if (Character.isDigit(fees.charAt(0))) {
-				if (fees.endsWith("%")) {
-					fees = StringUtils.substringBefore(fees, "%");
-					return SimpleTradingFees.percentage(Double.parseDouble(fees));
-				} else {
-					return SimpleTradingFees.amount(Double.parseDouble(fees));
-				}
-			}
-
-			return Utils.findClassAndInstantiate(TradingFees.class, fees);
-		} catch (Exception ex) {
-			throw new IllegalConfigurationException("Error processing trading fees '" + fees + "' defined in property '" + property + "'", ex);
-		}
 	}
 
 	private void parseTradingPairs(PropertyBasedConfiguration properties, String propertyName, Consumer<String[][]> consumer) {

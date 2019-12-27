@@ -1,5 +1,7 @@
 package com.univocity.trader.config;
 
+import com.univocity.trader.*;
+import com.univocity.trader.account.*;
 import com.univocity.trader.simulation.*;
 import org.apache.commons.lang3.*;
 
@@ -40,6 +42,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	private LocalDateTime simulationEnd;
 	private boolean cacheCandles = false;
 	private int activeQueryLimit = 15;
+	private TradingFees tradingFees = SimpleTradingFees.percentage(0.1);
 	private int backfillLength = 6;
 	private ChronoUnit backfillUnit = ChronoUnit.MONTHS;
 
@@ -121,7 +124,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		simulationEnd(parseDateTime(properties, "simulation.end"));
 		cacheCandles(properties.getBoolean("simulation.cache.candles", false));
 		activeQueryLimit(properties.getInteger("simulation.active.query.limit", 15));
-
+		tradingFees(parseTradingFees(properties, "simulation.trade.fees"));
 
 		String backfill = properties.getOptionalProperty("simulation.history.backfill");
 		if (backfill != null) {
@@ -305,7 +308,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	}
 
 	public Simulation addParameters(Collection<Parameters> parameters) {
-		if(parameters != null) {
+		if (parameters != null) {
 			this.parameters.addAll(parameters);
 		}
 		return this;
@@ -323,5 +326,46 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 
 	public Instant backfillStart() {
 		return LocalDate.now().minus(backfillLength, backfillUnit).atStartOfDay().toInstant(ZoneOffset.UTC);
+	}
+
+	public final TradingFees tradingFees() {
+		return tradingFees;
+	}
+
+	public final Simulation tradingFees(TradingFees tradingFees) {
+		this.tradingFees = tradingFees;
+		return this;
+	}
+
+
+	public final Simulation tradingFeeAmount(double amountPerTrade) {
+		this.tradingFees = SimpleTradingFees.amount(amountPerTrade);
+		return this;
+	}
+
+	public final Simulation tradingFeePercentage(double percentagePerTrade) {
+		this.tradingFees = SimpleTradingFees.percentage(percentagePerTrade);
+		return this;
+	}
+
+	protected TradingFees parseTradingFees(PropertyBasedConfiguration config, String property) {
+		String fees = config.getOptionalProperty(property);
+		if (fees == null) {
+			return null;
+		}
+		try {
+			if (Character.isDigit(fees.charAt(0))) {
+				if (fees.endsWith("%")) {
+					fees = StringUtils.substringBefore(fees, "%");
+					return SimpleTradingFees.percentage(Double.parseDouble(fees));
+				} else {
+					return SimpleTradingFees.amount(Double.parseDouble(fees));
+				}
+			}
+
+			return Utils.findClassAndInstantiate(TradingFees.class, fees);
+		} catch (Exception ex) {
+			throw new IllegalConfigurationException("Error processing trading fees '" + fees + "' defined in property '" + property + "'", ex);
+		}
 	}
 }

@@ -33,21 +33,22 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	private final Client client;
 	private final ClientAccount account;
 	private final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
+	private final Simulation simulation;
 
-	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration) {
+	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration, Simulation simulation) {
 		if (StringUtils.isBlank(configuration.referenceCurrency())) {
-			throw new IllegalConfigurationException("Please configure the reference currency symbol using 'configuration.referenceCurrency(String)'");
+			throw new IllegalConfigurationException("Please configure the reference currency symbol");
 		}
 		if (configuration.symbolPairs().isEmpty()) {
-			throw new IllegalConfigurationException("Please configure traded symbol pairs using 'configuration.tradeWith(...)'");
+			throw new IllegalConfigurationException("Please configure traded symbol pairs");
 		}
-
+		this.simulation = simulation;
 		this.account = account;
 		this.configuration = configuration;
 		this.client = new Client(account, this);
 	}
 
-	public Client getClient(){
+	public Client getClient() {
 		return client;
 	}
 
@@ -445,7 +446,10 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public TradingFees getTradingFees() {
-		return configuration.tradingFees();
+		if (simulation.tradingFees() == null) {
+			throw new IllegalConfigurationException("Please configure trading fess");
+		}
+		return simulation.tradingFees();
 	}
 
 	@Override

@@ -28,8 +28,8 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration) {
-		this.account = new AccountManager(this, accountConfiguration);
+	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, Simulation simulation) {
+		this.account = new AccountManager(this, accountConfiguration, simulation);
 	}
 
 	public final TradingFees getTradingFees(){
