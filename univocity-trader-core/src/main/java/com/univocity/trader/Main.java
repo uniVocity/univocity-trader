@@ -65,6 +65,7 @@ public class Main {
 		final CommandLineParser parser = new DefaultParser();
 		CommandLine cmd = null;
 		try {
+			boolean ran = false;
 			cmd = parser.parse(options, args);
 			/*
 			 * config
@@ -74,24 +75,34 @@ public class Main {
 			EntryPoint entryPoint = Utils.findClassAndInstantiate(EntryPoint.class, exchangeName);
 
 			if (cmd.hasOption(TRADE_OPTION)) {
+				ran = true;
 				livetrade(entryPoint, configFileName);
 			} else {
-				AbstractMarketSimulator<?, ?> simulator = loadSimulator(entryPoint, configFileName);
+				AbstractSimulator<?, ?> simulator = loadSimulator(entryPoint, configFileName);
 				/*
 				 * run command
 				 */
 				if (cmd.hasOption(BACKFILL_OPTION)) {
+					ran = true;
 					/*
 					 * update market history
 					 */
-					simulator.backfillHistory();
+					if (simulator instanceof AbstractMarketSimulator) {
+						((AbstractMarketSimulator) simulator).backfillHistory();
+					} else {
+						throw new IllegalArgumentException(BACKFILL_OPTION + " is not supported by " + exchangeName);
+					}
 				}
 				if (cmd.hasOption(SIMULATE_OPTION)) {
+					ran = true;
 					/*
 					 * simulate
 					 */
 					simulator.run();
 				}
+			}
+			if (!ran) {
+				throw new IllegalArgumentException("Please provide an action to execute: " + BACKFILL_OPTION + ", " + SIMULATE_OPTION + " or " + TRADE_OPTION);
 			}
 		} catch (final Exception e) {
 			System.err.println(e.getMessage());
@@ -107,8 +118,8 @@ public class Main {
 		trader.run();
 	}
 
-	private static AbstractMarketSimulator<?, ?> loadSimulator(EntryPoint entryPoint, String configFileName) {
-		var out = (AbstractMarketSimulator<?, ?>) ReflectionUtils.invokeMethod(entryPoint, "simulator", true);
+	private static AbstractSimulator<?, ?> loadSimulator(EntryPoint entryPoint, String configFileName) {
+		var out = (AbstractSimulator<?, ?>) ReflectionUtils.invokeMethod(entryPoint, "simulator", true);
 		loadConfiguration(out.configure(), configFileName);
 		return out;
 	}

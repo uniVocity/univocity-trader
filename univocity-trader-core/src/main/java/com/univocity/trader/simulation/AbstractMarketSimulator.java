@@ -23,15 +23,29 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 	private static final Logger log = LoggerFactory.getLogger(AbstractMarketSimulator.class);
 
 	private final Map<String, Engine[]> symbolHandlers = new HashMap<>();
+	private final Supplier<Exchange<?, A>> exchangeSupplier;
 
 	protected AbstractMarketSimulator(C configuration, Supplier<Exchange<?, A>> exchangeSupplier) {
-		super(configuration, exchangeSupplier);
+		super(configuration);
+		this.exchangeSupplier = exchangeSupplier;
+	}
+
+
+	private void initialize() {
+		symbolHandlers.clear();
+		resetBalances();
+	}
+
+	@Override
+	protected final void executeSimulation(Collection<Parameters> parameters) {
+		for (Parameters p : parameters) {
+			initialize();
+			executeSimulation(p);
+			reportResults();
+		}
 	}
 
 	protected final void executeSimulation(Parameters parameters) {
-		symbolHandlers.clear();
-		AccountManager[] accounts = accounts();
-		resetBalances();
 
 		Set<Object> allInstances = new HashSet<>();
 		getAllPairs().forEach((symbol, pair) -> {
@@ -39,7 +53,7 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 			String fundSymbol = pair[1];
 
 			List<AccountManager> accountsTradingSymbol = new ArrayList<>();
-			for (AccountManager account : accounts) {
+			for (AccountManager account : accounts()) {
 				if (account.configuration().symbolPairs().keySet().contains(symbol)) {
 					accountsTradingSymbol.add(account);
 				}
@@ -135,16 +149,17 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 				}
 			}
 		}
-		if(!ran){
+		if (!ran) {
 			throw new IllegalStateException("No candles processed in real time trading simulation from " + start + " to " + end);
 		}
 
 //		System.out.println("Processed candle counts:" + counts);
+	}
 
-		System.out.println("Real time trading simulation from " + start + " to " + end);
+	private void reportResults() {
 		for (AccountManager account : accounts()) {
 			String id = account.getClient().getId();
-			if(StringUtils.isNotBlank(id)){
+			if (StringUtils.isNotBlank(id)) {
 				System.out.println("------------------");
 				System.out.println("Client: " + id);
 			}
@@ -154,4 +169,25 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 		}
 	}
 
+	public void backfillHistory() {
+		TreeSet<String> allSymbols = new TreeSet<>();
+		configuration.accounts().forEach(a -> allSymbols.addAll(a.symbolPairs().keySet()));
+		allSymbols.addAll(new CandleRepository(configure().database()).getKnownSymbols());
+		backfillHistory(allSymbols);
+	}
+
+	public void backfillHistory(String... symbolsToUpdate) {
+		LinkedHashSet<String> allSymbols = new LinkedHashSet<>();
+		Collections.addAll(allSymbols, symbolsToUpdate);
+		backfillHistory(allSymbols);
+	}
+
+	public void backfillHistory(Collection<String> symbols) {
+		CandleRepository candleRepository = new CandleRepository(configure().database());
+		Exchange<?, A> exchange = exchangeSupplier.get();
+		final Instant start = simulation.backfillStart();
+		for (String symbol : symbols) {
+			candleRepository.fillHistoryGaps(exchange, symbol, start, configuration.tickInterval());
+		}
+	}
 }

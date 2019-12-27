@@ -1,6 +1,6 @@
 package com.univocity.trader.config;
 
-public class GenericConfiguration extends Configuration<GenericConfiguration, GenericAccountConfiguration>{
+public class GenericConfiguration extends Configuration<GenericConfiguration, Account>{
 
 	@Override
 	protected ConfigurationGroup[] getAdditionalConfigurationGroups() {
@@ -8,7 +8,7 @@ public class GenericConfiguration extends Configuration<GenericConfiguration, Ge
 	}
 
 	@Override
-	protected GenericAccountConfiguration newAccountConfiguration(String id) {
-		return new GenericAccountConfiguration(id);
+	protected Account newAccountConfiguration(String id) {
+		return new Account(id);
 	}
 }

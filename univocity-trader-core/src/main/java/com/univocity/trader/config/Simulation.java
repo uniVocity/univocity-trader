@@ -304,6 +304,13 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return parameters;
 	}
 
+	public Simulation addParameters(Collection<Parameters> parameters) {
+		if(parameters != null) {
+			this.parameters.addAll(parameters);
+		}
+		return this;
+	}
+
 	public Simulation addParameters(Parameters parameters) {
 		this.parameters.add(parameters);
 		return this;

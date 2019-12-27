@@ -51,7 +51,7 @@ public class MarketSimulation {
 
 		Binance.Simulator simulator = Binance.simulator();
 		simulator.configure().loadConfigurationFromProperties();
-		simulator.backfillHistory();
+//		simulator.backfillHistory();
 
 //		simulation.symbolInformation("ADAUSDT").minimumAssetsPerOrder(100.0).priceDecimalPlaces(8).quantityDecimalPlaces(2);
 //		simulation.symbolInformation("BTCUSDT").minimumAssetsPerOrder(0.001).priceDecimalPlaces(8).quantityDecimalPlaces(8);

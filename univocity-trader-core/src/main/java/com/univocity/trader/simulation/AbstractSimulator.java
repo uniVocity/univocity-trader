@@ -1,13 +1,12 @@
 package com.univocity.trader.simulation;
 
-import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.indicators.base.*;
 
 import java.time.*;
 import java.util.*;
-import java.util.function.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
@@ -16,15 +15,12 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 	protected Map<String, SymbolInformation> symbolInformation = new TreeMap<>();
 	private AccountManager[] accounts;
 	protected final Simulation simulation;
-	private final C configuration;
-
-	private final Supplier<Exchange<?, A>> exchangeSupplier;
+	protected final C configuration;
 	private Map<String, String[]> allPairs;
 
-	public AbstractSimulator(C configuration, Supplier<Exchange<?, A>> exchangeSupplier) {
+	public AbstractSimulator(C configuration) {
 		this.configuration = configuration;
 		simulation = configuration.simulation();
-		this.exchangeSupplier = exchangeSupplier;
 	}
 
 	protected AccountManager[] accounts() {
@@ -118,33 +114,17 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		List<Parameters> parameters = simulation.parameters();
 		if (parameters.isEmpty()) {
 			parameters = Collections.singletonList(Parameters.NULL);
+		} else {
+			System.out.println("Running simulation with " + parameters.size() + " parameters");
 		}
-		for (Parameters params : parameters) {
-			executeSimulation(params);
-		}
-	}
 
-	public void backfillHistory() {
-		TreeSet<String> allSymbols = new TreeSet<>();
-		configuration.accounts().forEach(a -> allSymbols.addAll(a.symbolPairs().keySet()));
-		allSymbols.addAll(new CandleRepository(configure().database()).getKnownSymbols());
-		backfillHistory(allSymbols);
-	}
-
-	public void backfillHistory(String... symbolsToUpdate) {
-		LinkedHashSet<String> allSymbols = new LinkedHashSet<>();
-		Collections.addAll(allSymbols, symbolsToUpdate);
-		backfillHistory(allSymbols);
-	}
-
-	public void backfillHistory(Collection<String> symbols) {
-		CandleRepository candleRepository = new CandleRepository(configure().database());
-		Exchange<?, A> exchange = exchangeSupplier.get();
-		final Instant start = simulation.backfillStart();
-		for (String symbol : symbols) {
-			candleRepository.fillHistoryGaps(exchange, symbol, start, configuration.tickInterval());
+		long start = System.currentTimeMillis();
+		try {
+			executeSimulation(parameters);
+		} finally {
+			System.out.println("Total simulation time: " + TimeInterval.getFormattedDuration(System.currentTimeMillis() - start));
 		}
 	}
 
-	protected abstract void executeSimulation(Parameters parameters);
+	protected abstract void executeSimulation(Collection<Parameters> parameters);
 }
