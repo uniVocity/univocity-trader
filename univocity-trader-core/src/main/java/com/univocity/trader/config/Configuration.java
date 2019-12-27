@@ -58,7 +58,9 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		}
 	}
 
-	protected abstract ConfigurationGroup[] getAdditionalConfigurationGroups();
+	protected ConfigurationGroup[] getAdditionalConfigurationGroups(){
+		return new ConfigurationGroup[0];
+	}
 
 	public DatabaseConfiguration database() {
 		return databaseConfiguration;

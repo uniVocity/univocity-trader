@@ -40,6 +40,7 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 	private TimeZone timeZone;
 	protected boolean parsingProperties = false;
 
+
 	protected NewInstances<Strategy> strategies = new NewInstances<>(new Strategy[0]);
 	protected NewInstances<StrategyMonitor> monitors = new NewInstances<>(new StrategyMonitor[0]);
 	protected Instances<OrderListener> listeners = new Instances<>(new OrderListener[0]);

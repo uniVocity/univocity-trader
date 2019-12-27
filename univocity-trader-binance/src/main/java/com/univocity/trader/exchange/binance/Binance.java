@@ -16,11 +16,6 @@ public final class Binance implements EntryPoint {
 		}
 
 		@Override
-		protected ConfigurationGroup[] getAdditionalConfigurationGroups() {
-			return new ConfigurationGroup[0];
-		}
-
-		@Override
 		protected Account newAccountConfiguration(String id) {
 			return new Account(id);
 		}

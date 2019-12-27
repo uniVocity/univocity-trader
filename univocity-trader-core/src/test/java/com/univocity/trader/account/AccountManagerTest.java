@@ -15,7 +15,7 @@ public class AccountManagerTest {
 	private static final double CLOSE = 0.4379;
 
 	private AccountManager getAccountManager() {
-		Account cfg = new GenericConfiguration().account();
+		SimulationAccount cfg = new SimulationConfiguration().account();
 		cfg
 				.referenceCurrency("USDT")
 				.tradeWithPair("ADA", "BNB");

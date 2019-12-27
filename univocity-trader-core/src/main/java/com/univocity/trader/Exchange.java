@@ -150,7 +150,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *
 	 * @param assetSymbol symbol of the asset (e.g. BTC, EUR, MSFT, etc)
 	 * @param fundSymbol  symbol of the funds used to represent the price of the given asset (ETH, USD, BRL). The framework will always send a symbol here, if
-	 *                    no trading pair exists, the {@code referenceCurrency} provided by {@link Client#getReferenceCurrency()} will be sent.
+	 *                    no trading pair exists, the {@code referenceCurrency} provided by {@link AccountConfiguration#referenceCurrency()} will be sent.
 	 *                    It can be ignored if not applicable (when trading stocks for example, and the account only buys stocks with USD)
 	 *
 	 * @return the latest price of the given {@code assetSymbol} or pair.
@@ -160,11 +160,11 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	/**
 	 * Opens a client account with the given {@code apiKey} and {@code secret}, which authorizes the {@link Client} to trade and update their account balance.
 	 *
-	 * @param clientConfiguration the configuration of a client account (typically with API key and secret) to be used to connect to the desired account.
+	 * @param accountConfiguration the configuration of a client account (typically with API key and secret) to be used to connect to the desired account.
 	 *
 	 * @return an exchange-specific implementation of the {@link ClientAccount} interface, which allows the {@link Client} to trade through this framework.
 	 */
-	ClientAccount connectToAccount(C clientConfiguration);
+	ClientAccount connectToAccount(C accountConfiguration);
 
 	/**
 	 * Handles errors from the exchange server that might be produced when polling for latest prices in case the live stream becomes unavailable, slow or
