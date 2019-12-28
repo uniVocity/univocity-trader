@@ -4,6 +4,7 @@ import com.univocity.trader.account.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.binance.*;
 import com.univocity.trader.notification.*;
+import com.univocity.trader.simulation.*;
 
 import java.time.*;
 
@@ -25,7 +26,7 @@ public class MarketSimulation {
 		Account account = simulator.configure().account();
 
 		account
-				.referenceCurrency("USDT")
+				.referenceCurrency("USDT") //Balances will be calculated using the reference currency.
 				.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH")
 				.minimumInvestmentAmountPerTrade(10.0)
 //				.maximumInvestmentPercentagePerAsset(30.0, "ADA", "ETH")
@@ -51,6 +52,7 @@ public class MarketSimulation {
 				.simulateFrom(LocalDate.of(2018, 7, 1).atStartOfDay())
 				.simulateTo(LocalDate.of(2019, 7, 1).atStartOfDay());
 
+//		execute simulation
 		simulator.run();
 	}
 }

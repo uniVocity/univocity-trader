@@ -18,14 +18,16 @@ import static com.univocity.trader.indicators.base.TimeInterval.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A extends AccountConfiguration<A>> extends AbstractSimulator<C, A> {
+public abstract class MarketSimulator<C extends Configuration<C, A>, A extends AccountConfiguration<A>> extends AbstractSimulator<C, A> {
 
-	private static final Logger log = LoggerFactory.getLogger(AbstractMarketSimulator.class);
+	private static final Logger log = LoggerFactory.getLogger(MarketSimulator.class);
 
 	private final Map<String, Engine[]> symbolHandlers = new HashMap<>();
 	private final Supplier<Exchange<?, A>> exchangeSupplier;
+	private CandleRepository candleRepository;
+	private ExecutorService executor;
 
-	protected AbstractMarketSimulator(C configuration, Supplier<Exchange<?, A>> exchangeSupplier) {
+	protected MarketSimulator(C configuration, Supplier<Exchange<?, A>> exchangeSupplier) {
 		super(configuration);
 		this.exchangeSupplier = exchangeSupplier;
 	}
@@ -38,11 +40,19 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 
 	@Override
 	protected final void executeSimulation(Collection<Parameters> parameters) {
-		for (Parameters p : parameters) {
-			initialize();
-			executeSimulation(p);
-			reportResults();
+		candleRepository = new CandleRepository(configure().database());
+		executor = Executors.newCachedThreadPool();
+		try {
+			for (Parameters p : parameters) {
+				initialize();
+				executeSimulation(p);
+				reportResults(p);
+			}
+		} finally {
+			executor.shutdown();
+			candleRepository.clearCaches();
 		}
+
 	}
 
 	protected final void executeSimulation(Parameters parameters) {
@@ -87,11 +97,9 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 		LocalDateTime end = getSimulationEnd();
 		final long startTime = getStartTime();
 		final long endTime = getEndTime();
-		CandleRepository candleRepository = new CandleRepository(configure().database());
 
 		int activeQueries = 0;
 		Map<String, CompletableFuture<Enumeration<Candle>>> futures = new HashMap<>();
-		ExecutorService executor = Executors.newCachedThreadPool();
 		for (String symbol : symbolHandlers.keySet()) {
 			activeQueries++;
 			boolean loadAllDataFirst = simulation.cacheCandles() || activeQueries > simulation.activeQueryLimit();
@@ -109,7 +117,6 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 			}
 		});
 
-		executor.shutdown();
 		boolean ran = false;
 
 //		Map<String, Long> counts = new TreeMap<>();
@@ -156,13 +163,17 @@ public abstract class AbstractMarketSimulator<C extends Configuration<C, A>, A e
 //		System.out.println("Processed candle counts:" + counts);
 	}
 
-	private void reportResults() {
+	private void reportResults(Parameters parameters) {
 		for (AccountManager account : accounts()) {
 			String id = account.getClient().getId();
-			if (StringUtils.isNotBlank(id)) {
-				System.out.println("------------------");
-				System.out.println("Client: " + id);
+			System.out.print("-------");
+			if(parameters != null && parameters != Parameters.NULL){
+				System.out.print(" | Parameters: " + parameters);
 			}
+			if (StringUtils.isNotBlank(id)) {
+				System.out.print(" | Client: " + id);
+			}
+			System.out.println(" | -------");
 			System.out.print(account.toString());
 			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
 

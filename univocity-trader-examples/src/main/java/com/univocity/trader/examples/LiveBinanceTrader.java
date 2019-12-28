@@ -9,27 +9,19 @@ import com.univocity.trader.notification.*;
 import java.math.*;
 
 public class LiveBinanceTrader {
+
 	public static void main(String... args) {
-//		TODO: configure your database connection as needed. The following options are available:
+		Binance.Trader trader = Binance.trader();
+		trader.configure().loadConfigurationFromProperties();
 
-//		(a) Load configuration file
-//		Configuration.load();                                //tries to open a univocity-trader.properties file
-//		Configuration.loadFromCommandLine(args);		      //opens a file provided via the command line
-//		Configuration.load("/path/to/config", "other.file"); //tries to find specific configuration files
-
-//		(b) Configuration code
-//		Configuration.configure().database()
+//		TODO: configure your database connection as needed. By default MySQL will be used
+//		trader.configure().database()
 //				.jdbcDriver("my.database.DriverClass")
 //				.jdbcUrl("jdbc:mydb://localhost:5555/database")
 //				.user("admin")
 //				.password("qwerty");
 
-//		(c) Use your own DataSource implementation:
-//		DataSource ds = ?
-//		CandleRepository.setDataSource(ds);
-
-		Binance.Trader trader = Binance.trader();
-
+//		If you want to receive e-mail notifications each time an order is submitted to the exchange, configure your e-mail sender
 		trader.configure().mailSender()
 				.replyToAddress("dev@univocity.com")
 				.smtpHost("smtp.gmail.com")
@@ -39,20 +31,28 @@ public class LiveBinanceTrader {
 				.smtpPassword("<YOUR SMTP PASSWORD>")
 				.smtpSender("<YOU>>@gmail.com");
 
-		Account clientConfig = trader.configure().account()
+		//set an e-mail and timezone here to get notifications to your e-mail every time a BUY or SELL happens.
+		//the timezone is required if you want to host this in a server outside of your local timezone
+		//so the time a trade happens will come to you in your local time and not the server time
+		Account account = trader.configure().account()
 				.email("<YOUR E-MAIL")
 				.timeZone("system")
 				.referenceCurrency("USDT")
 				.apiKey("<YOUR BINANCE API KEY>")
 				.secret("<YOUR BINANCE API SECRET>");
 
-		clientConfig.strategies().add(ExampleStrategy::new);
-		clientConfig.monitors().add(ExampleStrategyMonitor::new);
-		clientConfig.listeners().add(new OrderExecutionToLog());
+		account.strategies().add(ExampleStrategy::new);
+		account.monitors().add(ExampleStrategyMonitor::new);
+		account.listeners().add(new OrderExecutionToLog());
 
-		clientConfig.tradeWith("BTC", "ETH", "XRP", "ADA");
-		clientConfig.maximumInvestmentAmountPerAsset(20);
-		clientConfig.orderManager(new DefaultOrderManager() {
+//		never invest more than 20 USDT on anything
+		account
+				.tradeWith("BTC", "ETH", "XRP", "ADA")
+				.maximumInvestmentAmountPerAsset(20)
+		;
+
+//		overrides the default order manager submit orders that likely won't be filled so you can see what the program does.
+		account.orderManager(new DefaultOrderManager() {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
 				switch (order.getSide()) {
@@ -65,8 +65,8 @@ public class LiveBinanceTrader {
 			}
 		});
 
+//		Begin trading
 		trader.run();
-
 	}
 }
 

@@ -87,8 +87,8 @@ public class Main {
 					/*
 					 * update market history
 					 */
-					if (simulator instanceof AbstractMarketSimulator) {
-						((AbstractMarketSimulator) simulator).backfillHistory();
+					if (simulator instanceof MarketSimulator) {
+						((MarketSimulator) simulator).backfillHistory();
 					} else {
 						throw new IllegalArgumentException(BACKFILL_OPTION + " is not supported by " + exchangeName);
 					}
@@ -109,6 +109,11 @@ public class Main {
 			final HelpFormatter formatter = new HelpFormatter();
 			formatter.setOptionComparator(null);
 			formatter.printHelp("posix", options);
+		} finally {
+			if (cmd.hasOption(BACKFILL_OPTION) && !cmd.hasOption(TRADE_OPTION)){
+				// exit after backfill as any HTTP client used might be configured to be kept alive and prevent the program from exiting.
+				System.exit(0);
+			}
 		}
 	}
 

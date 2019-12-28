@@ -1,7 +1,6 @@
 package com.univocity.trader.exchange.binance;
 
 import com.univocity.trader.*;
-import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.binance.api.client.domain.market.*;
 import com.univocity.trader.simulation.*;
 
@@ -21,7 +20,7 @@ public final class Binance implements EntryPoint {
 		}
 	}
 
-	public static final class Simulator extends AbstractMarketSimulator<Configuration, Account> {
+	public static final class Simulator extends MarketSimulator<Configuration, Account> {
 		private Simulator() {
 			super(new Configuration(), BinanceExchange::new);
 		}

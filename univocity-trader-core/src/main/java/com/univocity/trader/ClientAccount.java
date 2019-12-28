@@ -2,19 +2,20 @@ package com.univocity.trader;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 
 import java.util.*;
 
 /**
  * A {@code ClientAccount} implementation controls the account of a user on an exchange or broker,
  * and allows orders to be executed and monitored on behalf of the account holder. Ideally a {@code ClientAccount}
- * instance comes from {@link Exchange#connectToAccount(String, String)}.
+ * instance comes from {@link Exchange#connectToAccount(AccountConfiguration)}}.
  *
  * How a order is processed and tracked depends on an {@link OrderManager}, which receives updates on the order status
  * at frequent intervals and might allow cancellation of the order if it is not filled in a timely manner.
  *
  * The {@link DefaultOrderManager} will be used to handle all orders on all symbols unless the user associates
- * their own implementation to all or some symbols using {@link AccountConfiguration#setOrderManager(OrderManager, String...)}.
+ * their own implementation to all or some symbols using {@link AccountConfiguration#orderManager(OrderManager, String...)}.
  *
  * Note that the {@link DefaultOrderManager} will keep orders open for up to 10 minutes by default, and will cancel the order
  * if it could be filled in full after that time. If the order is cancelled, the account will still retain the amount
