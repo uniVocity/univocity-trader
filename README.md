@@ -84,24 +84,20 @@ public static void main(String... args) {
 //configure to update historical data in database going back 2 years from today.
   simulation.backfillYears(2);
 
-//pulls any missing candlesticks from the exchange and store them in our local database.
+// pulls any missing candlesticks from the exchange 
+// and store them in our local database.
   simulator.backfillHistory("BTCUSDT", "ADAUSDT");
 
-//It runs over stored candles backwards and will try to fill any gaps until the date 2 years ago from today is reached.
-  CandleRepository.fillHistoryGaps(exchange, symbol, start, TimeInterval.minutes(1)); // pulls one minute candles
-  }
+// This runs over stored candles backwards and will try to fill
+// any gaps until the date 2 years ago from today is reached.
+// Pulls one-minute candles.
+  CandleRepository.fillHistoryGaps(exchange, symbol, start, TimeInterval.minutes(1));
+
 }
 
 ```
 
 Once the database connection is configured with your particular details, you can execute the `main` method.
-
->NOTE: If you are running this from the command line, execute:
->
->```
->cd univocity-trader-examples
->mvn exec:java -Dexec.mainClass=com.univocity.trader.exchange.binance.example.MarketHistoryLoader
->```
 
 The logs should print something like this:
 
@@ -204,11 +200,14 @@ public class ExampleStrategy extends IndicatorStrategy {
  public Signal getSignal(Candle candle) {  
  //price jumped below lower band on the 1 hour time frame
  if (candle.high < boll1h.getLowerBand()) {  
-  //on the 5 minute time frame, the lowest price of the candle is above the lower band.
+  // on the 5 minute time frame, the lowest price 
+  // of the candle is above the lower band.
   if (candle.low > boll5m.getLowerBand()) {      
-  //still on the 5 minute time frame, the close price of the candle is under the middle band
+  // still on the 5 minute time frame, the close 
+  // price of the candle is under the middle band
   if (candle.close < boll5m.getMiddleBand()) {
-   // if the slope of the 5 minute bollinger band is starting to point up, BUY 
+   // if the slope of the 5 minute bollinger band
+   // is starting to point up, BUY 
    if (boll5m.movingUp()) { 
    return Signal.BUY;
    }
@@ -418,14 +417,16 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
 
  private final Set<Indicator> indicators = new HashSet<>();
  
- //use the InstantaneousTrendline indicator to hit us about the current trend
+ // use the InstantaneousTrendline indicator to 
+ // hint us about the current trend
  private final InstantaneousTrendline trend;
  
- //if we lose money on a trade, will wait for the trend to give a BUY signal before buying again.
+ // if we lose money on a trade, will wait for the 
+ // trend to give a BUY signal before buying again.
  private boolean waitForUptrend = false;
  
  public ExampleStrategyMonitor() {
- //check the trend on the 25 minute time scale
+ // check the trend on the 25 minute time scale
  indicators.add(trend = new InstantaneousTrendline(TimeInterval.minutes(25)));
  }
  
@@ -436,17 +437,17 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
  
  @Override
  public String handleStop(Signal signal, Strategy strategy) {
- //current profit or loss %
+ // current profit or loss %
  double currentReturns = trader.getChange();
- //best profit % (can only be 0% or more)
+ // best profit % (can only be 0% or more)
  double bestReturns = trader.getMaxChange(); 
                        
- //if we are down 2% from the best ever profit generated
+ // if we are down 2% from the best ever profit generated
  if (currentReturns - bestReturns < -2.0) { 
-  //if we are losing money
+  // if we are losing money
   if (currentReturns < 0.0) { 
-  waitForUptrend = true;
-  return "stop loss";
+   waitForUptrend = true;
+   return "stop loss";
   }
   return "exit with some profit"; //else we made money (though we let 2% slip)
  }
@@ -504,7 +505,8 @@ public ExampleStrategy(Parameters params) {
  interval = p[1];
  }
  
- indicators.add(boll5m = new BollingerBand(length, TimeInterval.minutes(interval))); //instantiate using the given parameters
+ // instantiate using the given parameters
+ indicators.add(boll5m = new BollingerBand(length, TimeInterval.minutes(interval)));
  indicators.add(boll1h = new BollingerBand(TimeInterval.hours(1)));
 }
 ```
@@ -516,19 +518,20 @@ code to generate a set of parameters to see how better (or worse) the results wi
 ```java
 // comment out this this line
 // simulation.strategies().add(ExampleStrategy::new);
+
 // and replace with:
- 
-saccount.strategies()
+account.strategies()
   .add((symbol, params) -> new ExampleStrategy(params));
 
-// Also remove the OrderExecutionToLog as we are not interested in seeing each and every trade
+// Also remove the OrderExecutionToLog as we are 
+// not interested in seeing each and every trade
 account.listeners()
 //  .add(new OrderExecutionToLog())
     .add(new SimpleStrategyStatistics())
 ;
 
-// keeps all candles in memory so the simulation won't have to
-// query the database to test each parameter set
+// keeps all candles in memory so the simulation won't
+// have to query the database to test each parameter set
 simulation.cacheCandles(true);
 
 // testing from 1 minute to 15 minute time frames
@@ -594,8 +597,8 @@ has code you'd be using to trade with the example strategy shown earlier:
 public static void main(String... args) {
   Binance.Trader trader = Binance.trader();
 
-//If you want to receive e-mail notifications each time an order is 
-//submitted to the exchange, configure your e-mail sender
+// If you want to receive e-mail notifications each time an order
+// is submitted to the exchange, configure your e-mail sender
   trader.configure().mailSender()...
 
 Account account = trader.configure().account()
@@ -609,13 +612,13 @@ account.strategies().add(ExampleStrategy::new);
 account.monitors().add(ExampleStrategyMonitor::new);
 account.listeners().add(new OrderExecutionToLog());
 
-//never invest more than 20 USDT on anything
+// never invest more than 20 USDT on anything
 account
   .tradeWith("BTC", "ETH", "XRP", "ADA")
   .maximumInvestmentAmountPerAsset(20)
 ;
 
-//overrides the default order manager submit orders that 
+// overrides the default order manager submit orders that 
 // likely won't be filled so you can see what the program does.
 account.orderManager(new DefaultOrderManager() {
   @Override
@@ -750,7 +753,7 @@ and load the configuration provided in the properties files.
 
 You can also load a pre-configured properties file in code and change the values loaded, using:
 
-```
+```java
 Binance.Trader trader = Binance.trader();
 trader.configure().loadConfigurationFromProperties();
 
