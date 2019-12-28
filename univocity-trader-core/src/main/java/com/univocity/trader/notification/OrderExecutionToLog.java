@@ -27,6 +27,8 @@ public class OrderExecutionToLog implements OrderListener {
 			}
 			if(StringUtils.isNotBlank(client.getId())){
 				log.debug(client.getId() + ": " + details);
+			} else {
+				log.debug(details);
 			}
 
 		}

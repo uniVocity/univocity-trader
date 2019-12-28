@@ -387,7 +387,7 @@ public class Trader {
 	}
 
 	/**
-	 * Returns the estimated total funds in the reference currency (given by {@link Client#getReferenceCurrency()})
+	 * Returns the estimated total funds in the reference currency (given by {@link ExchangeClient#getReferenceCurrency()})
 	 *
 	 * @return the estimate net worth of the account.
 	 */

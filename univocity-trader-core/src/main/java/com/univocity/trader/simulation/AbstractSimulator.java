@@ -49,12 +49,12 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 	}
 
 	public final LocalDateTime getSimulationStart() {
-		LocalDateTime start = simulation.simulationStart();
+		LocalDateTime start = simulation.simulateFrom();
 		return start != null ? start : LocalDateTime.now().minusYears(1);
 	}
 
 	public final LocalDateTime getSimulationEnd() {
-		LocalDateTime end = simulation.simulationEnd();
+		LocalDateTime end = simulation.simulateTo();
 		return end != null ? end : LocalDateTime.now();
 	}
 

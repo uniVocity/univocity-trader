@@ -2,7 +2,6 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.config.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.strategy.*;
@@ -10,22 +9,16 @@ import com.univocity.trader.utils.*;
 
 import java.time.*;
 import java.util.*;
-import java.util.concurrent.*;
 
-public class Client<T> {
+public class ExchangeClient<T> implements Client {
 
-	private static final Set<Object> allInstances = ConcurrentHashMap.newKeySet();
-
-	private Exchange exchange;
 	private TradingManager root;
-	private ClientAccount account;
 
 	private final List<CandleProcessor<T>> candleProcessors = new ArrayList<>();
 
 	private final AccountManager accountManager;
 
-	public Client(ClientAccount account, AccountManager accountManager) {
-		this.account = account;
+	public ExchangeClient(AccountManager accountManager) {
 		this.accountManager = accountManager;
 	}
 
@@ -37,16 +30,15 @@ public class Client<T> {
 		accountManager.register(tradingManager);
 	}
 
-	AccountManager getAccountManager(){
+	AccountManager getAccountManager() {
 		return accountManager;
 	}
 
-	Instances<OrderListener> getOrderListeners(){
+	Instances<OrderListener> getOrderListeners() {
 		return accountManager.configuration().listeners();
 	}
 
 	public void initialize(CandleRepository candleRepository, Exchange<T, ?> exchange, SmtpMailSender mailSender) {
-		this.exchange = exchange;
 		if (accountManager.configuration().symbolPairs().isEmpty()) {
 			throw new IllegalStateException("No trade symbols defined for client " + accountManager.configuration().id());
 		}

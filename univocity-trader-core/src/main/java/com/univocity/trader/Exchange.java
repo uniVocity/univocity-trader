@@ -116,7 +116,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 * @param symbols      a comma separated list of symbols to subscribe to.
 	 * @param tickInterval the frequency of the signals to be received such as every 1 minute, 1 hour, 5 seconds, etc (whichever is supported by the exchange)
 	 * @param consumer     a consumer of {@code Exchange}-specific candle/tick details whose data need to be converted into a {@link Candle} and then submitted
-	 *                     for further processing (i.e. {@link Strategy} analysis, {@link Signal} generation and potential trading by {@link Client})
+	 *                     for further processing (i.e. {@link Strategy} analysis, {@link Signal} generation and potential trading by {@link ExchangeClient})
 	 */
 	void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<T> consumer);
 
@@ -158,11 +158,11 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	double getLatestPrice(String assetSymbol, String fundSymbol);
 
 	/**
-	 * Opens a client account with the given {@code apiKey} and {@code secret}, which authorizes the {@link Client} to trade and update their account balance.
+	 * Opens a client account with the given {@code apiKey} and {@code secret}, which authorizes the {@link ExchangeClient} to trade and update their account balance.
 	 *
 	 * @param accountConfiguration the configuration of a client account (typically with API key and secret) to be used to connect to the desired account.
 	 *
-	 * @return an exchange-specific implementation of the {@link ClientAccount} interface, which allows the {@link Client} to trade through this framework.
+	 * @return an exchange-specific implementation of the {@link ClientAccount} interface, which allows the {@link ExchangeClient} to trade through this framework.
 	 */
 	ClientAccount connectToAccount(C accountConfiguration);
 

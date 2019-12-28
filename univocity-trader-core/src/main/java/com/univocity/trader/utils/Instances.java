@@ -6,8 +6,8 @@ public class Instances<T> extends AbstractNewInstances<T, Instances<T>> {
 		super(empty);
 	}
 
-	public T add(T reusableInstance) {
+	public Instances<T> add(T reusableInstance) {
 		add((s, p) -> reusableInstance);
-		return (T)this;
+		return this;
 	}
 }

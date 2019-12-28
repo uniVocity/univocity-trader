@@ -30,7 +30,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	private long lastBalanceSync = 0L;
 	private final Map<String, Balance> balances = new ConcurrentHashMap<>();
 
-	private final Client client;
+	private final ExchangeClient client;
 	private final ClientAccount account;
 	private final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
 	private final Simulation simulation;
@@ -45,10 +45,10 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		this.simulation = simulation;
 		this.account = account;
 		this.configuration = configuration;
-		this.client = new Client(account, this);
+		this.client = new ExchangeClient( this);
 	}
 
-	public Client getClient() {
+	public ExchangeClient getClient() {
 		return client;
 	}
 

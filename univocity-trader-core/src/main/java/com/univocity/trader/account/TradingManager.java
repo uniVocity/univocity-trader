@@ -26,7 +26,7 @@ public class TradingManager {
 	protected Trader trader;
 	private Exchange<?, ?> exchange;
 	private final OrderListener[] notifications;
-	private final Client client;
+	private final ExchangeClient client;
 	private OrderExecutionToEmail emailNotifier;
 	private final SymbolPriceDetails priceDetails;
 
@@ -210,7 +210,7 @@ public class TradingManager {
 		return tradingAccount.getTradingFees();
 	}
 
-	public void sendBalanceEmail(String title, Client client) {
+	public void sendBalanceEmail(String title, ExchangeClient client) {
 		getEmailNotifier().sendBalanceEmail(title, client);
 	}
 

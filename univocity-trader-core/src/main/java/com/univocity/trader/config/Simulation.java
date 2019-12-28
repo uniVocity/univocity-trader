@@ -53,79 +53,79 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	private Map<String, Double> initialFunds = new ConcurrentHashMap<>();
 	private final List<Parameters> parameters = new ArrayList<>();
 
-	public final LocalDateTime simulationStart() {
+	public final LocalDateTime simulateFrom() {
 		return simulationStart != null ? simulationStart : LocalDateTime.now().minusYears(1);
 	}
 
-	public final LocalDateTime simulationEnd() {
+	public final LocalDateTime simulateTo() {
 		return simulationEnd != null ? simulationEnd : LocalDateTime.now();
 	}
 
-	public Simulation simulationStart(LocalDateTime simulationStart) {
+	public Simulation simulateFrom(LocalDateTime simulationStart) {
 		this.simulationStart = simulationStart;
 		return this;
 	}
 
-	public Simulation simulationEnd(LocalDateTime simulationEnd) {
+	public Simulation simulateTo(LocalDateTime simulationEnd) {
 		this.simulationEnd = simulationEnd;
 		return this;
 	}
 
-	public Simulation simulationStart(String simulationStart) {
+	public Simulation simulateFrom(String simulationStart) {
 		this.simulationStart = parseDateTime(simulationStart, null);
 		return this;
 	}
 
-	public Simulation simulationEnd(String simulationEnd) {
+	public Simulation simulateTo(String simulationEnd) {
 		this.simulationEnd = parseDateTime(simulationEnd, null);
 		return this;
 	}
 
-	public Simulation simulationStart(long time) {
+	public Simulation simulateFrom(long time) {
 		this.simulationStart = LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault());
 		return this;
 	}
 
-	public Simulation simulationEnd(long time) {
+	public Simulation simulateTo(long time) {
 		this.simulationEnd = LocalDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.systemDefault());
 		return this;
 	}
 
-	public Simulation simulationStart(Instant date) {
+	public Simulation simulateFrom(Instant date) {
 		this.simulationStart = date == null ? null : LocalDateTime.ofInstant(date, ZoneId.systemDefault());
 		return this;
 	}
 
-	public Simulation simulationEnd(Instant date) {
+	public Simulation simulateTo(Instant date) {
 		this.simulationEnd = date == null ? null : LocalDateTime.ofInstant(date, ZoneId.systemDefault());
 		return this;
 	}
 
-	public Simulation simulationStart(Date date) {
+	public Simulation simulateFrom(Date date) {
 		this.simulationStart = date == null ? null : LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
 		return this;
 	}
 
-	public Simulation simulationEnd(Date date) {
+	public Simulation simulateTo(Date date) {
 		this.simulationEnd = date == null ? null : LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
 		return this;
 	}
 
 
-	public Simulation simulationStart(Calendar date) {
+	public Simulation simulateFrom(Calendar date) {
 		this.simulationStart = date == null ? null : LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
 		return this;
 	}
 
-	public Simulation simulationEnd(Calendar date) {
+	public Simulation simulateTo(Calendar date) {
 		this.simulationEnd = date == null ? null : LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
 		return this;
 	}
 
 	@Override
 	public void readProperties(PropertyBasedConfiguration properties) {
-		simulationStart(parseDateTime(properties, "simulation.start"));
-		simulationEnd(parseDateTime(properties, "simulation.end"));
+		simulateFrom(parseDateTime(properties, "simulation.start"));
+		simulateTo(parseDateTime(properties, "simulation.end"));
 		cacheCandles(properties.getBoolean("simulation.cache.candles", false));
 		activeQueryLimit(properties.getInteger("simulation.active.query.limit", 15));
 		tradingFees(parseTradingFees(properties, "simulation.trade.fees"));

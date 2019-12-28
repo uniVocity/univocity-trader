@@ -44,9 +44,4 @@ public class Account extends AccountConfiguration<Account> {
 	public char[] secret() {
 		return secret;
 	}
-
-	@Override
-	public boolean isConfigured() {
-		return super.isConfigured() && StringUtils.isNoneBlank(apiKey) && ArrayUtils.isNotEmpty(secret);
-	}
 }
