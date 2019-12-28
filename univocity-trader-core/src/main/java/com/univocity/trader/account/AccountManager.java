@@ -45,7 +45,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		this.simulation = simulation;
 		this.account = account;
 		this.configuration = configuration;
-		this.client = new ExchangeClient( this);
+		this.client = new ExchangeClient(this);
 	}
 
 	public ExchangeClient getClient() {
@@ -446,10 +446,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public TradingFees getTradingFees() {
-		if (simulation.tradingFees() == null) {
-			throw new IllegalConfigurationException("Please configure trading fess");
+		if (simulation != null) {
+			if (simulation.tradingFees() == null) {
+				throw new IllegalConfigurationException("Please configure trading fess");
+			}
+			return simulation.tradingFees();
 		}
-		return simulation.tradingFees();
+		return ClientAccount.super.getTradingFees();
 	}
 
 	@Override

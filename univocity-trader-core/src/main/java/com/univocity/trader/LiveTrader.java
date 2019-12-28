@@ -1,6 +1,6 @@
 package com.univocity.trader;
 
-import com.univocity.trader.account.ExchangeClient;
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.config.AccountConfiguration;
@@ -101,7 +101,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 		this.exchange = exchange;
 		EmailConfiguration mail = configuration.mailSender();
-		this.mailSender = mail.isConfigured() ? null : new SmtpMailSender(mail);
+		this.mailSender = mail.isConfigured() ? new SmtpMailSender(mail) : null;
 	}
 
 	public C configure(){
@@ -113,6 +113,16 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		if(candleRepository == null) {
 			candleRepository = new CandleRepository(configuration.database());
 		}
+
+		if(clients.isEmpty()){
+			for(var account : configuration.accounts()){
+				ClientAccount clientAccount = exchange.connectToAccount(account);
+				AccountManager accountManager = new AccountManager(clientAccount, account, null);
+				var client = new ExchangeClient<T>(accountManager);
+				clients.add(client);
+			}
+		}
+
 		if (allPairs == null) {
 			allPairs = new TreeMap<>();
 			for (ExchangeClient client : clients) {

@@ -12,7 +12,6 @@ public class LiveBinanceTrader {
 
 	public static void main(String... args) {
 		Binance.Trader trader = Binance.trader();
-		trader.configure().loadConfigurationFromProperties();
 
 //		TODO: configure your database connection as needed. By default MySQL will be used
 //		trader.configure().database()
