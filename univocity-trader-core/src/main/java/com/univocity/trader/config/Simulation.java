@@ -3,6 +3,7 @@ package com.univocity.trader.config;
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.simulation.*;
+import com.univocity.trader.simulation.orderfill.*;
 import org.apache.commons.lang3.*;
 
 import java.io.*;
@@ -43,8 +44,11 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	private boolean cacheCandles = false;
 	private int activeQueryLimit = 15;
 	private TradingFees tradingFees = SimpleTradingFees.percentage(0.1);
+	private OrderFillEmulator orderFillEmulator = new PriceMatchEmulator();
+
 	private int backfillLength = 6;
 	private ChronoUnit backfillUnit = ChronoUnit.MONTHS;
+
 
 	private Map<String, Double> initialFunds = new ConcurrentHashMap<>();
 	private final List<Parameters> parameters = new ArrayList<>();
@@ -125,7 +129,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		cacheCandles(properties.getBoolean("simulation.cache.candles", false));
 		activeQueryLimit(properties.getInteger("simulation.active.query.limit", 15));
 		tradingFees(parseTradingFees(properties, "simulation.trade.fees"));
-
+		orderFillEmulator(loadOrderFillEmulator(properties));
 		String backfill = properties.getOptionalProperty("simulation.history.backfill");
 		if (backfill != null) {
 			char ch = Character.toUpperCase(backfill.charAt(backfill.length() - 1));
@@ -146,6 +150,22 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 			String className = properties.getProperty("simulation.parameters.class");
 			Class<? extends Parameters> parametersClass = Utils.findClass(Parameters.class, className);
 			parameters(parametersFile, parametersClass);
+		}
+	}
+
+	private OrderFillEmulator loadOrderFillEmulator(PropertyBasedConfiguration properties) {
+		String emulator = properties.getProperty("simulation.order.fill");
+		if (emulator == null) {
+			return new PriceMatchEmulator();
+		}
+		if (!emulator.toLowerCase().endsWith("emulator")) {
+			try {
+				return Utils.findClassAndInstantiate(OrderFillEmulator.class, emulator + "Emulator");
+			} catch (RuntimeException e) {
+				return Utils.findClassAndInstantiate(OrderFillEmulator.class, emulator);
+			}
+		} else {
+			return Utils.findClassAndInstantiate(OrderFillEmulator.class, emulator);
 		}
 	}
 
@@ -367,5 +387,29 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		} catch (Exception ex) {
 			throw new IllegalConfigurationException("Error processing trading fees '" + fees + "' defined in property '" + property + "'", ex);
 		}
+	}
+
+	public OrderFillEmulator orderFillEmulator() {
+		return orderFillEmulator;
+	}
+
+	public Simulation emulateSlippage() {
+		return orderFillEmulator(new SlippageEmulator());
+	}
+
+	public Simulation fillOrdersImmediately() {
+		return orderFillEmulator(new ImmediateFillEmulator());
+	}
+
+	public Simulation fillOrdersOnPriceMatch() {
+		return orderFillEmulator(new PriceMatchEmulator());
+	}
+
+	public Simulation orderFillEmulator(OrderFillEmulator orderFillEmulator) {
+		if (orderFillEmulator == null) {
+			throw new IllegalArgumentException("Order fill emulator cannot be null");
+		}
+		this.orderFillEmulator = orderFillEmulator;
+		return this;
 	}
 }

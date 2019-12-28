@@ -1258,7 +1258,7 @@ public class Utils {
 	 * @throws IllegalArgumentException if no class is found.
 	 */
 	public static <T> Class<? extends T> findClass(Class<T> parent, String classToFind) {
-		return (Class<? extends T>)search(scanClasses(), parent, Collections.singleton(classToFind)).iterator().next();
+		return (Class<? extends T>) search(scanClasses(), parent, Collections.singleton(classToFind)).iterator().next();
 	}
 
 	private static WeakReference<ScanResult> classesScanned;
@@ -1307,33 +1307,47 @@ public class Utils {
 		}
 	}
 
-	private static LinkedHashSet<Class<?>> search(ScanResult scanResult, Class<?> parentType, Set<String> classNames) {
-		ClassInfoList subclasses = parentType.isInterface() ? scanResult.getClassesImplementing(parentType.getName()) : scanResult.getSubclasses(parentType.getName());
-
-		List<Class<?>> loadedClasses = subclasses.stream()
-				.filter(subClass -> subClass.isStandardClass() && !subClass.isAbstract() && !subClass.isAnonymousInnerClass())
-				.filter(subClass -> StringUtils.endsWithAny(subClass.getName(), classNames.toArray(new String[0])))
-				.map(ClassInfo::loadClass)
-				.collect(Collectors.toList());
-		;
-
-		LinkedHashSet<Class<?>> sorted = new LinkedHashSet<>();
-		for (String name : classNames) {
+	private static void doSearch(boolean caseInsensitive, List<Class<?>> loadedClasses, Set<String> classNames, LinkedHashSet<Class<?>> sorted) {
+		Iterator<String> names = classNames.iterator();
+		while (names.hasNext()) {
+			String name = names.next();
 			boolean found = false;
 			Iterator<Class<?>> it = loadedClasses.iterator();
 			while (it.hasNext()) {
 				Class<?> c = it.next();
-				if (c.getName().endsWith(name)) {
+				if ((caseInsensitive && c.getName().toLowerCase().endsWith(name.toLowerCase())) || c.getName().endsWith(name)) {
 					it.remove();
+					names.remove();
 					found = true;
 					sorted.add(c);
 					break;
 				}
 			}
-			if (!found) {
+			if (caseInsensitive && !found) {
 				throw new IllegalArgumentException("Could not find class '" + name + "'");
 			}
 		}
+	}
+
+	private static LinkedHashSet<Class<?>> search(ScanResult scanResult, Class<?> parentType, Set<String> classNames) {
+		ClassInfoList subclasses = parentType.isInterface() ? scanResult.getClassesImplementing(parentType.getName()) : scanResult.getSubclasses(parentType.getName());
+
+		String[] lowerCasedNames = classNames.toArray(new String[0]);
+		for (int i = 0; i < lowerCasedNames.length; i++) {
+			lowerCasedNames[i] = lowerCasedNames[i].toLowerCase();
+		}
+
+		List<Class<?>> loadedClasses = subclasses.stream()
+				.filter(subClass -> subClass.isStandardClass() && !subClass.isAbstract() && !subClass.isAnonymousInnerClass())
+				.filter(subClass -> StringUtils.endsWithAny(subClass.getName().toLowerCase(), lowerCasedNames))
+				.map(ClassInfo::loadClass)
+				.collect(Collectors.toList());
+		;
+
+		LinkedHashSet<Class<?>> sorted = new LinkedHashSet<>();
+		classNames = new LinkedHashSet<>(classNames);
+		doSearch(false, loadedClasses, classNames, sorted);
+		doSearch(true, loadedClasses, classNames, sorted);
 
 		if (!loadedClasses.isEmpty()) {
 			StringBuilder simpleNames = new StringBuilder();

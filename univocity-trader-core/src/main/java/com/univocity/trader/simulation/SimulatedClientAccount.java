@@ -4,19 +4,20 @@ import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.simulation.orderfill.*;
 
 import java.math.*;
 import java.util.*;
 
 import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
-import static com.univocity.trader.account.Order.Type.*;
 
 public class SimulatedClientAccount implements ClientAccount {
 
 	private Map<String, Set<PendingOrder>> orders = new HashMap<>();
 	private TradingFees tradingFees;
 	private final AccountManager account;
+	private OrderFillEmulator orderFillEmulator;
 
 	private static class PendingOrder {
 		final Order order;
@@ -30,10 +31,11 @@ public class SimulatedClientAccount implements ClientAccount {
 
 	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, Simulation simulation) {
 		this.account = new AccountManager(this, accountConfiguration, simulation);
+		this.orderFillEmulator = simulation.orderFillEmulator();
 	}
 
-	public final TradingFees getTradingFees(){
-		if(this.tradingFees == null) {
+	public final TradingFees getTradingFees() {
+		if (this.tradingFees == null) {
 			this.tradingFees = account.getTradingFees();
 			if (this.tradingFees == null) {
 				throw new IllegalArgumentException("Trading fees cannot be null");
@@ -82,10 +84,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		out.setType(orderType);
 		out.setStatus(Order.Status.NEW);
 		out.setExecutedQuantity(BigDecimal.ZERO);
-//		out.setStatus(Order.Status.FILLED);
-//		out.setExecutedQuantity(new BigDecimal(quantity));
 		out.setOrderId(UUID.randomUUID().toString());
-
 		return out;
 	}
 
@@ -130,7 +129,7 @@ public class SimulatedClientAccount implements ClientAccount {
 			Order order = pendingOrder.order;
 
 			if (!order.isFinalized()) {
-				fillOrder(order, candle);
+				orderFillEmulator.fillOrder((DefaultOrder) order, candle);
 			}
 			if (order.isFinalized()) {
 				it.remove();
@@ -138,25 +137,6 @@ public class SimulatedClientAccount implements ClientAccount {
 			}
 		}
 		return true;
-	}
-
-	protected void fillOrder(Order order, Candle candle) {
-		DefaultOrder o = (DefaultOrder) order;
-		if (order.getType() == LIMIT) {
-			if ((order.getSide() == BUY && order.getPrice().doubleValue() >= candle.low)
-					|| (order.getSide() == SELL && order.getPrice().doubleValue() <= candle.high)) {
-				o.setStatus(Order.Status.FILLED);
-				o.setExecutedQuantity(order.getQuantity());
-			}
-		} else if (order.getType() == MARKET) {
-			o.setStatus(Order.Status.FILLED);
-			o.setExecutedQuantity(order.getQuantity());
-			if (order.getSide() == BUY) {
-				o.setPrice(BigDecimal.valueOf((candle.open + candle.close + candle.high) / 3.0));
-			} else if (order.getSide() == SELL) {
-				o.setPrice(BigDecimal.valueOf((candle.open + candle.close + candle.low) / 3.0));
-			}
-		}
 	}
 
 	private void updateBalances(Order order, BigDecimal locked) {
