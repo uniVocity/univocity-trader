@@ -5,6 +5,7 @@ import com.univocity.trader.indicators.base.*;
 import java.math.*;
 
 import static com.univocity.trader.account.Balance.*;
+import static com.univocity.trader.candles.Candle.*;
 
 public interface Order {
 
@@ -113,6 +114,14 @@ public interface Order {
 
 		description.append('.');
 		return description.toString();
+	}
+
+	default String getFormattedFillPct() {
+		return CHANGE_FORMAT.get().format(getFillPct());
+	}
+
+	default double getFillPct() {
+		return getExecutedQuantity().divide(getQuantity(), RoundingMode.FLOOR).doubleValue();
 	}
 
 	enum Side {

@@ -98,7 +98,12 @@ public class TradingManager {
 
 	public boolean hasAssets(Candle c) {
 		double minimum = getPriceDetails().getMinimumOrderAmount(c.close);
-		return getAssets() * c.close > minimum;
+		double positionValue = getAssets() * c.close;
+		return positionValue > minimum && positionValue > minimumInvestmentAmountPerTrade();
+	}
+
+	double minimumInvestmentAmountPerTrade(){
+		return getAccount().configuration().minimumInvestmentAmountPerTrade(assetSymbol);
 	}
 
 	public final Order buy(double quantity) {

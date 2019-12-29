@@ -571,9 +571,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		account.cancel(order);
 		order = account.updateOrderStatus(order);
 		pendingOrders.remove(order.getOrderId());
-		orderManager.finalized(order, traderOf(order));
+		orderFinalized(orderManager, order);
 		logOrderStatus("Cancellation via order manager: ", order);
-		updateBalances();
 	}
 
 

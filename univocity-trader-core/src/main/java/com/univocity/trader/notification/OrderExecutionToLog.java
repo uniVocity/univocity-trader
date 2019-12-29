@@ -5,6 +5,8 @@ import com.univocity.trader.account.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
+import java.math.*;
+
 import static com.univocity.trader.account.Order.Side.*;
 
 public class OrderExecutionToLog implements OrderListener {
@@ -29,7 +31,16 @@ public class OrderExecutionToLog implements OrderListener {
 			if (order.getSide() == BUY) {
 				details += f.priceToString(order.getPrice());
 				if (order.isFinalized()) {
-					details += " (" + order.getStatus() + " - spent: $" + f.priceToString(order.getTotalTraded()) + ")";
+					details += " (" + order.getStatus();
+					if (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) == 0) {
+						details += " 0% filled.";
+					} else {
+						if (order.getRemainingQuantity().compareTo(BigDecimal.ZERO) > 0) {
+							details += " " + order.getFormattedFillPct() + " filled";
+						}
+						details += " - spent: $" + f.priceToString(order.getTotalTraded()) + ")";
+					}
+
 				} else {
 					details += " (PENDING - total committed: $" + f.priceToString(order.getTotalOrderAmount()) + ")";
 				}
