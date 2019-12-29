@@ -77,7 +77,7 @@ public class TradingManager {
 	}
 
 	public Candle getLatestCandle() {
-		return trader.getCandle();
+		return trader.latestCandle();
 	}
 
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
@@ -101,18 +101,9 @@ public class TradingManager {
 		return getAssets() * c.close > minimum;
 	}
 
-	public final boolean buy(double quantity) {
-		return processOrder(trader, tradingAccount.buy(assetSymbol, fundSymbol, quantity));
+	public final Order buy(double quantity) {
+		return tradingAccount.buy(assetSymbol, fundSymbol, quantity);
 	}
-
-	private boolean processOrder(Trader trader, Order order) {
-		if (order != null) {
-			trader.notifyTrade(trader.getCandle(), order);
-			return true;
-		}
-		return false;
-	}
-
 
 //	public boolean switchTo(String ticker, Signal trade, String exitSymbol) {
 //		String targetSymbol = exitSymbol + fundSymbol;
@@ -139,11 +130,11 @@ public class TradingManager {
 //		return false;
 //	}
 
-	public boolean sell(double quantity) {
+	public Order sell(double quantity) {
 		if (quantity <= 0.0) {
-			return false;
+			return null;
 		}
-		return processOrder(trader, tradingAccount.sell(assetSymbol, fundSymbol, quantity));
+		return tradingAccount.sell(assetSymbol, fundSymbol, quantity);
 	}
 
 	public double getAssets() {
@@ -241,6 +232,7 @@ public class TradingManager {
 	}
 
 	void notifyOrderFinalized(Order order) {
+		trader.orderFinalized(order);
 		for (int i = 0; i < notifications.length; i++) {
 			try {
 				notifications[i].orderFinalized(order, trader, client);

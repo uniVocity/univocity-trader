@@ -13,24 +13,46 @@ public class OrderExecutionToLog implements OrderListener {
 
 	@Override
 	public void orderSubmitted(Order order, Trader trader, Client client) {
+		logDetails(order, trader, client);
+	}
+
+	@Override
+	public void orderFinalized(Order order, Trader trader, Client client) {
+		logDetails(order, trader, client);
+	}
+
+	private void logDetails(Order order, Trader trader, Client client) {
 		if (log.isDebugEnabled()) {
-			SymbolPriceDetails f = trader.getPriceDetails();
+			SymbolPriceDetails f = trader.priceDetails();
 			String type = StringUtils.rightPad(order.getSide().toString(), 8);
-			String details = trader.getCandle().getFormattedCloseTimeWithYear() + " " + trader.getSymbol() + " " + type + " " + f.quantityToString(order.getQuantity()) + " @ $";
+			String details = trader.latestCandle().getFormattedCloseTimeWithYear() + " " + trader.symbol() + " " + type + " " + f.quantityToString(order.getQuantity()) + " @ $";
 			if (order.getSide() == BUY) {
-				details += f.priceToString(order.getPrice()) + " (Total spent: $" + f.priceToString(order.getTotalOrderAmount()) + ")";
+				details += f.priceToString(order.getPrice());
+				if (order.isFinalized()) {
+					details += " (" + order.getStatus() + " - spent: $" + f.priceToString(order.getTotalTraded()) + ")";
+				} else {
+					details += " (PENDING - total committed: $" + f.priceToString(order.getTotalOrderAmount()) + ")";
+				}
 			} else {
-				details += f.priceToString(trader.getCandle().close) + " (" + trader.getFormattedPriceChangePct() + ") ";
-				details += trader.exitReason();
-				details += " >> " + trader.tradeLength() + " ticks >> [Min: $" + f.priceToString(trader.getMinPrice()) + " (" + trader.getFormattedMinChangePct() + ") - Max: $" + f.priceToString(trader.getMaxPrice()) + " (" + trader.getFormattedMaxChangePct() + ")]";
-				details += "\t Holdings ~$" + f.priceToString(trader.holdings()) + " " + trader.getReferenceCurrencySymbol();
+				details += f.priceToString(trader.latestCandle().close);
+				if (order.isFinalized()) {
+					if (trader.position().isEmpty()) {
+						details += " (" + order.getStatus() + ", P/L: " + f.priceToString(trader.actualProfitLoss()) + " [" + trader.formattedProfitLossPct() + "]) ";
+					} else {
+						details += " (PARTIAL EXIT - " + order.getStatus() + ", P/L: " + f.priceToString(trader.actualProfitLoss()) + " [" + trader.formattedProfitLossPct() + "]) ";
+					}
+					details += "\t Holdings ~$" + f.priceToString(trader.holdings()) + " " + trader.referenceCurrencySymbol();
+				} else {
+					details += " (PENDING - expected returns: " + trader.formattedPriceChangePct() + ") ";
+					details += " >> " + trader.tradeLength() + " ticks >> [Min: $" + f.priceToString(trader.minPrice()) + " (" + trader.formattedMinChangePct() + ") - Max: $" + f.priceToString(trader.maxPrice()) + " (" + trader.formattedMaxChangePct() + ")]";
+					details += trader.exitReason();
+				}
 			}
-			if(StringUtils.isNotBlank(client.getId())){
+			if (StringUtils.isNotBlank(client.getId())) {
 				log.debug(client.getId() + ": " + details);
 			} else {
 				log.debug(details);
 			}
-
 		}
 	}
 }

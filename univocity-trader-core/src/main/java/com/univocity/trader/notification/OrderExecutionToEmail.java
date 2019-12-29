@@ -75,14 +75,14 @@ public class OrderExecutionToEmail implements OrderListener {
 			return;
 		}
 
-		String assetSymbol = trader.getAssetSymbol();
-		String fundSymbol = trader.getFundSymbol();
+		String assetSymbol = trader.assetSymbol();
+		String fundSymbol = trader.fundSymbol();
 		try {
-			SymbolPriceDetails f = trader.getPriceDetails();
+			SymbolPriceDetails f = trader.priceDetails();
 			String balances = printTotalBalances(tradingManager.updateBalances());
 
-			String timeLong = " at " + trader.getCandle().getFormattedCloseTime("h:mma, MMMM dd, yyyy", client.getTimezone());
-			String timeShort = " - " + trader.getCandle().getFormattedCloseTime("EEEE hh:mma", client.getTimezone());
+			String timeLong = " at " + trader.latestCandle().getFormattedCloseTime("h:mma, MMMM dd, yyyy", client.getTimezone());
+			String timeShort = " - " + trader.latestCandle().getFormattedCloseTime("EEEE hh:mma", client.getTimezone());
 			String title = order.getSide() + " " + assetSymbol;
 			String typeDescription = order.getType() == Order.Type.LIMIT ? "with limit order of " + f.priceToString(order.getPrice()) + " " + fundSymbol + " per unit" : "at market";
 			String details;
@@ -91,19 +91,19 @@ public class OrderExecutionToEmail implements OrderListener {
 
 			if (order.getSide() == Order.Side.BUY) {
 				title += " @ " + f.priceToString(order.getPrice()) + timeShort;
-				details = "Bought " + qty + " " + assetSymbol + " " + typeDescription + " when price reached " + f.priceToString(trader.getLastClosingPrice()) + " " + fundSymbol + timeLong + ".";
+				details = "Bought " + qty + " " + assetSymbol + " " + typeDescription + " when price reached " + f.priceToString(trader.lastClosingPrice()) + " " + fundSymbol + timeLong + ".";
 				details += "\nAmount invested: $" + f.priceToString(order.getTotalOrderAmount()) + " " + fundSymbol;
 				details += "\nOrder status: " + order.getStatus();
 			} else {
-				title += " @ " + f.priceToString(order.getPrice()) + " (" + trader.getFormattedPriceChangePct(order.getPrice()) + ")" + timeShort;
-				details = "Sold " + qty + " " + assetSymbol + " " + typeDescription + " when price reached " + f.priceToString(trader.getLastClosingPrice()) + " " + fundSymbol + timeLong + ".";
+				title += " @ " + f.priceToString(order.getPrice()) + " (" + trader.formattedPriceChangePct(order.getPrice()) + ")" + timeShort;
+				details = "Sold " + qty + " " + assetSymbol + " " + typeDescription + " when price reached " + f.priceToString(trader.lastClosingPrice()) + " " + fundSymbol + timeLong + ".";
 				details += "\nExit reason: " + trader.exitReason();
 				details += "\nOrder status: " + order.getStatus();
-				details += "\n\nChange: " + trader.getFormattedPriceChangePct();
-				details += "\nClose price: " + f.priceToString(trader.getLastClosingPrice()) + " " + fundSymbol;
-				details += "\nTrade length: " + trader.getFormattedTradeLength();
-				details += "\nMinimum price: " + f.priceToString(trader.getMinPrice()) + " " + fundSymbol + " (" + trader.getFormattedMinChangePct() + ")";
-				details += "\nMaximum price: " + f.priceToString(trader.getMaxPrice()) + " " + fundSymbol + " (" + trader.getFormattedMaxChangePct() + ")";
+				details += "\n\nChange: " + trader.formattedPriceChangePct();
+				details += "\nClose price: " + f.priceToString(trader.lastClosingPrice()) + " " + fundSymbol;
+				details += "\nTrade length: " + trader.formattedTradeLength();
+				details += "\nMinimum price: " + f.priceToString(trader.minPrice()) + " " + fundSymbol + " (" + trader.formattedMinChangePct() + ")";
+				details += "\nMaximum price: " + f.priceToString(trader.maxPrice()) + " " + fundSymbol + " (" + trader.formattedMaxChangePct() + ")";
 			}
 
 			String body = details + "\n" + balances;
@@ -150,26 +150,26 @@ public class OrderExecutionToEmail implements OrderListener {
 				if (worth > 0.5) {
 					printing = true;
 					msg.append("\n\t* ").append(f.quantityToString(assets)).append(" ").append(next.getAssetSymbol());
-					if (trader.getBoughtPrice() > 0) {
-						msg.append(". Paid ").append(f.priceToString(trader.getBoughtPrice()));
+					if (trader.averagePrice() > 0) {
+						msg.append(". Paid ").append(f.priceToString(trader.averagePrice()));
 					}
 					msg.append(", ");
-					msg.append("trading at ").append(f.priceToString(trader.getLastClosingPrice()));
-					double change = trader.getChange();
+					msg.append("trading at ").append(f.priceToString(trader.lastClosingPrice()));
+					double change = trader.change();
 					if (change != 0.0) {
 						msg.append(' ').append('(');
 						if (change > 0.0) {
 							msg.append('+');
 						}
-						msg.append(trader.getFormattedPriceChangePct());
+						msg.append(trader.formattedPriceChangePct());
 						msg.append(')');
 					}
-					msg.append(". Holding ").append(f.quantityToString(trader.getAssetQuantity())).append(" units");
-					msg.append(", worth ~").append(f.switchToSymbol(trader.getAssetSymbol() + referenceCurrencySymbol).priceToString(worth)).append(" ").append(next.getFundSymbol());
-					if (trader.getTicks() > 0) {
-						msg.append(" (max: ").append(f.priceToString(trader.getMaxPrice()))
-								.append(", min: ").append(f.priceToString(trader.getMinPrice()))
-								.append(", length: ").append(trader.getFormattedTradeLength())
+					msg.append(". Holding ").append(f.quantityToString(trader.assetQuantity())).append(" units");
+					msg.append(", worth ~").append(f.switchToSymbol(trader.assetSymbol() + referenceCurrencySymbol).priceToString(worth)).append(" ").append(next.getFundSymbol());
+					if (trader.ticks() > 0) {
+						msg.append(" (max: ").append(f.priceToString(trader.maxPrice()))
+								.append(", min: ").append(f.priceToString(trader.minPrice()))
+								.append(", length: ").append(trader.formattedTradeLength())
 								.append(")");
 					}
 				}

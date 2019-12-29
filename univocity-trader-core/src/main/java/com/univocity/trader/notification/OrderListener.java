@@ -14,8 +14,8 @@ public interface OrderListener {
 	 *
 	 * @param order  the order created in the exchange
 	 * @param trader the object responsible for the order creation, be it a {@code BUY} or {@code SELL}, and which contains many details
-	 *               regarding the current symbol, such as {@link Trader#getLastClosingPrice()} and {@link Trader#getCandle()};
-	 *               and the trade itself, e.g. {@link Trader#getBoughtPrice()}, {@link Trader#getMinPrice()}, {@link Trader#getTicks()}, etc.
+	 *               regarding the current symbol, such as {@link Trader#lastClosingPrice()} and {@link Trader#latestCandle()};
+	 *               and the trade itself, e.g. {@link Trader#averagePrice()}, {@link Trader#minPrice()}, {@link Trader#ticks()}, etc.
 	 * @param client the client whose account was used to place the given order.
 	 */
 	void orderSubmitted(Order order, Trader trader, Client client);
@@ -25,8 +25,8 @@ public interface OrderListener {
 	 *
 	 * @param order  the order created in the exchange
 	 * @param trader the object responsible for the order creation, be it a {@code BUY} or {@code SELL}, and which contains many details
-	 *               regarding the current symbol, such as {@link Trader#getLastClosingPrice()} and {@link Trader#getCandle()};
-	 *               and the trade itself, e.g. {@link Trader#getBoughtPrice()}, {@link Trader#getMinPrice()}, {@link Trader#getTicks()}, etc.
+	 *               regarding the current symbol, such as {@link Trader#lastClosingPrice()} and {@link Trader#latestCandle()};
+	 *               and the trade itself, e.g. {@link Trader#averagePrice()}, {@link Trader#minPrice()}, {@link Trader#ticks()}, etc.
 	 * @param client the client whose account was used to place the given order.
 	 */
 	default void orderFinalized(Order order, Trader trader, Client client) {
@@ -37,8 +37,8 @@ public interface OrderListener {
 	 * Notification that a simulation has ended. Not used when trading live.
 	 *
 	 * @param trader the object responsible for the order creation, be it a {@code BUY} or {@code SELL}, and which contains many details
-	 *               regarding the current symbol, such as {@link Trader#getLastClosingPrice()} and {@link Trader#getCandle()};
-	 *               and the trade itself, e.g. {@link Trader#getBoughtPrice()}, {@link Trader#getMinPrice()}, {@link Trader#getTicks()}, etc.
+	 *               regarding the current symbol, such as {@link Trader#lastClosingPrice()} and {@link Trader#latestCandle()};
+	 *               and the trade itself, e.g. {@link Trader#averagePrice()}, {@link Trader#minPrice()}, {@link Trader#ticks()}, etc.
 	 * @param client the client whose simulated account was used to place the given order.
 	 */
 	default void simulationEnded(Trader trader, Client client) {

@@ -20,7 +20,7 @@ import com.univocity.trader.indicators.*;
  */
 public abstract class StrategyMonitor extends IndicatorGroup {
 	/**
-	 * The object which contains all details pertinent to the current instrument being traded (e.g. {@link Trader#getChange()}, {@link Trader#getLastClosingPrice()}, {@link Trader#getBoughtPrice()},
+	 * The object which contains all details pertinent to the current instrument being traded (e.g. {@link Trader#change()}, {@link Trader#lastClosingPrice()}, {@link Trader#averagePrice()},
 	 * etc)
 	 */
 	protected Trader trader;
@@ -84,13 +84,13 @@ public abstract class StrategyMonitor extends IndicatorGroup {
 	}
 
 	/**
-	 * Notifies that the {@link #trader} bought some quantity of symbol {@link Trader#getSymbol()}
+	 * Notifies that the {@link #trader} bought some quantity of symbol {@link Trader#symbol()}
 	 */
 	public void bought() {
 	}
 
 	/**
-	 * Notifies that any instruments of symbol {@link Trader#getSymbol()} held by the {@link #trader} were sold.
+	 * Notifies that any instruments of symbol {@link Trader#symbol()} held by the {@link #trader} were sold.
 	 */
 	public void sold() {
 	}

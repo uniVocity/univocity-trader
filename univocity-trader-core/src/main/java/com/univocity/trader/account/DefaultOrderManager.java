@@ -63,7 +63,7 @@ public class DefaultOrderManager implements OrderManager {
 
 	@Override
 	public void unchanged(Order order, Trader trader) {
-		if (order.getTimeElapsed(trader.getCandle().closeTime) >= maxTimeToKeepOrderOpen.ms) {
+		if (order.getTimeElapsed(trader.latestCandle().closeTime) >= maxTimeToKeepOrderOpen.ms) {
 			order.cancel();
 			return;
 		}
@@ -71,7 +71,7 @@ public class DefaultOrderManager implements OrderManager {
 
 	@Override
 	public boolean cancelToReleaseFundsFor(Order order, Trader currentTrader, Trader newSymbolTrader) {
-		if (order.getTimeElapsed(currentTrader.getCandle().closeTime) > maxTimeToKeepOrderOpen.ms / 2) {
+		if (order.getTimeElapsed(currentTrader.latestCandle().closeTime) > maxTimeToKeepOrderOpen.ms / 2) {
 			order.cancel();
 			return true;
 		}

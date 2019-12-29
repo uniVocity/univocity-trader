@@ -4,7 +4,7 @@ import java.text.*;
 import java.time.*;
 import java.time.format.*;
 
-public class Candle implements Comparable<Candle> {
+public class Candle implements Comparable<Candle>, Cloneable {
 	private static final ThreadLocal<DateTimeFormatter> DATE_FORMAT = ThreadLocal.withInitial(() -> DateTimeFormatter.ofPattern("MMM dd HH:mm"));
 	private static final ThreadLocal<DateTimeFormatter> DATE_YEAR_FORMAT = ThreadLocal.withInitial(() -> DateTimeFormatter.ofPattern("yyyy MMM dd HH:mm"));
 
@@ -100,7 +100,7 @@ public class Candle implements Comparable<Candle> {
 			return this;
 		}
 
-		if(this.merged){
+		if (this.merged) {
 			this.closeTime = o.closeTime;
 			this.high = Math.max(this.high, o.high);
 			this.low = Math.min(this.low, o.low);
@@ -147,5 +147,13 @@ public class Candle implements Comparable<Candle> {
 
 	public boolean isRed() {
 		return this.open >= this.close;
+	}
+
+	public Candle clone() {
+		try {
+			return (Candle) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 }

@@ -2,9 +2,7 @@ package com.univocity.trader.strategy;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.*;
-import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.utils.*;
 import org.slf4j.*;
@@ -48,10 +46,10 @@ public class Engine {
 				plainStrategies.add(strategy);
 			}
 		}
-		Collections.addAll(groups, trader.getStrategyMonitors());
+		Collections.addAll(groups, trader.monitors());
 		indicatorGroups = groups.toArray(new IndicatorGroup[0]);
 
-		Aggregator rootAggregator = new Aggregator(trader.getSymbol() + parameters.toString());
+		Aggregator rootAggregator = new Aggregator(trader.symbol() + parameters.toString());
 		for (int i = 0; i < indicatorGroups.length; i++) {
 			indicatorGroups[i].initialize(rootAggregator);
 		}
@@ -76,7 +74,7 @@ public class Engine {
 		}
 
 		//for simulations only - tries to fill open orders using the latest candle information loaded from history.
-		tradingManager.updateOpenOrders(trader.getSymbol(), candle);
+		tradingManager.updateOpenOrders(trader.symbol(), candle);
 
 
 		for (int i = 0; i < strategies.length; i++) {
@@ -85,7 +83,7 @@ public class Engine {
 			try {
 				trader.trade(candle, signal, strategy);
 			} catch (Exception e) {
-				log.error("Error processing " + signal + " " + trader.getSymbol() + " generated using candle (" + candle + ") from " + strategy, e);
+				log.error("Error processing " + signal + " " + trader.symbol() + " generated using candle (" + candle + ") from " + strategy, e);
 			}
 		}
 	}

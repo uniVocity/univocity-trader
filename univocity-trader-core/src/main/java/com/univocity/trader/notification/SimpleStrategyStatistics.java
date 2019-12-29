@@ -32,16 +32,16 @@ public class SimpleStrategyStatistics implements OrderListener {
 	public void orderSubmitted(Order order, Trader trader, Client client) {
 		if (this.trader == null) {
 			this.trader = trader;
-			initialInvestment = this.trader.getTotalFundsInReferenceCurrency();
-			firstCandle = this.trader.getCandle();
+			initialInvestment = this.trader.totalFundsInReferenceCurrency();
+			firstCandle = this.trader.latestCandle();
 		}
 		if (order.getSide() == SELL) {
-			double change = trader.getPriceChangePct() - trader.getBreakEvenChange(order.getTotalTraded().doubleValue());
+			double change = trader.priceChangePct() - trader.breakEvenChange(order.getTotalTraded().doubleValue());
 			if (!Double.isNaN(change)) {
-				parameterReturns.computeIfAbsent(trader.getParameters().toString(), s -> new ArrayList<>()).add(change);
+				parameterReturns.computeIfAbsent(trader.parameters().toString(), s -> new ArrayList<>()).add(change);
 			}
 		}
-		lastCandle = trader.getCandle();
+		lastCandle = trader.latestCandle();
 	}
 
 	public void printTradeStats() {
@@ -65,7 +65,7 @@ public class SimpleStrategyStatistics implements OrderListener {
 			double averageGain = positiveCount == 0 ? 0 : totalPositive / positiveCount;
 			double averageLoss = negativeCount == 0 ? 0 : totalNegative / negativeCount;
 
-			double latestHoldings = trader.getTotalFundsInReferenceCurrency();
+			double latestHoldings = trader.totalFundsInReferenceCurrency();
 
 			System.out.println("===[ " + (symbol == null ? "" : symbol) + " results using parameters: " + e.getKey() + " ]===");
 			DecimalFormat formatter = CHANGE_FORMAT.get();

@@ -71,15 +71,15 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 		if(trader == null){
 			throw new IllegalStateException("Unknown symbol: " + symbol);
 		}
-		double price = trader.getLastClosingPrice();
-		if (price == 0.0 && trader.getCandle() == null) {
+		double price = trader.lastClosingPrice();
+		if (price == 0.0 && trader.latestCandle() == null) {
 			// case for simulations only, where we try to switch from one asset to another without selling then buying, to avoid paying fees twice.
 			Trader assetTrader = account.getTraderOf(assetSymbol + account.getReferenceCurrencySymbol());
 			if (assetTrader != null) {
 				Trader fundsTrader = account.getTraderOf(fundSymbol + account.getReferenceCurrencySymbol());
 				if (fundsTrader != null) {
-					double assetPrice = assetTrader.getLastClosingPrice();
-					double fundPrice = fundsTrader.getLastClosingPrice();
+					double assetPrice = assetTrader.lastClosingPrice();
+					double fundPrice = fundsTrader.lastClosingPrice();
 					if (fundPrice != 0.0) {
 						price = assetPrice / fundPrice;
 					}

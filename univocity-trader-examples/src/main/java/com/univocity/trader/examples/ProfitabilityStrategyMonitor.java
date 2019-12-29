@@ -26,9 +26,9 @@ public class ProfitabilityStrategyMonitor extends StrategyMonitor {
 
 	@Override
 	public boolean discardSell(Candle candle) {
-		TradingFees tradingFees = trader.getTradingFees();
-		double quantity = this.trader.getAssetQuantity();
-		double price = this.trader.getBoughtPrice();
+		TradingFees tradingFees = trader.tradingFees();
+		double quantity = this.trader.assetQuantity();
+		double price = this.trader.averagePrice();
 		double purchaseValue = price * quantity;
 		double sellValue = tradingFees.takeFee(candle.low * quantity, Order.Type.MARKET, Order.Side.SELL);
 		double diffpct = (sellValue - purchaseValue) / purchaseValue;
