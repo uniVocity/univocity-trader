@@ -86,13 +86,10 @@ public static void main(String... args) {
 
 // pulls any missing candlesticks from the exchange 
 // and store them in our local database.
-  simulator.backfillHistory("BTCUSDT", "ADAUSDT");
-
 // This runs over stored candles backwards and will try to fill
 // any gaps until the date 2 years ago from today is reached.
-// Pulls one-minute candles.
-  CandleRepository.fillHistoryGaps(exchange, symbol, start, TimeInterval.minutes(1));
-
+// Pulls one-minute candles by default.
+  simulator.backfillHistory("BTCUSDT", "ADAUSDT");
 }
 
 ```
