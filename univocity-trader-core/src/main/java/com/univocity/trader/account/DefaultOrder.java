@@ -70,6 +70,6 @@ public class DefaultOrder extends OrderRequest implements Order {
 
 	@Override
 	public String toString() {
-		return print(System.currentTimeMillis());
+		return print(0);
 	}
 }

@@ -5,6 +5,7 @@ import com.univocity.trader.indicators.base.*;
 import java.math.*;
 
 import static com.univocity.trader.account.Balance.*;
+import static com.univocity.trader.account.Order.Status.*;
 import static com.univocity.trader.candles.Candle.*;
 
 public interface Order {
@@ -60,7 +61,7 @@ public interface Order {
 	}
 
 	default boolean isFinalized() {
-		return getStatus() == Status.FILLED || getStatus() == Status.CANCELLED;
+		return getStatus() == FILLED || getStatus() == Status.CANCELLED;
 	}
 
 	default String print(long latestClose) {
@@ -108,16 +109,23 @@ public interface Order {
 					.append(getFundsSymbol());
 		}
 
-		description
-				.append(". Open for ")
-				.append(TimeInterval.getFormattedDuration(getTimeElapsed(latestClose)));
+		if(latestClose > 0) {
+			description
+					.append(". Open for ")
+					.append(TimeInterval.getFormattedDuration(getTimeElapsed(latestClose)));
+		}
 
 		description.append('.');
 		return description.toString();
 	}
 
 	default String getFormattedFillPct() {
-		return CHANGE_FORMAT.get().format(getFillPct());
+		String out = CHANGE_FORMAT.get().format(getFillPct());
+		//adjust display of mostly filled order so it's less confusing.
+		if (getStatus() != FILLED && out.equals("100.00%")) {
+			return "99.99%";
+		}
+		return out;
 	}
 
 	default double getFillPct() {

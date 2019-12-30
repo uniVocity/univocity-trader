@@ -96,13 +96,13 @@ public class TradingManager {
 		return exchange.getLatestPrices();
 	}
 
-	public boolean hasAssets(Candle c) {
+	public boolean hasAssets(Candle c, boolean includeLocked) {
 		double minimum = getPriceDetails().getMinimumOrderAmount(c.close);
-		double positionValue = getAssets() * c.close;
+		double positionValue = (includeLocked ? getTotalAssets() : getAssets()) * c.close;
 		return positionValue > minimum && positionValue > minimumInvestmentAmountPerTrade();
 	}
 
-	double minimumInvestmentAmountPerTrade(){
+	double minimumInvestmentAmountPerTrade() {
 		return getAccount().configuration().minimumInvestmentAmountPerTrade(assetSymbol);
 	}
 
@@ -146,6 +146,10 @@ public class TradingManager {
 		return tradingAccount.getAmount(assetSymbol);
 	}
 
+	public double getTotalAssets() {
+		return tradingAccount.getBalance(assetSymbol).getTotal().doubleValue();
+	}
+
 	public double getCash() {
 		return tradingAccount.getAmount(fundSymbol);
 	}
@@ -165,7 +169,7 @@ public class TradingManager {
 	public boolean exitExistingPositions(String exitSymbol, Candle c) {
 		boolean exited = false;
 		for (TradingManager action : tradingAccount.getAllTradingManagers()) {
-			if (action != this && action.hasAssets(c) && action.trader.switchTo(exitSymbol, c, action.symbol)) {
+			if (action != this && action.hasAssets(c, false) && action.trader.switchTo(exitSymbol, c, action.symbol)) {
 				exited = true;
 				break;
 			}

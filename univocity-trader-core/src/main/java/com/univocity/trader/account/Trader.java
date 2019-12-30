@@ -134,7 +134,7 @@ public class Trader {
 	 * </li>
 	 * <li>signal = {@code SELL}: Sells all assets held for the current symbol, closing any open orders, if:
 	 * <ol>
-	 * <li>the account has assets available to sell (via {@link TradingManager#hasAssets(Candle)});</li>
+	 * <li>the account has assets available to sell (via {@link TradingManager#hasAssets(Candle, boolean)});</li>
 	 * <li>none of the associated strategy monitors (from {@link #monitors()} produce {@code false} upon
 	 * invoking {@link StrategyMonitor#allowExit()};</li>
 	 * <li>the {@link OrderRequest} processed by the {@link OrderManager} associated with the symbol is not cancelled
@@ -169,7 +169,7 @@ public class Trader {
 			log.debug("Cleared sell signal of {}: trade opened by another strategy", symbol());
 			signal = NEUTRAL;
 		}
-		boolean hasAssets = tradingManager.hasAssets(candle) /*|| !position.isEmpty()*/; //TODO: TEST THIS
+		boolean hasAssets = tradingManager.hasAssets(candle, false) /*|| !position.isEmpty()*/; //TODO: TEST THIS
 		if (hasAssets) {
 			double nextChange = priceChangePct(candle.close);
 			ticks++;
@@ -216,9 +216,12 @@ public class Trader {
 						monitors[i].bought();
 					}
 					currentBoughtStrategy = strategy;
-					ticks = 0;
-					max = candle.close;
-					min = candle.close;
+
+					if (position.isEmpty() || !tradingManager.hasAssets(candle, true)) {
+						ticks = 0;
+						max = candle.close;
+						min = candle.close;
+					}
 					out = BUY;
 				}
 			} finally {
@@ -285,7 +288,7 @@ public class Trader {
 	}
 
 	private boolean canSell(Candle candle) {
-		if (!tradingManager.hasAssets(candle)) {
+		if (!tradingManager.hasAssets(candle, false)) {
 			log.trace("Ignoring sell signal of {}: no assets ({})", symbol(), tradingManager.getAssets());
 			return false;
 		}
@@ -374,7 +377,7 @@ public class Trader {
 			if (exitSymbol.equals(tradingManager.fundSymbol) || exitSymbol.equals(tradingManager.assetSymbol)) {
 				return false;
 			}
-			if (tradingManager.hasAssets(candle)) {
+			if (tradingManager.hasAssets(candle, false)) {
 				boolean canExit = monitors.length > 0;
 				for (int i = 0; i < monitors.length; i++) {
 					canExit &= monitors[i].allowTradeSwitch(exitSymbol, candle, candleTicker);
@@ -589,7 +592,7 @@ public class Trader {
 			averagePrice = totalSpent / totalUnits;
 			change = priceChangePct(averagePrice, lastClosingPrice());
 			maxChange = priceChangePct(averagePrice, maxPrice());
-			minChange = priceChangePct(averagePrice, minChange());
+			minChange = priceChangePct(averagePrice, minPrice());
 		}
 	}
 
@@ -667,18 +670,21 @@ public class Trader {
 				updateAveragePrice(position.values());
 			}
 		} else if (exitOrders.containsKey(order.getOrderId())) {
-			if (!tradingManager.hasAssets(latestCandle)) {
+			if (!tradingManager.hasAssets(latestCandle, true)) {
 				updateAveragePrice(exitOrders.values());
 				double totalSold = this.totalSpent;
+				double soldUnits = this.totalUnits;
 				double sellPrice = averagePrice;
 
 				updateAveragePrice(position.values());
 
 				actualProfitLossPct = priceChangePct(averagePrice, sellPrice);
-				actualProfitLoss = totalSold - totalSpent;
+				actualProfitLoss = totalSold - (totalSpent * (soldUnits / this.totalUnits));
 
 				position.clear();
 				exitOrders.clear();
+
+
 			} else {
 				double totalSold = order.getTotalTraded().doubleValue();
 				double sellPrice = order.getPrice().doubleValue();
@@ -691,7 +697,7 @@ public class Trader {
 		}
 	}
 
-	public Strategy boughtStrategy(){
+	public Strategy boughtStrategy() {
 		return boughtStrategy;
 	}
 
