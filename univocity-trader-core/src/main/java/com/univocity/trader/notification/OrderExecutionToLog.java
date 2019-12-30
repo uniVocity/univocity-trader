@@ -44,7 +44,7 @@ public class OrderExecutionToLog implements OrderListener {
 			SymbolPriceDetails f = trader.priceDetails();
 			String type = StringUtils.rightPad(order.getSide().toString(), 8);
 			String details = trader.latestCandle().getFormattedCloseTimeWithYear() + " " + trader.symbol() + " " + type + " " + f.quantityToString(order.getQuantity()) + " @ $";
-			if (order.getSide() == BUY) {
+			if (order.isBuy()) {
 				details += f.priceToString(order.getPrice());
 				if (order.isFinalized()) {
 					details += " + " + printFillDetails(order, f, trader);
@@ -54,10 +54,11 @@ public class OrderExecutionToLog implements OrderListener {
 			} else {
 				details += f.priceToString(trader.latestCandle().close);
 				if (order.isFinalized()) {
-					details += " - " + printFillDetails(order, f, trader) + ", P&L: " + f.priceToString(trader.actualProfitLoss()) + " [" + trader.formattedProfitLossPct() + "] ";
+					details += " - " + printFillDetails(order, f, trader) + ", P/L: $" + f.priceToString(trader.actualProfitLoss()) + " [" + trader.formattedProfitLossPct() + "] ";
 					details += " Holdings ~$" + f.priceToString(trader.holdings()) + " " + trader.referenceCurrencySymbol() + " (free: $" + f.priceToString(trader.balance("USDT").getFree()) + ")";
 				} else {
-					details += " - PENDING     expected returns: " + trader.formattedPriceChangePct() + " ";
+					details += " - PENDING     order value: $" + f.priceToString(order.getTotalOrderAmount());
+					details += " expected returns: " + trader.formattedEstimateProfitLossPercentage(order) + " ";
 					details += " >> " + trader.tradeLength() + " ticks >> [Min: $" + f.priceToString(trader.minPrice()) + " (" + trader.formattedMinChangePct() + ") - Max: $" + f.priceToString(trader.maxPrice()) + " (" + trader.formattedMaxChangePct() + ")]";
 					details += " " + trader.exitReason();
 				}

@@ -133,6 +133,7 @@ public class SimulatedClientAccount implements ClientAccount {
 			}
 			if (order.isFinalized()) {
 				it.remove();
+				((DefaultOrder) order).setFeesPaid(new BigDecimal(getTradingFees().feesOnOrder(order)));
 				updateBalances(order, pendingOrder.lockedAmount);
 			}
 		}
@@ -146,13 +147,13 @@ public class SimulatedClientAccount implements ClientAccount {
 		double amountTraded = order.getTotalTraded().doubleValue();
 		double fees = amountTraded - getTradingFees().takeFee(amountTraded, order.getType(), order.getSide());
 
-		if (order.getSide() == BUY) {
+		if (order.isBuy()) {
 			account.addToFreeBalance(asset, order.getExecutedQuantity());
 			account.subtractFromLockedBalance(funds, locked);
 
 			BigDecimal unspentAmount = locked.subtract(order.getTotalTraded());
 			account.addToFreeBalance(funds, unspentAmount);
-		} else if (order.getSide() == SELL) {
+		} else if (order.isSell()) {
 			account.subtractFromLockedBalance(asset, locked);
 			account.addToFreeBalance(asset, order.getRemainingQuantity());
 			account.addToFreeBalance(funds, order.getTotalTraded());

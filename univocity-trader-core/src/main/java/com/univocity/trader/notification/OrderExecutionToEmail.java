@@ -84,12 +84,12 @@ public class OrderExecutionToEmail implements OrderListener {
 			String timeLong = " at " + trader.latestCandle().getFormattedCloseTime("h:mma, MMMM dd, yyyy", client.getTimezone());
 			String timeShort = " - " + trader.latestCandle().getFormattedCloseTime("EEEE hh:mma", client.getTimezone());
 			String title = order.getSide() + " " + assetSymbol;
-			String typeDescription = order.getType() == Order.Type.LIMIT ? "with limit order of " + f.priceToString(order.getPrice()) + " " + fundSymbol + " per unit" : "at market";
+			String typeDescription = order.isLimit() ? "with limit order of " + f.priceToString(order.getPrice()) + " " + fundSymbol + " per unit" : "at market";
 			String details;
 
 			String qty = f.quantityToString(order.getQuantity());
 
-			if (order.getSide() == Order.Side.BUY) {
+			if (order.isBuy()) {
 				title += " @ " + f.priceToString(order.getPrice()) + timeShort;
 				details = "Bought " + qty + " " + assetSymbol + " " + typeDescription + " when price reached " + f.priceToString(trader.lastClosingPrice()) + " " + fundSymbol + timeLong + ".";
 				details += "\nAmount invested: $" + f.priceToString(order.getTotalOrderAmount()) + " " + fundSymbol;

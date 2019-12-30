@@ -34,6 +34,8 @@ public interface Order {
 
 	BigDecimal getExecutedQuantity();
 
+	BigDecimal getFeesPaid();
+
 	Side getSide();
 
 	Type getType();
@@ -62,6 +64,22 @@ public interface Order {
 
 	default boolean isFinalized() {
 		return getStatus() == FILLED || getStatus() == Status.CANCELLED;
+	}
+
+	default boolean isBuy(){
+		return getSide() == Side.BUY;
+	}
+
+	default boolean isSell(){
+		return getSide() == Side.SELL;
+	}
+
+	default boolean isMarket(){
+		return getType() == Type.MARKET;
+	}
+
+	default boolean isLimit(){
+		return getType() == Type.LIMIT;
 	}
 
 	default String print(long latestClose) {

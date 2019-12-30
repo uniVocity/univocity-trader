@@ -235,11 +235,11 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 				// and the symbol is "ADABTC", we need to invert the side as
 				// we are selling ADA to buy BTC.
 				if (side == BUY) {
-					if (order.getSide() == SELL) {
+					if (order.isSell()) {
 						return true;
 					}
 				} else if (side == SELL) {
-					if (order.getSide() == BUY) {
+					if (order.isBuy()) {
 						return true;
 					}
 				}

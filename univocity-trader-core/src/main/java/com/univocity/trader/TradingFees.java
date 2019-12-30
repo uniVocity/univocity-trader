@@ -22,6 +22,31 @@ public interface TradingFees {
 	double takeFee(double amount, Order.Type orderType, Order.Side side);
 
 	/**
+	 * Return the trading fee amount applied to a given {@link Order}.
+	 *
+	 * @param order the order whose fees will be calculated
+	 *
+	 * @return the total fee amount for the given order;
+	 */
+	default double feesOnOrder(Order order) {
+		final double amount = order.getTotalOrderAmount().doubleValue();
+		return feesOnAmount(amount, order.getType(), order.getSide());
+	}
+
+	/**
+	 * Return the trading fee amount applied to a given total order amount.
+	 *
+	 * @param amount    the original amount before fees
+	 * @param orderType the type of order (i.e. {@code MARKET}, {@code LIMIT})
+	 * @param side      the order side (i.e. {@code BUY}, {@code SELL}
+	 *
+	 * @return the total fee amount for the given order amount;
+	 */
+	default double feesOnAmount(final double amount, Order.Type orderType, Order.Side side) {
+		return amount - takeFee(amount, orderType, side);
+	}
+
+	/**
 	 * Returns the break even amount. Used to know how much the price has to move until the invested amount/quantity after fees becomes positive.
 	 *
 	 * @param amount the original amount spent on a trade (before fees).

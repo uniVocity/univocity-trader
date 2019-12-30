@@ -43,6 +43,8 @@ public class Trader {
 	private final Map<String, Order> position = new ConcurrentHashMap<>();
 	private final Map<String, Order> exitOrders = new ConcurrentHashMap<>();
 
+	//these two are used internally only to calculate
+	// average prices with fees taken into account.
 	private double totalSpent;
 	private double totalUnits;
 
@@ -587,7 +589,8 @@ public class Trader {
 		totalSpent = 0.0;
 		totalUnits = 0.0;
 		for (Order order : orders) {
-			totalSpent += order.getTotalTraded().doubleValue();
+			double fees = order.getFeesPaid().doubleValue();
+			totalSpent += order.getTotalTraded().doubleValue() + (order.isBuy() ? fees : -fees);
 			totalUnits += order.getExecutedQuantity().doubleValue();
 		}
 		if (totalUnits == 0.0) {
@@ -670,7 +673,7 @@ public class Trader {
 		}
 
 		if (position.containsKey(order.getOrderId())) {
-			if (order.getSide() == Order.Side.BUY) {
+			if (order.isBuy()) {
 				updateAveragePrice(position.values());
 			}
 		} else if (exitOrders.containsKey(order.getOrderId())) {
@@ -707,5 +710,14 @@ public class Trader {
 
 	public String formattedProfitLossPct() {
 		return formattedPct(actualProfitLossPct());
+	}
+
+	/**
+	 * Returns the formatted current price change percentage of the current (or latest) trade.
+	 *
+	 * @return the current change percentage, formatted as {@code #,##0.00%}
+	 */
+	public String formattedEstimateProfitLossPercentage(Order order) {
+		return formattedPct(change() - 100.0 * ((tradingFees().feesOnOrder(order)) / order.getTotalOrderAmount().doubleValue()));
 	}
 }

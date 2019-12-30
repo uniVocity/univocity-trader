@@ -27,8 +27,9 @@ public class MarketSimulation {
 
 		account
 				.referenceCurrency("USDT") //Balances will be calculated using the reference currency.
-				.tradeWith("BTC", "ADA", "LTC", "XRP", "ETH"/*, "BAT", "XMR"*/)
+				.tradeWith("BTC"/*, "ADA", "LTC", "XRP", "ETH", "BAT", "XMR"*/)
 				.minimumInvestmentAmountPerTrade(10.0)
+				.maximumInvestmentAmountPerTrade(250.0)
 //				.maximumInvestmentPercentagePerAsset(30.0, "ADA", "ETH")
 //				.maximumInvestmentPercentagePerAsset(50.0, "BTC", "LTC")
 //				.maximumInvestmentAmountPerAsset(200, "XRP")

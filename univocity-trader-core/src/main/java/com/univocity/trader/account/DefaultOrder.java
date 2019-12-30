@@ -9,6 +9,7 @@ public class DefaultOrder extends OrderRequest implements Order {
 	private String orderId;
 	private BigDecimal executedQuantity;
 	private Order.Status status;
+	private BigDecimal feesPaid = BigDecimal.ZERO;
 
 	public DefaultOrder(String assetSymbol, String fundSymbol, Side side, long time) {
 		super(assetSymbol, fundSymbol, side, time);
@@ -66,6 +67,15 @@ public class DefaultOrder extends OrderRequest implements Order {
 
 	public boolean isCancelled() {
 		return this.status == Status.CANCELLED;
+	}
+
+	@Override
+	public BigDecimal getFeesPaid() {
+		return feesPaid;
+	}
+
+	public void setFeesPaid(BigDecimal feesPaid) {
+		this.feesPaid = feesPaid;
 	}
 
 	@Override
