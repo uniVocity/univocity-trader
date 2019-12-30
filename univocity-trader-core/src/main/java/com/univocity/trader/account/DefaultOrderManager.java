@@ -27,10 +27,6 @@ public class DefaultOrderManager implements OrderManager {
 
 		double availableQuantity = order.getQuantity().doubleValue();
 
-//		if (order.isResubmission()) {
-//			order.setType(Order.Type.MARKET);
-//		}
-
 		if (book != null) {
 			double spread = book.getSpread(availableQuantity);
 			double ask = book.getAverageAskAmount(availableQuantity);
@@ -69,7 +65,6 @@ public class DefaultOrderManager implements OrderManager {
 	public void unchanged(Order order, Trader trader, Consumer<Order> resubmission) {
 		if (order.getTimeElapsed(trader.latestCandle().closeTime) >= maxTimeToKeepOrderOpen.ms) {
 			order.cancel();
-			return;
 		}
 	}
 

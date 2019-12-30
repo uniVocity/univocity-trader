@@ -247,8 +247,12 @@ public class Trader {
 			}
 		}
 		if (!exitOrders.isEmpty()) {
-			log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
-			return false;
+			for(Order order : exitOrders.values()){
+				if(!order.isFinalized()){
+					log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
+					return false;
+				}
+			}
 		}
 		if (tradingManager.waitingForBuyOrderToFill()) {
 			tradingManager.cancelStaleOrdersFor(this);

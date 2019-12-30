@@ -583,7 +583,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 		TradingManager tradingManager = getTradingManagerOf(order.getSymbol());
 
-		tradingManager.updateOpenOrders(order.getSymbol(), null);
+		tradingManager.updateOpenOrders(order.getSymbol(), tradingManager.trader.latestCandle());
 
 		OrderRequest request = prepareOrder(tradingManager, order.getSide(), order.getRemainingQuantity().doubleValue(), order);
 		order = executeOrder(request);

@@ -129,9 +129,6 @@ public class SimulatedClientAccount implements ClientAccount {
 			Order order = pendingOrder.order;
 
 			if (!order.isFinalized()) {
-				if (candle == null) {
-					throw new IllegalStateException("Can't update open order on " + symbol + " with a null candle");
-				}
 				orderFillEmulator.fillOrder((DefaultOrder) order, candle);
 			}
 			if (order.isFinalized()) {
