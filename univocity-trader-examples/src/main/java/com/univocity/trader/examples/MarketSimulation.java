@@ -42,7 +42,7 @@ public class MarketSimulation {
 
 		account.listeners()
 				.add(new OrderExecutionToLog())
-				.add(new SimpleStrategyStatistics())
+				.add((symbol)->new SimpleStrategyStatistics(symbol))
 		;
 
 		Simulation simulation = simulator.configure().simulation();

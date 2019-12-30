@@ -19,10 +19,6 @@ public class SimpleStrategyStatistics implements OrderListener {
 	private Candle firstCandle;
 	private Candle lastCandle;
 
-	public SimpleStrategyStatistics() {
-		this(null);
-	}
-
 	public SimpleStrategyStatistics(String symbol) {
 		this.symbol = symbol;
 	}

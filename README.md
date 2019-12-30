@@ -331,7 +331,7 @@ listener to the simulation, the [SimpleStrategyStatistics](./univocity-trader-co
 ```java
 account.listeners()
   .add(new OrderExecutionToLog())
-  .add(new SimpleStrategyStatistics())
+  .add((symbol)->new SimpleStrategyStatistics(symbol))
 ;
 
 simulation.run();
@@ -524,7 +524,7 @@ account.strategies()
 // not interested in seeing each and every trade
 account.listeners()
 //  .add(new OrderExecutionToLog())
-    .add(new SimpleStrategyStatistics())
+    .add((symbol)->new SimpleStrategyStatistics(symbol))
 ;
 
 // keeps all candles in memory so the simulation won't

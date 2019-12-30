@@ -177,6 +177,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			System.out.print(account.toString());
 			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
 
+			account.getAllTradingManagers().forEach(t->t.getTrader().notifySimulationEnd());
 		}
 	}
 
