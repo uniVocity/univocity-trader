@@ -30,7 +30,7 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
 
 	@Override
 	public String handleStop(Signal signal, Strategy strategy) {
-		final double currentReturns = trader.change();
+		final double currentReturns = trader.priceChangePct();
 		final double bestReturns = trader.maxChange();
 		if ((currentReturns - bestReturns) < -2.0) {
 			if (currentReturns < 0.0) {

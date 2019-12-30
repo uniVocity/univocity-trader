@@ -20,7 +20,7 @@ import com.univocity.trader.indicators.*;
  */
 public abstract class StrategyMonitor extends IndicatorGroup {
 	/**
-	 * The object which contains all details pertinent to the current instrument being traded (e.g. {@link Trader#change()}, {@link Trader#lastClosingPrice()}, {@link Trader#averagePrice()},
+	 * The object which contains all details pertinent to the current instrument being traded (e.g. {@link Trader#priceChangePct()}, {@link Trader#lastClosingPrice()}, {@link Trader#averagePrice()},
 	 * etc)
 	 */
 	protected Trader trader;

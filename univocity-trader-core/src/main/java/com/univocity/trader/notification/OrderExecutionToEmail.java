@@ -155,7 +155,7 @@ public class OrderExecutionToEmail implements OrderListener {
 					}
 					msg.append(", ");
 					msg.append("trading at ").append(f.priceToString(trader.lastClosingPrice()));
-					double change = trader.change();
+					double change = trader.priceChangePct();
 					if (change != 0.0) {
 						msg.append(' ').append('(');
 						if (change > 0.0) {

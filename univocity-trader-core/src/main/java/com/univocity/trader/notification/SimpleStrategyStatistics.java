@@ -6,7 +6,6 @@ import com.univocity.trader.candles.*;
 import java.text.*;
 import java.util.*;
 
-import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.candles.Candle.*;
 
 public class SimpleStrategyStatistics implements OrderListener {

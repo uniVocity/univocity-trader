@@ -363,6 +363,9 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	@Override
 	public Order executeOrder(OrderRequest orderDetails) {
 		if (orderDetails != null) {
+			if(orderDetails.isCancelled()){
+				return null;
+			}
 			Order order = account.executeOrder(orderDetails);
 			if (order != null) {
 				switch (order.getStatus()) {
@@ -588,6 +591,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		OrderRequest request = prepareOrder(tradingManager, order.getSide(), order.getRemainingQuantity().doubleValue(), order);
 		order = executeOrder(request);
 		tradingManager.trader.processOrder(order);
+	}
+
+	public Order submitOrder(Trader trader, double quantity, Order.Side side, Order.Type type){
+		OrderRequest request = prepareOrder(trader.tradingManager, side, quantity, null);
+		Order order = executeOrder(request);
+		trader.processOrder(order);
+		return order;
 	}
 
 	private Trader traderOf(Order order) {

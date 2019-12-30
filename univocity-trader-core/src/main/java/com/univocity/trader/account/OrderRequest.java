@@ -101,7 +101,7 @@ public class OrderRequest {
 		cancelled = true;
 	}
 
-	public final boolean isResubmission(){
+	public final boolean isResubmission() {
 		return resubmittedFrom != null;
 	}
 

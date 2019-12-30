@@ -112,7 +112,7 @@ public class Trader {
 	 * <li>the number of ticks received since the first trade was created via {@link #ticks()}</li>
 	 * <li>the average price paid for the instrument traded by this {@code Trader} via {@link #averagePrice()}</li>
 	 * <li>the time elapsed since the first trade executed via {@link #tradeDuration()};</li>
-	 * <li>the current change % in price since this trade opened via {@link #change()}</li>
+	 * <li>the current change % in price since this trade opened via {@link #priceChangePct()}</li>
 	 * <li>the maximum positive change % this trade had via {@link #maxChange()}</li>
 	 * <li>the maximum price reached since the trade opened via {@link #maxPrice()}</li>
 	 * <li>the minimum change % (negative or zero) this trade had via {@link #minChange()}</li>
@@ -247,8 +247,8 @@ public class Trader {
 			}
 		}
 		if (!exitOrders.isEmpty()) {
-			for(Order order : exitOrders.values()){
-				if(!order.isFinalized()){
+			for (Order order : exitOrders.values()) {
+				if (!order.isFinalized()) {
 					log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
 					return false;
 				}
@@ -267,17 +267,17 @@ public class Trader {
 		}
 		double amountToSpend = tradingManager.allocateFunds();
 		final double minimum = priceDetails().getMinimumOrderAmount(candle.close);
-		if (amountToSpend * candle.close <= minimum) {
+		if (amountToSpend <= minimum) {
 			tradingManager.cancelStaleOrdersFor(this);
-			amountToSpend = tradingManager.allocateFunds() / candle.close;
-			if (amountToSpend * candle.close <= minimum) {
+			amountToSpend = tradingManager.allocateFunds();
+			if (amountToSpend <= minimum) {
 				if (tradingManager.exitExistingPositions(tradingManager.assetSymbol, candle)) {
 					tradingManager.updateBalances();
 					return true;
 				} else {
 					tradingManager.updateBalances();
-					amountToSpend = tradingManager.allocateFunds() / candle.close;
-					if (amountToSpend * candle.close <= minimum) {
+					amountToSpend = tradingManager.allocateFunds();
+					if (amountToSpend <= minimum) {
 						log.trace("Discarding buy of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
 						return false;
 					}
@@ -291,6 +291,15 @@ public class Trader {
 		}
 		log.trace("Could not buy {} @ {}", tradingManager.getSymbol(), candle.close);
 		return false;
+	}
+
+	public double allocateFunds() {
+		final double minimum = priceDetails().getMinimumOrderAmount(latestCandle.close);
+		double funds = tradingManager.allocateFunds();
+		if (funds < minimum) {
+			return 0.0;
+		}
+		return funds;
 	}
 
 	private boolean canSell(Candle candle) {
@@ -346,8 +355,12 @@ public class Trader {
 		tradingManager.notifySimulationEnd();
 	}
 
+	public Order submitOrder(Order.Type type, Order.Side side, double quantity) {
+		return tradingManager.getAccount().submitOrder(this, quantity, side, type);
+	}
+
 	void processOrder(Order order) {
-		if(order == null){
+		if (order == null) {
 			return;
 		}
 		try {
@@ -536,7 +549,7 @@ public class Trader {
 	 * @return the current change percentage, formatted as {@code #,##0.00%}
 	 */
 	public String formattedPriceChangePct() {
-		return formattedPct(change());
+		return formattedPct(priceChangePct());
 	}
 
 	/**
@@ -574,7 +587,7 @@ public class Trader {
 	 * @return the current change percentage, where 100% change is returned as {@code 100.0}
 	 */
 	public double priceChangePct() {
-		return change();
+		return averagePrice() > 0.0 ? change : 0.0;
 	}
 
 	/**
@@ -649,10 +662,6 @@ public class Trader {
 		return averagePrice() > 0.0 ? maxChange : 0.0;
 	}
 
-	public double change() {
-		return averagePrice() > 0.0 ? change : 0.0;
-	}
-
 	public double actualProfitLoss() {
 		return actualProfitLoss;
 	}
@@ -725,6 +734,6 @@ public class Trader {
 	 * @return the current change percentage, formatted as {@code #,##0.00%}
 	 */
 	public String formattedEstimateProfitLossPercentage(Order order) {
-		return formattedPct(change() - 100.0 * ((tradingFees().feesOnOrder(order)) / order.getTotalOrderAmount().doubleValue()));
+		return formattedPct(priceChangePct() - 100.0 * ((tradingFees().feesOnOrder(order)) / order.getTotalOrderAmount().doubleValue()));
 	}
 }
