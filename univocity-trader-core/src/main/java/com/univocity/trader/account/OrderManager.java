@@ -7,6 +7,8 @@ import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
+import java.util.function.*;
+
 /**
  * The {@code OrderManager} is responsible to preparing, submitting and tracking the state of an {@link Order}
  * submitted to the {@link Exchange} via {@link AccountManager#buy(String, String, double)} or {@link AccountManager#sell(String, String, double)}.
@@ -22,7 +24,8 @@ import com.univocity.trader.strategy.*;
  * Once the {@link OrderRequest} is submitted to the exchange, an {@link Order} will be returned and tracked until it's {@code FILLED} or {@code CANCELLED}.
  * This happens in a separate thread that requests a new order status using {@link AccountManager#updateOrderStatus(Order)}, at the rate specified by
  * {@link OrderManager#getOrderUpdateFrequency()}. Once the updated {@link Order} details are available, the order monitor thread will invoke
- * {@link #unchanged(Order, Trader)} if no changes happened to the order since the last status update, {@link #updated(Order, Trader)} if the executed quantity changed
+ * {@link #unchanged(Order, Trader, Consumer)} if no changes happened to the order since the last status update,
+ * {@link #updated(Order, Trader, Consumer)} if the executed quantity changed
  * (i.e. the order is being {@code PARTIALLY_FILLED}), or {@link #finalized(Order, Trader)} when the order was {@code FILLED} or {@code CANCELLED}.
  *
  * If the user does not specifies an {@link OrderManager} implementation, the {@link DefaultOrderManager} will be used. Notice that this default implementation
@@ -31,7 +34,7 @@ import com.univocity.trader.strategy.*;
  *
  * An order might also be cancelled if it is not yet {@code FILLED} and another {@code BUY} or {@code SELL} signal appears for
  * another instrument when there are no funds available. In that case, {@link AccountManager#cancelStaleOrdersFor(Trader)} will be used to cycle through
- * all pending orders, which will in turn invoke {@link #cancelToReleaseFundsFor(Order, Trader)}. The implementation of this method should decide whether or
+ * all pending orders, which will in turn invoke {@link #cancelToReleaseFundsFor(Order, Trader, Trader)}. The implementation of this method should decide whether or
  * not to cancel the order so that the instrument of the given {@link Trader} can be traded.
  */
 public interface OrderManager {
@@ -71,7 +74,7 @@ public interface OrderManager {
 	/**
 	 * Notifies that an order is now {@code FILLED} or {@code CANCELLED}, and won't be monitored for updates anymore.
 	 *
-	 * @param order the order that you probably won't have to care about anymore.
+	 * @param order  the order that you probably won't have to care about anymore.
 	 * @param trader the {@code Trader} responsible for the order
 	 */
 	void finalized(Order order, Trader trader);
@@ -79,28 +82,41 @@ public interface OrderManager {
 	/**
 	 * Notifies that an order has been updated, meaning it got {@code PARTIALLY_FILLED}.
 	 *
-	 * @param order the order which got partially filled and has an updated amount in {@link Order#getExecutedQuantity()}
-	 * @param trader the {@code Trader} responsible for the order
+	 * @param order        the order which got partially filled and has an updated amount in {@link Order#getExecutedQuantity()}
+	 * @param trader       the {@code Trader} responsible for the order
+	 * @param resubmission a consumer provided by the framework which allows requesting for
+	 *                     the current order to be cancelled then resubmitted to the exchange, effectively
+	 *                     invoking {@link #prepareOrder(SymbolPriceDetails, OrderBook, OrderRequest, Candle)} with
+	 *                     new order details. The resubmission request will be ignored if the order is 98% filled or more
+	 *                     (i.e. {@link Order#getFillPct()}  is greater than 98.0).
 	 */
-	void updated(Order order, Trader trader);
+	void updated(Order order, Trader trader, Consumer<Order> resubmission);
 
 	/**
-	 * Notifies that an order has not been changed since the last status check, which happened at the time defined by {@link #getOrderUpdateFrequency()}.
+	 * Notifies that an order has not been changed since the last status check, which happened at the time defined by
+	 * {@link #getOrderUpdateFrequency()}.
 	 *
-	 * @param order the order that's not being filled. Its status (in {@link Order#getStatus()}) should be either {@code NEW} or {@code PARTIALLY_FILLED}.
-	 * @param trader the {@code Trader} responsible for the order
+	 * @param order        the order that's not being filled. Its status (in {@link Order#getStatus()}) should be
+	 *                     either {@code NEW} or {@code PARTIALLY_FILLED}.
+	 * @param trader       the {@code Trader} responsible for the order
+	 * @param resubmission a consumer provided by the framework which allows requesting for
+	 *                     the current order to be cancelled then resubmitted to the exchange, effectively
+	 *                     invoking {@link #prepareOrder(SymbolPriceDetails, OrderBook, OrderRequest, Candle)} with
+	 *                     new order details. The resubmission request will be ignored if the order is 98% filled or more
+	 *                     (i.e. {@link Order#getFillPct()} is greater than 98.0).
 	 */
-	void unchanged(Order order, Trader trader);
+	void unchanged(Order order, Trader trader, Consumer<Order> resubmission);
 
 	/**
 	 * Requests to cancel a given order that has not been {@code FILLED} to release funds for executing another order for another symbol.
 	 * The details of the other symbol that cannot be traded due to lack of funds can be obtained from the {@code newSymbolTrader} object
 	 *
 	 * @param order           an order that has not been completely filled yet.
-	 * @param orderTrader 	  the {@link Trader} of the current order that has not been filled.
+	 * @param orderTrader     the {@link Trader} of the current order that has not been filled.
 	 * @param newSymbolTrader the {@link Trader} of the symbol that could not be traded due to lack of funds.
 	 *
 	 * @return {@code true} if the given order can be cancelled, otherwise {@code false}.
 	 */
 	boolean cancelToReleaseFundsFor(Order order, Trader orderTrader, Trader newSymbolTrader);
+
 }

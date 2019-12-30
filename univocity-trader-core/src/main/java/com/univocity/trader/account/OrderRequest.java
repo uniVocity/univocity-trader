@@ -11,12 +11,14 @@ public class OrderRequest {
 	private final String fundsSymbol;
 	private final Order.Side side;
 	private final long time;
+	private final Order resubmittedFrom;
 
 	private BigDecimal price = BigDecimal.ZERO;
 	private BigDecimal quantity = BigDecimal.ZERO;
 	private Order.Type type = Order.Type.LIMIT;
 
-	public OrderRequest(String assetsSymbol, String fundsSymbol, Order.Side side, long time) {
+	public OrderRequest(String assetsSymbol, String fundsSymbol, Order.Side side, long time, Order resubmittedFrom) {
+		this.resubmittedFrom = resubmittedFrom;
 		this.time = time;
 		if (StringUtils.isBlank(assetsSymbol)) {
 			throw new IllegalArgumentException("Assets symbol cannot be null/blank");
@@ -97,5 +99,13 @@ public class OrderRequest {
 
 	public void cancel() {
 		cancelled = true;
+	}
+
+	public final boolean isResubmission(){
+		return resubmittedFrom != null;
+	}
+
+	public final Order getOriginalOrder() {
+		return resubmittedFrom;
 	}
 }

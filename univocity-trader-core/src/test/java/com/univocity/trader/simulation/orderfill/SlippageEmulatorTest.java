@@ -169,12 +169,13 @@ public class SlippageEmulatorTest {
 		assertEquals(10_002.833, order.getPrice().doubleValue(), 0.001);
 
 		order = newOrder(MARKET, BUY, 10_000, 1);
-		//volume zero = no change
+		//volume zero = emulates fill regardless, assumes 1.5% slippage
 		tryFill(order, new Candle(1, 2, 10_000, 10_000, 10_000, 10_000, 0.0));
-		assertEquals(0.0, order.getExecutedQuantity().doubleValue(), 0.00001);
-		assertEquals(Order.Status.NEW, order.getStatus());
-		assertEquals(10_000.0, order.getPrice().doubleValue(), 0.001);
+		assertEquals(1.0, order.getExecutedQuantity().doubleValue(), 0.00001);
+		assertEquals(Order.Status.FILLED, order.getStatus());
+		assertEquals(10_001.5, order.getPrice().doubleValue(), 0.001);
 
+		order = newOrder(MARKET, BUY, 10_000, 1);
 		//price was never higher than what we want to pay, must fill
 		tryFill(order, new Candle(1, 2, 9_999, 9_999, 9_999, 9_999, 1.0));
 		assertEquals(1.0, order.getExecutedQuantity().doubleValue(), 0.00001);
@@ -229,12 +230,13 @@ public class SlippageEmulatorTest {
 		assertEquals(9_999, order.getPrice().doubleValue(), 0.001);
 
 		order = newOrder(MARKET, SELL, 10_000, 1);
-		//volume zero = no change
+		//volume zero = assumes 1.5% slippage
 		tryFill(order, new Candle(1, 2, 10_000, 10_000, 10_000, 10_000, 0.0));
-		assertEquals(0.0, order.getExecutedQuantity().doubleValue(), 0.00001);
-		assertEquals(Order.Status.NEW, order.getStatus());
-		assertEquals(10_000.0, order.getPrice().doubleValue(), 0.001);
+		assertEquals(1.0, order.getExecutedQuantity().doubleValue(), 0.00001);
+		assertEquals(Order.Status.FILLED, order.getStatus());
+		assertEquals(9_998.5, order.getPrice().doubleValue(), 0.001);
 
+		order = newOrder(MARKET, SELL, 10_000, 1);
 		//price was never higher than what we want to pay, must fill
 		tryFill(order, new Candle(1, 2, 9_999, 9_999, 9_999, 9_999, 1.0));
 		assertEquals(1.0, order.getExecutedQuantity().doubleValue(), 0.00001);

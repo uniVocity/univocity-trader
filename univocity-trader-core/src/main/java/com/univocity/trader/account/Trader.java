@@ -342,7 +342,10 @@ public class Trader {
 		tradingManager.notifySimulationEnd();
 	}
 
-	private void processOrder(Order order) {
+	void processOrder(Order order) {
+		if(order == null){
+			return;
+		}
 		try {
 			try {
 				if (exitReason == null) {

@@ -6,6 +6,7 @@ import com.univocity.trader.indicators.base.*;
 import org.slf4j.*;
 
 import java.math.*;
+import java.util.function.*;
 
 public class DefaultOrderManager implements OrderManager {
 
@@ -22,33 +23,36 @@ public class DefaultOrderManager implements OrderManager {
 
 	@Override
 	public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
-		if (book == null) {
-			return;
-		}
 		BigDecimal originalPrice = order.getPrice();
 
 		double availableQuantity = order.getQuantity().doubleValue();
 
-		double spread = book.getSpread(availableQuantity);
-		double ask = book.getAverageAskAmount(availableQuantity);
-		double bid = book.getAverageBidAmount(availableQuantity);
+//		if (order.isResubmission()) {
+//			order.setType(Order.Type.MARKET);
+//		}
 
-		//aims price at central price point of the spread.
-		if (order.getSide() == Order.Side.BUY) {
-			order.setPrice(new BigDecimal(bid + (spread / 2.0)));
-		} else {
-			order.setPrice(new BigDecimal(ask - (spread / 2.0)));
+		if (book != null) {
+			double spread = book.getSpread(availableQuantity);
+			double ask = book.getAverageAskAmount(availableQuantity);
+			double bid = book.getAverageBidAmount(availableQuantity);
+
+			//aims price at central price point of the spread.
+			if (order.getSide() == Order.Side.BUY) {
+				order.setPrice(new BigDecimal(bid + (spread / 2.0)));
+			} else {
+				order.setPrice(new BigDecimal(ask - (spread / 2.0)));
+			}
+
+			log.debug("{} - spread of {}: Ask {}, Bid {}. Closed at {}. Going to {} at ${}.",
+					order.getSymbol(),
+					priceDetails.priceToString(spread),
+					priceDetails.priceToString(ask),
+					priceDetails.priceToString(bid),
+					priceDetails.priceToString(originalPrice),
+					order.getSide(),
+					priceDetails.priceToString(order.getPrice())
+			);
 		}
-
-		log.debug("{} - spread of {}: Ask {}, Bid {}. Closed at {}. Going to {} at ${}.",
-				order.getSymbol(),
-				priceDetails.priceToString(spread),
-				priceDetails.priceToString(ask),
-				priceDetails.priceToString(bid),
-				priceDetails.priceToString(originalPrice),
-				order.getSide(),
-				priceDetails.priceToString(order.getPrice())
-		);
 	}
 
 	@Override
@@ -57,12 +61,12 @@ public class DefaultOrderManager implements OrderManager {
 	}
 
 	@Override
-	public void updated(Order order, Trader trader) {
+	public void updated(Order order, Trader trader, Consumer<Order> resubmission) {
 
 	}
 
 	@Override
-	public void unchanged(Order order, Trader trader) {
+	public void unchanged(Order order, Trader trader, Consumer<Order> resubmission) {
 		if (order.getTimeElapsed(trader.latestCandle().closeTime) >= maxTimeToKeepOrderOpen.ms) {
 			order.cancel();
 			return;

@@ -12,11 +12,11 @@ public class DefaultOrder extends OrderRequest implements Order {
 	private BigDecimal feesPaid = BigDecimal.ZERO;
 
 	public DefaultOrder(String assetSymbol, String fundSymbol, Side side, long time) {
-		super(assetSymbol, fundSymbol, side, time);
+		super(assetSymbol, fundSymbol, side, time, null);
 	}
 
 	public DefaultOrder(Order order) {
-		super(order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), order.getTime());
+		super(order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), order.getTime(), null);
 		this.setOrderId(order.getOrderId());
 		this.setType(order.getType());
 		this.setQuantity(round(order.getQuantity()));

@@ -138,7 +138,7 @@ public interface Order {
 	}
 
 	default String getFormattedFillPct() {
-		String out = CHANGE_FORMAT.get().format(getFillPct());
+		String out = CHANGE_FORMAT.get().format(getFillPct() / 100.0);
 		//adjust display of mostly filled order so it's less confusing.
 		if (getStatus() != FILLED && out.equals("100.00%")) {
 			return "99.99%";
@@ -147,7 +147,7 @@ public interface Order {
 	}
 
 	default double getFillPct() {
-		return getExecutedQuantity().divide(getQuantity(), RoundingMode.FLOOR).doubleValue();
+		return getExecutedQuantity().divide(getQuantity(), RoundingMode.FLOOR).doubleValue() * 100.0;
 	}
 
 	enum Side {

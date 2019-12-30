@@ -5,8 +5,6 @@ import com.univocity.trader.candles.*;
 
 import java.math.*;
 
-import static com.univocity.trader.account.Order.Side.*;
-
 /**
  * An {@link OrderFillEmulator} that emulates slippage.
  *
@@ -82,15 +80,20 @@ public class SlippageEmulator implements OrderFillEmulator {
 
 		double increment = 1.0 / multiplier;
 		double totalVolume = candle.volume;
+
+		if (totalVolume == 0 && order.isMarket()) {
+			pips = 10;
+			totalVolume = order.getQuantity().doubleValue();
+		}
+
 		double volumePerPip = pips == 0 ? totalVolume : totalVolume / pips;
 
-
-		final boolean buying = order.getSide() == BUY;
+		final boolean buying = order.isBuy();
 
 		double price = order.getPrice().doubleValue();
 		double high = candle.high;
 		double low = candle.low;
-		if (order.getType() == Order.Type.MARKET) { //market order, let it run until order fills
+		if (order.isMarket()) { //market order, let it run until order fills
 			price = candle.open;
 			if (buying) {
 				low = Integer.MIN_VALUE;
@@ -104,9 +107,9 @@ public class SlippageEmulator implements OrderFillEmulator {
 		double totalPaid = 0.0;
 		double tradedVolume = 0.0;
 
-		increment = order.getType() == Order.Type.MARKET ? -increment : increment;
+		increment = order.isMarket() ? -increment : increment;
 
-		if (order.getType() == Order.Type.LIMIT || order.getType() == Order.Type.MARKET) {
+		if (order.isLimit() || order.isMarket()) {
 			while (totalVolume > 0 && quantity > 0 && ((buying && price >= low) || (!buying && price <= high))) {
 				totalVolume -= volumePerPip;
 				quantity -= volumePerPip;
@@ -126,20 +129,28 @@ public class SlippageEmulator implements OrderFillEmulator {
 				price = buying ? price - increment : price + increment;
 			}
 
-			if (order.getType() == Order.Type.MARKET) {
+			if (order.isMarket()) {
 				double averagePrice = totalPaid / tradedVolume;
 				averagePrice = (averagePrice + candle.open + ((candle.open + candle.close + (buying ? candle.high : candle.low)) / 3.0)) / 3.0;
 				if (buying && averagePrice > candle.high) {
-					averagePrice = candle.high;
+					if (candle.volume != 0) {
+						averagePrice = candle.high;
+					} else {
+						averagePrice = Math.min(averagePrice, candle.high * 1.015);
+					}
 				} else if (!buying && averagePrice < candle.low) {
-					averagePrice = candle.low;
+					if (candle.volume != 0) {
+						averagePrice = candle.low;
+					} else {
+						averagePrice = Math.max(averagePrice, candle.low * 0.985);
+					}
 				}
 				updatePrice(order, averagePrice, tradedVolume);
-			} else if (order.getType() == Order.Type.LIMIT) {
-				if (order.getSide() == BUY && candle.high < order.getPrice().doubleValue()) {
+			} else if (order.isLimit()) {
+				if (order.isBuy() && candle.high < order.getPrice().doubleValue()) {
 					updatePrice(order, candle.high, tradedVolume);
 				}
-				if (order.getSide() == SELL && candle.low > order.getPrice().doubleValue()) {
+				if (order.isSell() && candle.low > order.getPrice().doubleValue()) {
 					updatePrice(order, candle.low, tradedVolume);
 				}
 			}

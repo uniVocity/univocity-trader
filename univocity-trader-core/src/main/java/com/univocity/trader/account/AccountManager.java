@@ -292,13 +292,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return out.toString();
 	}
 
-	@Override
-	public synchronized Map<String, Balance> updateBalances() {
-		long now = System.currentTimeMillis();
-		if (now - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL) {
-			return balances;
-		}
-
+	private void executeUpdateBalances() {
 		Map<String, Balance> updatedBalances = account.updateBalances();
 		if (updatedBalances != null && updatedBalances != balances) {
 			updatedBalances.keySet().retainAll(configuration.symbols());
@@ -310,6 +304,16 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 			lastBalanceSync = System.currentTimeMillis();
 		}
+	}
+
+	@Override
+	public synchronized Map<String, Balance> updateBalances() {
+		long now = System.currentTimeMillis();
+		if (now - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL) {
+			return balances;
+		}
+		executeUpdateBalances();
+
 		return balances;
 	}
 
@@ -335,7 +339,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 							quantity = quantity * (maxSpend / expectedCost);
 						}
 						quantity = quantity * 0.9999;
-						OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, quantity);
+						OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, quantity, null);
 						return executeOrder(orderPreparation);
 					}
 				} finally {
@@ -352,7 +356,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		if (tradingManager == null) {
 			throw new IllegalStateException("Unable to sell " + quantity + " units of unknown symbol: " + symbol);
 		}
-		OrderRequest orderPreparation = prepareOrder(tradingManager, SELL, quantity);
+		OrderRequest orderPreparation = prepareOrder(tradingManager, SELL, quantity, null);
 		return executeOrder(orderPreparation);
 	}
 
@@ -386,10 +390,10 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return null;
 	}
 
-	private OrderRequest prepareOrder(TradingManager tradingManager, Order.Side side, double quantity) {
+	private OrderRequest prepareOrder(TradingManager tradingManager, Order.Side side, double quantity, Order resubmissionFrom) {
 		SymbolPriceDetails priceDetails = tradingManager.getPriceDetails();
 		long time = tradingManager.getLatestCandle().closeTime;
-		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side, time);
+		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side, time, resubmissionFrom);
 		orderPreparation.setPrice(priceDetails.priceToBigDecimal(tradingManager.getLatestPrice()));
 		orderPreparation.setQuantity(priceDetails.adjustQuantityScale(quantity));
 
@@ -536,15 +540,15 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 		if (old.getExecutedQuantity().compareTo(order.getExecutedQuantity()) != 0) {
 			logOrderStatus("", order);
-			updateBalances();
-			orderManager.updated(order, traderOf(order));
+			executeUpdateBalances();
+			orderManager.updated(order, traderOf(order), this::resubmit);
 		} else {
 			logOrderStatus("Unchanged ", order);
-			orderManager.unchanged(order, traderOf(order));
+			orderManager.unchanged(order, traderOf(order), this::resubmit);
 		}
 
 		//order manager could have cancelled the order
-		if (order.getStatus() == CANCELLED) {
+		if (order.getStatus() == CANCELLED && pendingOrders.containsKey(order.getOrderId())) {
 			cancelOrder(orderManager, order);
 		}
 		return order;
@@ -553,7 +557,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	private void orderFinalized(OrderManager orderManager, Order order) {
 		orderManager = orderManager == null ? configuration.orderManager(order.getSymbol()) : orderManager;
 		try {
-			updateBalances();
+			executeUpdateBalances();
 		} finally {
 			try {
 				orderManager.finalized(order, traderOf(order));
@@ -561,6 +565,29 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 				getTradingManagerOf(order.getSymbol()).notifyOrderFinalized(order);
 			}
 		}
+	}
+
+	private void resubmit(Order order) {
+		if (order == null) {
+			throw new IllegalArgumentException("Order for resubmission cannot be null");
+		}
+
+		if (order.getFillPct() > 98.0) {
+			//ignore orders 98% filled.
+			return;
+		}
+
+
+		OrderManager orderManager = configuration.orderManager(order.getSymbol());
+		cancelOrder(orderManager, order);
+
+		TradingManager tradingManager = getTradingManagerOf(order.getSymbol());
+
+		tradingManager.updateOpenOrders(order.getSymbol(), null);
+
+		OrderRequest request = prepareOrder(tradingManager, order.getSide(), order.getRemainingQuantity().doubleValue(), order);
+		order = executeOrder(request);
+		tradingManager.trader.processOrder(order);
 	}
 
 	private Trader traderOf(Order order) {
@@ -595,7 +622,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	public SimulatedAccountConfiguration resetBalances() {
 		this.balances.clear();
-		updateBalances();
+		executeUpdateBalances();
 		return this;
 	}
 
