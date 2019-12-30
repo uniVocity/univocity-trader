@@ -457,6 +457,10 @@ public class Trader {
 		return tradingManager.getTotalFundsIn(symbol);
 	}
 
+	public Balance balance(String symbol) {
+		return tradingManager.getBalance(symbol).clone();
+	}
+
 	public SymbolPriceDetails priceDetails() {
 		return tradingManager.getPriceDetails();
 	}

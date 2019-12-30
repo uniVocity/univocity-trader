@@ -55,7 +55,7 @@ public class OrderExecutionToLog implements OrderListener {
 				details += f.priceToString(trader.latestCandle().close);
 				if (order.isFinalized()) {
 					details += " - " + printFillDetails(order, f, trader) + ", P&L: " + f.priceToString(trader.actualProfitLoss()) + " [" + trader.formattedProfitLossPct() + "] ";
-					details += " Holdings ~$" + f.priceToString(trader.holdings()) + " " + trader.referenceCurrencySymbol();
+					details += " Holdings ~$" + f.priceToString(trader.holdings()) + " " + trader.referenceCurrencySymbol() + " (free: $" + f.priceToString(trader.balance("USDT").getFree()) + ")";
 				} else {
 					details += " - PENDING     expected returns: " + trader.formattedPriceChangePct() + " ";
 					details += " >> " + trader.tradeLength() + " ticks >> [Min: $" + f.priceToString(trader.minPrice()) + " (" + trader.formattedMinChangePct() + ") - Max: $" + f.priceToString(trader.maxPrice()) + " (" + trader.formattedMaxChangePct() + ")]";

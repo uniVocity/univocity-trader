@@ -2,7 +2,7 @@ package com.univocity.trader.account;
 
 import java.math.*;
 
-public class Balance {
+public class Balance implements Cloneable {
 
 	public static final Balance ZERO = new Balance(null);
 
@@ -31,7 +31,7 @@ public class Balance {
 	}
 
 	public double getFreeAmount() {
-		if(freeAmount < 0.0){
+		if (freeAmount < 0.0) {
 			freeAmount = free.doubleValue();
 		}
 		return freeAmount;
@@ -63,12 +63,20 @@ public class Balance {
 				'}';
 	}
 
-	public static final BigDecimal round(BigDecimal bd){
+	public static final BigDecimal round(BigDecimal bd) {
 		return bd.round(ROUND_MC);
 	}
 
-	public static final String roundStr(BigDecimal bd){
+	public static final String roundStr(BigDecimal bd) {
 		return round(bd).toPlainString();
+	}
+
+	public Balance clone() {
+		try {
+			return (Balance) super.clone();
+		} catch (CloneNotSupportedException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 
 }

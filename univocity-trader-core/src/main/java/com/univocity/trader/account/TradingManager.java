@@ -267,6 +267,10 @@ public class TradingManager {
 		}
 	}
 
+	public Balance getBalance(String symbol) {
+		return tradingAccount.getBalance(symbol);
+	}
+
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
 //		return exchange.isDirectSwitchSupported(currentAssetSymbol, targetAssetSymbol);
 //	}
