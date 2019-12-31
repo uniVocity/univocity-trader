@@ -69,8 +69,7 @@ public class OrderExecutionToEmail implements OrderListener {
 		return out.toString();
 	}
 
-	@Override
-	public void orderSubmitted(Order order, Trader trader, Client client) {
+	private void sendEmail(Order order, Trader trader, Client client) {
 		if (mailSender == null) {
 			return;
 		}
@@ -84,6 +83,19 @@ public class OrderExecutionToEmail implements OrderListener {
 			String timeLong = " at " + trader.latestCandle().getFormattedCloseTime("h:mma, MMMM dd, yyyy", client.getTimezone());
 			String timeShort = " - " + trader.latestCandle().getFormattedCloseTime("EEEE hh:mma", client.getTimezone());
 			String title = order.getSide() + " " + assetSymbol;
+
+			if (!order.isFinalized()) {
+				title += " (PENDING)";
+			} else {
+				double fillPct = order.getFillPct();
+				if (fillPct > 98.0) {
+					title += " (FILLED)";
+				} else if (fillPct < 1.0) {
+					title += " (CANCELLED)";
+				} else {
+					title += " (" + order.getFormattedFillPct() + " filled, CANCELLED)";
+				}
+			}
 			String typeDescription = order.isLimit() ? "with limit order of " + f.priceToString(order.getPrice()) + " " + fundSymbol + " per unit" : "at market";
 			String details;
 
@@ -99,7 +111,15 @@ public class OrderExecutionToEmail implements OrderListener {
 				details = "Sold " + qty + " " + assetSymbol + " " + typeDescription + " when price reached " + f.priceToString(trader.lastClosingPrice()) + " " + fundSymbol + timeLong + ".";
 				details += "\nExit reason: " + trader.exitReason();
 				details += "\nOrder status: " + order.getStatus();
-				details += "\n\nChange: " + trader.formattedPriceChangePct();
+				details += "\n\nCurrent price change: " + trader.formattedPriceChangePct();
+
+				if (order.isFinalized()) {
+					details += "\nProfit/loss: ";
+				} else {
+					details += "\nExpected profit/loss: ";
+				}
+				details += f.priceToString(trader.actualProfitLoss()) + " (" + trader.formattedProfitLossPct() + ")";
+
 				details += "\nClose price: " + f.priceToString(trader.lastClosingPrice()) + " " + fundSymbol;
 				details += "\nTrade length: " + trader.formattedTradeLength();
 				details += "\nMinimum price: " + f.priceToString(trader.minPrice()) + " " + fundSymbol + " (" + trader.formattedMinChangePct() + ")";
@@ -119,14 +139,18 @@ public class OrderExecutionToEmail implements OrderListener {
 			log.error("Error sending trade notification e-mail", e);
 		}
 	}
-//
-//	public void notifyTradeExecution(Order order, Trader trader, Client client) {
-//		if (notifiers != null) {
-//			for(int i = 0; i < notifiers.length; i++){
-//				notifiers[i].orderUpdated(order, trader, client);
-//			}
-//		}
-//	}
+
+	@Override
+	public void orderSubmitted(Order order, Trader trader, Client client) {
+		if (!order.isFinalized()) { //skip this one and let orderFinalized() run
+			sendEmail(order, trader, client);
+		}
+	}
+
+	@Override
+	public void orderFinalized(Order order, Trader trader, Client client) {
+		sendEmail(order, trader, client);
+	}
 
 	private void printTotalBalances(Map<String, Balance> balances, Set<TradingManager> visited, StringBuilder msg, AtomicReference<Double> total, TradingManager next) {
 		if (visited.contains(next)) {

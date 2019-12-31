@@ -18,10 +18,14 @@ public interface OrderListener {
 	 *               and the trade itself, e.g. {@link Trader#averagePrice()}, {@link Trader#minPrice()}, {@link Trader#ticks()}, etc.
 	 * @param client the client whose account was used to place the given order.
 	 */
-	void orderSubmitted(Order order, Trader trader, Client client);
+	default void orderSubmitted(Order order, Trader trader, Client client){
+
+	}
 
 	/**
-	 * Notification that an order already submitted to the exchange is finalized (i.e. either {@code FILLED} or {@code CANCELLED})
+	 * Notification that an order already submitted to the exchange is finalized (i.e. either {@code FILLED} or {@code CANCELLED}).
+	 * Notice that a cancelled order might have been partially filled to some point, so check if {@link Order#getFillPct()} is
+	 * equal to {@code 0.0} to find out whether the order affected the account balance.
 	 *
 	 * @param order  the order created in the exchange
 	 * @param trader the object responsible for the order creation, be it a {@code BUY} or {@code SELL}, and which contains many details

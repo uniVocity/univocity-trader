@@ -694,6 +694,10 @@ public class Trader {
 			}
 		} else if (exitOrders.containsKey(order.getOrderId())) {
 			if (!tradingManager.hasAssets(latestCandle, true)) {
+				//FIXME refactor this class to use a Trade
+				// which tracks individual positions and when they close.
+				// As its we might lose track of the current position if buy/sell
+				// orders fill around the same time
 				updateAveragePrice(exitOrders.values());
 				double totalSold = this.totalSpent;
 				double soldUnits = this.totalUnits;

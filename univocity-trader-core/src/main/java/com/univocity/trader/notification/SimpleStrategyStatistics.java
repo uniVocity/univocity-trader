@@ -19,12 +19,16 @@ public class SimpleStrategyStatistics implements OrderListener {
 	private Candle firstCandle;
 	private Candle lastCandle;
 
+	public SimpleStrategyStatistics() {
+		this(null);
+	}
+
 	public SimpleStrategyStatistics(String symbol) {
 		this.symbol = symbol;
 	}
 
 	@Override
-	public void orderSubmitted(Order order, Trader trader, Client client) {
+	public void orderFinalized(Order order, Trader trader, Client client) {
 		if (this.trader == null) {
 			this.trader = trader;
 			initialInvestment = this.trader.totalFundsInReferenceCurrency();
