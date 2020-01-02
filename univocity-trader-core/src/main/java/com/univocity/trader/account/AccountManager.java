@@ -5,6 +5,7 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.simulation.*;
+import com.univocity.trader.strategy.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
@@ -363,7 +364,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	@Override
 	public Order executeOrder(OrderRequest orderDetails) {
 		if (orderDetails != null) {
-			if(orderDetails.isCancelled()){
+			if (orderDetails.isCancelled()) {
 				return null;
 			}
 			Order order = account.executeOrder(orderDetails);
@@ -562,10 +563,15 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		try {
 			executeUpdateBalances();
 		} finally {
+			Trade trade = null;
 			try {
-				orderManager.finalized(order, traderOf(order));
+				Trader trader = traderOf(order);
+				if (trader != null) {
+					trade = trader.tradeOf(order);
+				}
+				orderManager.finalized(order, trader);
 			} finally {
-				getTradingManagerOf(order.getSymbol()).notifyOrderFinalized(order);
+				getTradingManagerOf(order.getSymbol()).notifyOrderFinalized(order, trade);
 			}
 		}
 	}
@@ -585,18 +591,22 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		cancelOrder(orderManager, order);
 
 		TradingManager tradingManager = getTradingManagerOf(order.getSymbol());
+		Trade trade = tradingManager.getTrader().tradeOf(order);
 
 		tradingManager.updateOpenOrders(order.getSymbol(), tradingManager.trader.latestCandle());
 
 		OrderRequest request = prepareOrder(tradingManager, order.getSide(), order.getRemainingQuantity().doubleValue(), order);
 		order = executeOrder(request);
-		tradingManager.trader.processOrder(order);
+
+		Strategy strategy = tradingManager.getTrader().strategyOf(order);
+
+		tradingManager.trader.processOrder(trade, order, strategy, trade == null ? "Order resubmission" : "Order resubmission: " + trade.exitReason());
 	}
 
-	public Order submitOrder(Trader trader, double quantity, Order.Side side, Order.Type type){
+	public Order submitOrder(Trader trader, double quantity, Order.Side side, Order.Type type) {
 		OrderRequest request = prepareOrder(trader.tradingManager, side, quantity, null);
 		Order order = executeOrder(request);
-		trader.processOrder(order);
+		trader.processOrder(null, order, null, null);
 		return order;
 	}
 
@@ -605,13 +615,31 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	private void cancelOrder(OrderManager orderManager, Order order) {
-		account.cancel(order);
-		order = account.updateOrderStatus(order);
-		pendingOrders.remove(order.getOrderId());
-		orderFinalized(orderManager, order);
-		logOrderStatus("Cancellation via order manager: ", order);
+		try {
+			order.cancel();
+			account.cancel(order);
+		} catch (Exception e) {
+			log.error("Failed to execute cancellation of order '" + order + "' on exchange", e);
+		} finally {
+			order = account.updateOrderStatus(order);
+			pendingOrders.remove(order.getOrderId());
+			orderFinalized(orderManager, order);
+			logOrderStatus("Cancellation via order manager: ", order);
+		}
 	}
 
+	public synchronized void cancelOrder(Order order) {
+		OrderManager orderManager = configuration.orderManager(order.getSymbol());
+		if (!order.isFinalized()) {
+			Order latestUpdate = pendingOrders.get(order.getOrderId());
+			if (latestUpdate != null) {
+				order = latestUpdate;
+			}
+			if (!order.isFinalized()) {
+				cancelOrder(orderManager, order);
+			}
+		}
+	}
 
 	public synchronized void cancelStaleOrdersFor(Trader trader) {
 		if (pendingOrders.isEmpty()) {
@@ -621,7 +649,6 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			Order order = entry.getValue();
 			OrderManager orderManager = configuration.orderManager(order.getSymbol());
 			if (orderManager.cancelToReleaseFundsFor(order, traderOf(order), trader)) {
-				order.cancel();
 				if (order.getStatus() == CANCELLED) {
 					cancelOrder(orderManager, order);
 					return;

@@ -69,10 +69,11 @@ public class OrderExecutionToEmail implements OrderListener {
 		return out.toString();
 	}
 
-	private void sendEmail(Order order, Trader trader, Client client) {
+	private void sendEmail(Order order, Trade trade, Client client) {
 		if (mailSender == null) {
 			return;
 		}
+		Trader trader = trade.trader();
 
 		String assetSymbol = trader.assetSymbol();
 		String fundSymbol = trader.fundSymbol();
@@ -107,23 +108,25 @@ public class OrderExecutionToEmail implements OrderListener {
 				details += "\nAmount invested: $" + f.priceToString(order.getTotalOrderAmount()) + " " + fundSymbol;
 				details += "\nOrder status: " + order.getStatus();
 			} else {
-				title += " @ " + f.priceToString(order.getPrice()) + " (" + trader.formattedPriceChangePct(order.getPrice()) + ")" + timeShort;
+				title += " @ " + f.priceToString(order.getPrice()) + " (" + trade.formattedPriceChangePct(order.getPrice()) + ")" + timeShort;
 				details = "Sold " + qty + " " + assetSymbol + " " + typeDescription + " when price reached " + f.priceToString(trader.lastClosingPrice()) + " " + fundSymbol + timeLong + ".";
-				details += "\nExit reason: " + trader.exitReason();
+				if(trade.exitReason() != null) {
+					details += "\nExit reason: " + trade.exitReason();
+				}
 				details += "\nOrder status: " + order.getStatus();
-				details += "\n\nCurrent price change: " + trader.formattedPriceChangePct();
+				details += "\n\nCurrent price change: " + trade.formattedPriceChangePct();
 
 				if (order.isFinalized()) {
 					details += "\nProfit/loss: ";
 				} else {
 					details += "\nExpected profit/loss: ";
 				}
-				details += f.priceToString(trader.actualProfitLoss()) + " (" + trader.formattedProfitLossPct() + ")";
+				details += f.priceToString(trade.actualProfitLoss()) + " (" + trade.formattedProfitLossPct() + ")";
 
 				details += "\nClose price: " + f.priceToString(trader.lastClosingPrice()) + " " + fundSymbol;
-				details += "\nTrade length: " + trader.formattedTradeLength();
-				details += "\nMinimum price: " + f.priceToString(trader.minPrice()) + " " + fundSymbol + " (" + trader.formattedMinChangePct() + ")";
-				details += "\nMaximum price: " + f.priceToString(trader.maxPrice()) + " " + fundSymbol + " (" + trader.formattedMaxChangePct() + ")";
+				details += "\nTrade length: " + trade.formattedTradeLength();
+				details += "\nMinimum price: " + f.priceToString(trade.minPrice()) + " " + fundSymbol + " (" + trade.formattedMinChangePct() + ")";
+				details += "\nMaximum price: " + f.priceToString(trade.maxPrice()) + " " + fundSymbol + " (" + trade.formattedMaxChangePct() + ")";
 			}
 
 			String body = details + "\n" + balances;
@@ -141,15 +144,15 @@ public class OrderExecutionToEmail implements OrderListener {
 	}
 
 	@Override
-	public void orderSubmitted(Order order, Trader trader, Client client) {
+	public void orderSubmitted(Order order, Trade trade, Client client) {
 		if (!order.isFinalized()) { //skip this one and let orderFinalized() run
-			sendEmail(order, trader, client);
+			sendEmail(order, trade, client);
 		}
 	}
 
 	@Override
-	public void orderFinalized(Order order, Trader trader, Client client) {
-		sendEmail(order, trader, client);
+	public void orderFinalized(Order order, Trade trade, Client client) {
+		sendEmail(order, trade, client);
 	}
 
 	private void printTotalBalances(Map<String, Balance> balances, Set<TradingManager> visited, StringBuilder msg, AtomicReference<Double> total, TradingManager next) {
@@ -174,28 +177,41 @@ public class OrderExecutionToEmail implements OrderListener {
 				if (worth > 0.5) {
 					printing = true;
 					msg.append("\n\t* ").append(f.quantityToString(assets)).append(" ").append(next.getAssetSymbol());
-					if (trader.averagePrice() > 0) {
-						msg.append(". Paid ").append(f.priceToString(trader.averagePrice()));
-					}
 					msg.append(", ");
 					msg.append("trading at ").append(f.priceToString(trader.lastClosingPrice()));
-					double change = trader.priceChangePct();
-					if (change != 0.0) {
-						msg.append(' ').append('(');
-						if (change > 0.0) {
-							msg.append('+');
-						}
-						msg.append(trader.formattedPriceChangePct());
-						msg.append(')');
-					}
 					msg.append(". Holding ").append(f.quantityToString(trader.assetQuantity())).append(" units");
 					msg.append(", worth ~").append(f.switchToSymbol(trader.assetSymbol() + referenceCurrencySymbol).priceToString(worth)).append(" ").append(next.getFundSymbol());
-					if (trader.ticks() > 0) {
-						msg.append(" (max: ").append(f.priceToString(trader.maxPrice()))
-								.append(", min: ").append(f.priceToString(trader.minPrice()))
-								.append(", length: ").append(trader.formattedTradeLength())
-								.append(")");
+
+					Set<Trade> trades = trader.trades();
+					if(!trades.isEmpty()){
+						String indent = ". ";
+						if(trades.size() > 1){
+							msg.append(". Trades:");
+							indent = ".\n\t\t + ";
+						}
+						for(Trade trade : trades) {
+							msg.append(indent);
+							if (trade.averagePrice() > 0) {
+								msg.append("Paid ").append(f.priceToString(trade.averagePrice()));
+							}
+							double change = trade.priceChangePct();
+							if (change != 0.0) {
+								msg.append(' ').append('(');
+								if (change > 0.0) {
+									msg.append('+');
+								}
+								msg.append(trade.formattedPriceChangePct());
+								msg.append(')');
+							}
+							if (trade.ticks() > 0) {
+								msg.append(" (max: ").append(f.priceToString(trade.maxPrice()))
+										.append(", min: ").append(f.priceToString(trade.minPrice()))
+										.append(", length: ").append(trade.formattedTradeLength())
+										.append(")");
+							}
+						}
 					}
+
 				}
 			}
 			if (locked > 0.0) {
@@ -222,6 +238,4 @@ public class OrderExecutionToEmail implements OrderListener {
 			return total * tradingManager.getLatestPrice(tradingManager.getAssetSymbol(), referenceCurrencySymbol);
 		}
 	}
-
-
 }

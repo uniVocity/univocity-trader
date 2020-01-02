@@ -1,12 +1,11 @@
 package com.univocity.trader.examples;
 
-import java.util.*;
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
-import com.univocity.trader.simulation.*;
 import com.univocity.trader.strategy.*;
+
+import java.util.*;
 
 public class ExampleStrategy extends IndicatorStrategy {
 	private final Set<Indicator> indicators = new HashSet<>();

@@ -2,6 +2,7 @@ package com.univocity.trader.examples;
 
 import java.util.*;
 
+import com.univocity.trader.account.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -29,9 +30,9 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
 	}
 
 	@Override
-	public String handleStop(Signal signal, Strategy strategy) {
-		final double currentReturns = trader.priceChangePct();
-		final double bestReturns = trader.maxChange();
+	public String handleStop(Trade trade, Signal signal, Strategy strategy) {
+		final double currentReturns = trade.priceChangePct();
+		final double bestReturns = trade.maxChange();
 		if ((currentReturns - bestReturns) < -2.0) {
 			if (currentReturns < 0.0) {
 				waitForUptrend = true;

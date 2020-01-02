@@ -206,6 +206,10 @@ public class TradingManager {
 		tradingAccount.cancelStaleOrdersFor(trader);
 	}
 
+	public void cancelOrder(Order order) {
+		tradingAccount.cancelOrder(order);
+	}
+
 	public TradingFees getTradingFees() {
 		return tradingAccount.getTradingFees();
 	}
@@ -230,21 +234,21 @@ public class TradingManager {
 		return emailNotifier;
 	}
 
-	void notifyOrderSubmitted(Order order) {
+	void notifyOrderSubmitted(Order order, Trade trade) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
-				notifications[i].orderSubmitted(order, trader, client);
+				notifications[i].orderSubmitted(order, trade, client);
 			} catch (Exception e) {
 				log.error("Error sending orderSubmitted notification for order: " + order, e);
 			}
 		}
 	}
 
-	void notifyOrderFinalized(Order order) {
+	void notifyOrderFinalized(Order order, Trade trade) {
 		trader.orderFinalized(order);
 		for (int i = 0; i < notifications.length; i++) {
 			try {
-				notifications[i].orderFinalized(order, trader, client);
+				notifications[i].orderFinalized(order, trade, client);
 			} catch (Exception e) {
 				log.error("Error sending orderFinalized notification for order: " + order, e);
 			}

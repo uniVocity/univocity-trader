@@ -28,14 +28,14 @@ public class SimpleStrategyStatistics implements OrderListener {
 	}
 
 	@Override
-	public void orderFinalized(Order order, Trader trader, Client client) {
+	public void orderFinalized(Order order, Trade trade, Client client) {
 		if (this.trader == null) {
-			this.trader = trader;
+			this.trader = trade.trader();
 			initialInvestment = this.trader.totalFundsInReferenceCurrency();
 			firstCandle = this.trader.latestCandle();
 		}
 		if (order.isSell()) {
-			double change = trader.priceChangePct() - trader.breakEvenChange(order.getTotalTraded().doubleValue());
+			double change = trade.priceChangePct() - trader.breakEvenChange(order.getTotalTraded().doubleValue());
 			if (!Double.isNaN(change)) {
 				parameterReturns.computeIfAbsent(trader.parameters().toString(), s -> new ArrayList<>()).add(change);
 			}

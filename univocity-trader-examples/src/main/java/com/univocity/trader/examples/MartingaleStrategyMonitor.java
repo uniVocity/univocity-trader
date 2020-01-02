@@ -39,8 +39,8 @@ public class MartingaleStrategyMonitor extends StrategyMonitor {
 	}
 
 	@Override
-	public String handleStop(Signal signal, Strategy strategy) {
-		if (trader.priceChangePct() > 3.0) {
+	public String handleStop(Trade trade, Signal signal, Strategy strategy) {
+		if (trade.priceChangePct() > 3.0) {
 			return "take profit";
 		}
 
@@ -51,7 +51,7 @@ public class MartingaleStrategyMonitor extends StrategyMonitor {
 	}
 
 	@Override
-	public void worstLoss(double change) {
+	public void worstLoss(Trade trade, double change) {
 		if (!buyToday()) {
 			return;
 		}
@@ -72,18 +72,18 @@ public class MartingaleStrategyMonitor extends StrategyMonitor {
 			Order order = trader.submitOrder(Order.Type.LIMIT, Order.Side.BUY, quantity);
 			if (order != null && !order.isCancelled()) {
 				lastBuy = trader.latestCandle().closeTime;
-				log.info(">>> Lost {} in {}, doubling position with {}", trader.formattedPriceChangePct(), trader.symbol(), order);
+				log.info(">>> Lost {} in {}, doubling position with {}", trade.formattedPriceChangePct(), trader.symbol(), order);
 			}
 		}
 	}
 
 	@Override
-	public boolean allowExit() {
-		if (trader.priceChangePct() > 2.0) {
+	public boolean allowExit(Trade trade) {
+		if (trade.priceChangePct() > 2.0) {
 			doublePercentage = -2.0; //reset
 			return true;
-		} else if (!trader.stopped()) {
-			log.info("Preventing sell of {} under 2% profit. Current price: {} ({})", trader.symbol(), trader.lastClosingPrice(), trader.formattedPriceChangePct());
+		} else if (!trade.stopped()) {
+			log.info("Preventing sell of {} under 2% profit. Current price: {} ({})", trade.symbol(), trade.lastClosingPrice(), trade.formattedPriceChangePct());
 			return false;
 		} else {
 			return true;

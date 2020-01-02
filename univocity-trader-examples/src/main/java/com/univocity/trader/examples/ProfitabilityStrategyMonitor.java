@@ -25,12 +25,12 @@ public class ProfitabilityStrategyMonitor extends StrategyMonitor {
 	}
 
 	@Override
-	public boolean discardSell(Candle candle) {
+	public boolean allowExit(Trade trade) {
 		TradingFees tradingFees = trader.tradingFees();
 		double quantity = this.trader.assetQuantity();
-		double price = this.trader.averagePrice();
+		double price = trade.averagePrice();
 		double purchaseValue = price * quantity;
-		double sellValue = tradingFees.takeFee(candle.low * quantity, Order.Type.MARKET, Order.Side.SELL);
+		double sellValue = tradingFees.takeFee(trader.latestCandle().low * quantity, Order.Type.MARKET, Order.Side.SELL);
 		double diffpct = (sellValue - purchaseValue) / purchaseValue;
 		if (diffpct < MINIMUM_PROFIT) {
 			/*
