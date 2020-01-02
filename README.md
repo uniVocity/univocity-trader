@@ -392,7 +392,7 @@ public abstract class StrategyMonitor extends IndicatorGroup {
 
  protected Trader trader;
  
- public String handleStop(Signal signal, Strategy strategy) {
+ public String handleStop(Trade trade, Signal signal, Strategy strategy) {
  return null;
  }
  
@@ -433,11 +433,11 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
  }
  
  @Override
- public String handleStop(Signal signal, Strategy strategy) {
+ public String handleStop(Trade trade, Signal signal, Strategy strategy) {
  // current profit or loss %
- double currentReturns = trader.getChange();
+ double currentReturns = trade.priceChangePct();
  // best profit % (can only be 0% or more)
- double bestReturns = trader.getMaxChange(); 
+ double bestReturns = trade.getMaxChange(); 
                        
  // if we are down 2% from the best ever profit generated
  if (currentReturns - bestReturns < -2.0) { 

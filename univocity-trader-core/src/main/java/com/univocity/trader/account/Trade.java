@@ -493,6 +493,10 @@ public class Trade implements Comparable<Trade> {
 		return trader;
 	}
 
+	public Collection<Order> exitOrders() {
+		return Collections.unmodifiableCollection(exitOrders.values());
+	}
+
 	@Override
 	public int compareTo(Trade o) {
 		return Long.compare(this.firstCandle.openTime, o.firstCandle.openTime);
@@ -500,5 +504,9 @@ public class Trade implements Comparable<Trade> {
 
 	public String symbol() {
 		return trader.symbol();
+	}
+
+	public double quantity() {
+		return removeCancelledAndSumQuantities(position).doubleValue();
 	}
 }
