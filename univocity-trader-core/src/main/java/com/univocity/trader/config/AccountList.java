@@ -48,6 +48,14 @@ public class AccountList<T extends AccountConfiguration<T>> implements Configura
 	}
 
 	public List<T> accounts() {
-		return accounts.values().stream().filter(AccountConfiguration::isConfigured).collect(Collectors.toList());
+		List<T> out = accounts.values().stream().filter(AccountConfiguration::isConfigured).collect(Collectors.toList());
+		if(out.isEmpty()){
+			out = accounts.values().stream().filter((a)->!a.isConfigured()).collect(Collectors.toList());
+			if(!out.isEmpty()){
+				throw new IllegalConfigurationException("No accounts configured. Found " + out.size() + " partially configured accounts. Reference currency not defined?");
+			}
+		}
+		return out;
 	}
+
 }
