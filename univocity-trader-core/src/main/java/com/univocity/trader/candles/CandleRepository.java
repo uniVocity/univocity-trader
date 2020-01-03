@@ -89,7 +89,15 @@ public class CandleRepository {
 		return true;
 	}
 
-	private Enumeration<Candle> toEnumeration(ArrayBlockingQueue<Candle> queue, boolean[] ended) {
+	protected Enumeration<Candle> toEnumeration(String symbol, Runnable readingProcess, Collection<Candle> out, boolean[] ended) {
+		if (!(out instanceof BlockingQueue)) {
+			readingProcess.run();
+			cachedResults.put(symbol, out);
+			return Collections.enumeration(out);
+		}
+
+		final BlockingQueue<Candle> queue = (BlockingQueue) out;
+		new Thread(readingProcess).start();
 		return new Enumeration<>() {
 			@Override
 			public boolean hasMoreElements() {
@@ -113,7 +121,14 @@ public class CandleRepository {
 				return null;
 			}
 		};
+	}
 
+	protected void storeCandle(String symbol, Collection<Candle> out, Candle candle) {
+		out.add(candle);
+	}
+
+	protected void ended(String symbol, boolean[] ended) {
+		ended[0] = true;
 	}
 
 	private Enumeration<Candle> executeQuery(String symbol, String query, Collection<Candle> out) {
@@ -131,25 +146,18 @@ public class CandleRepository {
 
 				while (rs.next()) {
 					Candle candle = CANDLE_MAPPER.mapRow(rs, 0);
-					out.add(candle);
+					storeCandle(symbol, out, candle);
 					count++;
 				}
 			} catch (SQLException e) {
 				log.error("Error reading " + symbol + " Candle from db().", e);
 			} finally {
 				log.trace("Read all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
-				ended[0] = true;
+				ended(symbol, ended);
 			}
 		};
 
-		if (out instanceof ArrayBlockingQueue) {
-			new Thread(readingProcess).start();
-			return toEnumeration((ArrayBlockingQueue<Candle>) out, ended);
-		} else {
-			readingProcess.run();
-			cachedResults.put(symbol, out);
-			return Collections.enumeration(out);
-		}
+		return toEnumeration(symbol, readingProcess, out, ended);
 	}
 
 	public void clearCaches() {

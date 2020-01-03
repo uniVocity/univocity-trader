@@ -38,9 +38,13 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		resetBalances();
 	}
 
+	protected CandleRepository createCandleRepository(){
+		return new CandleRepository(configure().database());
+	}
+
 	@Override
 	protected final void executeSimulation(Collection<Parameters> parameters) {
-		candleRepository = new CandleRepository(configure().database());
+		candleRepository = createCandleRepository();
 		executor = Executors.newCachedThreadPool();
 		try {
 			for (Parameters p : parameters) {
