@@ -11,6 +11,8 @@ import java.math.*;
 public class OrderExecutionToLog implements OrderListener {
 
 	private static final Logger log = LoggerFactory.getLogger(OrderExecutionToLog.class);
+	private int maxQuantityLength;
+	private int maxPriceLength;
 
 	@Override
 	public void orderSubmitted(Order order, Trade trade, Client client) {
@@ -41,20 +43,36 @@ public class OrderExecutionToLog implements OrderListener {
 		if (log.isDebugEnabled()) {
 			Trader trader = trade.trader();
 			SymbolPriceDetails f = trader.priceDetails();
-			String type = StringUtils.rightPad(order.getSide().toString(), 8);
-			String details = trader.latestCandle().getFormattedCloseTimeWithYear() + " " + trader.symbol() + " " + type + " " + f.quantityToString(order.getQuantity()) + " @ $";
+			String type = StringUtils.rightPad(order.getSide().toString(), 4);
+
+			String quantity = f.quantityToString(order.getQuantity());
+			if (maxQuantityLength < quantity.length()) {
+				maxQuantityLength = quantity.length();
+			}
+			quantity = StringUtils.leftPad(quantity, maxQuantityLength);
+
+			String price = order.isBuy() ? f.priceToString(order.getPrice()) : f.priceToString(trader.latestCandle().close);
+			if (maxPriceLength < price.length()) {
+				maxPriceLength = price.length();
+			}
+			price = StringUtils.rightPad(price, maxPriceLength);
+
+			String details = trader.latestCandle().getFormattedCloseTime("yy-MM-dd HH:mm") + " ";
+			details += trader.assetSymbol() + " " + type + " " + quantity + " @ $" + price;
 			if (order.isBuy()) {
-				details += f.priceToString(order.getPrice());
 				if (order.isFinalized()) {
 					details += " + " + printFillDetails(order, trade, f);
 				} else {
 					details += " + PENDING     total committed: $" + f.priceToString(order.getTotalOrderAmount());
 				}
+
+				if (order.isFinalized()) {
+					details += " Holdings ~$" + f.priceToString(trader.holdings()) + " " + trader.referenceCurrencySymbol() + " (free: $" + f.priceToString(trader.balance().getFree()) + ")";
+				}
 			} else {
-				details += f.priceToString(trader.latestCandle().close);
 				if (order.isFinalized()) {
 					details += " - " + printFillDetails(order, trade, f) + ", P/L: $" + f.priceToString(trade.actualProfitLoss()) + " [" + trade.formattedProfitLossPct() + "] ";
-					details += " Holdings ~$" + f.priceToString(trader.holdings()) + " " + trader.referenceCurrencySymbol() + " (free: $" + f.priceToString(trader.balance("USDT").getFree()) + ")";
+					details += " Holdings ~$" + f.priceToString(trader.holdings()) + " " + trader.referenceCurrencySymbol() + " (free: $" + f.priceToString(trader.balance().getFree()) + ")";
 				} else {
 					details += " - PENDING     order value: $" + f.priceToString(order.getTotalOrderAmount());
 					details += " expected returns: " + trade.formattedEstimateProfitLossPercentage(order) + " ";

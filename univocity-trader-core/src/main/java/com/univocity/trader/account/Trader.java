@@ -441,6 +441,10 @@ public class Trader {
 		return tradingManager.getBalance(symbol).clone();
 	}
 
+	public Balance balance() {
+		return tradingManager.getBalance(referenceCurrencySymbol()).clone();
+	}
+
 	public SymbolPriceDetails priceDetails() {
 		return tradingManager.getPriceDetails();
 	}
