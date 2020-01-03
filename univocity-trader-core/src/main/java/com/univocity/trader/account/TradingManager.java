@@ -29,6 +29,7 @@ public class TradingManager {
 	private final ExchangeClient client;
 	private OrderExecutionToEmail emailNotifier;
 	private final SymbolPriceDetails priceDetails;
+	private final SymbolPriceDetails referencePriceDetails;
 
 	public TradingManager(Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, String assetSymbol, String fundSymbol, Parameters params) {
 		if (exchange == null) {
@@ -51,17 +52,23 @@ public class TradingManager {
 		this.assetSymbol = assetSymbol;
 		this.fundSymbol = fundSymbol;
 		this.symbol = assetSymbol + fundSymbol;
-		this.priceDetails = priceDetails.switchToSymbol(symbol);
 
 		Instances<OrderListener> listenerProvider = client.getOrderListeners();
 		this.notifications = listenerProvider != null ? listenerProvider.create(symbol, params) : new OrderListener[0];
 		client.registerTradingManager(this);
 		tradingAccount = client.getAccountManager();
 		this.emailNotifier = getEmailNotifier();
+
+		this.priceDetails = priceDetails.switchToSymbol(symbol);
+		this.referencePriceDetails = priceDetails.switchToSymbol(getReferenceCurrencySymbol());
 	}
 
 	public SymbolPriceDetails getPriceDetails() {
 		return priceDetails;
+	}
+
+	public SymbolPriceDetails getReferencePriceDetails() {
+		return referencePriceDetails;
 	}
 
 	public String getFundSymbol() {

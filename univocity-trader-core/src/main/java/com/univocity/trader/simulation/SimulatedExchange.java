@@ -3,7 +3,7 @@ package com.univocity.trader.simulation;
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.config.AccountConfiguration;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 
 import java.util.*;
@@ -56,11 +56,11 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 		return symbolInformation;
 	}
 
-	public void setSymbolInformation(String symbol, SymbolInformation info){
+	public void setSymbolInformation(String symbol, SymbolInformation info) {
 		symbolInformation.put(symbol, info);
 	}
 
-	public void setSymbolInformation(Map<String, SymbolInformation> info){
+	public void setSymbolInformation(Map<String, SymbolInformation> info) {
 		symbolInformation.putAll(info);
 	}
 
@@ -68,7 +68,7 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
 		String symbol = assetSymbol + fundSymbol;
 		Trader trader = account.getTraderOf(symbol);
-		if(trader == null){
+		if (trader == null) {
 			throw new IllegalStateException("Unknown symbol: " + symbol);
 		}
 		double price = trader.lastClosingPrice();
@@ -119,6 +119,7 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 		throw new UnsupportedOperationException();
 	}
 }
+
 class SimulatedClientConfiguration extends AccountConfiguration<SimulatedClientConfiguration> {
 	public SimulatedClientConfiguration(String id) {
 		super(id);

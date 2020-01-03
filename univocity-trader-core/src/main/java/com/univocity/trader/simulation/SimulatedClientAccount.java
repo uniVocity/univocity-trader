@@ -110,6 +110,7 @@ public class SimulatedClientAccount implements ClientAccount {
 	@Override
 	public void cancel(Order order) {
 		order.cancel();
+		updateOpenOrders(order.getSymbol(), null);
 	}
 
 	@Override
@@ -128,7 +129,7 @@ public class SimulatedClientAccount implements ClientAccount {
 			PendingOrder pendingOrder = it.next();
 			Order order = pendingOrder.order;
 
-			if (!order.isFinalized()) {
+			if (candle != null && !order.isFinalized()) {
 				orderFillEmulator.fillOrder((DefaultOrder) order, candle);
 			}
 			if (order.isFinalized()) {

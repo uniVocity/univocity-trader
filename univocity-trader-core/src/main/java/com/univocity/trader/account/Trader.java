@@ -449,6 +449,10 @@ public class Trader {
 		return tradingManager.getPriceDetails();
 	}
 
+	public SymbolPriceDetails referencePriceDetails() {
+		return tradingManager.getReferencePriceDetails();
+	}
+
 	public String toString() {
 		return "Trader{" + symbol() + "}";
 	}

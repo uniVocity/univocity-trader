@@ -52,6 +52,8 @@ public class MarketSimulation {
 				.simulateFrom(LocalDate.of(2018, 7, 1).atStartOfDay())
 				.simulateTo(LocalDate.of(2019, 7, 1).atStartOfDay());
 
+		simulator.symbolInformation("USDT").priceDecimalPlaces(2).quantityDecimalPlaces(2);
+
 //		execute simulation
 		simulator.run();
 	}
