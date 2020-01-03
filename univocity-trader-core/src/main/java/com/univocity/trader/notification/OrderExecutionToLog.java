@@ -44,6 +44,7 @@ public class OrderExecutionToLog implements OrderListener {
 			Trader trader = trade.trader();
 			SymbolPriceDetails f = trader.priceDetails();
 			SymbolPriceDetails rf = trader.referencePriceDetails();
+			String currency = " " + trader.referenceCurrencySymbol();
 			String type = StringUtils.rightPad(order.getSide().toString(), 4);
 
 			String quantity = f.quantityToString(order.getQuantity());
@@ -63,16 +64,16 @@ public class OrderExecutionToLog implements OrderListener {
 			if (order.isBuy()) {
 				if (order.isFinalized()) {
 					details += " + " + printFillDetails(order, trade, rf);
-					details += ". Worth $" + rf.priceToString(trader.assetQuantity() * trader.lastClosingPrice()) + " " + trader.referenceCurrencySymbol() + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
+					details += ". Worth $" + rf.priceToString(trader.assetQuantity() * trader.lastClosingPrice()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
 				} else {
-					details += " + PENDING     committed $" + rf.priceToString(order.getTotalOrderAmount()) + " " + trader.referenceCurrencySymbol();
+					details += " + PENDING     committed $" + rf.priceToString(order.getTotalOrderAmount()) + currency;
 				}
 			} else {
 				if (order.isFinalized()) {
 					details += " - " + printFillDetails(order, trade, rf) + ". P/L $" + rf.priceToString(trade.actualProfitLoss()) + " [" + trade.formattedProfitLossPct() + "].";
-					details += " Holdings $" + rf.priceToString(trader.holdings()) + " " + trader.referenceCurrencySymbol() + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
+					details += " Holdings $" + rf.priceToString(trader.holdings()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
 				} else {
-					details += " - PENDING     worth $" + rf.priceToString(order.getTotalOrderAmount()) + " " + trader.referenceCurrencySymbol();
+					details += " - PENDING     worth $" + rf.priceToString(order.getTotalOrderAmount()) + currency;
 					details += ". Expected P/L " + trade.formattedEstimateProfitLossPercentage(order);
 					details += " | " + trade.tradeLength() + " ticks [min $" + f.priceToString(trade.minPrice()) + " (" + trade.formattedMinChangePct() + "), max $" + f.priceToString(trade.maxPrice()) + " (" + trade.formattedMaxChangePct() + ")]";
 					details += " " + trade.exitReason();
