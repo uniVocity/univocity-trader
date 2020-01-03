@@ -38,7 +38,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		resetBalances();
 	}
 
-	protected CandleRepository createCandleRepository(){
+	protected CandleRepository createCandleRepository() {
 		return new CandleRepository(configure().database());
 	}
 
@@ -123,10 +123,12 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 		boolean ran = false;
 
-//		Map<String, Long> counts = new TreeMap<>();
+		//TODO: allow the original randomized candle processing to happen via configuration.
+		final var sortedMarkets = new TreeMap<>(markets);
+
 		for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
-			//TODO: allow the original randomized candle processing to happen via configuration.
-			for (Map.Entry<String, Enumeration<Candle>> e : new TreeMap<>(markets).entrySet()) {
+
+			for (Map.Entry<String, Enumeration<Candle>> e : sortedMarkets.entrySet()) {
 				ran = true;
 				String symbol = e.getKey();
 				Enumeration<Candle> it = e.getValue();
@@ -172,7 +174,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		for (AccountManager account : accounts()) {
 			String id = account.getClient().getId();
 			System.out.print("-------");
-			if(parameters != null && parameters != Parameters.NULL){
+			if (parameters != null && parameters != Parameters.NULL) {
 				System.out.print(" | Parameters: " + parameters);
 			}
 			if (StringUtils.isNotBlank(id)) {
@@ -182,7 +184,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			System.out.print(account.toString());
 			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
 
-			account.getAllTradingManagers().forEach(t->t.getTrader().notifySimulationEnd());
+			account.getAllTradingManagers().forEach(t -> t.getTrader().notifySimulationEnd());
 		}
 	}
 
