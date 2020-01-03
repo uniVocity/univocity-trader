@@ -89,7 +89,7 @@ public class CandleRepository {
 		return true;
 	}
 
-	protected Enumeration<Candle> toEnumeration(String symbol, Runnable readingProcess, Collection<Candle> out, boolean[] ended) {
+	protected Enumeration<Candle> toEnumeration(String symbol, Instant from, Instant to, Runnable readingProcess, Collection<Candle> out, boolean[] ended) {
 		if (!(out instanceof BlockingQueue)) {
 			readingProcess.run();
 			cachedResults.put(symbol, out);
@@ -123,7 +123,7 @@ public class CandleRepository {
 		};
 	}
 
-	protected void storeCandle(String symbol, Collection<Candle> out, Candle candle) {
+	protected void storeCandle(String symbol, Instant from, Instant to, Collection<Candle> out, Candle candle) {
 		out.add(candle);
 	}
 
@@ -131,7 +131,7 @@ public class CandleRepository {
 		ended[0] = true;
 	}
 
-	private Enumeration<Candle> executeQuery(String symbol, String query, Collection<Candle> out) {
+	private Enumeration<Candle> executeQuery(String symbol, String query, Instant from, Instant to, Collection<Candle> out) {
 		boolean[] ended = new boolean[]{false};
 
 		final long start = System.currentTimeMillis();
@@ -146,7 +146,7 @@ public class CandleRepository {
 
 				while (rs.next()) {
 					Candle candle = CANDLE_MAPPER.mapRow(rs, 0);
-					storeCandle(symbol, out, candle);
+					storeCandle(symbol, from, to, out, candle);
 					count++;
 				}
 			} catch (SQLException e) {
@@ -157,7 +157,7 @@ public class CandleRepository {
 			}
 		};
 
-		return toEnumeration(symbol, readingProcess, out, ended);
+		return toEnumeration(symbol, from, to, readingProcess, out, ended);
 	}
 
 	public void clearCaches() {
@@ -245,7 +245,7 @@ public class CandleRepository {
 			};
 		}
 
-		return executeQuery(symbol, query, out);
+		return executeQuery(symbol, query, from, to, out);
 	}
 
 	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {

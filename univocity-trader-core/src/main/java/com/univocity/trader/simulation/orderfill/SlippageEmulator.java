@@ -199,7 +199,6 @@ public class SlippageEmulator implements OrderFillEmulator {
 				}
 				decimals++;
 			}
-
 		}
 
 		return decimals;
