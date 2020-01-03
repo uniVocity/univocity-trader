@@ -92,7 +92,7 @@ public class Trader {
 	 * <ol>
 	 * <li>the account has assets available to sell (via {@link TradingManager#hasAssets(Candle, boolean)});</li>
 	 * <li>none of the associated strategy monitors (from {@link #monitors()} produce {@code false} upon
-	 * invoking {@link StrategyMonitor#allowExit()};</li>
+	 * invoking {@link StrategyMonitor#allowExit(Trade)};</li>
 	 * <li>the {@link OrderRequest} processed by the {@link OrderManager} associated with the symbol is not cancelled
 	 * (i.e. {@link OrderRequest#isCancelled()})</li>
 	 * </ol>
@@ -103,7 +103,7 @@ public class Trader {
 	 * <li>signal = {@code NEUTRAL}: Will simply update the statistics of any open trades.</li>
 	 * </ul>
 	 * When there is a trade open, regardless of the signal received, all strategy monitors (from
-	 * {@link #monitors()} will have their {@link StrategyMonitor#handleStop(Signal, Strategy)} method called
+	 * {@link #monitors()} will have their {@link StrategyMonitor#handleStop(Trade, Signal, Strategy)} method called
 	 * to determine whether or not to exit the trade. If any one of these calls return
 	 * an exit message, the assets will be sold, {@link Trade#stopped()} will evaluate to {@code true} and {@link Trade#exitReason()}
 	 * will return the reason for exiting the trade.
@@ -355,7 +355,7 @@ public class Trader {
 	 * Tries to exit a current trade to immediately buy into another instrument. In cases where it's supported, such as currencies and crypto, a "direct" switch will be executed to save trading fees;
 	 * i.e. if there's an open position on BTCUSDT, and the exit symbol is ETH, a single SELL order of symbol BTCETH will be executed, selling BTC to open a position in ETH. If no compatible trading
 	 * symbols exists, or the market operates just with stocks, the current position will be sold in order to make funds available for buying into the next instrument. Using the previous example, BTC
-	 * would be sold back into USDT, and another BUY order would be made using the USDT funds to buy ETH. If any call {@link StrategyMonitor#allowTradeSwitch(String, Candle, String)} evaluates to
+	 * would be sold back into USDT, and another BUY order would be made using the USDT funds to buy ETH. If any call {@link StrategyMonitor#allowTradeSwitch(Trade, String, Candle, String)} evaluates to
 	 * {@code false}, the "switch" operation will be cancelled, otherwise the current open position will be closed to release funds for the trader to BUY into the exitSymbol.
 	 *
 	 * @param exitSymbol   the new instrument to be bought into using the funds allocated by the current open order (in {@link #symbol()}.

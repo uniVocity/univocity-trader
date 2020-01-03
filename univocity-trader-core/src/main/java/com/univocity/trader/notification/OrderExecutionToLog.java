@@ -33,7 +33,7 @@ public class OrderExecutionToLog implements OrderListener {
 			if (order.getStatus() != Order.Status.FILLED && order.getRemainingQuantity().compareTo(BigDecimal.ZERO) > 0) {
 				details += order.getFormattedFillPct() + " filled, ";
 			}
-			details += (order.isBuy() ? "spent " : "sold ") + "$ " + f.priceToString(order.getTotalTraded());
+			details += (order.isBuy() ? "spent" : "sold") + " $" + f.priceToString(order.getTotalTraded());
 			details += time;
 		}
 		return details;
@@ -63,21 +63,18 @@ public class OrderExecutionToLog implements OrderListener {
 			if (order.isBuy()) {
 				if (order.isFinalized()) {
 					details += " + " + printFillDetails(order, trade, rf);
+					details += ". Worth $" + rf.priceToString(trader.assetQuantity() * trader.lastClosingPrice()) + " " + trader.referenceCurrencySymbol() + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
 				} else {
-					details += " + PENDING     total committed: $" + rf.priceToString(order.getTotalOrderAmount()) + " " + trader.referenceCurrencySymbol();
-				}
-
-				if (order.isFinalized()) {
-					details += ". Worth ~$" + rf.priceToString(trader.assetQuantity() * trader.lastClosingPrice()) + " " + trader.referenceCurrencySymbol() + " (free: $" + rf.priceToString(trader.balance().getFree()) + ")";
+					details += " + PENDING     committed $" + rf.priceToString(order.getTotalOrderAmount()) + " " + trader.referenceCurrencySymbol();
 				}
 			} else {
 				if (order.isFinalized()) {
-					details += " - " + printFillDetails(order, trade, rf) + ", P/L: $" + rf.priceToString(trade.actualProfitLoss()) + " [" + trade.formattedProfitLossPct() + "] ";
-					details += " Holdings ~$" + rf.priceToString(trader.holdings()) + " " + trader.referenceCurrencySymbol() + " (free: $" + rf.priceToString(trader.balance().getFree()) + ")";
+					details += " - " + printFillDetails(order, trade, rf) + ". P/L $" + rf.priceToString(trade.actualProfitLoss()) + " [" + trade.formattedProfitLossPct() + "].";
+					details += " Holdings $" + rf.priceToString(trader.holdings()) + " " + trader.referenceCurrencySymbol() + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
 				} else {
-					details += " - PENDING     order value: $" + rf.priceToString(order.getTotalOrderAmount()) + " " + trader.referenceCurrencySymbol();
-					details += " expected returns: " + trade.formattedEstimateProfitLossPercentage(order) + " ";
-					details += " >> " + trade.tradeLength() + " ticks >> [Min: $" + f.priceToString(trade.minPrice()) + " (" + trade.formattedMinChangePct() + ") - Max: $" + f.priceToString(trade.maxPrice()) + " (" + trade.formattedMaxChangePct() + ")]";
+					details += " - PENDING     worth $" + rf.priceToString(order.getTotalOrderAmount()) + " " + trader.referenceCurrencySymbol();
+					details += ". Expected P/L " + trade.formattedEstimateProfitLossPercentage(order);
+					details += " | " + trade.tradeLength() + " ticks [min $" + f.priceToString(trade.minPrice()) + " (" + trade.formattedMinChangePct() + "), max $" + f.priceToString(trade.maxPrice()) + " (" + trade.formattedMaxChangePct() + ")]";
 					details += " " + trade.exitReason();
 				}
 			}
