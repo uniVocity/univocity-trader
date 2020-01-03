@@ -125,7 +125,8 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 //		Map<String, Long> counts = new TreeMap<>();
 		for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
-			for (Map.Entry<String, Enumeration<Candle>> e : markets.entrySet()) {
+			//TODO: allow the original randomized candle processing to happen via configuration.
+			for (Map.Entry<String, Enumeration<Candle>> e : new TreeMap<>(markets).entrySet()) {
 				ran = true;
 				String symbol = e.getKey();
 				Enumeration<Candle> it = e.getValue();

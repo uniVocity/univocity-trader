@@ -46,8 +46,8 @@ public class Trade implements Comparable<Trade> {
 	private double totalUnits;
 
 	private int ticks;
-	private double max = Double.MIN_VALUE;
-	private double min = Double.MAX_VALUE;
+	private double max;
+	private double min;
 	private double minChange;
 	private double maxChange;
 	private double change;
@@ -65,6 +65,8 @@ public class Trade implements Comparable<Trade> {
 		this.firstCandle = trader.latestCandle();
 		this.boughtStrategy = boughtStrategy;
 		this.monitors = trader.monitors();
+
+		this.max = this.min = firstCandle.close;
 
 		increasePosition(buyOrder);
 	}

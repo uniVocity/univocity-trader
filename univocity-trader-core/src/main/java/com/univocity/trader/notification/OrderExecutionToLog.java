@@ -60,7 +60,7 @@ public class OrderExecutionToLog implements OrderListener {
 			price = StringUtils.rightPad(price, maxPriceLength);
 
 			String details = trader.latestCandle().getFormattedCloseTime("yy-MM-dd HH:mm") + " ";
-			details += trader.assetSymbol() + " " + type + " " + quantity + " @ $" + price;
+			details += StringUtils.rightPad(trader.assetSymbol(), 8) + " " + type + " " + quantity + " @ $" + price;
 			if (order.isBuy()) {
 				if (order.isFinalized()) {
 					details += " + " + printFillDetails(order, trade, rf);
