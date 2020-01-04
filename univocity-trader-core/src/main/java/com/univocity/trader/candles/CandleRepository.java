@@ -382,6 +382,4 @@ public class CandleRepository {
 		query += " ORDER BY close_time DESC LIMIT 1";
 		return db().queryForObject(query, CANDLE_MAPPER);
 	}
-
-
 }

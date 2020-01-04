@@ -22,7 +22,6 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 	private static final Logger log = LoggerFactory.getLogger(MarketSimulator.class);
 
-	private final Map<String, Engine[]> symbolHandlers = new HashMap<>();
 	private final Supplier<Exchange<?, A>> exchangeSupplier;
 	private CandleRepository candleRepository;
 	private ExecutorService executor;
@@ -34,7 +33,6 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 
 	private void initialize() {
-		symbolHandlers.clear();
 		resetBalances();
 	}
 
@@ -60,8 +58,9 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	}
 
 	protected final void executeSimulation(Parameters parameters) {
-
 		Set<Object> allInstances = new HashSet<>();
+		Map<String, Engine[]> symbolHandlers = new HashMap<>();
+
 		getAllPairs().forEach((symbol, pair) -> {
 			String assetSymbol = pair[0];
 			String fundSymbol = pair[1];
@@ -79,7 +78,6 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 				SimulatedExchange exchange = new SimulatedExchange(accountManager);
 				exchange.setSymbolInformation(this.symbolInformation);
 				SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange);
-//			exchange.setMainTradeSymbols(mainTradeSymbols);
 
 				TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, accountManager, assetSymbol, fundSymbol, parameters);
 
@@ -95,12 +93,9 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		allInstances.clear();
 
 		ConcurrentHashMap<String, Enumeration<Candle>> markets = new ConcurrentHashMap<>();
-		HashMap<String, Candle> pending = new HashMap<>();
 
 		LocalDateTime start = getSimulationStart();
 		LocalDateTime end = getSimulationEnd();
-		final long startTime = getStartTime();
-		final long endTime = getEndTime();
 
 		int activeQueries = 0;
 		Map<String, CompletableFuture<Enumeration<Candle>>> futures = new HashMap<>();
@@ -121,53 +116,77 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			}
 		});
 
-		boolean ran = false;
-
 		//TODO: allow the original randomized candle processing to happen via configuration.
 		final var sortedMarkets = new TreeMap<>(markets);
+		MarketReader[] readers = buildMarketReaderList(sortedMarkets, symbolHandlers);
+
+		executeSimulation(readers);
+	}
+
+	private void executeSimulation(MarketReader[] readers) {
+		LocalDateTime start = getSimulationStart();
+		LocalDateTime end = getSimulationEnd();
+
+		final long startTime = getStartTime();
+		final long endTime = getEndTime();
+
+		boolean ran = false;
+
+
 
 		for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
-
-			for (Map.Entry<String, Enumeration<Candle>> e : sortedMarkets.entrySet()) {
+			boolean resetClock = false;
+			for (int i = 0; i < readers.length; i++) {
+				MarketReader reader = readers[i];
 				ran = true;
-				String symbol = e.getKey();
-				Enumeration<Candle> it = e.getValue();
-				Candle candle = pending.get(symbol);
+				Candle candle = reader.pending;
 				if (candle != null) {
 					if (candle.openTime + 1 >= clock && candle.openTime <= clock + MINUTE.ms - 1) {
-						Engine[] engines = symbolHandlers.get(symbol);
-
-						for (int i = 0; i < engines.length; i++) {
-							engines[i].process(candle, false);
+						for (int j = 0; j < reader.engines.length; j++) {
+							reader.engines[j].process(candle, false);
 						}
 
-//						counts.compute(symbol, (p, c) -> c == null ? 1 : c + 1);
-						pending.remove(symbol);
-						if (it.hasMoreElements()) {
-							Candle next = it.nextElement();
+						reader.pending = null;
+						if (reader.input.hasMoreElements()) {
+							Candle next = reader.input.nextElement();
 							if (next != null) {
-								pending.put(symbol, next);
-								if (next.openTime + 1 >= clock && next.openTime <= clock + MINUTE.ms - 1) {
-									clock -= MINUTE.ms;
+								reader.pending = next;
+								if (!resetClock && next.openTime + 1 >= clock && next.openTime <= clock + MINUTE.ms - 1) {
+									resetClock = true;
 								}
 							}
 						}
 					}
 				} else {
-					if (it.hasMoreElements()) {
-						Candle next = it.nextElement();
+					if (reader.input.hasMoreElements()) {
+						Candle next = reader.input.nextElement();
 						if (next != null) {
-							pending.put(symbol, next);
+							reader.pending = next;
 						}
 					}
 				}
+			}
+			if(resetClock) {
+				clock -= MINUTE.ms;
 			}
 		}
 		if (!ran) {
 			throw new IllegalStateException("No candles processed in real time trading simulation from " + start + " to " + end);
 		}
+	}
 
-//		System.out.println("Processed candle counts:" + counts);
+	private MarketReader[] buildMarketReaderList(Map<String, Enumeration<Candle>> markets, Map<String, Engine[]> symbolHandlers) {
+		List<MarketReader> out = new ArrayList<>();
+
+		for (Map.Entry<String, Enumeration<Candle>> e : markets.entrySet()) {
+			MarketReader reader = new MarketReader();
+			reader.symbol = e.getKey();
+			reader.engines = symbolHandlers.get(e.getKey());
+			reader.input = e.getValue();
+			out.add(reader);
+		}
+
+		return out.toArray(new MarketReader[0]);
 	}
 
 	private void reportResults(Parameters parameters) {
@@ -208,5 +227,12 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		for (String symbol : symbols) {
 			candleRepository.fillHistoryGaps(exchange, symbol, start, configuration.tickInterval());
 		}
+	}
+
+	private static class MarketReader {
+		String symbol;
+		Enumeration<Candle> input;
+		Candle pending;
+		Engine[] engines;
 	}
 }
