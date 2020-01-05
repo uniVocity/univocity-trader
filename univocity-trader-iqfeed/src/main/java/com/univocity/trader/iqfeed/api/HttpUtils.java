@@ -1,4 +1,4 @@
-package com.univocity.trader.vendor.iqfeed.api.client;
+package com.univocity.trader.iqfeed.api;
 
 import io.netty.channel.*;
 import org.asynchttpclient.*;

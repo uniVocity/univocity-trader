@@ -1,6 +1,6 @@
-package com.univocity.trader.vendor.iqfeed.api.client.exception;
+package com.univocity.trader.iqfeed.api.exception;
 
-import com.univocity.trader.vendor.iqfeed.api.client.*;
+import com.univocity.trader.iqfeed.api.*;
 
 public class IQFeedApiException extends RuntimeException {
 	private IQFeedApiError error;

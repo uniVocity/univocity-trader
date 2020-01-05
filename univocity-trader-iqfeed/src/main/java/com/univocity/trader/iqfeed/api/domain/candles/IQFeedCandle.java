@@ -1,4 +1,4 @@
-package com.univocity.trader.vendor.iqfeed.api.client.domain.candles;
+package com.univocity.trader.iqfeed.api.domain.candles;
 
 // TODO: extend standard Candle class?
 public class IQFeedCandle {

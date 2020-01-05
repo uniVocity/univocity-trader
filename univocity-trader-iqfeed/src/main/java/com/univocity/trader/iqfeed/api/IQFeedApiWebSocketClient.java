@@ -1,7 +1,7 @@
-package com.univocity.trader.vendor.iqfeed.api.client;
+package com.univocity.trader.iqfeed.api;
 
-import com.univocity.trader.vendor.iqfeed.api.client.domain.candles.*;
-import com.univocity.trader.vendor.iqfeed.api.client.domain.request.*;
+import com.univocity.trader.iqfeed.api.domain.candles.*;
+import com.univocity.trader.iqfeed.api.domain.request.*;
 
 import java.io.*;
 import java.util.*;

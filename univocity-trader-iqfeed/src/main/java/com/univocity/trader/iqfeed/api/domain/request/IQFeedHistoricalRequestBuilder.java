@@ -1,4 +1,4 @@
-package com.univocity.trader.vendor.iqfeed.api.client.domain.request;
+package com.univocity.trader.iqfeed.api.domain.request;
 
 //@author jecker
 

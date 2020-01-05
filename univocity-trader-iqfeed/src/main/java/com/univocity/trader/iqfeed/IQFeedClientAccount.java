@@ -2,7 +2,7 @@ package com.univocity.trader.iqfeed;
 
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
-import com.univocity.trader.vendor.iqfeed.api.client.*;
+import com.univocity.trader.iqfeed.api.*;
 import io.netty.channel.*;
 import io.netty.channel.nio.*;
 import org.asynchttpclient.*;

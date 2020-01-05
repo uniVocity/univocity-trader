@@ -1,9 +1,8 @@
-package com.univocity.trader.vendor.iqfeed.api.client.impl;
+package com.univocity.trader.iqfeed.api.impl;
 
-import com.univocity.trader.vendor.iqfeed.api.client.*;
-import com.univocity.trader.vendor.iqfeed.api.client.constant.*;
-import com.univocity.trader.vendor.iqfeed.api.client.domain.candles.*;
-import com.univocity.trader.vendor.iqfeed.api.client.domain.request.*;
+import com.univocity.trader.iqfeed.api.*;
+import com.univocity.trader.iqfeed.api.domain.candles.*;
+import com.univocity.trader.iqfeed.api.domain.request.*;
 import org.asynchttpclient.*;
 import org.asynchttpclient.ws.*;
 import org.slf4j.*;
@@ -55,7 +54,7 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
 	// TODO: check on this method here
 	private WebSocket createNewWebSocket(IQFeedApiWebSocketListener<?> listener) {
 		listener.setProcessor(processor);
-		String streamingUrl = IQFeedApiConstants.HOST + ":" + IQFeedApiConstants.PORT;
+		String streamingUrl = com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedApiConstants.HOST + ":" + com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedApiConstants.PORT;
 		try {
 			return client.prepareGet(streamingUrl).execute(new WebSocketUpgradeHandler.Builder().addWebSocketListener(listener).build()).get();
 		} catch (Exception any) {

@@ -1,6 +1,6 @@
-package com.univocity.trader.vendor.iqfeed.api.client;
+package com.univocity.trader.iqfeed.api;
 
-import com.univocity.trader.vendor.iqfeed.api.client.impl.*;
+import com.univocity.trader.iqfeed.api.impl.*;
 import org.asynchttpclient.*;
 
 public class IQFeedApiClientFactory {

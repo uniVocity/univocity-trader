@@ -1,8 +1,8 @@
 package com.univocity.trader.iqfeed;
 
 import com.univocity.trader.*;
+import com.univocity.trader.iqfeed.api.domain.candles.*;
 import com.univocity.trader.simulation.*;
-import com.univocity.trader.vendor.iqfeed.api.client.domain.candles.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>

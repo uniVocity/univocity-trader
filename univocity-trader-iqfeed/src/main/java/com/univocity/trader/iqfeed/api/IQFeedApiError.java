@@ -1,4 +1,4 @@
-package com.univocity.trader.vendor.iqfeed.api.client;
+package com.univocity.trader.iqfeed.api;
 
 import com.univocity.trader.vendor.iqfeed.api.client.constant.*;
 import org.apache.commons.lang3.builder.*;
@@ -10,7 +10,7 @@ public class IQFeedApiError {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, IQFeedApiConstants.TO_STRING_BUILDER_STYLE)
+		return new ToStringBuilder(this, com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedApiConstants.TO_STRING_BUILDER_STYLE)
 				.append("code", code)
 				.append("msg", msg)
 				.toString();
