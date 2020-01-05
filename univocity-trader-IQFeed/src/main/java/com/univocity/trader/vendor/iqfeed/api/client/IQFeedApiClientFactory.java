@@ -16,15 +16,16 @@ public class IQFeedApiClientFactory {
     private AsyncHttpClient client;
 
 
-    private IQFeedApiClientFactory(){
+    private IQFeedApiClientFactory(AsyncHttpClient client){
+        this.client = client;
     }
 
-    public static IQFeedApiClientFactory newInstance() {
-        return new IQFeedApiClientFactory();
+    public static IQFeedApiClientFactory newInstance(AsyncHttpClient client) {
+        return new IQFeedApiClientFactory(client);
     }
 
-    public IQFeedApiWebSocketClient newWebSocketClient(String host, String port) {
-        return new IQFeedApiWebSocketClientImpl(this.client, host, port, new IQFeedApiWebSocketListener<>());
+    public IQFeedApiWebSocketClient newWebSocketClient() {
+        return new IQFeedApiWebSocketClientImpl(client, new IQFeedApiWebSocketListener<>());
     }
 
 }

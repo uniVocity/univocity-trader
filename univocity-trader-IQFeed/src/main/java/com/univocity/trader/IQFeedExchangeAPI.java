@@ -7,7 +7,7 @@ import com.univocity.trader.vendor.iqfeed.api.client.*;
 import com.univocity.trader.candles.SymbolInformation;
 import com.univocity.trader.vendor.iqfeed.api.client.*;
 import com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedApiConstants;
-import com.univocity.trader.vendor.iqfeed.api.client.domain.market.Candlestick;
+import com.univocity.trader.vendor.iqfeed.api.client.domain.candles.IQFeedCandle;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequest;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequestBuilder;
 import io.netty.channel.*;
@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
-public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
+public class IQFeedExchangeAPI implements ExchangeApi<IQFeedCandle> {
 
     private static final Logger logger = LoggerFactory.getLogger(IQFeedExchangeAPI.class);
 
@@ -67,7 +67,7 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     };
 
     @Override
-    public Candlestick getLatestTick(String symbol, TimeInterval interval){
+    public IQFeedCandle getLatestTick(String symbol, TimeInterval interval){
         // TODO: implement
         return null;
     }
@@ -83,7 +83,7 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     }
 
     @Override
-    public List<Candlestick> getLatestTicks(String symbol, TimeInterval interval){
+    public List<IQFeedCandle> getLatestTicks(String symbol, TimeInterval interval){
         // TODO: implement
         ChronoUnit timeUnit  = null;
         switch(TimeInterval.getUnitStr(interval.unit)){
@@ -113,13 +113,13 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
                 .setEndDateTime(Instant.now().toEpochMilli())
                 .build();
 
-        List<Candlestick> candles = socketClient().getHistoricalCandlestickBars(request);
+        List<IQFeedCandle> candles = socketClient().getHistoricalCandlestickBars(request);
         return candles;
     }
 
     //TODO: implement
     @Override
-    public List<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime){
+    public List<IQFeedCandle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime){
         StringBuilder requestIDBuilder = new StringBuilder("IQFeedHistoricalRequest_" + Instant.now().toString());
         requestIDBuilder.append("_symbol:" + symbol+ "_interval:" + interval.toString() + "_start:" + startTime + "_end:" + endTime);
         IQFeedHistoricalRequest request = new IQFeedHistoricalRequestBuilder()
@@ -134,19 +134,19 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     // TODO: add callback for connection login via IQFeed
 
     @Override
-    public Candle generateCandle(Candlestick c) {
+    public Candle generateCandle(IQFeedCandle c) {
         return new Candle(
                 c.getOpenTime(),
                 c.getCloseTime(),
-                Double.parseDouble(c.getOpen()),
-                Double.parseDouble(c.getHigh()),
-                Double.parseDouble(c.getLow()),
-                Double.parseDouble(c.getClose()),
-                Double.parseDouble(c.getVolume())
+                c.getOpen(),
+                c.getHigh(),
+                c.getLow(),
+                c.getClose(),
+                c.getVolume()
         );
     }
 
-    public PreciseCandle generatePreciseCandle(Candlestick c){
+    public PreciseCandle generatePreciseCandle(IQFeedCandle c){
         return new PreciseCandle(
                 c.getOpenTime(),
                 c.getCloseTime(),
@@ -176,8 +176,9 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
         return null;
     }
 
+    // TODO: implement this...
     @Override
-    public void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candlestick> consumer){
+    public void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<IQFeedCandle> consumer){
     }
 
     @Override
@@ -191,14 +192,8 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
 
     private IQFeedApiWebSocketClient socketClient(){
         if(socketClient == null){
-            IQFeedApiClientFactory factory = IQFeedApiClientFactory.newInstance(
-                    IQFeedApiConstants.IQPORTAL_PATH,
-            IQFeedApiConstants.IQPRODUCT,
-            IQFeedApiConstants.IQVERSION,
-            IQFeedApiConstants.IQLOGIN,
-            IQFeedApiConstants.IQPASS,
-            true, true, asyncHttpClient);
-            socketClient = factory.newWebSocketClient(IQFeedApiConstants.HOST, IQFeedApiConstants.PORT);
+            IQFeedApiClientFactory factory = IQFeedApiClientFactory.newInstance(asyncHttpClient);
+            socketClient = factory.newWebSocketClient();
         }
         return socketClient;
     }

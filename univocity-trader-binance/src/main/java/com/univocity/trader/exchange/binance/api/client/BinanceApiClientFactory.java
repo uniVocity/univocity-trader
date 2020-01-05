@@ -34,7 +34,7 @@ public class BinanceApiClientFactory {
 
   /**
    * New instance.
-   *
+
    * @param apiKey the API key
    * @param secret the Secret
    *

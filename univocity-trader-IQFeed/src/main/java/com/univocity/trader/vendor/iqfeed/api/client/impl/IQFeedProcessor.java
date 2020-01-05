@@ -2,6 +2,8 @@ package com.univocity.trader.vendor.iqfeed.api.client.impl;
 
 import com.univocity.trader.candles.Candle;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.candles.IQFeedCandle;
+import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequest;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,17 +14,18 @@ public class IQFeedProcessor {
 
     public List<IQFeedCandle> candles = new ArrayList<>();
     public Object in;
-    public String latestHeader;
+    public IQFeedHistoricalRequest latestRequest;
+    public Long closeOffset;
 
     public void process(String payload){
-        String dataQualifier = latestHeader.substring(1,2);
-        switch(dataQualifier.toLowerCase()) {
-            case "i":
+        String dataQualifier = latestRequest.getHeader().substring(1,2);
+        switch(dataQualifier.toUpperCase()) {
+            case "I":
                 this.candles = processHIX(payload);
-            case "t":
+            case "T":
                 this.candles = processHTX(payload);
-            case "m": case "d": case"w":
-                this.candles = processHMX(payload);
+            case "M": case "D": case"W":
+                this.candles = processHDX(payload);
         }
     }
 
@@ -84,7 +87,8 @@ public class IQFeedProcessor {
         for(String line : payload.split("\n")){
            String[] vals = line.split(",");
            String ID = vals[0];
-            Long dateTime = Long.valueOf(vals[1]);
+            Long openTime = formatDate(vals[1]);
+            Long closeTime = formatDate(vals[1]) + this.latestRequest.getIntervalMillis();
             Double last = Double.valueOf(vals[2]);
             Double lastSize = Double.valueOf(vals[3]);
             Double totalVolume = Double.valueOf(vals[4]);
@@ -96,7 +100,8 @@ public class IQFeedProcessor {
             String aggressor  = vals[10];
             String daycode  = vals[11];
             IQFeedCandle candle = new IQFeedCandle.IQFeedCandleBuilder()
-                    .setDateTime(dateTime)
+                    .setOpenTime(openTime)
+                    .setCloseTime(closeTime)
                     .setLast(last)
                     .setLastSize(lastSize)
                     .setTotalVolume(totalVolume)
@@ -118,32 +123,36 @@ public class IQFeedProcessor {
         for(String line : payload.split("\n")) {
             String[] vals = line.split(",");
             String ID = vals[0];
-            String dateTime = vals[1];
+            Long openTime = formatDate(vals[1]);
+            Long closeTime = openTime + this.latestRequest.getIntervalMillis();
             Double open = Double.valueOf(vals[4]);
             Double high = Double.valueOf(vals[2]);
             Double low = Double.valueOf(vals[3]);
             Double close = Double.valueOf(vals[5]);
-            String totalVolume = vals[6];
-            String periodVolume = vals[7];
-            String numTrades = vals[8];
+            Double totalVolume = Double.valueOf(vals[6]);
+            Double periodVolume = Double.valueOf(vals[7]);
+            Double numTrades = Double.valueOf(vals[8]);
             IQFeedCandle candle = new IQFeedCandle.IQFeedCandleBuilder()
-                    .setOpenTime(formatDate(dateTime))
+                    .setOpenTime(openTime)
+                    .setCloseTime(closeTime)
                     .setOpen(open)
                     .setHigh(high)
                     .setLow(low)
                     .setClose(close)
+                    .setVolume(periodVolume)
                     .build();
             candles.add(candle);
         }
         return candles;
     }
 
-    public List<IQFeedCandle> processHMX(String payload){
+    public List<IQFeedCandle> processHDX(String payload){
         List<IQFeedCandle> candles = new ArrayList<>();
         for(String line : payload.split("\n")){
             String[] vals = line.split(",");
             String ID = vals[0];
-            String dateTime = vals[1];
+            Long openTime = formatDate(vals[1]);
+            Long closeTime = openTime + this.latestRequest.getIntervalMillis();
             Double high = Double.valueOf(vals[2]);
             Double low = Double.valueOf(vals[3]);
             Double open = Double.valueOf(vals[4]);
@@ -151,11 +160,13 @@ public class IQFeedProcessor {
             Double periodVolume = Double.valueOf(vals[6]);
             Double openInterest  = Double.valueOf(vals[7]);
             IQFeedCandle candle = new IQFeedCandle.IQFeedCandleBuilder()
-                    .setOpenTime(formatDate(dateTime))
+                    .setOpenTime(openTime)
+                    .setCloseTime(closeTime)
                     .setHigh(high)
                     .setLow(low)
                     .setOpen(open)
                     .setClose(close)
+                    .setVolume(periodVolume)
                     .setPeriodVolume(periodVolume)
                     .setOpenInterest(openInterest)
                     .build();
@@ -200,12 +211,12 @@ public class IQFeedProcessor {
         return null;
     }
 
-    public String getLatestHeader(){
-        return this.latestHeader;
+    public IQFeedHistoricalRequest getLatestRequest(){
+        return this.latestRequest;
     }
 
-    public void setLatestHeader(String latestHeader){
-        this.latestHeader = latestHeader;
+    public void setLatestRequest(IQFeedHistoricalRequest latestRequest){
+        this.latestRequest = latestRequest;
     }
 
     public void setCandles(List<IQFeedCandle> candles){

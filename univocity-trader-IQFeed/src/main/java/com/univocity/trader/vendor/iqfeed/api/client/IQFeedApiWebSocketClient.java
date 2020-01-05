@@ -14,7 +14,7 @@ public interface IQFeedApiWebSocketClient extends Closeable {
 
     // todo - add more methods for IQFeed
 
-    List<IQFeedCandle> getCandlestickBars(String request);
+    List<IQFeedCandle> getCandlestickBars(IQFeedHistoricalRequest request);
 
     List<IQFeedCandle> getHistoricalCandlestickBars(IQFeedHistoricalRequest request);
 

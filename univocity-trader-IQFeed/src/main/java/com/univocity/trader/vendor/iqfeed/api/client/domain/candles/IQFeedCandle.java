@@ -3,12 +3,21 @@ package com.univocity.trader.vendor.iqfeed.api.client.domain.candles;
 import com.univocity.trader.candles.Candle;
 import com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedApiConstants;
 
-public class IQFeedCandle extends Candle {
+// TODO: extend standard Candle class?
+public class IQFeedCandle {
 
-    public IQFeedCandle(Long dateTime, Double last, Double lastSize, Double periodVolume, Double totalVolume,
-                        Double numTrades, Double bid, Double ask, String basis, String marketCenter, String conditions,
-                        String aggressor, String dayCode, String ID) {
-        this.dateTime = dateTime;
+    public IQFeedCandle(Double open, Double high, Double low, Double close, Double volume, Long opentime, Long closeTime,
+                        Double openInterest, Double last, Double lastSize, Double periodVolume, Double totalVolume, Double numTrades, Double bid,
+                        Double ask, String basis, String marketCenter, String conditions, String aggressor, String dayCode, String ID) {
+
+        this.openTime = opentime;
+        this.closeTime = closeTime;
+        this.openInterest = openInterest;
+        this.open = open;
+        this.high = high;
+        this.low = low;
+        this.close = close;
+        this.volume = volume;
         this.last = last;
         this.lastSize = lastSize;
         this.periodVolume = periodVolume;
@@ -24,7 +33,14 @@ public class IQFeedCandle extends Candle {
         this.ID = ID;
     }
 
-    Long dateTime;
+    Double open;
+    Double high;
+    Double low;
+    Double close;
+    Double volume;
+
+    Long openTime;
+    Long closeTime;
     Double last;
     Double lastSize;
     Double periodVolume;
@@ -40,7 +56,47 @@ public class IQFeedCandle extends Candle {
     String dayCode;
     String ID;
 
-    public Double getOpenInterest() {
+    public Double getOpen() {
+        return open;
+    }
+
+    public void setOpen(Double open) {
+        this.open = open;
+    }
+
+    public Double getHigh() {
+        return high;
+    }
+
+    public void setHigh(Double high) {
+        this.high = high;
+    }
+
+    public Double getLow() {
+        return low;
+    }
+
+    public void setLow(Double low) {
+        this.low = low;
+    }
+
+    public Double getClose() {
+        return close;
+    }
+
+    public void setClose(Double close) {
+        this.close = close;
+    }
+
+    public Double getVolume() {
+        return volume;
+    }
+
+    public void setVolume(Double volume) {
+        this.volume = volume;
+    }
+
+        public Double getOpenInterest() {
         return openInterest;
     }
 
@@ -56,12 +112,20 @@ public class IQFeedCandle extends Candle {
         this.ID = ID;
     }
 
-    public Long getDateTime() {
-        return dateTime;
+    public Long getOpenTime() {
+        return openTime;
     }
 
-    public void setDateTime(Long dateTime) {
-        this.dateTime = dateTime;
+    public void setOpenTime(Long openTime) {
+        this.openTime = openTime;
+    }
+
+    public Long getCloseTime() {
+        return openTime;
+    }
+
+    public void setCloseTime(Long closeTime) {
+        this.openTime = openTime;
     }
 
     public Double getLast() {
@@ -161,15 +225,13 @@ public class IQFeedCandle extends Candle {
     }
 
     public static final class IQFeedCandleBuilder {
-        public long openTime;
-        public long closeTime;
-        public double open;
-        public double high;
-        public double low;
-        public double close;
-        public double volume;
-        public boolean merged;
-        Long dateTime;
+        Double open;
+        Double high;
+        Double low;
+        Double close;
+        Double volume;
+        Long openTime;
+        Long closeTime;
         Double last;
         Double lastSize;
         Double periodVolume;
@@ -177,13 +239,13 @@ public class IQFeedCandle extends Candle {
         Double numTrades;
         Double bid;
         Double ask;
+        Double openInterest;
         String basis;
         String marketCenter;
         String conditions;
         String aggressor;
         String dayCode;
         String ID;
-        Double openInterest;
 
         public IQFeedCandleBuilder() {
         }
@@ -192,53 +254,38 @@ public class IQFeedCandle extends Candle {
             return new IQFeedCandleBuilder();
         }
 
-        public IQFeedCandleBuilder setOpenTime(long openTime) {
-            this.openTime = openTime;
-            return this;
-        }
-
-        public IQFeedCandleBuilder setOpenInterest(Double openInterest){
-            this.openInterest = openInterest;
-            return this;
-        }
-
-        public IQFeedCandleBuilder setCloseTime(long closeTime) {
-            this.closeTime = closeTime;
-            return this;
-        }
-
-        public IQFeedCandleBuilder setOpen(double open) {
+        public IQFeedCandleBuilder setOpen(Double open) {
             this.open = open;
             return this;
         }
 
-        public IQFeedCandleBuilder setHigh(double high) {
+        public IQFeedCandleBuilder setHigh(Double high) {
             this.high = high;
             return this;
         }
 
-        public IQFeedCandleBuilder setLow(double low) {
+        public IQFeedCandleBuilder setLow(Double low) {
             this.low = low;
             return this;
         }
 
-        public IQFeedCandleBuilder setClose(double close) {
+        public IQFeedCandleBuilder setClose(Double close) {
             this.close = close;
             return this;
         }
 
-        public IQFeedCandleBuilder setVolume(double volume) {
+        public IQFeedCandleBuilder setVolume(Double volume) {
             this.volume = volume;
             return this;
         }
 
-        public IQFeedCandleBuilder setDateTime(Long dateTime) {
-            this.dateTime = dateTime;
+        public IQFeedCandleBuilder setOpenTime(Long openTime) {
+            this.openTime = openTime;
             return this;
         }
 
-        public IQFeedCandleBuilder setMerged(boolean merged) {
-            this.merged = merged;
+        public IQFeedCandleBuilder setCloseTime(Long closeTime) {
+            this.closeTime = closeTime;
             return this;
         }
 
@@ -277,6 +324,11 @@ public class IQFeedCandle extends Candle {
             return this;
         }
 
+        public IQFeedCandleBuilder setOpenInterest(Double openInterest) {
+            this.openInterest = openInterest;
+            return this;
+        }
+
         public IQFeedCandleBuilder setBasis(String basis) {
             this.basis = basis;
             return this;
@@ -308,7 +360,8 @@ public class IQFeedCandle extends Candle {
         }
 
         public IQFeedCandle build() {
-            IQFeedCandle iQFeedCandle = new IQFeedCandle(dateTime, last, lastSize, periodVolume, totalVolume, numTrades, bid, ask, basis, marketCenter, conditions, aggressor, dayCode, ID);
+            IQFeedCandle iQFeedCandle = new IQFeedCandle(open, high, low, close, volume, openTime, closeTime, openInterest, last, lastSize, periodVolume, totalVolume, numTrades, bid, ask, basis, marketCenter, conditions, aggressor, dayCode, ID);
+            iQFeedCandle.setOpenTime(openTime);
             return iQFeedCandle;
         }
     }

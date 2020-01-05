@@ -4,6 +4,7 @@ import com.univocity.trader.ClientAccountApi;
 import com.univocity.trader.IQFeedExchangeAPI;
 import com.univocity.trader.SymbolPriceDetails;
 import com.univocity.trader.account.*;
+import com.univocity.trader.vendor.iqfeed.api.client.HttpUtils;
 import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiClientFactory;
 import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiWebSocketClient;
 import com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedApiConstants;
@@ -12,7 +13,6 @@ import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import org.asynchttpclient.AsyncHttpClient;
 import org.asynchttpclient.*;
-import org.asynchttpclient.util.HttpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +30,12 @@ class IQFeedClientAccountApi implements ClientAccountApi {
 
     public IQFeedClientAccountApi(){
         this.exchangeAPI = exchangeAPI;
+
         final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
-        factory = IQFeedApiClientFactory.newInstance();
-        client = factory.newWebSocketClient(IQFeedApiConstants.HOST, IQFeedApiConstants.PORT);
+        final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 655356);
+
+        factory = IQFeedApiClientFactory.newInstance(asyncHttpClient);
+        client = factory.newWebSocketClient();
     }
 
     // unused methods - ask about adding new interface for data vendor

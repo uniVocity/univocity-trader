@@ -4,6 +4,7 @@ import com.univocity.trader.indicators.base.TimeInterval;
 import java.security.InvalidParameterException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class IQFeedHistoricalRequest {
 
 
     // optional
+    public Long intervalMillis;
     public String header;
     public String beginDate;
     public Long beginDateTime;
@@ -84,21 +86,18 @@ public class IQFeedHistoricalRequest {
             case "minute": case "min": case "m":
                 dataQualifier = "I";
                 this.interval = "60";
+                this.intervalMillis = 60000L;
                 break;
             case "d": case "day":
                 dataQualifier = "D";
+                this.intervalMillis = Long.valueOf(24*60*60*1000);
                 break;
             case "interval":
                 dataQualifier = "I";
                 break;
-            case "w":
+            case "week": case "w": case "wk":
                 dataQualifier = "W";
-                break;
-            case "wk":
-                dataQualifier = "W";
-                break;
-            case "week":
-                dataQualifier = "W";
+                this.intervalMillis = Long.valueOf(24*60*60*7*1000);
                 break;
             case "mo": case "month":
                 dataQualifier = "M";
@@ -156,4 +155,11 @@ public class IQFeedHistoricalRequest {
         this.header = header;
     }
 
+    public Long getIntervalMillis() {
+        return intervalMillis;
+    }
+
+    public void setIntervalMillis(Long intervalMillis) {
+        this.intervalMillis = intervalMillis;
+    }
 }
