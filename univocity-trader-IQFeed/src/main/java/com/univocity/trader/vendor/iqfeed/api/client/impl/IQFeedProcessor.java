@@ -1,9 +1,7 @@
 package com.univocity.trader.vendor.iqfeed.api.client.impl;
 
 import com.univocity.trader.candles.Candle;
-import com.univocity.trader.vendor.iqfeed.api.client.domain.market.Candlestick;
-import com.univocity.trader.vendor.iqfeed.api.client.domain.market.CandlestickBuilder;
-
+import com.univocity.trader.vendor.iqfeed.api.client.domain.candles.IQFeedCandle;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +10,7 @@ import java.util.List;
 public class IQFeedProcessor {
 
 
-    public List<Candlestick> candles = new ArrayList<>();
+    public List<IQFeedCandle> candles = new ArrayList<>();
     public Object in;
     public String latestHeader;
 
@@ -34,7 +32,7 @@ public class IQFeedProcessor {
         return Instant.parse(date).toEpochMilli();
     }
 
-    public List<Candlestick> processHistoricalResponse(String payload){
+    public List<IQFeedCandle> processHistoricalResponse(String payload){
         /** Result Format for HTX, HTD, and HTT requests:
          *  	Request: HTX,GOOG,10<CR><LF>
          * 2019-04-09 15:05:25.465607,1196.1200,1,513790,1196.1200,1196.3600,971,O,26,113565084,87,0,9,<CR><LF>
@@ -81,24 +79,24 @@ public class IQFeedProcessor {
         return null;
     }
 
-    public List<Candle> processHTX(String payload){
-        List<Candlestick> candles = new ArrayList<Candlestick>();
+    public List<IQFeedCandle> processHTX(String payload){
+        List<IQFeedCandle> candles = new ArrayList<>();
         for(String line : payload.split("\n")){
            String[] vals = line.split(",");
            String ID = vals[0];
-            String dateTime = vals[1];
-            String last = vals[2];
-            String lastSize = vals[3];
-            String totalVolume = vals[4];
-            String bid = vals[5];
-            String ask = vals[6];
+            Long dateTime = Long.valueOf(vals[1]);
+            Double last = Double.valueOf(vals[2]);
+            Double lastSize = Double.valueOf(vals[3]);
+            Double totalVolume = Double.valueOf(vals[4]);
+            Double bid = Double.valueOf(vals[5]);
+            Double ask = Double.valueOf(vals[6]);
             String basis  = vals[7];
             String marketCenter  = vals[8];
             String conditions  = vals[9];
             String aggressor  = vals[10];
             String daycode  = vals[11];
-            Candle candle = new CandleBuilder()
-                    .setOpenTime(formatDate(dateTime))
+            IQFeedCandle candle = new IQFeedCandle.IQFeedCandleBuilder()
+                    .setDateTime(dateTime)
                     .setLast(last)
                     .setLastSize(lastSize)
                     .setTotalVolume(totalVolume)
@@ -115,47 +113,44 @@ public class IQFeedProcessor {
         return candles;
     }
 
-    public List<Candlestick> processHIX(String payload){
-        List<Candlestick> candles = new ArrayList<Candlestick>();
+    public List<IQFeedCandle> processHIX(String payload){
+        List<IQFeedCandle> candles = new ArrayList<>();
         for(String line : payload.split("\n")) {
             String[] vals = line.split(",");
             String ID = vals[0];
             String dateTime = vals[1];
-            String high = vals[2];
-            String low = vals[3];
-            String open = vals[4];
-            String close = vals[5];
+            Double open = Double.valueOf(vals[4]);
+            Double high = Double.valueOf(vals[2]);
+            Double low = Double.valueOf(vals[3]);
+            Double close = Double.valueOf(vals[5]);
             String totalVolume = vals[6];
             String periodVolume = vals[7];
             String numTrades = vals[8];
-            Candlestick candle = new CandlestickBuilder()
+            IQFeedCandle candle = new IQFeedCandle.IQFeedCandleBuilder()
                     .setOpenTime(formatDate(dateTime))
+                    .setOpen(open)
                     .setHigh(high)
                     .setLow(low)
-                    .setOpen(open)
                     .setClose(close)
-                    .setTotalVolume(totalVolume)
-                    .setPeriodVolume(periodVolume)
-                    .setNumTrades(numTrades)
                     .build();
             candles.add(candle);
         }
         return candles;
     }
 
-    public List<Candlestick> processHMX(String payload){
-        List<Candlestick> candles = new ArrayList<>();
+    public List<IQFeedCandle> processHMX(String payload){
+        List<IQFeedCandle> candles = new ArrayList<>();
         for(String line : payload.split("\n")){
             String[] vals = line.split(",");
             String ID = vals[0];
             String dateTime = vals[1];
-            String high = vals[2];
-            String low = vals[3];
-            String open = vals[4];
-            String close = vals[5];
-            String periodVolume = vals[6];
-            String openInterest  = vals[7];
-            Candlestick candle = new CandlestickBuilder()
+            Double high = Double.valueOf(vals[2]);
+            Double low = Double.valueOf(vals[3]);
+            Double open = Double.valueOf(vals[4]);
+            Double close = Double.valueOf(vals[5]);
+            Double periodVolume = Double.valueOf(vals[6]);
+            Double openInterest  = Double.valueOf(vals[7]);
+            IQFeedCandle candle = new IQFeedCandle.IQFeedCandleBuilder()
                     .setOpenTime(formatDate(dateTime))
                     .setHigh(high)
                     .setLow(low)
@@ -183,6 +178,7 @@ public class IQFeedProcessor {
         return null;
     }
 
+    // TODO: add support for these responses
     public Object processNewsResponse(String payload){
         /**
          * examples are not properly provided for news response, will need to investigate and implement
@@ -212,11 +208,11 @@ public class IQFeedProcessor {
         this.latestHeader = latestHeader;
     }
 
-    public void setCandles(List<Candlestick> candles){
+    public void setCandles(List<IQFeedCandle> candles){
         this.candles = candles;
     }
 
-    public List<Candlestick> getCandles(){
+    public List<IQFeedCandle> getCandles(){
         return this.candles;
     }
 

@@ -21,6 +21,9 @@ public class Candle implements Comparable<Candle> {
 	public double volume;
 	public final boolean merged;
 
+	public Candle(){
+	}
+
 	public Candle(long openTime, long closeTime, double open, double high, double low, double close, double volume) {
 		this(openTime, closeTime, open, high, low, close, volume, false);
 	}
