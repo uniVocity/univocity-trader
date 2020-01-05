@@ -29,7 +29,8 @@ public class CandleRepository {
 		return out;
 	};
 
-	private final ConcurrentHashMap<String, Collection<Candle>> cachedResults = new ConcurrentHashMap<>();
+	protected final ConcurrentHashMap<String, Collection<Candle>> cachedResults = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Long> candleCounts = new ConcurrentHashMap<>();
 	private final ThreadLocal<JdbcTemplate> db;
 
 	public CandleRepository(DatabaseConfiguration config) {
@@ -59,6 +60,7 @@ public class CandleRepository {
 	private final ConcurrentHashMap<String, long[]> recentCandles = new ConcurrentHashMap<>();
 
 	public boolean addToHistory(String symbol, PreciseCandle tick, boolean initializing) {
+		candleCounts.clear();
 		try {
 			long[] times = recentCandles.get(symbol);
 			if (times != null && times[0] == tick.openTime && times[1] == tick.closeTime) {
@@ -89,14 +91,18 @@ public class CandleRepository {
 		return true;
 	}
 
-	protected Enumeration<Candle> toEnumeration(String symbol, Instant from, Instant to, Runnable readingProcess, Collection<Candle> out, boolean[] ended) {
+	protected Enumeration<Candle> cacheAndReturnResults(String symbol, String query, Instant from, Instant to, Collection<Candle> out) {
+		cachedResults.put(symbol, out);
+		return Collections.enumeration(out);
+	}
+
+	private Enumeration<Candle> toEnumeration(String symbol, String query, Instant from, Instant to, Runnable readingProcess, Collection<Candle> out, boolean[] ended) {
 		if (!(out instanceof BlockingQueue)) {
 			readingProcess.run();
-			cachedResults.put(symbol, out);
-			return Collections.enumeration(out);
+			return cacheAndReturnResults(symbol, query, from, to, out);
 		}
 
-		final BlockingQueue<Candle> queue = (BlockingQueue) out;
+		final BlockingQueue<Candle> queue = (BlockingQueue<Candle>) out;
 		new Thread(readingProcess).start();
 		return new Enumeration<>() {
 			@Override
@@ -157,7 +163,7 @@ public class CandleRepository {
 			}
 		};
 
-		return toEnumeration(symbol, from, to, readingProcess, out, ended);
+		return toEnumeration(symbol, query, from, to, readingProcess, out, ended);
 	}
 
 	public void clearCaches() {
@@ -194,42 +200,53 @@ public class CandleRepository {
 		return narrowQueryToTimeInterval(query, from == null ? null : from.toEpochMilli(), to == null ? null : to.toEpochMilli());
 	}
 
+	protected Enumeration<Candle> getCachedResults(String symbol, String query, Instant from, Instant to) {
+		Collection<Candle> cachedResult;
+		boolean waitForCache;
+		synchronized (cachedResults) {
+			cachedResult = cachedResults.get(symbol);
+			if (cachedResult != null) {
+				waitForCache = true;
+			} else {
+				cachedResults.put(symbol, Collections.emptyList());
+				waitForCache = false;
+			}
+		}
+
+		if (waitForCache) {
+			while (cachedResult == Collections.EMPTY_LIST) {
+				try {
+					Thread.sleep(100);
+					cachedResult = cachedResults.get(symbol);
+				} catch (InterruptedException e) {
+					log.error("Error waiting for cached result of query " + query, e);
+					clearCaches();
+					Thread.currentThread().interrupt();
+				}
+			}
+			return Collections.enumeration(cachedResult);
+		}
+		return null;
+	}
+
+	protected Collection<Candle> getCacheStorage(long cacheSize) {
+		return new ArrayList<>((int) cacheSize);
+	}
+
 	public Enumeration<Candle> iterate(String symbol, Instant from, Instant to, boolean cache) {
 		String query = buildCandleQuery(symbol);
 		query = narrowQueryToTimeInterval(query, from, to);
 		query += " ORDER BY open_time";
 
 		Collection<Candle> out;
-		long cacheSize = 0;
-		if (cache) {
-			Collection<Candle> cachedResult;
-			boolean waitForCache;
-			synchronized (cachedResults) {
-				cachedResult = cachedResults.get(symbol);
-				if (cachedResult != null) {
-					waitForCache = true;
-				} else {
-					cachedResults.put(symbol, Collections.emptyList());
-					waitForCache = false;
-				}
-			}
 
-			if (waitForCache) {
-				while (cachedResult == Collections.EMPTY_LIST) {
-					try {
-						Thread.sleep(100);
-						cachedResult = cachedResults.get(symbol);
-					} catch (InterruptedException e) {
-						log.error("Error waiting for cached result of query " + query, e);
-						clearCaches();
-						Thread.currentThread().interrupt();
-					}
-				}
-				return Collections.enumeration(cachedResult);
-			} else {
-				cacheSize = countCandles(symbol, from, to);
-				out = new ArrayList<>((int) cacheSize);
+		if (cache) {
+			Enumeration<Candle> cached = getCachedResults(symbol, query, from, to);
+			if (cached != null) {
+				return cached;
 			}
+			long cacheSize = countCandles(symbol, from, to);
+			out = getCacheStorage(cacheSize);
 		} else {
 			out = new ArrayBlockingQueue<>(5000) {
 				public boolean add(Candle e) {
@@ -367,7 +384,19 @@ public class CandleRepository {
 		return new TreeSet<>(db().queryForList("SELECT DISTINCT symbol FROM candle", String.class));
 	}
 
-	public long countCandles(String symbol, Instant from, Instant to) {
+	public final long countCandles(String symbol, Instant from, Instant to) {
+		String key = symbol + toMs(from) + "_" + toMs(to);
+		return candleCounts.computeIfAbsent(key, (k) -> performCandleCounting(symbol, from, to));
+	}
+
+	private Long toMs(Instant instant) {
+		if (instant == null) {
+			return 0L;
+		}
+		return instant.toEpochMilli();
+	}
+
+	protected long performCandleCounting(String symbol, Instant from, Instant to) {
 		String query = "SELECT COUNT(*) FROM candle WHERE symbol = ?";
 		query = narrowQueryToTimeInterval(query, from, to);
 		return count(query, symbol);
