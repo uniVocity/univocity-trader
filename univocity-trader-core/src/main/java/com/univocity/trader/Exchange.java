@@ -119,7 +119,6 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *                     for further processing (i.e. {@link Strategy} analysis, {@link Signal} generation and potential trading by {@link ExchangeClient})
 	 */
 	void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<T> consumer);
-
 	/**
 	 * Disconnects from the live exchange stream opened with {@link #openLiveStream(String, TimeInterval, TickConsumer)}
 	 *
