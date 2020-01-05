@@ -137,7 +137,7 @@ public class CandleRepository {
 		ended[0] = true;
 	}
 
-	private Enumeration<Candle> executeQuery(String symbol, String query, Instant from, Instant to, Collection<Candle> out) {
+	protected Enumeration<Candle> executeQuery(String symbol, String query, Instant from, Instant to, Collection<Candle> out) {
 		boolean[] ended = new boolean[]{false};
 
 		final long start = System.currentTimeMillis();
