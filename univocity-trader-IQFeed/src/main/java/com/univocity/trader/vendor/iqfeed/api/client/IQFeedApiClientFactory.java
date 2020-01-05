@@ -16,21 +16,11 @@ public class IQFeedApiClientFactory {
     private AsyncHttpClient client;
 
 
-    private IQFeedApiClientFactory(String iqPortalPath, String product, String version, String login, String password,
-                                   boolean autoconnect, boolean savelogin, AsyncHttpClient client){
-        this.iqPortalPath = iqPortalPath;
-        this.product = product;
-        this.version = version;
-        this.login = login;
-        this.password = password;
-        this.autoconnect = autoconnect;
-        this.savelogin = savelogin;
-        this.client = client;
+    private IQFeedApiClientFactory(){
     }
 
-    public static IQFeedApiClientFactory newInstance(String iqPortalPath, String product, String version, String login,
-                                                     String password, boolean autoconnect, boolean savelogin, AsyncHttpClient client){
-        return new IQFeedApiClientFactory(iqPortalPath, product, version, login, password, autoconnect, savelogin, client);
+    public static IQFeedApiClientFactory newInstance() {
+        return new IQFeedApiClientFactory();
     }
 
     public IQFeedApiWebSocketClient newWebSocketClient(String host, String port) {

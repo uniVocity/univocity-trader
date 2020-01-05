@@ -47,28 +47,6 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
     private String login;
     private String pass;
 
-    public IQFeedClientAccountApi connectToIQFeedAccount(String host, String port, String product, String version, String login, String pass, boolean autoConnect,
-                                                   boolean saveLoginInfo ){
-        this.host = host;
-        this.port = port;
-        this.product = product;
-        this.version = version;
-        this.login = login;
-        this.pass = pass;
-
-        if(!iqPortal){
-            try {
-                Runtime.getRuntime().exec(iqPortalPath, null, new File(iqPortalPath));
-                iqPortal = true;
-            } catch(Exception e){
-                logger.info(e.getMessage());
-            }
-        }
-        return new IQFeedClientAccountApi(iqPortalPath, product, host, port, version, login, pass, this,
-                true, true, asyncHttpClient);
-    }
-
-
     @Override
     public IQFeedClientAccountApi connectToAccount(String api, String secret){
         if(!iqPortal){
@@ -79,7 +57,7 @@ public class IQFeedExchangeAPI implements ExchangeApi<Candlestick> {
                 logger.info(e.getMessage());
             }
         }
-        return null;
+        return new IQFeedClientAccountApi();
     }
 
     // TODO: implement

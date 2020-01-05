@@ -1,10 +1,9 @@
 package com.univocity.trader.vendor.iqfeed.api.client.impl;
 
+import com.univocity.trader.candles.Candle;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiCallback;
 import com.univocity.trader.vendor.iqfeed.api.client.IQFeedApiWebSocketClient;
-import com.univocity.trader.vendor.iqfeed.api.client.domain.event.CandlestickEvent;
-import com.univocity.trader.vendor.iqfeed.api.client.domain.market.Candlestick;
 import com.univocity.trader.vendor.iqfeed.api.client.domain.request.IQFeedHistoricalRequest;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -50,20 +49,20 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
         }
     }
 
-    public List<Candlestick> getCandlestickBars(IQFeedHistoricalRequest request){
+    public List<Candle> getCandlestickBars(IQFeedHistoricalRequest request){
         this.processor.setLatestHeader(request.getHeader());
         this.sendRequest(request.toString());
-        List<Candlestick> candles = this.processor.getCandles();
+        List<Candle> candles = this.processor.getCandles();
         return candles;
     }
 
-    public List<Candlestick> getCandlestickBars(String request){
+    public List<Candle> getCandlestickBars(String request){
         this.sendRequest(request);
         List<Candlestick> candles = this.processor.getCandles();
         return candles;
     }
 
-    public List<Candlestick> getHistoricalCandlestickBars(IQFeedHistoricalRequest request) {
+    public List<Candle> getHistoricalCandlestickBars(IQFeedHistoricalRequest request) {
         this.sendRequest(request.toString());
         List<Candlestick> candles = this.processor.getCandles();
         return candles;

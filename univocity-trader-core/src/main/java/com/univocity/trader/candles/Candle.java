@@ -147,4 +147,60 @@ public class Candle implements Comparable<Candle> {
 	public boolean isRed() {
 		return this.open >= this.close;
 	}
+
+	public static final class CandleBuilder {
+		public long openTime;
+		public long closeTime;
+		public double open;
+		public double high;
+		public double low;
+		public double close;
+		public double volume;
+
+		private CandleBuilder() {
+		}
+
+		public static CandleBuilder aCandle() {
+			return new CandleBuilder();
+		}
+
+		public CandleBuilder setOpenTime(long openTime) {
+			this.openTime = openTime;
+			return this;
+		}
+
+		public CandleBuilder setCloseTime(long closeTime) {
+			this.closeTime = closeTime;
+			return this;
+		}
+
+		public CandleBuilder setOpen(double open) {
+			this.open = open;
+			return this;
+		}
+
+		public CandleBuilder setHigh(double high) {
+			this.high = high;
+			return this;
+		}
+
+		public CandleBuilder setLow(double low) {
+			this.low = low;
+			return this;
+		}
+
+		public CandleBuilder setClose(double close) {
+			this.close = close;
+			return this;
+		}
+
+		public CandleBuilder setVolume(double volume) {
+			this.volume = volume;
+			return this;
+		}
+
+		public Candle build() {
+			return new Candle(openTime, closeTime, open, high, low, close, volume);
+		}
+	}
 }

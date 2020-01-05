@@ -81,7 +81,7 @@ public class IQFeedProcessor {
         return null;
     }
 
-    public List<Candlestick> processHTX(String payload){
+    public List<Candle> processHTX(String payload){
         List<Candlestick> candles = new ArrayList<Candlestick>();
         for(String line : payload.split("\n")){
            String[] vals = line.split(",");
@@ -97,7 +97,7 @@ public class IQFeedProcessor {
             String conditions  = vals[9];
             String aggressor  = vals[10];
             String daycode  = vals[11];
-            Candlestick candle = new CandlestickBuilder()
+            Candle candle = new CandleBuilder()
                     .setOpenTime(formatDate(dateTime))
                     .setLast(last)
                     .setLastSize(lastSize)

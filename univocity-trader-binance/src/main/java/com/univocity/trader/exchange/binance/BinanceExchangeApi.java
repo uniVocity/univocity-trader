@@ -186,8 +186,4 @@ public class BinanceExchangeApi implements ExchangeApi<Candlestick> {
 		return restClient;
 	}
 
-//	@Override
-//	public boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
-//		return symbolInformation.containsKey(currentAssetSymbol + targetAssetSymbol);
-//	}
 }
