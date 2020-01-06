@@ -1,4 +1,4 @@
-package com.univocity.trader.vendor.iqfeed.api.client.constant;
+package com.univocity.trader.iqfeed.api.constant;
 
 import org.apache.commons.lang3.builder.*;
 

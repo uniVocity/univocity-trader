@@ -4,6 +4,7 @@ import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.iqfeed.api.*;
+import com.univocity.trader.iqfeed.api.constant.*;
 import com.univocity.trader.iqfeed.api.domain.candles.*;
 import com.univocity.trader.iqfeed.api.domain.request.*;
 import io.netty.channel.*;
@@ -31,7 +32,7 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 	private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
 	// TODO: ask about maxFrameSize
 	private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 655356);
-	private String iqPortalPath = com.univocity.trader.vendor.iqfeed.api.client.constant.IQFeedApiConstants.IQPORTAL_PATH;
+	private String iqPortalPath = IQFeedApiConstants.IQPORTAL_PATH;
 	private String host;
 	private String port;
 	private String product;
