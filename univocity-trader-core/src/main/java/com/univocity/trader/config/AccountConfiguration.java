@@ -51,6 +51,8 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 	Set<String> supportedSymbols = new TreeSet<>();
 	Map<String, OrderManager> orderManagers = new ConcurrentHashMap<>();
 
+	private final TreeSet<String> requiredPropertyNames = new TreeSet<>();
+
 	protected AccountConfiguration(String id) {
 		this.id = id;
 	}
@@ -532,5 +534,15 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 		} else {
 			throw new IllegalArgumentException(msg);
 		}
+	}
+
+
+	Set<String> getRequiredPropertyNames() {
+		requiredPropertyNames.add("reference.currency");
+		return requiredPropertyNames;
+	}
+
+	protected void addRequiredPropertyNames(String... names) {
+		Collections.addAll(requiredPropertyNames, names);
 	}
 }

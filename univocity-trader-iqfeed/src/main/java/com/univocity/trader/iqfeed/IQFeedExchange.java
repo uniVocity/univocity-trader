@@ -32,19 +32,15 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 	private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
 	// TODO: ask about maxFrameSize
 	private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 655356);
-	private String iqPortalPath = IQFeedApiConstants.IQPORTAL_PATH;
-	private String host;
-	private String port;
-	private String product;
-	private String version;
-	private String login;
-	private String pass;
+
+
+
 
 	@Override
 	public IQFeedClientAccount connectToAccount(Account account) {
 		if (!iqPortal) {
 			try {
-				Runtime.getRuntime().exec(iqPortalPath, null, new File(iqPortalPath));
+				Runtime.getRuntime().exec(account.iqPortalPath(), null, new File(account.iqPortalPath()));
 				iqPortal = true;
 			} catch (Exception e) {
 				logger.info(e.getMessage());
