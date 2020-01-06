@@ -11,8 +11,6 @@ import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static com.univocity.trader.account.Balance.*;
-
 /**
  * A {@code Trade} holds one or more {@link Order} placed in the {@link Exchange} through
  * a {@link Trader}. Once a position is opened, this {@code Trade} object will start capturing the following
@@ -39,6 +37,7 @@ public class Trade implements Comparable<Trade> {
 	private double averagePrice = 0.0;
 	private final Map<String, Order> position = new ConcurrentHashMap<>();
 	private final Map<String, Order> exitOrders = new ConcurrentHashMap<>();
+	private final Map<String, Order> pastOrders = new ConcurrentHashMap<>();
 
 	//these two are used internally only to calculate
 	// average prices with fees taken into account.
@@ -333,10 +332,10 @@ public class Trade implements Comparable<Trade> {
 				if (Double.isNaN(actualProfitLossPct)) {
 					throw new IllegalStateException("Profit/loss % can't be determined");
 				}
+				pastOrders.putAll(position);
 				position.clear();
+				pastOrders.putAll(exitOrders);
 				exitOrders.clear();
-
-
 			} else {
 				double totalSold = order.getTotalTraded().doubleValue();
 				double sellPrice = order.getPrice().doubleValue();
@@ -349,8 +348,8 @@ public class Trade implements Comparable<Trade> {
 		}
 	}
 
-	private BigDecimal removeCancelledAndSumQuantities(Map<String, Order> orders) {
-		BigDecimal total = BigDecimal.ZERO;
+	private double removeCancelledAndSumQuantities(Map<String, Order> orders) {
+		double total = 0.0;
 
 		if (!orders.isEmpty()) {
 			var it = orders.entrySet().iterator();
@@ -359,7 +358,7 @@ public class Trade implements Comparable<Trade> {
 				if (order.isCancelled() && order.getExecutedQuantity().equals(BigDecimal.ZERO)) {
 					it.remove();
 				} else {
-					total = total.add(order.getExecutedQuantity());
+					total += order.getExecutedQuantity().doubleValue();
 				}
 			}
 		}
@@ -379,12 +378,10 @@ public class Trade implements Comparable<Trade> {
 			return false;
 		}
 
-		BigDecimal bought = removeCancelledAndSumQuantities(position);
-		BigDecimal sold = removeCancelledAndSumQuantities(exitOrders);
+		double bought = removeCancelledAndSumQuantities(position);
+		double sold = removeCancelledAndSumQuantities(exitOrders);
 
-		BigDecimal minLeftOver = bought.multiply(new BigDecimal("0.005")); // half of a percent of total bought
-
-		if (bought.subtract(sold).round(ROUND_MC).compareTo(minLeftOver) <= 0) {
+		if ((bought - sold) * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() / 5.0) {
 			return true;
 		}
 
@@ -450,19 +447,15 @@ public class Trade implements Comparable<Trade> {
 
 	public boolean hasOrder(Order order) {
 		if (order.isBuy()) {
-			for (Order o : position.values()) {
-				if (o.getOrderId().equals(order.getOrderId())) {
-					return true;
-				}
+			if (position.get(order.getOrderId()) != null) {
+				return true;
 			}
 		} else if (order.isSell()) {
-			for (Order o : exitOrders.values()) {
-				if (o.getOrderId().equals(order.getOrderId())) {
-					return true;
-				}
+			if (exitOrders.get(order.getOrderId()) != null) {
+				return true;
 			}
 		}
-		return false;
+		return pastOrders.get(order.getOrderId()) != null;
 	}
 
 	/**
@@ -509,6 +502,6 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public double quantity() {
-		return removeCancelledAndSumQuantities(position).doubleValue();
+		return removeCancelledAndSumQuantities(position);
 	}
 }

@@ -143,10 +143,14 @@ public class TradingManager {
 //	}
 
 	public Order sell(double quantity) {
-		if (quantity <= 0.0) {
+		if (quantity * getLatestPrice() < minimumInvestmentAmountPerTrade()) {
 			return null;
 		}
 		return tradingAccount.sell(assetSymbol, fundSymbol, quantity);
+	}
+
+	public Order sell() {
+		return sell(getAssets());
 	}
 
 	public double getAssets() {

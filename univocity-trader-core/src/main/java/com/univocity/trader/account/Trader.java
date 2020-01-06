@@ -36,6 +36,7 @@ public class Trader {
 	private StrategyMonitor[] monitors;
 
 	private final Set<Trade> trades = ConcurrentHashMap.newKeySet();
+	private final Set<Trade> pastTrades = ConcurrentHashMap.newKeySet();
 	final boolean allowMixedStrategies;
 
 	/**
@@ -463,12 +464,18 @@ public class Trader {
 			trade.orderFinalized(order);
 			if (trade.tradeFinalized()) {
 				trades.remove(trade);
+				pastTrades.add(trade);
 			}
 		}
 	}
 
 	public Trade tradeOf(Order order) {
 		for (Trade trade : trades) {
+			if (trade.hasOrder(order)) {
+				return trade;
+			}
+		}
+		for (Trade trade : pastTrades) {
 			if (trade.hasOrder(order)) {
 				return trade;
 			}

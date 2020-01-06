@@ -61,16 +61,19 @@ public class OrderExecutionToLog implements OrderListener {
 
 			String details = trader.latestCandle().getFormattedCloseTime("yy-MM-dd HH:mm") + " ";
 			details += StringUtils.rightPad(trader.assetSymbol(), 8) + " " + type + " " + quantity + " @ $" + price;
+//			details += "[" + order.getOrderId() + "]";
 			if (order.isBuy()) {
 				if (order.isFinalized()) {
-					details += " + " + printFillDetails(order, trade, rf);
-					details += ". Worth $" + rf.priceToString(trader.assetQuantity() * trader.lastClosingPrice()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
+					details += " + " + printFillDetails(order, trade, rf) + ".";
+					if(order.getExecutedQuantity().compareTo(BigDecimal.ZERO) != 0){
+						details += " Worth $" + rf.priceToString(order.getExecutedQuantity().doubleValue() * trader.lastClosingPrice()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
+					}
 				} else {
 					details += " + PENDING     committed $" + rf.priceToString(order.getTotalOrderAmount()) + currency;
 				}
 			} else {
 				if (order.isFinalized()) {
-					details += " - " + printFillDetails(order, trade, rf) + ". P/L $" + rf.priceToString(trade.actualProfitLoss()) + " [" + trade.formattedProfitLossPct() + "].";
+					details += " - " + printFillDetails(order, trade, rf) + "." + (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) == 0 ? "" : " P/L $" + rf.priceToString(trade.actualProfitLoss()) + " [" + trade.formattedProfitLossPct() + "].");
 					details += " Holdings $" + rf.priceToString(trader.holdings()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
 				} else {
 					details += " - PENDING     worth $" + rf.priceToString(order.getTotalOrderAmount()) + currency;
