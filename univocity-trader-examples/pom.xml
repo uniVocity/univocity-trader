@@ -21,6 +21,12 @@
 			<artifactId>univocity-trader-binance</artifactId>
 			<version>${revision}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.univocity</groupId>
+			<artifactId>univocity-trader-iqfeed</artifactId>
+			<version>${revision}</version>
+		</dependency>
 	</dependencies>
 
 	<build>
