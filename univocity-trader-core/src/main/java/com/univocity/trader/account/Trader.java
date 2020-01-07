@@ -3,6 +3,7 @@ package com.univocity.trader.account;
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.*;
+import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.strategy.*;
 import com.univocity.trader.utils.*;
@@ -38,6 +39,7 @@ public class Trader {
 	private final Set<Trade> trades = ConcurrentHashMap.newKeySet();
 	private final Set<Trade> pastTrades = ConcurrentHashMap.newKeySet();
 	final boolean allowMixedStrategies;
+	final OrderListener[] notifications;
 
 	/**
 	 * Creates a new trader for a given symbol. For internal use only.
@@ -55,6 +57,14 @@ public class Trader {
 		this.tradingManager.trader = this;
 
 		this.monitors = createStrategyMonitors(allInstances);
+		List<OrderListener> tmp = new ArrayList<>();
+		for(StrategyMonitor monitor : monitors){
+			if(monitor instanceof OrderListener){
+				tmp.add((OrderListener)monitor);
+			}
+		}
+		this.notifications = tmp.toArray(new OrderListener[0]);
+
 
 		boolean allowMixedStrategies = true;
 		for (int i = 0; i < this.monitors.length; i++) {

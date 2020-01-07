@@ -246,6 +246,11 @@ public class TradingManager {
 	}
 
 	void notifyOrderSubmitted(Order order, Trade trade) {
+		notifyOrderSubmitted(order, trade, this.notifications);
+		notifyOrderSubmitted(order, trade, trader.notifications);
+	}
+
+	private void notifyOrderSubmitted(Order order, Trade trade, OrderListener[] notifications) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
 				notifications[i].orderSubmitted(order, trade, client);
@@ -255,8 +260,7 @@ public class TradingManager {
 		}
 	}
 
-	void notifyOrderFinalized(Order order, Trade trade) {
-		trader.orderFinalized(order);
+	private void notifyOrderFinalized(Order order, Trade trade, OrderListener[] notifications) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
 				notifications[i].orderFinalized(order, trade, client);
@@ -266,7 +270,18 @@ public class TradingManager {
 		}
 	}
 
+	void notifyOrderFinalized(Order order, Trade trade) {
+		trader.orderFinalized(order);
+		notifyOrderFinalized(order, trade, this.notifications);
+		notifyOrderFinalized(order, trade, trader.notifications);
+	}
+
 	void notifySimulationEnd() {
+		notifySimulationEnd(this.notifications);
+		notifySimulationEnd(trader.notifications);
+	}
+
+	private void notifySimulationEnd(OrderListener[] notifications) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
 				notifications[i].simulationEnded(trader, client);
