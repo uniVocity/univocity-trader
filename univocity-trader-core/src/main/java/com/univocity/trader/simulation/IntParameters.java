@@ -1,6 +1,7 @@
 package com.univocity.trader.simulation;
 
-import org.springframework.util.*;
+
+import org.apache.commons.lang3.*;
 
 import java.util.*;
 
@@ -19,16 +20,26 @@ public class IntParameters extends Parameters {
 
 	@Override
 	public IntParameters fromString(String s) {
-		s = StringUtils.deleteAny(s, " []{}()");
-		if(s.isBlank()){
+		if (s.indexOf('[') >= 0) {
+			s = StringUtils.substringBetween(s, "[", "]");
+		} else if (s.indexOf('(') >= 0) {
+			s = StringUtils.substringBetween(s, "(", ")");
+		} else if (s.indexOf('{') >= 0) {
+			s = StringUtils.substringBetween(s, "{", "}");
+		}
+
+		if (s.isBlank()) {
 			return new IntParameters();
 		}
 		String[] params = s.split(",");
 		int[] p = new int[params.length];
 		for (int i = 0; i < params.length; i++) {
+			params[i] = params[i].trim();
 			p[i] = Integer.parseInt(params[i]);
 		}
 
 		return new IntParameters(p);
 	}
+
+
 }

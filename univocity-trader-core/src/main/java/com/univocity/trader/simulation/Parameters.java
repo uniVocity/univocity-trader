@@ -17,7 +17,7 @@ public abstract class Parameters {
 		return printParameters();
 	}
 
-	public Parameters fromString(String s){
+	public Parameters fromString(String s) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -27,5 +27,18 @@ public abstract class Parameters {
 			out.add((T) this.fromString(p));
 		}
 		return out;
+	}
+
+	@Override
+	public final int hashCode() {
+		return toString().hashCode();
+	}
+
+	@Override
+	public final boolean equals(Object o) {
+		if (o == null) {
+			return false;
+		}
+		return toString().equals(o.toString());
 	}
 }
