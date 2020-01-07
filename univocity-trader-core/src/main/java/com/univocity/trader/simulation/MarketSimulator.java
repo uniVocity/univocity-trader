@@ -235,4 +235,8 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		Candle pending;
 		Engine[] engines;
 	}
+
+	public CandleRepository getCandleRepository(){
+		return candleRepository;
+	}
 }
