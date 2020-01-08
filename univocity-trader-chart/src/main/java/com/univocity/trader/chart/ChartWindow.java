@@ -1,9 +1,13 @@
 package com.univocity.trader.chart;
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.annotation.*;
+import com.univocity.trader.chart.dynamic.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.*;
+import java.util.List;
 
 public class ChartWindow extends JFrame {
 
@@ -18,6 +22,9 @@ public class ChartWindow extends JFrame {
 
 		this.chart = new LineChart();
 		this.add(chart, BorderLayout.CENTER);
+
+		this.add(chart.getController().getControlPanel(), BorderLayout.WEST);
+
 
 		JButton addCandle = new JButton("Add candle");
 		this.add(addCandle, BorderLayout.SOUTH);

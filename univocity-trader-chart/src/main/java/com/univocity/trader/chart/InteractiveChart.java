@@ -6,12 +6,10 @@ import com.univocity.trader.candles.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public abstract class InteractiveChart extends BasicChart {
+public abstract class InteractiveChart<C extends InteractiveChartController> extends BasicChart<C> {
 
 	private Candle hoveredCandle = null;
 	private Point mousePosition = null;
-	private boolean isVerticalSelectionLineEnabled = true;
-	private boolean isHorizontalSelectionLineEnabled = true;
 
 	public InteractiveChart() {
 		this.setFocusable(true);
@@ -53,6 +51,18 @@ public abstract class InteractiveChart extends BasicChart {
 		return null;
 	}
 
+	private boolean isVerticalSelectionLineEnabled() {
+		return getController().isVerticalSelectionLineEnabled();
+	}
+
+	private boolean isHorizontalSelectionLineEnabled() {
+		return getController().isHorizontalSelectionLineEnabled();
+	}
+
+	private Color getSelectionLineColor() {
+		return getController().getSelectionLineColor();
+	}
+
 	@Override
 	protected void draw(Graphics2D g) {
 		Point hoveredPosition = null;
@@ -61,13 +71,13 @@ public abstract class InteractiveChart extends BasicChart {
 			drawHovered(hoveredCandle, hoveredPosition, g);
 		}
 
-		if (isVerticalSelectionLineEnabled || isHorizontalSelectionLineEnabled) {
+		if (isVerticalSelectionLineEnabled() || isHorizontalSelectionLineEnabled()) {
 			if (hoveredCandle != null) {
-				g.setColor(new Color(220, 220, 255));
-				if (isVerticalSelectionLineEnabled) {
+				g.setColor(getSelectionLineColor());
+				if (isVerticalSelectionLineEnabled()) {
 					g.drawLine(hoveredPosition.x, 0, hoveredPosition.x, height);
 				}
-				if (isHorizontalSelectionLineEnabled) {
+				if (isHorizontalSelectionLineEnabled()) {
 					g.drawLine(0, hoveredPosition.y, width, hoveredPosition.y);
 				}
 			}
@@ -76,6 +86,9 @@ public abstract class InteractiveChart extends BasicChart {
 		Point selectionPoint = getSelectedCandleLocation();
 		if (selectionPoint != null) {
 			drawSelected(selectedCandle, selectionPoint, g);
+		}
+		if (hoveredCandle != null) {
+			drawHovered(hoveredCandle, hoveredPosition, g);
 		}
 	}
 
