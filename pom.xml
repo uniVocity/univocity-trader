@@ -33,6 +33,7 @@
         <module>univocity-trader-binance</module>
         <module>univocity-trader-iqfeed</module>
         <module>univocity-trader-examples</module>
+        <module>univocity-trader-chart</module>
     </modules>
 
     <issueManagement>
