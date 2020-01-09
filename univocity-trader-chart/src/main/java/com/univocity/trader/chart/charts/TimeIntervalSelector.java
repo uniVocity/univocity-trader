@@ -47,7 +47,7 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 					SwingUtilities.invokeLater(() -> repaint());
 				} else if (mouseOverGlass) {
 					int x = e.getPoint().x;
-					int pixelsToMove = x - startHandle.getPosition();
+					int pixelsToMove = x - glassDragStart;
 
 					pixelsToMove = startHandle.getMovablePixels(pixelsToMove);
 					if (pixelsToMove != 0) {
@@ -57,11 +57,6 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 
 					startHandle.move(pixelsToMove);
 					endHandle.move(pixelsToMove);
-
-//					updateHandleBoundaries();
-
-//					startHandle.candle = TimeIntervalSelector.this.chart.getCandleAt(startHandle.getPosition());
-//					endHandle.candle = TimeIntervalSelector.this.chart.getCandleAt(endHandle.getPosition());
 
 					glassDragStart = x;
 					SwingUtilities.invokeLater(() -> repaint());
@@ -90,6 +85,18 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 						setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					}
 				}
+			}
+		});
+
+		addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				updateHandleBoundaries();
+
+				startHandle.candle = TimeIntervalSelector.this.chart.getCandleAt(startHandle.getPosition());
+				endHandle.candle = TimeIntervalSelector.this.chart.getCandleAt(endHandle.getPosition());
+
+				SwingUtilities.invokeLater(() -> repaint());
 			}
 		});
 	}
