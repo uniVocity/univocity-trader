@@ -1,12 +1,11 @@
 package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
 import com.univocity.trader.chart.gui.*;
 
 import java.awt.*;
-import java.util.*;
-import java.util.List;
 
 public abstract class BasicChart<C extends BasicChartController> extends NullLayoutPanel {
 
@@ -23,17 +22,11 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private Candle from;
 	private Candle to;
+	protected final CandleHistory candleHistory;
 
-	//TODO: very temporary solution
-	public java.util.List<Candle> tradeHistory = new ArrayList<>(1000);
-	private final List<Runnable> dataUpdateListeners = new ArrayList<>();
-
-	public BasicChart() {
-
-	}
-
-	public void addDataUpdateListener(Runnable r){
-		dataUpdateListeners.add(r);
+	public BasicChart(CandleHistory candleHistory) {
+		this.candleHistory = candleHistory;
+		candleHistory.addDataUpdateListener(this::dataUpdated);
 	}
 
 	protected Color getBackgroundColor() {
@@ -60,13 +53,11 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		draw((Graphics2D) g);
 	}
 
-	public void dataUpdated() {
+	private void dataUpdated() {
 		maximum = 0;
 		minimum = Double.MAX_VALUE;
 
 		updateEdgeValues();
-
-		dataUpdateListeners.forEach(Runnable::run);
 
 		revalidate();
 		repaint();
@@ -75,7 +66,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	private void updateEdgeValues() {
 		maximum = 0;
 		minimum = Integer.MAX_VALUE;
-		for (Candle c : tradeHistory) {
+		for (Candle c : candleHistory) {
 			updateEdgeValues(c);
 		}
 		updateIncrements();
@@ -104,22 +95,19 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	}
 
 	private void updateIncrements() {
-		if (tradeHistory != null) {
-			horizontalIncrement = ((double) width / (double) tradeHistory.size());
+		if (!candleHistory.isEmpty()) {
+			horizontalIncrement = ((double) width / (double) candleHistory.size());
 		}
 	}
 
 	protected final Candle getCandleAt(int x) {
-		if (tradeHistory.isEmpty()) {
-			return null;
-		}
-		return tradeHistory.get(getCandleIndexAt(x));
+		return candleHistory.get(getCandleIndexAt(x));
 	}
 
 	protected final int getCandleIndexAt(int x) {
 		x = (int) ((double) x / horizontalIncrement);
-		if (x >= tradeHistory.size()) {
-			return tradeHistory.size() - 1;
+		if (x >= candleHistory.size()) {
+			return candleHistory.size() - 1;
 		}
 		return x;
 	}
@@ -171,17 +159,13 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	}
 
 	protected Point createCandleCoordinate(int candleIndex) {
-		Candle candle = tradeHistory.get(candleIndex);
+		Candle candle = candleHistory.get(candleIndex);
 
 		Point p = new Point();
 		p.x = getXCoordinate(candleIndex);
 		p.y = getYCoordinate(getCentralValue(candle));
 
 		return p;
-	}
-
-	private int indexOf(Candle candle) {
-		return Collections.binarySearch(tradeHistory, candle);
 	}
 
 	public Point locationOf(Candle candle) {
@@ -197,7 +181,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	}
 
 	public int getX(Candle candle) {
-		return getXCoordinate(indexOf(candle));
+		return getXCoordinate(candleHistory.indexOf(candle));
 	}
 
 	public int getY(Candle candle) {
@@ -208,16 +192,31 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return locationOf(getSelectedCandle());
 	}
 
-	protected final int getCandleWidth() {
-		return getController().getCandleWidth();
+	protected final int getBarWidth() {
+		return getController().getBarWidth();
 	}
 
 	private int getSpaceBetweenCandles() {
-		return getController().getSpaceBetweenCandles();
+		return getController().getSpaceBetweenBars();
+	}
+
+	@Override
+	public Dimension getPreferredSize() {
+		Dimension out = super.getPreferredSize();
+		out.width = getWidth();
+		return out;
+
+	}
+
+	@Override
+	public int getWidth() {
+		int sw = super.getWidth();
+		int rw = requiredWidth();
+		return Math.max(rw, sw);
 	}
 
 	public final int requiredWidth() {
-		return (getCandleWidth() + getSpaceBetweenCandles()) * tradeHistory.size();
+		return (getBarWidth() + getSpaceBetweenCandles()) * candleHistory.size();
 	}
 
 	protected abstract C newController();

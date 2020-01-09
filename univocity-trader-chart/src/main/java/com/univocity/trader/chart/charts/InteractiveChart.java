@@ -2,6 +2,7 @@ package com.univocity.trader.chart.charts;
 
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
 
 import java.awt.*;
@@ -12,7 +13,8 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 	private Candle hoveredCandle = null;
 	private Point mousePosition = null;
 
-	public InteractiveChart() {
+	public InteractiveChart(CandleHistory candleHistory) {
+		super(candleHistory);
 		this.setFocusable(true);
 
 		addMouseMotionListener(new MouseMotionListener() {

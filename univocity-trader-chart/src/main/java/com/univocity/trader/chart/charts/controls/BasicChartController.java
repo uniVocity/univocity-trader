@@ -1,8 +1,8 @@
 package com.univocity.trader.chart.charts.controls;
 
 
-import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.annotation.Label;
+import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.dynamic.*;
 
@@ -27,11 +27,11 @@ public class BasicChartController implements Controller {
 
 	@Label("Bar width")
 	@SpinnerBound(maximum = 20)
-	private int candleWidth = 1;
+	private int barWidth = 1;
 
 	@Label("Bar spacing")
 	@SpinnerBound(minimum = 1, maximum = 20)
-	private int spaceBetweenCandles = 0;
+	private int spaceBetweenBars = 1;
 
 	private JPanel controlPanel;
 
@@ -109,20 +109,20 @@ public class BasicChartController implements Controller {
 		return controlPanel;
 	}
 
-	public int getCandleWidth() {
-		return candleWidth;
+	public int getBarWidth() {
+		return barWidth;
 	}
 
-	public int getSpaceBetweenCandles() {
-		return spaceBetweenCandles;
+	public int getSpaceBetweenBars() {
+		return spaceBetweenBars;
 	}
 
-	public void setCandleWidth(int candleWidth) {
-		this.candleWidth = candleWidth;
+	public void setBarWidth(int barWidth) {
+		this.barWidth = barWidth;
 	}
 
-	public void setSpaceBetweenCandles(int spaceBetweenCandles) {
-		this.spaceBetweenCandles = spaceBetweenCandles;
+	public void setSpaceBetweenBars(int spaceBetweenBars) {
+		this.spaceBetweenBars = spaceBetweenBars;
 	}
 }
 

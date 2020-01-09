@@ -7,7 +7,7 @@ public class HistogramChartController extends AbstractFilledBarChartController<H
 
 	public HistogramChartController(HistogramChart chart) {
 		super(chart);
-		this.setCandleWidth(3);
+		this.setBarWidth(3);
 		this.setDisplayingLogarithmicScale(false);
 	}
 }

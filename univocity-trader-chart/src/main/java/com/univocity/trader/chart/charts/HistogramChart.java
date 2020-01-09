@@ -2,6 +2,7 @@ package com.univocity.trader.chart.charts;
 
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
 
 import java.awt.*;
@@ -11,11 +12,12 @@ public class HistogramChart extends FilledBarChart<HistogramChartController> {
 
 	private final Function<Candle, Double> valueReader;
 
-	public HistogramChart() {
-		this((c) -> c.volume);
+	public HistogramChart(CandleHistory candleHistory) {
+		this(candleHistory, (c) -> c.volume);
 	}
 
-	public HistogramChart(Function<Candle, Double> valueReader) {
+	public HistogramChart(CandleHistory candleHistory, Function<Candle, Double> valueReader) {
+		super(candleHistory);
 		this.valueReader = valueReader;
 	}
 
@@ -23,10 +25,10 @@ public class HistogramChart extends FilledBarChart<HistogramChartController> {
 	protected void drawBar(Candle trade, Point location, Graphics2D g, Color lineColor, Color fillColor) {
 		int h = height - getYCoordinate(getCentralValue(trade));
 		g.setColor(fillColor);
-		g.fillRect(location.x - getCandleWidth() / 2, height - h, getCandleWidth(), h);
+		g.fillRect(location.x - getBarWidth() / 2, height - h, getBarWidth(), h);
 
 		g.setColor(lineColor);
-		g.drawRect(location.x - getCandleWidth() / 2, height - h, getCandleWidth(), h);
+		g.drawRect(location.x - getBarWidth() / 2, height - h, getBarWidth(), h);
 	}
 
 	@Override

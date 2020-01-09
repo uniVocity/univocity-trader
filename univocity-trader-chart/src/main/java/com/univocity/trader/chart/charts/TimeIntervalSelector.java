@@ -176,11 +176,11 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 	public void dataUpdated() {
 		this.dataUpdated = true;
 		if (startHandle.candle == null) {
-			startHandle.candle = chart.tradeHistory.get(0);
+			startHandle.candle = chart.candleHistory.get(0);
 		}
 
 		if (endHandle.candle == null) {
-			endHandle.candle = chart.tradeHistory.get(chart.tradeHistory.size() - 1);
+			endHandle.candle = chart.candleHistory.get(chart.candleHistory.size() - 1);
 		}
 	}
 }

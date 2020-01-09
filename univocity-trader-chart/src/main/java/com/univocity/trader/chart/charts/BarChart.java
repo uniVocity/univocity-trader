@@ -2,20 +2,22 @@ package com.univocity.trader.chart.charts;
 
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
 
 import java.awt.*;
 
 public class BarChart extends InteractiveChart<BarChartController> {
 
-	public BarChart(){
+	public BarChart(CandleHistory candleHistory) {
+		super(candleHistory);
 	}
 
 	@Override
 	protected void draw(Graphics2D g) {
-		for (int i = 0; i < tradeHistory.size(); i++) {
+		for (int i = 0; i < candleHistory.size(); i++) {
 			Point location = createCandleCoordinate(i);
-			Candle candle = tradeHistory.get(i);
+			Candle candle = candleHistory.get(i);
 			drawBar(getLineColor(candle), candle, location, g);
 		}
 
@@ -34,8 +36,8 @@ public class BarChart extends InteractiveChart<BarChartController> {
 		int x = location.x;
 
 		g.drawLine(x, low, x, high);
-		g.drawLine(x - getCandleWidth() / 2, open, x, open);
-		g.drawLine(x, close, x + getCandleWidth() / 2, close);
+		g.drawLine(x - getBarWidth() / 2, open, x, open);
+		g.drawLine(x, close, x + getBarWidth() / 2, close);
 	}
 
 	private Color getLineColor(Candle candle) {

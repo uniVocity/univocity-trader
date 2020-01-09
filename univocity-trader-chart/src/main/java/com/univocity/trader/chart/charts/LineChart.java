@@ -2,14 +2,15 @@ package com.univocity.trader.chart.charts;
 
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
 
 import java.awt.*;
 
 public class LineChart extends InteractiveChart<LineChartController> {
 
-	public LineChart() {
-		super();
+	public LineChart(CandleHistory candleHistory) {
+		super(candleHistory);
 	}
 
 	@Override
@@ -33,7 +34,7 @@ public class LineChart extends InteractiveChart<LineChartController> {
 		g.setColor(getLineColor());
 
 		Point startPoint = null;
-		for (int i = 0; i < tradeHistory.size(); i++) {
+		for (int i = 0; i < candleHistory.size(); i++) {
 			Point location = createCandleCoordinate(i);
 			if (startPoint == null) {
 				startPoint = location;

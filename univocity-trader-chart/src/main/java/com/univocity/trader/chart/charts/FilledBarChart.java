@@ -2,21 +2,23 @@ package com.univocity.trader.chart.charts;
 
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
 
 import java.awt.*;
 
 abstract class FilledBarChart<C extends AbstractFilledBarChartController<?>> extends InteractiveChart<C> {
 
-	public FilledBarChart() {
+	public FilledBarChart(CandleHistory candleHistory) {
+		super(candleHistory);
 	}
 
 	@Override
 	protected void draw(Graphics2D g) {
 		g.setStroke(getLineStroke());
-		for (int i = 0; i < tradeHistory.size(); i++) {
+		for (int i = 0; i < candleHistory.size(); i++) {
 			Point location = createCandleCoordinate(i);
-			Candle candle = tradeHistory.get(i);
+			Candle candle = candleHistory.get(i);
 			drawBar(candle, location, g, getLineColor(candle), getFillColor(candle));
 		}
 
