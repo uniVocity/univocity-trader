@@ -1,7 +1,7 @@
 package com.univocity.trader.chart.dynamic;
 
-import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.annotation.*;
+import com.univocity.trader.chart.charts.controls.*;
 
 public class ChartUpdateProcessor implements UpdateProcessor {
 

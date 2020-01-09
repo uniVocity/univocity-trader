@@ -176,6 +176,13 @@ public class PanelBuilder<T> {
 		Integer minimum = annotation.minimum();
 		Integer increment = annotation.increment();
 
+		if(value < minimum){
+			value = minimum;
+		}
+		if(value > maximum){
+			value = maximum;
+		}
+
 		final JSpinner spinner = new JSpinner(new SpinnerNumberModel(value, minimum, maximum, increment));
 
 		spinner.addChangeListener(new ChangeListener() {

@@ -1,7 +1,8 @@
-package com.univocity.trader.chart;
+package com.univocity.trader.chart.charts;
 
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.charts.controls.*;
 
 import java.awt.*;
 
@@ -37,16 +38,12 @@ public class BarChart extends InteractiveChart<BarChartController> {
 		g.drawLine(x, close, x + getCandleWidth() / 2, close);
 	}
 
-	private int getCandleWidth(){
-		return getController().getCandleWidth();
-	}
-
 	private Color getLineColor(Candle candle) {
 		return getController().getLineColor(candle);
 	}
 
 	private Color getLineSelectionColor(Candle candle) {
-		return getController().getLineSelectionColor(candle);
+		return getController().getSelectionLineColor(candle);
 	}
 
 	@Override

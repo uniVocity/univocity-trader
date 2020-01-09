@@ -1,4 +1,4 @@
-package com.univocity.trader.chart;
+package com.univocity.trader.chart.gui;
 
 import javax.swing.*;
 import java.awt.*;

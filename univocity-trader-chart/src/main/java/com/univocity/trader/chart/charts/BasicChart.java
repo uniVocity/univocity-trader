@@ -1,6 +1,8 @@
-package com.univocity.trader.chart;
+package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.gui.*;
 
 import java.awt.*;
 import java.util.*;
@@ -19,7 +21,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private Candle from;
 	private Candle to;
-	protected final java.util.List<Candle> tradeHistory = new ArrayList<>(1000);
+	public final java.util.List<Candle> tradeHistory = new ArrayList<>(1000);
 
 	public BasicChart() {
 
@@ -192,7 +194,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return locationOf(getSelectedCandle());
 	}
 
-	private int getCandleWidth(){
+	protected final int getCandleWidth(){
 		return getController().getCandleWidth();
 	}
 

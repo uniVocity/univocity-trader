@@ -1,11 +1,10 @@
-package com.univocity.trader.chart;
+package com.univocity.trader.chart.charts.controls;
 
 
-import com.sun.source.util.*;
 import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.annotation.Label;
+import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.dynamic.*;
-import org.springframework.expression.spel.support.ReflectionHelper;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,11 +26,11 @@ public class BasicChartController implements Controller {
 	private boolean isAntialiazed = true;
 
 	@Label("Bar width")
-	@SpinnerBound(maximum = 10)
+	@SpinnerBound(maximum = 20)
 	private int candleWidth = 1;
 
 	@Label("Bar spacing")
-	@SpinnerBound(minimum = 0)
+	@SpinnerBound(minimum = 1, maximum = 20)
 	private int spaceBetweenCandles = 0;
 
 	private JPanel controlPanel;

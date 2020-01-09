@@ -1,7 +1,8 @@
-package com.univocity.trader.chart;
+package com.univocity.trader.chart.charts.controls;
 
 import com.univocity.trader.chart.annotation.Label;
 import com.univocity.trader.chart.annotation.*;
+import com.univocity.trader.chart.charts.*;
 
 import java.awt.*;
 

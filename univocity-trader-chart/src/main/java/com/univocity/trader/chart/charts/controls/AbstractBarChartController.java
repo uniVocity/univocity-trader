@@ -1,13 +1,14 @@
-package com.univocity.trader.chart;
+package com.univocity.trader.chart.charts.controls;
 
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.annotation.Label;
 import com.univocity.trader.chart.annotation.*;
+import com.univocity.trader.chart.charts.*;
 
 import java.awt.*;
 
-public abstract class AbstractBarChartController<C extends InteractiveChart> extends InteractiveChartController {
+public abstract class AbstractBarChartController<C extends InteractiveChart<?>> extends InteractiveChartController {
 
 	@Label("Positive closing color")
 	@ColorBound()
@@ -26,6 +27,7 @@ public abstract class AbstractBarChartController<C extends InteractiveChart> ext
 
 	public AbstractBarChartController(C chart) {
 		super(chart);
+		setBackgroundColor(Color.BLACK);
 	}
 
 	public Color getUpColor() {
@@ -68,7 +70,7 @@ public abstract class AbstractBarChartController<C extends InteractiveChart> ext
 		}
 	}
 
-	public Color getLineSelectionColor(Candle trade) {
+	public Color getSelectionLineColor(Candle trade) {
 		if (trade.isClosePositive()) {
 			return getUpSelectionColor();
 		} else {

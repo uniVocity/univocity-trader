@@ -1,13 +1,14 @@
 package com.univocity.trader.chart;
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.charts.*;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class ChartWindow extends JFrame {
 
-	private BarChart chart;
+	private CandleChart chart;
 
 	public ChartWindow() {
 		this.setLayout(new BorderLayout());
@@ -16,7 +17,7 @@ public class ChartWindow extends JFrame {
 		this.setBounds(0, 0, 800, 600);
 		this.setLocationRelativeTo(null);
 
-		this.chart = new BarChart();
+		this.chart = new CandleChart();
 		this.add(chart, BorderLayout.CENTER);
 
 		this.add(chart.getController().getControlPanel(), BorderLayout.WEST);
