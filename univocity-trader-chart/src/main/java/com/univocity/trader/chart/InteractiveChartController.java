@@ -8,15 +8,21 @@ import java.awt.*;
 @Border("Chart settings")
 public class InteractiveChartController extends BasicChartController {
 
+	private Stroke normalStroke = new BasicStroke(1);
+
 	@Label("Selection color")
 	@ColorBound()
-	private Color selectionLineColor = new Color(220, 220, 255);
+	private Color selectionLineColor = new Color(220, 220, 255, 100);
 
 	@CheckBoxBound("Horizontal selection")
 	private boolean horizontalSelectionLineEnabled = true;
 
 	@CheckBoxBound("Vertical selection")
 	private boolean verticalSelectionLineEnabled = true;
+
+	@Label("Line stroke")
+	@SpinnerBound(maximum = 10)
+	private int stroke = 1;
 
 	public InteractiveChartController(InteractiveChart c) {
 		super(c);
@@ -46,10 +52,21 @@ public class InteractiveChartController extends BasicChartController {
 		this.verticalSelectionLineEnabled = verticalSelectionLineEnabled;
 	}
 
-	public void copySettings(InteractiveChartController controller) {
-		super.copySettings(controller);
-		this.selectionLineColor = controller.selectionLineColor;
-		this.horizontalSelectionLineEnabled = controller.horizontalSelectionLineEnabled;
-		this.verticalSelectionLineEnabled = controller.verticalSelectionLineEnabled;
+	public Stroke getNormalStroke() {
+		return normalStroke;
 	}
+
+	public void setNormalStroke(Stroke normalStroke) {
+		this.normalStroke = normalStroke;
+	}
+
+	public int getStroke() {
+		return stroke;
+	}
+
+	public void setStroke(int stroke) {
+		this.stroke = stroke;
+		this.setNormalStroke(new BasicStroke(stroke));
+	}
+
 }

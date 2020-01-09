@@ -131,7 +131,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 	}
 
-	private int getYCoordinate(double value) {
+	protected final int getYCoordinate(double value) {
 		return displayLogarithmicScale() ? getLogarithmicYCoordinate(value) : getLinearYCoordinate(value);
 	}
 
@@ -213,11 +213,18 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return controller;
 	}
 
+	protected double getHighestPlottedValue(Candle candle) {
+		return candle.high;
+	}
+
+	protected double getLowestPlottedValue(Candle candle) {
+		return candle.low;
+	}
+
+	protected double getCentralValue(Candle candle) {
+		return candle.close;
+	}
+
 	protected abstract void draw(Graphics2D g);
 
-	protected abstract double getHighestPlottedValue(Candle candle);
-
-	protected abstract double getLowestPlottedValue(Candle candle);
-
-	protected abstract double getCentralValue(Candle candle);
 }

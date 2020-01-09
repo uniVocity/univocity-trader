@@ -2,7 +2,6 @@ package com.univocity.trader.chart;
 
 
 import com.univocity.trader.candles.*;
-import com.univocity.trader.chart.annotation.*;
 
 import java.awt.*;
 
@@ -25,19 +24,6 @@ public class LineChart extends InteractiveChart<LineChartController> {
 	@Override
 	protected double getLowestPlottedValue(Candle candle) {
 		return candle.close;
-	}
-
-	@Override
-	protected double getCentralValue(Candle candle) {
-		return candle.close;
-	}
-
-	private Color getLineColor(){
-		return getController().getLineColor();
-	}
-
-	private Stroke getLineStroke(){
-		return getController().getNormalStroke();
 	}
 
 	@Override
@@ -76,6 +62,10 @@ public class LineChart extends InteractiveChart<LineChartController> {
 
 	private Color getMarkerColor(){
 		return getController().getMarkerColor();
+	}
+
+	protected final Color getLineColor() {
+		return getController().getLineColor();
 	}
 
 	private void drawCircle(Color color, Point location, Graphics2D g){

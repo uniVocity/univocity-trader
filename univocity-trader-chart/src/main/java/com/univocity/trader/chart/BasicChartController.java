@@ -5,6 +5,7 @@ import com.sun.source.util.*;
 import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.annotation.Label;
 import com.univocity.trader.chart.dynamic.*;
+import org.springframework.expression.spel.support.ReflectionHelper;
 
 import javax.swing.*;
 import java.awt.*;
@@ -107,11 +108,6 @@ public class BasicChartController implements Controller {
 			controlPanel = PanelBuilder.createPanel(this);
 		}
 		return controlPanel;
-	}
-
-	public void copySettings(BasicChartController controller) {
-		this.displayingLogarithmicScale = controller.displayingLogarithmicScale;
-		this.backgroundColor = controller.backgroundColor;
 	}
 
 	public int getCandleWidth() {

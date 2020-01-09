@@ -7,13 +7,6 @@ import java.awt.*;
 
 public class LineChartController extends InteractiveChartController {
 
-	
-	private Stroke normalStroke = new BasicStroke(1);
-	
-	@Label("Line stroke")
-	@SpinnerBound(maximum = 10)
-	private int stroke = 1;
-
 	@Label("Marker width")
 	@SpinnerBound(maximum = 20)
 	private int markerWidth = 8;
@@ -54,21 +47,4 @@ public class LineChartController extends InteractiveChartController {
 		this.lineColor = lineColor;
 	}
 
-	public Stroke getNormalStroke() {
-		return normalStroke;
-	}
-
-	public void setNormalStroke(Stroke normalStroke) {
-		this.normalStroke = normalStroke;
-	}
-
-	public int getStroke() {
-		return stroke;
-	}
-
-	public void setStroke(int stroke) {
-		this.stroke = stroke;
-		this.setNormalStroke(new BasicStroke(stroke));
-	}
-	
 }

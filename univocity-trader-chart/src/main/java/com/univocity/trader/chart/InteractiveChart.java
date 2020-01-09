@@ -65,14 +65,11 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 
 	@Override
 	protected void draw(Graphics2D g) {
-		Point hoveredPosition = null;
-		if (hoveredCandle != null) {
-			hoveredPosition = locationOf(hoveredCandle);
-			drawHovered(hoveredCandle, hoveredPosition, g);
-		}
+		Point hoveredPosition = locationOf(hoveredCandle);
 
 		if (isVerticalSelectionLineEnabled() || isHorizontalSelectionLineEnabled()) {
-			if (hoveredCandle != null) {
+			g.setStroke(new BasicStroke(1));
+			if (hoveredPosition != null) {
 				g.setColor(getSelectionLineColor());
 				if (isVerticalSelectionLineEnabled()) {
 					g.drawLine(hoveredPosition.x, 0, hoveredPosition.x, height);
@@ -87,9 +84,13 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 		if (selectionPoint != null) {
 			drawSelected(selectedCandle, selectionPoint, g);
 		}
-		if (hoveredCandle != null) {
+		if (hoveredPosition != null) {
 			drawHovered(hoveredCandle, hoveredPosition, g);
 		}
+	}
+
+	protected final Stroke getLineStroke() {
+		return getController().getNormalStroke();
 	}
 
 	protected abstract void drawSelected(Candle selected, Point location, Graphics2D g);
