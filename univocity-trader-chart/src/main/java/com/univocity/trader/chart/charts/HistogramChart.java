@@ -12,11 +12,11 @@ public class HistogramChart extends FilledBarChart<HistogramChartController> {
 
 	private final Function<Candle, Double> valueReader;
 
-	public HistogramChart(CandleHistory candleHistory) {
+	public HistogramChart(CandleHistoryView candleHistory) {
 		this(candleHistory, (c) -> c.volume);
 	}
 
-	public HistogramChart(CandleHistory candleHistory, Function<Candle, Double> valueReader) {
+	public HistogramChart(CandleHistoryView candleHistory, Function<Candle, Double> valueReader) {
 		super(candleHistory);
 		this.valueReader = valueReader;
 	}

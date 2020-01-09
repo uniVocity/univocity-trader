@@ -9,7 +9,7 @@ import java.awt.*;
 
 public class CandleChart extends FilledBarChart<CandleChartController> {
 
-	public CandleChart(CandleHistory candleHistory) {
+	public CandleChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
 	}
 

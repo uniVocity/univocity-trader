@@ -37,6 +37,9 @@ public class CandleHistory implements Iterable<Candle> {
 	}
 
 	public int indexOf(Candle candle) {
+		if(candle == null){
+			return -1;
+		}
 		return Collections.binarySearch(tradeHistory, candle);
 	}
 
@@ -57,5 +60,9 @@ public class CandleHistory implements Iterable<Candle> {
 
 	public void notifyUpdateListeners() {
 		dataUpdateListeners.forEach(Runnable::run);
+	}
+
+	public CandleHistoryView newView(){
+		return new CandleHistoryView(this);
 	}
 }

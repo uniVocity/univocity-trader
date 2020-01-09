@@ -22,6 +22,7 @@ public class LineChartController extends InteractiveChartController {
 
 	public LineChartController(LineChart chart) {
 		super(chart);
+		setSpaceBetweenBars(0);
 	}
 
 	public int getMarkerWidth() {

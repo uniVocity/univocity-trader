@@ -2,6 +2,7 @@ package com.univocity.trader.chart.charts;
 
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.gui.*;
 
 import javax.swing.*;
@@ -27,8 +28,10 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 	private Candle previousEnd;
 
 	private boolean dataUpdated;
+	private CandleHistory candleHistory;
 
-	public TimeIntervalSelector(BasicChart<?> chart) {
+	public TimeIntervalSelector(CandleHistory fullCandleHistory, BasicChart<?> chart) {
+		this.candleHistory = fullCandleHistory;
 		this.chart = chart;
 		this.setPreferredSize(new Dimension(100, 100));
 
@@ -41,10 +44,10 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 			public void mouseDragged(MouseEvent e) {
 				if (selectedHandle != null) {
 					moveHandle(selectedHandle, e.getPoint().x);
-					repaint();
+					SwingUtilities.invokeLater(() -> repaint());
 				} else if (mouseOverGlass) {
 					int x = e.getPoint().x;
-					int pixelsToMove = x - glassDragStart;
+					int pixelsToMove = x - startHandle.getPosition();
 
 					pixelsToMove = startHandle.getMovablePixels(pixelsToMove);
 					if (pixelsToMove != 0) {
@@ -55,13 +58,13 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 					startHandle.move(pixelsToMove);
 					endHandle.move(pixelsToMove);
 
-					updateHandleBoundaries();
+//					updateHandleBoundaries();
 
-					startHandle.candle = TimeIntervalSelector.this.chart.getCandleAt(startHandle.getPosition());
-					endHandle.candle = TimeIntervalSelector.this.chart.getCandleAt(endHandle.getPosition());
+//					startHandle.candle = TimeIntervalSelector.this.chart.getCandleAt(startHandle.getPosition());
+//					endHandle.candle = TimeIntervalSelector.this.chart.getCandleAt(endHandle.getPosition());
 
 					glassDragStart = x;
-					repaint();
+					SwingUtilities.invokeLater(() -> repaint());
 				} else {
 					setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				}
@@ -92,6 +95,7 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 	}
 
 	private final AtomicBoolean intervalUpdateEventRunning = new AtomicBoolean(false);
+
 	void fireIntervalChanged(Candle from, Candle to) {
 		if (!intervalUpdateEventRunning.get()) {
 			intervalUpdateEventRunning.set(true);
@@ -175,13 +179,19 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 
 	public void dataUpdated() {
 		this.dataUpdated = true;
+		Candle first = candleHistory.get(0);
 		if (startHandle.candle == null) {
-			startHandle.candle = chart.candleHistory.get(0);
+			startHandle.candle = first;
 		}
 
+		Candle last = candleHistory.get(candleHistory.size() - 1);
 		if (endHandle.candle == null) {
-			endHandle.candle = chart.candleHistory.get(chart.candleHistory.size() - 1);
+			endHandle.candle = last;
 		}
+
+		chart.candleHistory.updateView(first, last);
+
+		SwingUtilities.invokeLater(this::repaint);
 	}
 }
 

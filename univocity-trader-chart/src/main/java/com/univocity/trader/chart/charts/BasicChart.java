@@ -20,11 +20,9 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private C controller;
 
-	private Candle from;
-	private Candle to;
-	protected final CandleHistory candleHistory;
+	protected final CandleHistoryView candleHistory;
 
-	public BasicChart(CandleHistory candleHistory) {
+	public BasicChart(CandleHistoryView candleHistory) {
 		this.candleHistory = candleHistory;
 		candleHistory.addDataUpdateListener(this::dataUpdated);
 	}
@@ -66,6 +64,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	private void updateEdgeValues() {
 		maximum = 0;
 		minimum = Integer.MAX_VALUE;
+
 		for (Candle c : candleHistory) {
 			updateEdgeValues(c);
 		}

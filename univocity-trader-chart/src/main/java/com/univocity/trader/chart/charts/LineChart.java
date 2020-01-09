@@ -9,7 +9,7 @@ import java.awt.*;
 
 public class LineChart extends InteractiveChart<LineChartController> {
 
-	public LineChart(CandleHistory candleHistory) {
+	public LineChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
 	}
 

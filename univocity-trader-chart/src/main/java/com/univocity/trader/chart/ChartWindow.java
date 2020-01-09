@@ -14,6 +14,7 @@ public class ChartWindow extends JFrame {
 	private JButton addCandleButton;
 	private JPanel centralPanel;
 	private JScrollPane chartScroll;
+	private CandleHistoryView chartHistoryView;
 
 	public ChartWindow() {
 		this.setLayout(new BorderLayout());
@@ -69,21 +70,28 @@ public class ChartWindow extends JFrame {
 		return addCandleButton;
 	}
 
+	private CandleHistoryView getChartHistoryView() {
+		if (chartHistoryView == null) {
+			chartHistoryView = getCandleHistory().newView();
+		}
+		return chartHistoryView;
+	}
+
 	private CandleChart getChart() {
 		if (chart == null) {
-			chart = new CandleChart(getCandleHistory());
+			chart = new CandleChart(getChartHistoryView());
 			getCandleHistory().addDataUpdateListener(() -> getTimeIntervalSelector().dataUpdated());
+
+			getTimeIntervalSelector().addIntervalListener(chartHistoryView::updateView);
 		}
 		return chart;
 	}
 
 	private TimeIntervalSelector getTimeIntervalSelector() {
 		if (timeIntervalSelector == null) {
-			LineChart selectorChart = new LineChart(getCandleHistory());
+			LineChart selectorChart = new LineChart(getCandleHistory().newView());
 
-			timeIntervalSelector = new TimeIntervalSelector(selectorChart);
-
-			getCandleHistory().addDataUpdateListener(timeIntervalSelector::repaint);
+			timeIntervalSelector = new TimeIntervalSelector(getCandleHistory(), selectorChart);
 		}
 		return timeIntervalSelector;
 	}

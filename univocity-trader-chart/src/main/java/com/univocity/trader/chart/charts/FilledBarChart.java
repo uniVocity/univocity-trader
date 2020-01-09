@@ -9,7 +9,7 @@ import java.awt.*;
 
 abstract class FilledBarChart<C extends AbstractFilledBarChartController<?>> extends InteractiveChart<C> {
 
-	public FilledBarChart(CandleHistory candleHistory) {
+	public FilledBarChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
 	}
 

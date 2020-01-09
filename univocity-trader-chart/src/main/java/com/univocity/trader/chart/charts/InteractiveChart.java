@@ -13,7 +13,7 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 	private Candle hoveredCandle = null;
 	private Point mousePosition = null;
 
-	public InteractiveChart(CandleHistory candleHistory) {
+	public InteractiveChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
 		this.setFocusable(true);
 
