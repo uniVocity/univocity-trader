@@ -8,7 +8,7 @@ import java.awt.*;
 
 public class ChartWindow extends JFrame {
 
-	private HistogramChart chart;
+	private CandleChart chart;
 
 	public ChartWindow() {
 		this.setLayout(new BorderLayout());
@@ -17,7 +17,7 @@ public class ChartWindow extends JFrame {
 		this.setBounds(0, 0, 800, 600);
 		this.setLocationRelativeTo(null);
 
-		this.chart = new HistogramChart();
+		this.chart = new CandleChart();
 		this.add(chart, BorderLayout.CENTER);
 
 		this.add(chart.getController().getControlPanel(), BorderLayout.WEST);

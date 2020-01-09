@@ -15,6 +15,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private double logLow;
 	private double logRange;
+
 	protected Candle selectedCandle;
 
 	private C controller;
@@ -27,11 +28,11 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	}
 
-	protected Color getBackgroundColor(){
+	protected Color getBackgroundColor() {
 		return getController().getBackgroundColor();
 	}
 
-	protected boolean isAntialiazed(){
+	protected boolean isAntialiazed() {
 		return getController().isAntialiazed();
 	}
 
@@ -43,7 +44,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	public final void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
-		if(isAntialiazed()) {
+		if (isAntialiazed()) {
 			((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		}
 
@@ -122,7 +123,10 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	}
 
 	private int getLinearYCoordinate(double value) {
-		return height - (int) (height * value / maximum);
+		double linearRange = height - (height * minimum / maximum);
+		double proportion = (height - (height * value / maximum)) / linearRange;
+
+		return (int) (height * proportion);
 	}
 
 	private double getValueAtY(int y) {
@@ -137,7 +141,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return displayLogarithmicScale() ? getLogarithmicYCoordinate(value) : getLinearYCoordinate(value);
 	}
 
-	private boolean displayLogarithmicScale(){
+	private boolean displayLogarithmicScale() {
 		return getController().isDisplayingLogarithmicScale();
 	}
 
@@ -194,11 +198,11 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return locationOf(getSelectedCandle());
 	}
 
-	protected final int getCandleWidth(){
+	protected final int getCandleWidth() {
 		return getController().getCandleWidth();
 	}
 
-	private int getSpaceBetweenCandles(){
+	private int getSpaceBetweenCandles() {
 		return getController().getSpaceBetweenCandles();
 	}
 
