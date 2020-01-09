@@ -23,7 +23,7 @@ public class BasicChartController implements Controller {
 	private Color backgroundColor = Color.WHITE;
 
 	@CheckBoxBound("Anti-aliasing")
-	private boolean isAntialiazed = true;
+	private boolean isAntialiased = true;
 
 	@Label("Bar width")
 	@SpinnerBound(maximum = 20)
@@ -45,12 +45,12 @@ public class BasicChartController implements Controller {
 		return chart;
 	}
 
-	public boolean isAntialiazed() {
-		return isAntialiazed;
+	public boolean isAntialiased() {
+		return isAntialiased;
 	}
 
-	public void setIsAntialiazed(boolean isAntialiazed) {
-		this.isAntialiazed = isAntialiazed;
+	public void setIsAntialiased(boolean isAntialiased) {
+		this.isAntialiased = isAntialiased;
 	}
 
 	public boolean isDisplayingLogarithmicScale() {

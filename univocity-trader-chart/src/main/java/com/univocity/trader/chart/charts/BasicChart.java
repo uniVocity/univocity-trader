@@ -6,6 +6,7 @@ import com.univocity.trader.chart.gui.*;
 
 import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 public abstract class BasicChart<C extends BasicChartController> extends NullLayoutPanel {
 
@@ -22,18 +23,25 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private Candle from;
 	private Candle to;
-	public final java.util.List<Candle> tradeHistory = new ArrayList<>(1000);
+
+	//TODO: very temporary solution
+	public java.util.List<Candle> tradeHistory = new ArrayList<>(1000);
+	private final List<Runnable> dataUpdateListeners = new ArrayList<>();
 
 	public BasicChart() {
 
+	}
+
+	public void addDataUpdateListener(Runnable r){
+		dataUpdateListeners.add(r);
 	}
 
 	protected Color getBackgroundColor() {
 		return getController().getBackgroundColor();
 	}
 
-	protected boolean isAntialiazed() {
-		return getController().isAntialiazed();
+	protected boolean isAntialiased() {
+		return getController().isAntialiased();
 	}
 
 	protected void clearGraphics(Graphics g) {
@@ -44,7 +52,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	public final void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
-		if (isAntialiazed()) {
+		if (isAntialiased()) {
 			((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		}
 
@@ -57,6 +65,8 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		minimum = Double.MAX_VALUE;
 
 		updateEdgeValues();
+
+		dataUpdateListeners.forEach(Runnable::run);
 
 		revalidate();
 		repaint();

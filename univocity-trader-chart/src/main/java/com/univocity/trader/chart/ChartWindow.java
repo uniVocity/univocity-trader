@@ -8,7 +8,10 @@ import java.awt.*;
 
 public class ChartWindow extends JFrame {
 
+	private TimeIntervalSelector timeIntervalSelector;
 	private CandleChart chart;
+	private JButton addCandleButton;
+	private JPanel centralPanel;
 
 	public ChartWindow() {
 		this.setLayout(new BorderLayout());
@@ -17,39 +20,71 @@ public class ChartWindow extends JFrame {
 		this.setBounds(0, 0, 800, 600);
 		this.setLocationRelativeTo(null);
 
-		this.chart = new CandleChart();
-		this.add(chart, BorderLayout.CENTER);
+		this.add(getCentralPanel(), BorderLayout.CENTER);
+		this.add(new JScrollPane(getChart().getController().getControlPanel()), BorderLayout.WEST);
 
-		this.add(chart.getController().getControlPanel(), BorderLayout.WEST);
-
-
-		JButton addCandle = new JButton("Add candle");
-		this.add(addCandle, BorderLayout.SOUTH);
+		this.add(getAddCandleButton(), BorderLayout.SOUTH);
 
 		addCandles();
+	}
 
-		addCandle.addActionListener(e -> {
-			addCandle(chart.tradeHistory.size());
-			chart.dataUpdated();
+	private JPanel getCentralPanel() {
+		if (centralPanel == null) {
+			centralPanel = new JPanel(new BorderLayout());
+			centralPanel.add(new JScrollPane(getChart()), BorderLayout.CENTER);
+			centralPanel.add(getTimeIntervalSelector(), BorderLayout.SOUTH);
+		}
+		return centralPanel;
+	}
 
-		});
+	private JButton getAddCandleButton() {
+		if (addCandleButton == null) {
+			addCandleButton = new JButton("Add candle");
+			addCandleButton.addActionListener(e -> {
+				addCandle(getChart().tradeHistory.size());
+				getChart().dataUpdated();
+			});
+		}
+		return addCandleButton;
+	}
+
+	private CandleChart getChart() {
+		if (chart == null) {
+			chart = new CandleChart();
+			chart.addDataUpdateListener(() -> getTimeIntervalSelector().dataUpdated());
+		}
+		return chart;
+	}
+
+	private TimeIntervalSelector getTimeIntervalSelector() {
+		if (timeIntervalSelector == null) {
+			LineChart selectorChart = new LineChart();
+			selectorChart.tradeHistory = getChart().tradeHistory;
+
+			getChart().addDataUpdateListener(selectorChart::dataUpdated);
+
+			timeIntervalSelector = new TimeIntervalSelector(selectorChart);
+
+			getChart().addDataUpdateListener(timeIntervalSelector::repaint);
+		}
+		return timeIntervalSelector;
 	}
 
 	private void addCandle(int i) {
-		int size = chart.tradeHistory.size();
+		int size = getChart().tradeHistory.size();
 
 		if (i >= values.length) {
 			i = (i % values.length);
 		}
 
-		chart.tradeHistory.add(new Candle(size * 60000, (size + 1) * 60000, values[i][0], values[i][2], values[i][3], values[i][1], values[i][4]));
+		getChart().tradeHistory.add(new Candle(size * 60000, (size + 1) * 60000, values[i][0], values[i][2], values[i][3], values[i][1], values[i][4]));
 	}
 
 	private void addCandles() {
 		for (int i = 0; i < values.length; i++) {
 			addCandle(i);
 		}
-		chart.dataUpdated();
+		getChart().dataUpdated();
 	}
 
 	double[][] values = new double[][]{
