@@ -6,23 +6,13 @@ import com.univocity.trader.chart.charts.controls.*;
 
 import java.awt.*;
 
-public class CandleChart extends InteractiveChart<CandleChartController> {
+public class CandleChart extends FilledBarChart<CandleChartController> {
 
 	public CandleChart() {
 	}
 
 	@Override
-	protected void draw(Graphics2D g) {
-		for (int i = 0; i < tradeHistory.size(); i++) {
-			Point location = createCandleCoordinate(i);
-			Candle candle = tradeHistory.get(i);
-			drawCandle(candle, location, g, getLineColor(candle), getFillColor(candle));
-		}
-
-		super.draw(g);
-	}
-
-	private void drawCandle(Candle trade, Point location, Graphics2D g, Color lineColor, Color fillColor) {
+	protected void drawBar(Candle trade, Point location, Graphics2D g, Color lineColor, Color fillColor) {
 		g.setStroke(getLineStroke());
 		int high = getYCoordinate(trade.high);
 		int low = getYCoordinate(trade.low);
@@ -58,38 +48,7 @@ public class CandleChart extends InteractiveChart<CandleChartController> {
 	}
 
 	@Override
-	protected void drawSelected(Candle selected, Point location, Graphics2D g) {
-		drawSelectedBar(selected, location, g);
-	}
-
-	@Override
-	protected void drawHovered(Candle hovered, Point location, Graphics2D g) {
-		drawSelectedBar(hovered, location, g);
-	}
-
-	private void drawSelectedBar(Candle selected, Point location, Graphics2D g){
-		drawCandle(selected, location, g, getSelectionLineColor(selected), getSelectionFillColor(selected));
-	}
-
-	@Override
 	public CandleChartController newController() {
 		return new CandleChartController(this);
-	}
-
-	private Color getFillColor(Candle candle) {
-		return getController().getFillColor(candle);
-	}
-
-	private Color getLineColor(Candle candle) {
-		return getController().getLineColor(candle);
-	}
-
-
-	private Color getSelectionLineColor(Candle selected) {
-		return getController().getSelectionLineColor(selected);
-	}
-
-	private Color getSelectionFillColor(Candle selected) {
-		return getController().getSelectionFillColor(selected);
 	}
 }
