@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.*;
 public class TimeIntervalSelector extends NullLayoutPanel {
 	private Handle startHandle = new Handle(true);
 	private Handle endHandle = new Handle(false);
+	private Handle boundaryHandle = endHandle;
+
 	private static final Color glassBlue = new Color(0, 0, 255, 128);
 	private static final Color glassWhite = new Color(255, 255, 255, 128);
 	private Point gradientStart = new Point(0, 0);
@@ -60,7 +62,10 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 						glassDragStart = x;
 						startHandle.move(pixelsToMove);
 						endHandle.move(pixelsToMove);
+
 						updateHandleBoundaries();
+
+						boolean movingRight = pixelsToMove > 0;
 
 						SwingUtilities.invokeLater(() -> {
 							int startIndex = chart.getCandleIndexAtCoordinate(startHandle.getPosition());
@@ -68,6 +73,9 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 
 							startHandle.candle = chart.getCandleAtIndex(startIndex);
 							endHandle.candle = chart.getCandleAtIndex(endIndex);
+
+							boundaryHandle = movingRight ? endHandle : startHandle;
+
 							repaint();
 						});
 					}
@@ -99,16 +107,10 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 			}
 
 			private void moveHandle(Handle handle, int x) {
+				boundaryHandle = handle;
 				updateHandleBoundaries();
-
-//				if (x - handle.getWidth() <= 0) {
-//					handle.candle = chart.candleHistory.getFirst();
-//				} else if (x + handle.getWidth() >= width) {
-//					handle.candle = chart.candleHistory.getLast();
-//				} else {
-					handle.setPosition(x);
-					handle.candle = chart.getCandleAtCoordinate(handle.getPosition());
-//				}
+				handle.setPosition(x);
+				handle.candle = chart.getCandleAtCoordinate(handle.getPosition());
 			}
 		});
 
@@ -137,6 +139,21 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 		this.listenerList.remove(IntervalListener.class, listener);
 	}
 
+	private void adjustBoundary() {
+		int x = boundaryHandle.getPosition();
+
+		if (x - boundaryHandle.getWidth() <= 0) {
+			boundaryHandle.candle = chart.candleHistory.getFirst();
+			boundaryHandle.setPosition(0);
+		} else if (x + boundaryHandle.getWidth() >= width) {
+			boundaryHandle.candle = candleHistory.getLast();
+		}
+
+		if (endHandle.candle == candleHistory.getLast()) {
+			endHandle.setPosition(getWidth());
+		}
+	}
+
 	@Override
 	public void paintComponent(Graphics g1d) {
 		super.paintComponent(g1d);
@@ -157,6 +174,8 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 			updateHandleBoundaries();
 		}
 		g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
+
+		adjustBoundary();
 
 		startHandle.draw(g, this, null);
 		endHandle.draw(g, this, null);
