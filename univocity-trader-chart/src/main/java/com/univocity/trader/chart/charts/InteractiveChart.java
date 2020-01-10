@@ -49,7 +49,7 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 
 	public Candle getCandleUnderCursor() {
 		if (mousePosition != null) {
-			return getCandleAt(mousePosition.x);
+			return getCandleAtCoordinate(mousePosition.x);
 		}
 		return null;
 	}

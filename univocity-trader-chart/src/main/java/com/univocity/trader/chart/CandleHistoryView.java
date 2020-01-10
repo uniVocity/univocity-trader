@@ -24,18 +24,18 @@ public class CandleHistoryView implements Iterable<Candle> {
 
 	public void updateView(Candle from, Candle to) {
 		boolean changed = false;
-		if (this.from != from){
+		if (this.from != from) {
 			start = history.indexOf(from);
 			this.from = from;
 			changed = true;
 		}
-		if (this.to != to){
+		if (this.to != to) {
 			end = history.indexOf(to);
 			this.to = to;
 			changed = true;
 		}
 
-		if(!changed){
+		if (!changed) {
 			return;
 		}
 
@@ -119,5 +119,13 @@ public class CandleHistoryView implements Iterable<Candle> {
 
 	public void notifyUpdateListeners() {
 		history.notifyUpdateListeners();
+	}
+
+	public Candle getFirst() {
+		return history.get(0);
+	}
+
+	public Candle getLast() {
+		return history.get(size() - 1);
 	}
 }

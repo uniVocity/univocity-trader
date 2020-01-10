@@ -29,13 +29,14 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 
 	private boolean dataUpdated;
 	private CandleHistory candleHistory;
+	private int candlesInRange;
 
 	public TimeIntervalSelector(CandleHistory fullCandleHistory, BasicChart<?> chart) {
 		this.candleHistory = fullCandleHistory;
 		this.chart = chart;
 		this.setPreferredSize(new Dimension(100, 100));
 
-		addMouseMotionListener(new MouseMotionListener() {
+		addMouseMotionListener(new MouseAdapter() {
 			private Handle selectedHandle;
 			private boolean mouseOverGlass = false;
 			private int glassDragStart;
@@ -44,7 +45,7 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 			public void mouseDragged(MouseEvent e) {
 				if (selectedHandle != null) {
 					moveHandle(selectedHandle, e.getPoint().x);
-					SwingUtilities.invokeLater(() -> repaint());
+					invokeRepaint();
 				} else if (mouseOverGlass) {
 					int x = e.getPoint().x;
 					int pixelsToMove = x - glassDragStart;
@@ -55,11 +56,21 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 						pixelsToMove = Math.min(toMove, pixelsToMove);
 					}
 
-					startHandle.move(pixelsToMove);
-					endHandle.move(pixelsToMove);
+					if (pixelsToMove != 0) {
+						glassDragStart = x;
+						startHandle.move(pixelsToMove);
+						endHandle.move(pixelsToMove);
+						updateHandleBoundaries();
 
-					glassDragStart = x;
-					SwingUtilities.invokeLater(() -> repaint());
+						SwingUtilities.invokeLater(() -> {
+							int startIndex = chart.getCandleIndexAtCoordinate(startHandle.getPosition());
+							int endIndex = startIndex + candlesInRange;
+
+							startHandle.candle = chart.getCandleAtIndex(startIndex);
+							endHandle.candle = chart.getCandleAtIndex(endIndex);
+							repaint();
+						});
+					}
 				} else {
 					setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				}
@@ -86,19 +97,21 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 					}
 				}
 			}
-		});
 
-		addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
+			private void moveHandle(Handle handle, int x) {
 				updateHandleBoundaries();
 
-				startHandle.candle = TimeIntervalSelector.this.chart.getCandleAt(startHandle.getPosition());
-				endHandle.candle = TimeIntervalSelector.this.chart.getCandleAt(endHandle.getPosition());
-
-				SwingUtilities.invokeLater(() -> repaint());
+//				if (x - handle.getWidth() <= 0) {
+//					handle.candle = chart.candleHistory.getFirst();
+//				} else if (x + handle.getWidth() >= width) {
+//					handle.candle = chart.candleHistory.getLast();
+//				} else {
+					handle.setPosition(x);
+					handle.candle = chart.getCandleAtCoordinate(handle.getPosition());
+//				}
 			}
 		});
+
 	}
 
 	private final AtomicBoolean intervalUpdateEventRunning = new AtomicBoolean(false);
@@ -124,18 +137,6 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 		this.listenerList.remove(IntervalListener.class, listener);
 	}
 
-	private void updateHandleBoundaries() {
-		endHandle.setMinPosition(startHandle.getPosition() + startHandle.getWidth());
-		endHandle.setMaxPosition(getWidth());
-		startHandle.setMaxPosition(endHandle.getPosition() - endHandle.getWidth());
-	}
-
-	private void moveHandle(Handle handle, int x) {
-		updateHandleBoundaries();
-		handle.setPosition(x);
-		handle.candle = chart.getCandleAt(handle.getPosition());
-	}
-
 	@Override
 	public void paintComponent(Graphics g1d) {
 		super.paintComponent(g1d);
@@ -153,6 +154,7 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 			startHandle.draw(g, this, chart);
 			endHandle.draw(g, this, chart);
 			dataUpdated = false;
+			updateHandleBoundaries();
 		}
 		g.drawImage(background, 0, 0, getWidth(), getHeight(), this);
 
@@ -163,8 +165,18 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 		if (startHandle.candle != previousStart || endHandle.candle != previousEnd) {
 			previousStart = startHandle.candle;
 			previousEnd = endHandle.candle;
+
+			candlesInRange = candleHistory.indexOf(endHandle.candle) - candleHistory.indexOf(startHandle.candle);
+
 			fireIntervalChanged(startHandle.candle, endHandle.candle);
 		}
+	}
+
+	private void updateHandleBoundaries() {
+		int handleWidths = startHandle.getWidth() + endHandle.getWidth();
+		endHandle.setMinPosition(startHandle.getPosition() + handleWidths);
+		endHandle.setMaxPosition(getWidth());
+		startHandle.setMaxPosition(endHandle.getPosition() - handleWidths);
 	}
 
 	@Override
@@ -198,7 +210,10 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 
 		chart.candleHistory.updateView(first, last);
 
+		invokeRepaint();
+	}
+
+	private void invokeRepaint() {
 		SwingUtilities.invokeLater(this::repaint);
 	}
 }
-

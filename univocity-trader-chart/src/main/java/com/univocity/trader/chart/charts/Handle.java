@@ -43,7 +43,11 @@ class Handle {
 	}
 
 	public boolean isCursorOver(Point p) {
-		return p.x >= position && p.x <= position + width;
+		if(leftHandle){
+			return p.x >= position && p.x <= position + width;
+		} else {
+			return p.x >= position - width && p.x <= position;
+		}
 	}
 
 	public void setWidth(int width) {
@@ -59,7 +63,7 @@ class Handle {
 	}
 
 	public void setMaxPosition(int maxPosition) {
-		this.maxPosition = leftHandle ? maxPosition : maxPosition - width;
+		this.maxPosition = maxPosition;
 		setPosition(position);
 	}
 
@@ -88,14 +92,13 @@ class Handle {
 	}
 
 	public int getPosition() {
-		return leftHandle ? position : position + width;
+		return position;
 	}
 
 	public void setPosition(int position) {
 		if (position < minPosition) {
 			position = minPosition;
-		}
-		if (position > maxPosition) {
+		} else if (position > maxPosition) {
 			position = maxPosition;
 		}
 		this.position = position;
@@ -107,6 +110,11 @@ class Handle {
 			if (location != null) {
 				this.position = location.x;
 			}
+		}
+
+		int position = this.position;
+		if(!leftHandle){
+			position = position - width;
 		}
 
 		gradientStart.x = position - 2;

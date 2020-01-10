@@ -99,12 +99,16 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 	}
 
-	protected final Candle getCandleAt(int x) {
-		return candleHistory.get(getCandleIndexAt(x));
+	protected final Candle getCandleAtIndex(int index) {
+		return candleHistory.get(index);
 	}
 
-	protected final int getCandleIndexAt(int x) {
-		x = (int) ((double) x / horizontalIncrement);
+	protected final Candle getCandleAtCoordinate(int x) {
+		return candleHistory.get(getCandleIndexAtCoordinate(x));
+	}
+
+	protected final int getCandleIndexAtCoordinate(int x) {
+		x = (int) Math.round((double) x / horizontalIncrement);
 		if (x >= candleHistory.size()) {
 			return candleHistory.size() - 1;
 		}
