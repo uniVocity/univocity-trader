@@ -2,6 +2,7 @@ package com.univocity.trader.chart;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
+import com.univocity.trader.chart.charts.ruler.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,8 +14,11 @@ public class ChartWindow extends JFrame {
 	private CandleChart chart;
 	private JButton addCandleButton;
 	private JPanel centralPanel;
+	private JPanel leftPanel;
 	private JScrollPane chartScroll;
 	private CandleHistoryView chartHistoryView;
+	private ValueRuler valueRuler;
+
 
 	public ChartWindow() {
 		this.setLayout(new BorderLayout());
@@ -24,11 +28,21 @@ public class ChartWindow extends JFrame {
 		this.setLocationRelativeTo(null);
 
 		this.add(getCentralPanel(), BorderLayout.CENTER);
-		this.add(new JScrollPane(getChart().getController().getControlPanel()), BorderLayout.WEST);
+		this.add(new JScrollPane(getLeftPanel()), BorderLayout.WEST);
 
 		this.add(getAddCandleButton(), BorderLayout.SOUTH);
 
 		addCandles();
+	}
+
+	private JPanel getLeftPanel(){
+		if(leftPanel == null){
+			leftPanel = new JPanel();
+			leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+			leftPanel.add(getChart().getController().getControlPanel());
+			leftPanel.add(getValueRuler().getController().getControlPanel());
+		}
+		return leftPanel;
 	}
 
 	protected CandleHistory getCandleHistory() {
@@ -45,6 +59,14 @@ public class ChartWindow extends JFrame {
 			centralPanel.add(getTimeIntervalSelector(), BorderLayout.SOUTH);
 		}
 		return centralPanel;
+	}
+
+	private ValueRuler getValueRuler(){
+		if(valueRuler == null){
+			valueRuler = new ValueRuler(getChart());
+
+		}
+		return valueRuler;
 	}
 
 	private JScrollPane getChartScroll() {

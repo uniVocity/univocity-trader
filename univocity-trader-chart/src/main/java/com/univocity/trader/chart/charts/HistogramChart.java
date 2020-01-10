@@ -44,7 +44,7 @@ public class HistogramChart extends FilledBarChart<HistogramChartController> {
 		return valueReader.apply(candle);
 	}
 
-	protected double getCentralValue(Candle candle) {
+	public double getCentralValue(Candle candle) {
 		return valueReader.apply(candle);
 	}
 }

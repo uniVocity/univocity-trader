@@ -3,11 +3,17 @@ package com.univocity.trader.chart.charts;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.gui.*;
 
 import java.awt.*;
+import java.util.List;
+import java.util.*;
 
 public abstract class BasicChart<C extends BasicChartController> extends NullLayoutPanel {
+
+	private final EnumMap<Painter.Z, List<Painter>> painters = new EnumMap<>(Painter.Z.class);
+
 
 	private double horizontalIncrement = 0.0;
 	private double maximum = -1.0;
@@ -24,6 +30,8 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	public BasicChart(CandleHistoryView candleHistory) {
 		this.candleHistory = candleHistory;
+		painters.put(Painter.Z.BACK, new ArrayList<>());
+		painters.put(Painter.Z.FRONT, new ArrayList<>());
 		candleHistory.addDataUpdateListener(this::dataUpdated);
 	}
 
@@ -48,7 +56,16 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 
 		clearGraphics(g);
+
+		for (Painter<?> painter : painters.get(Painter.Z.BACK)) {
+			painter.paintOn((Graphics2D) g);
+		}
+
 		draw((Graphics2D) g);
+
+		for (Painter<?> painter : painters.get(Painter.Z.FRONT)) {
+			painter.paintOn((Graphics2D) g);
+		}
 	}
 
 	private void dataUpdated() {
@@ -59,6 +76,10 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 		revalidate();
 		repaint();
+	}
+
+	public double getMaximum() {
+		return maximum;
 	}
 
 	private void updateEdgeValues() {
@@ -130,7 +151,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return (int) (height * proportion);
 	}
 
-	private double getValueAtY(int y) {
+	public double getValueAtY(int y) {
 		if (displayLogarithmicScale()) {
 			return Math.pow(10, (y + logLow * height / logRange) / height * logRange);
 		} else {
@@ -138,7 +159,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 	}
 
-	protected final int getYCoordinate(double value) {
+	public final int getYCoordinate(double value) {
 		return displayLogarithmicScale() ? getLogarithmicYCoordinate(value) : getLinearYCoordinate(value);
 	}
 
@@ -231,6 +252,10 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return controller;
 	}
 
+	public void register(Painter<?> painter) {
+		painters.get(painter.getZ()).add(painter);
+	}
+
 	protected double getHighestPlottedValue(Candle candle) {
 		return candle.high;
 	}
@@ -239,7 +264,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return candle.low;
 	}
 
-	protected double getCentralValue(Candle candle) {
+	public double getCentralValue(Candle candle) {
 		return candle.close;
 	}
 
