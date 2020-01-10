@@ -30,7 +30,7 @@ public class CandleHistoryView implements Iterable<Candle> {
 			changed = true;
 		}
 		if (this.to != to) {
-			end = history.indexOf(to);
+			end = history.indexOf(to) + 1;
 			this.to = to;
 			changed = true;
 		}
@@ -43,9 +43,9 @@ public class CandleHistoryView implements Iterable<Candle> {
 			start = 0;
 		}
 		if (end == -1) {
-			end = history.size() - 1;
+			end = history.size();
 		}
-		atEnd = end == history.size() - 1;
+		atEnd = end == history.size();
 		notifyUpdateListeners();
 	}
 
@@ -98,7 +98,7 @@ public class CandleHistoryView implements Iterable<Candle> {
 
 	public void addAll(Collection<Candle> candles) {
 		if (atEnd) {
-			this.end = history.size() + candles.size() - 1;
+			this.end = history.size() + candles.size();
 		}
 		history.addAll(candles);
 	}
@@ -122,10 +122,10 @@ public class CandleHistoryView implements Iterable<Candle> {
 	}
 
 	public Candle getFirst() {
-		return history.get(0);
+		return history.get(start);
 	}
 
 	public Candle getLast() {
-		return history.get(size() - 1);
+		return history.get(start + size()-1);
 	}
 }
