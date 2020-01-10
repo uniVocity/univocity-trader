@@ -53,7 +53,11 @@ public class ChartWindow extends JFrame {
 			chartScroll.getViewport().setView(getChart());
 
 			JScrollBar scrollBar = chartScroll.getHorizontalScrollBar();
-			getCandleHistory().addDataUpdateListener(() -> SwingUtilities.invokeLater(() -> scrollBar.setValue(scrollBar.getMaximum())));
+			getCandleHistory().addDataUpdateListener(() -> SwingUtilities.invokeLater(() -> {
+				if(getTimeIntervalSelector().lookingAtRecentHistory()) {
+					scrollBar.setValue(scrollBar.getMaximum());
+				}
+			}));
 
 		}
 		return chartScroll;

@@ -218,27 +218,31 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 	public void dataUpdated() {
 		this.dataUpdated = true;
 
-		Candle first = candleHistory.get(0);
+		Candle first = candleHistory.getFirst();
 		if (startHandle.candle == null) {
 			startHandle.candle = first;
 		}
 
-		Candle last = candleHistory.get(candleHistory.size() - 1);
+		Candle last = candleHistory.getLast();
 		if (endHandle.candle == null) {
 			endHandle.candle = last;
 		}
 
 		//looking at most recent history, update view
-		if(endHandle.candle == chart.candleHistory.getLast() && endHandle.candle != last){
+		if (endHandle.candle == chart.candleHistory.getLast() && endHandle.candle != last) {
 			endHandle.candle = last;
 			Candle firstCandleInRange = candleHistory.get(candleHistory.size() - 1 - candlesInRange);
-			if(firstCandleInRange != null){
+			if (firstCandleInRange != null) {
 				startHandle.candle = firstCandleInRange;
 			}
 		}
 
 		chart.candleHistory.updateView(first, last);
 		invokeRepaint();
+	}
+
+	public boolean lookingAtRecentHistory() {
+		return endHandle.candle == candleHistory.getLast();
 	}
 
 	private void invokeRepaint() {

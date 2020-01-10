@@ -12,11 +12,13 @@ public class ColorSelector extends JLabel {
 	public static final String SELECTED_COLOR_CHANGED_PROPERTY = "SELECTED_COLOR_CHANGED_PROPERTY";
 
 	public ColorSelector(final Color initialColor, final String colorChooserTitle) {
+		setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 		setBackground(initialColor);
 		setBorder(new SoftBevelBorder(BevelBorder.LOWERED));
 		setOpaque(true);
+
 		addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent evt) {				
+			public void mousePressed(MouseEvent evt) {
 				//Color selectedColor = JColorChooser.showDialog(parent == null ? ColorSelector.this : parent, colorChooserTitle, getSelectedColor());
 				Color selectedColor = WindowUtils.displayJColorChooser(ColorSelector.this, colorChooserTitle, getSelectedColor());
 				Color oldValue = getSelectedColor();
