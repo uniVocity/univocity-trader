@@ -29,7 +29,7 @@ public class LineChart extends InteractiveChart<LineChartController> {
 	}
 
 	@Override
-	protected void draw(Graphics2D g) {
+	protected void draw(Graphics2D g, int width) {
 		g.setStroke(getLineStroke());
 		g.setColor(getLineColor());
 
@@ -45,7 +45,7 @@ public class LineChart extends InteractiveChart<LineChartController> {
 			startPoint = location;
 		}
 
-		super.draw(g);
+		super.draw(g, width);
 	}
 
 	@Override

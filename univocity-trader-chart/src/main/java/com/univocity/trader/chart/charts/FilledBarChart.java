@@ -14,7 +14,7 @@ abstract class FilledBarChart<C extends AbstractFilledBarChartController<?>> ext
 	}
 
 	@Override
-	protected void draw(Graphics2D g) {
+	protected void draw(Graphics2D g, int width) {
 		g.setStroke(getLineStroke());
 		for (int i = 0; i < candleHistory.size(); i++) {
 			Point location = createCandleCoordinate(i);
@@ -22,7 +22,7 @@ abstract class FilledBarChart<C extends AbstractFilledBarChartController<?>> ext
 			drawBar(candle, location, g, getLineColor(candle), getFillColor(candle));
 		}
 
-		super.draw(g);
+		super.draw(g, width);
 	}
 
 	protected abstract void drawBar(Candle trade, Point location, Graphics2D g, Color lineColor, Color fillColor);

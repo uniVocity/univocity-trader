@@ -39,14 +39,12 @@ public class RulerController<T> implements Controller, DrawingProfile {
 	private JPanel controlPanel;
 	private Ruler<?> ruler;
 
-
 	public RulerController(Ruler<?> ruler) {
 		this.ruler = ruler;
 		profiles = new EnumMap<DrawingProfile.Profile, DrawingProfile>(DrawingProfile.Profile.class);
-		profiles.put(DEFAULT, new DrawingProfileImpl(new BasicStroke(1), Color.GRAY, new Font("Arial", Font.PLAIN, 10), Color.BLACK));
-		profiles.put(SELECTION, new DrawingProfileImpl(new BasicStroke(3), Color.BLUE, new Font("Arial", Font.BOLD, 12), Color.BLUE));
+		profiles.put(DEFAULT, new DrawingProfileImpl(new BasicStroke(1), Color.GRAY, new Font("Arial", Font.PLAIN, 10), new Color(204, 204, 204)));
+		profiles.put(SELECTION, new DrawingProfileImpl(new BasicStroke(1), Color.BLACK, new Font("Arial", Font.BOLD, 10), Color.BLACK));
 		selectedProfile = profiles.get(DEFAULT);
-
 	}
 
 	public boolean isShowingGrid() {
@@ -191,7 +189,7 @@ public class RulerController<T> implements Controller, DrawingProfile {
 		return controlPanel;
 	}
 
-	public Ruler<?> getRuler(){
+	public Ruler<?> getRuler() {
 		return ruler;
 	}
 }

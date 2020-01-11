@@ -10,12 +10,25 @@ import java.awt.event.*;
 
 public abstract class InteractiveChart<C extends InteractiveChartController> extends BasicChart<C> {
 
-	private Candle hoveredCandle = null;
 	private Point mousePosition = null;
 
 	public InteractiveChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
 		this.setFocusable(true);
+
+		addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				Candle current = getCurrentCandle();
+				Candle selected = getSelectedCandle();
+
+				if(current != selected){
+					setSelectedCandle(current);
+				} else {
+					setSelectedCandle(null);
+				}
+			}
+		});
 
 		addMouseMotionListener(new MouseMotionListener() {
 
@@ -33,11 +46,9 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 				mousePosition = e.getPoint();
 				mousePosition.x = translateX(mousePosition.x);
 				Candle candle = getCandleUnderCursor();
-				if (candle != hoveredCandle) {
-					System.out.println(candle);
-					hoveredCandle = candle;
+				if (candle != getCurrentCandle()) {
+					setCurrentCandle(candle);
 				}
-				repaint();
 			}
 		});
 
@@ -68,8 +79,9 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 	}
 
 	@Override
-	protected void draw(Graphics2D g) {
-		Point hoveredPosition = locationOf(hoveredCandle);
+	protected void draw(Graphics2D g, int width) {
+		Point hoveredPosition = getCurrentCandleLocation();
+		System.out.println(hoveredPosition);
 
 		if (isVerticalSelectionLineEnabled() || isHorizontalSelectionLineEnabled()) {
 			g.setStroke(new BasicStroke(1));
@@ -86,10 +98,10 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 
 		Point selectionPoint = getSelectedCandleLocation();
 		if (selectionPoint != null) {
-			drawSelected(selectedCandle, selectionPoint, g);
+			drawSelected(getSelectedCandle(), selectionPoint, g);
 		}
 		if (hoveredPosition != null) {
-			drawHovered(hoveredCandle, hoveredPosition, g);
+			drawHovered(getCurrentCandle(), hoveredPosition, g);
 		}
 	}
 

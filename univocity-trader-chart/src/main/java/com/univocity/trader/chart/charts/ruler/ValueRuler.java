@@ -31,17 +31,14 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		final double yIncrement = getController().getFontHeight();
 
 		int y = chart.getHeight() - chart.getYCoordinate(chart.getMaximum());
-		getController().text(g);
 
 		while (y > 0) {
 			String tag = getValueFormat().format(chart.getValueAtY(y));
 			int tagWidth = getController().getMaxStringWidth(tag, g);
 
 			int yy = chart.getHeight() - y;
-
+			getController().text(g);
 			g.drawString(tag, chart.getBoundaryRight() - tagWidth - getRightValueTagSpacing(), yy + (getFontHeight() / 2));
-			drawLine(yy, g);
-
 			y -= yIncrement;
 		}
 
@@ -57,9 +54,9 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		return getMinimumWidth();
 	}
 
-	private void drawLine(int y, Graphics2D g) {
+	private void drawLine(int y, Graphics2D g, int width) {
 		getController().drawing(g);
-		g.drawLine(chart.translateX(0), y, getController().getLineWidth(), y);
+		g.drawLine(0, y, width, y);
 	}
 
 	protected void drawSelection(Graphics2D g, int width, Candle candle, Point location) {
@@ -67,7 +64,7 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 
 		final int y = chart.getYCoordinate(chart.getCentralValue(candle));
 		final int fontHeight = getController().getFontHeight();
-		int stringY = getController().centralizeYToFontHeight(y);
+		int stringY = getController().centralizeYToFontHeight(0);
 
 		if (stringY + fontHeight > chart.getHeight()) {
 			stringY = chart.getHeight() - fontHeight;
@@ -79,7 +76,8 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		int tagWidth = getController().getMaxStringWidth(tag, g);
 		getController().drawStringInBox(chart.getBoundaryRight() - tagWidth - getController().getRightValueTagSpacing(), stringY, chart.getWidth(), tag, g, 1);
 
-		drawLine(y, g);
+		getController().drawing(g);
+		drawLine(y, g, width);
 
 	}
 

@@ -14,14 +14,14 @@ public class BarChart extends InteractiveChart<BarChartController> {
 	}
 
 	@Override
-	protected void draw(Graphics2D g) {
+	protected void draw(Graphics2D g, int width) {
 		for (int i = 0; i < candleHistory.size(); i++) {
 			Point location = createCandleCoordinate(i);
 			Candle candle = candleHistory.get(i);
 			drawBar(getLineColor(candle), candle, location, g);
 		}
 
-		super.draw(g);
+		super.draw(g, width);
 	}
 
 	private void drawBar(Color color, Candle candle, Point location, Graphics2D g) {

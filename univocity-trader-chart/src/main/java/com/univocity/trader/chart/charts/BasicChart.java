@@ -3,10 +3,11 @@ package com.univocity.trader.chart.charts;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
-import com.univocity.trader.chart.charts.painter.*;
+import com.univocity.trader.chart.charts.painter.Painter;
 import com.univocity.trader.chart.charts.scrolling.*;
 import com.univocity.trader.chart.gui.*;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.util.List;
@@ -16,8 +17,6 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private final EnumMap<Painter.Z, List<Painter>> painters = new EnumMap<>(Painter.Z.class);
 
-	private final Color TRANSPARENT = new Color(255, 255, 255, 0);
-
 	private double horizontalIncrement = 0.0;
 	private double maximum = -1.0;
 	private double minimum = Double.MAX_VALUE;
@@ -25,7 +24,8 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	private double logLow;
 	private double logRange;
 
-	protected Candle selectedCandle;
+	private Candle selectedCandle;
+	private Candle currentCandle;
 
 	private C controller;
 
@@ -89,7 +89,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 			painter.paintOn(ig, width);
 		}
 
-		draw(ig);
+		draw(ig, width);
 
 		for (Painter<?> painter : painters.get(Painter.Z.FRONT)) {
 			painter.paintOn(ig, width);
@@ -233,8 +233,19 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	public final void setSelectedCandle(Candle candle) {
 		if (this.selectedCandle != candle) {
 			selectedCandle = candle;
-			repaint();
+			SwingUtilities.invokeLater(this::repaint);
 		}
+	}
+
+	public final void setCurrentCandle(Candle candle) {
+		if (this.currentCandle != candle) {
+			currentCandle = candle;
+			SwingUtilities.invokeLater(this::repaint);
+		}
+	}
+
+	public final Candle getCurrentCandle() {
+		return currentCandle;
 	}
 
 	protected Point createCandleCoordinate(int candleIndex) {
@@ -269,6 +280,10 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	public Point getSelectedCandleLocation() {
 		return locationOf(getSelectedCandle());
+	}
+
+	public Point getCurrentCandleLocation() {
+		return locationOf(getCurrentCandle());
 	}
 
 	protected final int getBarWidth() {
@@ -316,6 +331,6 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	}
 
-	protected abstract void draw(Graphics2D g);
+	protected abstract void draw(Graphics2D g, int width);
 
 }
