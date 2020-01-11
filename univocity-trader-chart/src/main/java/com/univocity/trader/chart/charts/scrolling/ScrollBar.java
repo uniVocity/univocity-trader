@@ -47,6 +47,7 @@ public class ScrollBar extends MouseAdapter {
 	}
 
 	public void updateScroll() {
+
 		double required = parent.requiredWidth();
 		double available = parent.getWidth();
 
@@ -127,7 +128,7 @@ public class ScrollBar extends MouseAdapter {
 		}
 
 		if (!scrollRequired) {
-			scrollHandle.setPosition(0);
+			scrollHandle.setPosition(Integer.MAX_VALUE);
 		}
 	}
 }

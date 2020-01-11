@@ -314,7 +314,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	int translateX(int x) {
 		if (scrollBar != null && scrollBar.isScrollingView()) {
-			return (int) (x + scrollBar.getBoundaryLeft());
+			return x + scrollBar.getBoundaryLeft();
 		}
 		return x;
 

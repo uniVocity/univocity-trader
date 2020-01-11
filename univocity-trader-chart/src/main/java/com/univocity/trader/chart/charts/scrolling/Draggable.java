@@ -4,7 +4,7 @@ package com.univocity.trader.chart.charts.scrolling;
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 abstract class Draggable {
-	private int position;
+	private int position = Integer.MAX_VALUE;
 
 	public final int getPosition() {
 		return position;

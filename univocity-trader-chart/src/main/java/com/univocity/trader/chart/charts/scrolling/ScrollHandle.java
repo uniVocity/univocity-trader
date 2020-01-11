@@ -26,12 +26,19 @@ class ScrollHandle extends Draggable {
 		return p.x >= getPosition() && p.x <= getPosition() + width && p.y <= c.getHeight() && p.y >= c.getHeight() - scrollBar.height;
 	}
 
+	public boolean pinnedToRight() {
+		return getPosition() + getWidth() >= maxPosition();
+	}
+
 	public void setWidth(int width) {
-		if(width < MIN_WIDTH){
-			width = MIN_WIDTH;
+		if(this.width != width) {
+			boolean pinnedToRight = pinnedToRight();
+			if (width < MIN_WIDTH) {
+				width = MIN_WIDTH;
+			}
+			this.width = width;
+			setPosition(pinnedToRight ? maxPosition() : getPosition());
 		}
-		this.width = width;
-		setPosition(getPosition());
 	}
 
 	public int getWidth() {
