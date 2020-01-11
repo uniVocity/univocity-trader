@@ -12,18 +12,18 @@ public abstract class AbstractBarChartController<C extends InteractiveChart<?>> 
 
 	@Label("Positive closing color")
 	@ColorBound()
-	private Color upColor = Color.GREEN;
+	private Color upColor = new Color(0, 153, 51);
 	@Label("Positive selection color")
 	@ColorBound()
-	private Color upSelectionColor = Color.GRAY;
+	private Color upSelectionColor = new Color(220, 220, 255);
 
 
 	@Label("Negative closing color")
 	@ColorBound()
-	private Color downColor = Color.RED;
+	private Color downColor = new Color(205, 0, 51);
 	@Label("Negative selection color")
 	@ColorBound()
-	private Color downSelectionColor = Color.ORANGE;
+	private Color downSelectionColor = new Color(152, 102, 0);
 
 	public AbstractBarChartController(C chart) {
 		super(chart);

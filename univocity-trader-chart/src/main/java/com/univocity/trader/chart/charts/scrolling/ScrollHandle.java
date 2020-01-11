@@ -31,6 +31,7 @@ class ScrollHandle extends Draggable {
 			width = MIN_WIDTH;
 		}
 		this.width = width;
+		setPosition(getPosition());
 	}
 
 	public int getWidth() {

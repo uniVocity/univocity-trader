@@ -16,7 +16,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private final EnumMap<Painter.Z, List<Painter>> painters = new EnumMap<>(Painter.Z.class);
 
-	private final Color TRANSPARENT = new Color(0, 0, 0, 0);
+	private final Color TRANSPARENT = new Color(255, 255, 255, 0);
 
 	private double horizontalIncrement = 0.0;
 	private double maximum = -1.0;
@@ -40,7 +40,6 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		painters.put(Painter.Z.BACK, new ArrayList<>());
 		painters.put(Painter.Z.FRONT, new ArrayList<>());
 		candleHistory.addDataUpdateListener(this::dataUpdated);
-		image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 	}
 
 	public void enableScrolling() {
@@ -74,16 +73,17 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 		clearGraphics(g);
 
-		int w = Math.max(requiredWidth(), getWidth());
-		boolean clearImage = image.getWidth() == w && image.getHeight() == height;
-		Graphics2D ig = (Graphics2D) image.getGraphics();
+		int width = Math.max(requiredWidth(), getWidth());
+		boolean clearImage = image != null && image.getWidth() == width && image.getHeight() == height;
 		if (!clearImage) {
-			image = new BufferedImage(w, Math.max(1, height), BufferedImage.TYPE_INT_ARGB);
-			ig = (Graphics2D) image.getGraphics();
-		} else {
+			image = new BufferedImage(width, Math.max(1, height), BufferedImage.TYPE_INT_ARGB);
+		}
+
+		Graphics2D ig = (Graphics2D) image.getGraphics();
+
+		if (clearImage) {
 			ig.clearRect(0, 0, width, height);
 			ig.setColor(TRANSPARENT);
-			ig.fillRect(0, 0, width, height);
 		}
 
 		applyAntiAliasing(ig);
@@ -94,7 +94,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 			painter.paintOn(ig);
 		}
 
-		g.drawImage(image, 0, 0, w, height, getBoundaryLeft(), 0, getBoundaryRight(), height, null);
+		g.drawImage(image, 0, 0, width, height, getBoundaryLeft(), 0, getBoundaryLeft() + getBoundaryRight(), height, null);
 
 		for (Painter<?> painter : painters.get(Painter.Z.BACK)) {
 			painter.paintOn(g);
