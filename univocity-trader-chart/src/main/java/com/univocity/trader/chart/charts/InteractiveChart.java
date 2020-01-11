@@ -22,7 +22,7 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 				Candle current = getCurrentCandle();
 				Candle selected = getSelectedCandle();
 
-				if(current != selected){
+				if (current != selected) {
 					setSelectedCandle(current);
 				} else {
 					setSelectedCandle(null);
@@ -44,6 +44,9 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 
 			private void processMouseEvent(final MouseEvent e) {
 				mousePosition = e.getPoint();
+				if (inDisabledSection(mousePosition)) {
+					return;
+				}
 				mousePosition.x = translateX(mousePosition.x);
 				Candle candle = getCandleUnderCursor();
 				if (candle != getCurrentCandle()) {

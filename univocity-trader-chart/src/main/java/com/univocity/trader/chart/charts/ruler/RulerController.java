@@ -15,7 +15,7 @@ public class RulerController<T> implements Controller, DrawingProfile {
 
 	@Label("Background color")
 	@ColorBound()
-	private Color backgroundColor = new Color(255, 255, 255, 0);
+	private Color backgroundColor = new Color(128, 128, 128, 128);
 
 
 	@Label("Grid color")

@@ -15,6 +15,8 @@ import java.util.*;
 
 public abstract class BasicChart<C extends BasicChartController> extends NullLayoutPanel {
 
+	private final Insets insets = new Insets(0, 0, 0, 0);
+
 	private final EnumMap<Painter.Z, List<Painter>> painters = new EnumMap<>(Painter.Z.class);
 
 	private double horizontalIncrement = 0.0;
@@ -69,7 +71,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		super.paintComponent(g1d);
 		Graphics2D g = (Graphics2D) g1d;
 
-		int width = Math.max(requiredWidth(), getWidth());
+		int width = Math.max(getRequiredWidth(), getWidth());
 		applyAntiAliasing(g);
 		clearGraphics(g, width);
 
@@ -85,20 +87,33 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 		updateScroll();
 
-		for (Painter<?> painter : painters.get(Painter.Z.BACK)) {
-			painter.paintOn(ig, width);
-		}
+		insets.right = 0;
+		insets.left = 0;
 
+		runPainters(ig, Painter.Z.BACK);
 		draw(ig, width);
-
-		for (Painter<?> painter : painters.get(Painter.Z.FRONT)) {
-			painter.paintOn(ig, width);
-		}
+		runPainters(ig, Painter.Z.FRONT);
 
 		g.drawImage(image, 0, 0, getWidth(), height, getBoundaryLeft(), 0, getBoundaryRight(), height, null);
 
 		if (scrollBar != null) {
 			scrollBar.draw(g);
+		}
+	}
+
+	public boolean inDisabledSection(Point point) {
+		return point.y < getHeight() - scrollBar.getHeight() && (point.x >= getWidth() - insets.right || point.x < insets.left);
+	}
+
+	public int getInsetsWidth() {
+		return insets.left + insets.right;
+	}
+
+	private void runPainters(Graphics2D g, Painter.Z z) {
+		for (Painter<?> painter : painters.get(z)) {
+			painter.paintOn(g, width);
+			insets.right = Math.max(painter.insets().right, insets.right);
+			insets.left = Math.max(painter.insets().left, insets.left);
 		}
 	}
 
@@ -171,7 +186,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private void updateIncrements() {
 		if (!candleHistory.isEmpty()) {
-			horizontalIncrement = ((double) Math.max(width, requiredWidth()) / (double) candleHistory.size());
+			horizontalIncrement = (((double) Math.max(width, getRequiredWidth()) - (getInsetsWidth())) / (double) candleHistory.size());
 		}
 	}
 
@@ -294,8 +309,8 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return getController().getSpaceBetweenBars();
 	}
 
-	public int requiredWidth() {
-		return (getBarWidth() + getSpaceBetweenCandles()) * candleHistory.size();
+	public int getRequiredWidth() {
+		return (getBarWidth() + getSpaceBetweenCandles()) * candleHistory.size() + getInsetsWidth();
 	}
 
 	protected abstract C newController();

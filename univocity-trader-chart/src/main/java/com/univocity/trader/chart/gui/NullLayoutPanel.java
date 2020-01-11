@@ -47,7 +47,7 @@ public abstract class NullLayoutPanel extends JPanel {
 		}
 	}
 
-	public int requiredWidth() {
+	public int getRequiredWidth() {
 		return -1;
 	}
 

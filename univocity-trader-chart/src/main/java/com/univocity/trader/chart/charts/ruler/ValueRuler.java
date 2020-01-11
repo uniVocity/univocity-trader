@@ -12,6 +12,13 @@ import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
 public class ValueRuler extends Ruler<ValueRulerController> {
 
+	private Point gradientStart = new Point(0, 0);
+	private Point gradientEnd = new Point(0, 0);
+	private static final Color glassGray = new Color(222, 222, 222, 180);
+	private static final Color glassWhite = new Color(255, 255, 255, 128);
+
+	private final Insets insets = new Insets(0, 0, 0, 0);
+
 	public ValueRuler(BasicChart<?> chart) {
 		super(chart);
 	}
@@ -24,17 +31,38 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		return getController().getFontHeight();
 	}
 
+	private void drawGlass(Graphics2D g) {
+		int width = insets.right + getRightValueTagSpacing();
+		int start = chart.getBoundaryRight() - width;
+		int end = insets.right + width;
+
+		gradientStart.x = start - 200;
+		gradientStart.y = 0;
+		gradientEnd.x = end + 200;
+		gradientEnd.y = chart.getHeight();
+
+
+		g.setPaint(new GradientPaint(gradientStart, glassGray, gradientEnd, glassWhite));
+		g.fillRect(start, 0, end, chart.getHeight());
+	}
+
 	protected void drawBackground(Graphics2D g, int width) {
 		getController().setProfile(DEFAULT);
+
+		drawGlass(g);
+
 		getController().updateFontSize(g);
 
 		final double yIncrement = getController().getFontHeight();
 
 		int y = chart.getHeight() - chart.getYCoordinate(chart.getMaximum());
 
+		int insetRight = 0;
 		while (y > 0) {
 			String tag = getValueFormat().format(chart.getValueAtY(y));
 			int tagWidth = getController().getMaxStringWidth(tag, g);
+
+			insetRight = Math.max(insetRight, tagWidth);
 
 			int yy = chart.getHeight() - y;
 			getController().text(g);
@@ -43,7 +71,8 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		}
 
 		getController().setProfile(DEFAULT);
-		getController().drawing(g);
+
+		insets.right = insetRight;
 	}
 
 	private int getMinimumWidth() {
@@ -54,9 +83,9 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		return getMinimumWidth();
 	}
 
-	private void drawLine(int y, Graphics2D g, int width) {
+	private void drawLine(int y, Graphics2D g, int length, int width) {
 		getController().drawing(g);
-		g.drawLine(0, y, width, y);
+		g.drawLine(width - length, y, width, y);
 	}
 
 	protected void drawSelection(Graphics2D g, int width, Candle candle, Point location) {
@@ -64,7 +93,7 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 
 		final int y = chart.getYCoordinate(chart.getCentralValue(candle));
 		final int fontHeight = getController().getFontHeight();
-		int stringY = getController().centralizeYToFontHeight(0);
+		int stringY = getController().centralizeYToFontHeight(y);
 
 		if (stringY + fontHeight > chart.getHeight()) {
 			stringY = chart.getHeight() - fontHeight;
@@ -75,10 +104,6 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		String tag = readFieldFormatted(candle);
 		int tagWidth = getController().getMaxStringWidth(tag, g);
 		getController().drawStringInBox(chart.getBoundaryRight() - tagWidth - getController().getRightValueTagSpacing(), stringY, chart.getWidth(), tag, g, 1);
-
-		getController().drawing(g);
-		drawLine(y, g, width);
-
 	}
 
 	private boolean isShowingGrid() {
@@ -108,6 +133,11 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 
 	@Override
 	public Z getZ() {
-		return Z.BACK;
+		return Z.FRONT;
+	}
+
+	@Override
+	public Insets insets() {
+		return insets;
 	}
 }

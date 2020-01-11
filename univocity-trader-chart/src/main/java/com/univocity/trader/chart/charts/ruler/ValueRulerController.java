@@ -82,4 +82,10 @@ public class ValueRulerController extends RulerController<ValueRuler> {
 		text(g);
 		g.drawString(string, x + stroke * 2, y + getFontHeight() - stroke * 2);
 	}
+
+	public void drawString(int x, int y, String string, Graphics2D g, int stroke) {
+		text(g);
+		g.drawString(string, x + stroke * 2, y + getFontHeight() - stroke * 2);
+	}
+
 }

@@ -1,6 +1,6 @@
 package com.univocity.trader.chart.charts.scrolling;
 
-import com.univocity.trader.chart.gui.*;
+import com.univocity.trader.chart.charts.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,7 +16,7 @@ public class ScrollBar extends MouseAdapter {
 	private final Point gradientStart = new Point(0, 0);
 	private final Point gradientEnd = new Point(0, 0);
 
-	final NullLayoutPanel parent;
+	final BasicChart parent;
 
 	int height = 10;
 	boolean scrolling;
@@ -27,7 +27,7 @@ public class ScrollBar extends MouseAdapter {
 
 	final ScrollHandle scrollHandle = new ScrollHandle(this);
 
-	public ScrollBar(NullLayoutPanel parent) {
+	public ScrollBar(BasicChart parent) {
 		this.parent = parent;
 		parent.addMouseMotionListener(this);
 
@@ -48,7 +48,7 @@ public class ScrollBar extends MouseAdapter {
 
 	public void updateScroll() {
 
-		double required = parent.requiredWidth();
+		double required = parent.getRequiredWidth();
 		double available = parent.getWidth();
 
 		double scrollingArea = available < ScrollHandle.MIN_WIDTH ? ScrollHandle.MIN_WIDTH : available;
@@ -130,5 +130,9 @@ public class ScrollBar extends MouseAdapter {
 		if (!scrollRequired) {
 			scrollHandle.setPosition(Integer.MAX_VALUE);
 		}
+	}
+
+	public int getHeight(){
+		return height;
 	}
 }
