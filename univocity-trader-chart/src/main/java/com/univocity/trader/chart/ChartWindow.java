@@ -123,7 +123,7 @@ public class ChartWindow extends JFrame {
 			i = (i % values.length);
 		}
 
-		getCandleHistory().addSilently(new Candle(size * 60000, (size + 1) * 60000, values[i][0], values[i][2], values[i][3], values[i][1], values[i][4]));
+		getCandleHistory().addSilently(new Candle(size * 60000 * 60, (size + 1) * 60000 * 60, values[i][0], values[i][2], values[i][3], values[i][1], values[i][4]));
 	}
 
 	private void addCandles() {

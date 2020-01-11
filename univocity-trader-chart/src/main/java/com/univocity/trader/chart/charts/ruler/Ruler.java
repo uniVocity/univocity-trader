@@ -69,6 +69,10 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		getController().setProfile(profile);
 	}
 
+	protected final int getStringWidth(String str, Graphics2D g) {
+		return getController().getStringWidth(str, g);
+	}
+
 	protected final void text(Graphics2D g) {
 		getController().text(g);
 	}

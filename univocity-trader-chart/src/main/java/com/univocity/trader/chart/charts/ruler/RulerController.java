@@ -20,7 +20,7 @@ public class RulerController<T> implements Controller, DrawingProfile {
 
 	@Label("Grid color")
 	@ColorBound()
-	private Color gridColor = Color.LIGHT_GRAY;
+	private Color gridColor = new Color(210, 210, 210, 190);
 
 	private Map<DrawingProfile.Profile, DrawingProfile> profiles;
 	private DrawingProfile selectedProfile;
