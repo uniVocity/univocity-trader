@@ -31,7 +31,7 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 			return;
 		}
 
-		double columnWidth = Math.round(chart.getHorizontalIncrement() * 10.0);
+		double columnWidth = Math.round(chart.getHorizontalIncrement() * 20.0);
 
 		double increments = width / columnWidth;
 
@@ -50,26 +50,23 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 				continue;
 			}
 
-			LocalDateTime candleTime = Instant.ofEpochMilli(candle.closeTime).atZone(ZoneId.systemDefault()).toLocalDateTime();
-			String text = null;
-
-			if (previousTime != null) {
-				text = getTimeLabel(previousTime, candleTime, candle);
-			}
+			LocalDateTime candleTime = candle.localCloseDateTime();
+			String text = getTimeLabel(previousTime, candleTime, candle);
 
 			previousTime = candleTime;
 
-			if (text != null) {
-				int stringWidth = getStringWidth(text, g);
-				int position = getTextPosition(x, stringWidth, false);
-				text(g);
-				drawString(position, chart.getHeight() - getFontHeight() - chart.getScrollHeight(), text, g, 1);
-			}
+			int stringWidth = getStringWidth(text, g);
+			int position = getTextPosition(x, stringWidth, false);
+			text(g);
+			drawString(position, chart.getHeight() - getFontHeight() - chart.getScrollHeight(), text, g, 1);
 		}
 
 	}
 
 	private String getTimeLabel(LocalDateTime previousTime, LocalDateTime candleTime, Candle candle) {
+		if (previousTime == null) {
+			return candle.getFormattedCloseTime("yyyy MMM dd");
+		}
 		long prevYear = previousTime.getYear();
 		long curYear = candleTime.getYear();
 		if (prevYear != curYear) {
@@ -83,7 +80,7 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 				int prevDay = previousTime.getDayOfMonth();
 				int curDay = candleTime.getDayOfMonth();
 				if (prevDay != curDay) {
-					return candle.getFormattedCloseTime("MMM dd");
+					return candle.getFormattedCloseTime("MMM dd HH:mm");
 				} else {
 					return candle.getFormattedCloseTime("HH:mm");
 				}

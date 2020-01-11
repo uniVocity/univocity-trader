@@ -149,6 +149,15 @@ public class Candle implements Comparable<Candle>, Cloneable {
 		return this.open >= this.close;
 	}
 
+	public LocalDateTime localCloseDateTime() {
+		return Instant.ofEpochMilli(closeTime).atZone(ZoneId.systemDefault()).toLocalDateTime();
+	}
+
+	public LocalDateTime localOpenDateTime() {
+		return Instant.ofEpochMilli(openTime).atZone(ZoneId.systemDefault()).toLocalDateTime();
+	}
+
+
 	public Candle clone() {
 		try {
 			return (Candle) super.clone();
