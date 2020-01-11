@@ -8,6 +8,7 @@ import com.univocity.trader.chart.charts.scrolling.*;
 import com.univocity.trader.chart.gui.*;
 
 import java.awt.*;
+import java.awt.image.*;
 import java.util.List;
 import java.util.*;
 
@@ -15,6 +16,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private final EnumMap<Painter.Z, List<Painter>> painters = new EnumMap<>(Painter.Z.class);
 
+	private final Color TRANSPARENT = new Color(0, 0, 0, 0);
 
 	private double horizontalIncrement = 0.0;
 	private double maximum = -1.0;
@@ -31,14 +33,17 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private ScrollBar scrollBar;
 
+	private BufferedImage image;
+
 	public BasicChart(CandleHistoryView candleHistory) {
 		this.candleHistory = candleHistory;
 		painters.put(Painter.Z.BACK, new ArrayList<>());
 		painters.put(Painter.Z.FRONT, new ArrayList<>());
 		candleHistory.addDataUpdateListener(this::dataUpdated);
+		image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 	}
 
-	public void enableScrolling(){
+	public void enableScrolling() {
 		scrollBar = new ScrollBar(this);
 	}
 
@@ -55,30 +60,72 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		g.fillRect(0, 0, width, height);
 	}
 
+	private void applyAntiAliasing(Graphics2D g) {
+		if (isAntialiased()) {
+			(g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		}
+	}
+
 	public final void paintComponent(Graphics g1d) {
 		super.paintComponent(g1d);
 		Graphics2D g = (Graphics2D) g1d;
 
-		if (isAntialiased()) {
-			(g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		}
+		applyAntiAliasing(g);
 
 		clearGraphics(g);
+
+		int w = Math.max(requiredWidth(), getWidth());
+		boolean clearImage = image.getWidth() == w && image.getHeight() == height;
+		Graphics2D ig = (Graphics2D) image.getGraphics();
+		if (!clearImage) {
+			image = new BufferedImage(w, Math.max(1, height), BufferedImage.TYPE_INT_ARGB);
+			ig = (Graphics2D) image.getGraphics();
+		} else {
+			ig.clearRect(0, 0, width, height);
+			ig.setColor(TRANSPARENT);
+			ig.fillRect(0, 0, width, height);
+		}
+
+		applyAntiAliasing(ig);
+
+		draw(ig);
+
+		for (Painter<?> painter : painters.get(Painter.Z.FRONT)) {
+			painter.paintOn(ig);
+		}
+
+		g.drawImage(image, 0, 0, w, height, getBoundaryLeft(), 0, getBoundaryRight(), height, null);
 
 		for (Painter<?> painter : painters.get(Painter.Z.BACK)) {
 			painter.paintOn(g);
 		}
 
-		draw(g);
-
-		for (Painter<?> painter : painters.get(Painter.Z.FRONT)) {
-			painter.paintOn(g);
-		}
-
-		if(scrollBar != null) {
+		if (scrollBar != null) {
 			scrollBar.draw(g);
 		}
 	}
+
+	double getVisibleProportion() {
+		if (scrollBar != null) {
+			return scrollBar.getVisibleProportion();
+		}
+		return 1.0;
+	}
+
+	private int getBoundaryRight() {
+		if (scrollBar != null && scrollBar.isScrollingView()) {
+			return scrollBar.getBoundaryRight();
+		}
+		return width;
+	}
+
+	int getBoundaryLeft() {
+		if (scrollBar != null && scrollBar.isScrollingView()) {
+			return scrollBar.getBoundaryLeft();
+		}
+		return 0;
+	}
+
 
 	private void dataUpdated() {
 		maximum = 0;
@@ -128,7 +175,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private void updateIncrements() {
 		if (!candleHistory.isEmpty()) {
-			horizontalIncrement = ((double) width / (double) candleHistory.size());
+			horizontalIncrement = ((double) Math.max(width, requiredWidth()) / (double) candleHistory.size());
 		}
 	}
 
@@ -263,6 +310,14 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	public double getCentralValue(Candle candle) {
 		return candle.close;
+	}
+
+	int translateX(int x) {
+		if (scrollBar != null && scrollBar.isScrollingView()) {
+			return (int) (x * scrollBar.getVisibleProportion() + scrollBar.getBoundaryLeft());
+		}
+		return x;
+
 	}
 
 	protected abstract void draw(Graphics2D g);

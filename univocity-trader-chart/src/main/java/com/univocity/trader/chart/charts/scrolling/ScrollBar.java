@@ -23,6 +23,8 @@ public class ScrollBar extends MouseAdapter {
 	private boolean scrollRequired;
 	private boolean dragging;
 	private int dragStart;
+	private double visibleProportion;
+	private double scrollStep;
 
 	final ScrollHandle scrollHandle = new ScrollHandle(this);
 
@@ -41,9 +43,13 @@ public class ScrollBar extends MouseAdapter {
 		timer.start();
 	}
 
+	public boolean isScrollingView(){
+		return scrollRequired;
+	}
+
 	public void draw(Graphics2D g) {
-		int required = parent.requiredWidth();
-		int available = parent.getWidth();
+		double required = parent.requiredWidth();
+		double available = parent.getWidth();
 		scrollRequired = required > available;
 
 		gradientStart.x = parent.getWidth() / 2;
@@ -55,9 +61,12 @@ public class ScrollBar extends MouseAdapter {
 		g.fillRect(0, parent.getHeight() - height, parent.getWidth(), height);
 
 		if (scrollRequired) {
-			int areaOutOfView = available - (int) ((double) available * Math.round((double) required / (double) available - 1.0));
+			double scrollingArea = available < ScrollHandle.MIN_WIDTH ? ScrollHandle.MIN_WIDTH : available;
+			visibleProportion = available / required;
+			double handleWidth = scrollingArea * visibleProportion;
+			scrollStep = (required - available) / (available - handleWidth);
 
-//			scrollHandle.setWidth(handleWidth);
+			scrollHandle.setWidth((int) handleWidth);
 			scrollHandle.draw(g, parent);
 		}
 	}
@@ -79,6 +88,14 @@ public class ScrollBar extends MouseAdapter {
 		}
 	}
 
+	public int getBoundaryRight() {
+		return (int) Math.round((scrollHandle.getPosition() + scrollHandle.getWidth()) * scrollStep);
+	}
+
+	public int getBoundaryLeft() {
+		return (int) Math.round(scrollHandle.getPosition() * scrollStep);
+	}
+
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		dragging = false;
@@ -87,6 +104,10 @@ public class ScrollBar extends MouseAdapter {
 	@Override
 	public void mouseExited(MouseEvent e) {
 		updateHighlight(e.getPoint());
+	}
+
+	public double getVisibleProportion(){
+		return visibleProportion;
 	}
 
 	@Override
@@ -105,6 +126,10 @@ public class ScrollBar extends MouseAdapter {
 
 		if (prev != scrolling && !dragging) {
 			SwingUtilities.invokeLater(parent::repaint);
+		}
+
+		if (!scrollRequired) {
+			scrollHandle.setPosition(0);
 		}
 	}
 }

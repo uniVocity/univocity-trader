@@ -6,7 +6,7 @@ import java.awt.*;
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 class ScrollHandle extends Draggable {
-	private static final int MIN_WIDTH = 20;
+	static final int MIN_WIDTH = 20;
 
 	private int width = MIN_WIDTH;
 

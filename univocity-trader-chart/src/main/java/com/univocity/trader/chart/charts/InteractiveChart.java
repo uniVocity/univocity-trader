@@ -31,6 +31,7 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 
 			private void processMouseEvent(final MouseEvent e) {
 				mousePosition = e.getPoint();
+				mousePosition.x = translateX(mousePosition.x);
 				Candle candle = getCandleUnderCursor();
 				if (candle != hoveredCandle) {
 					System.out.println(candle);
