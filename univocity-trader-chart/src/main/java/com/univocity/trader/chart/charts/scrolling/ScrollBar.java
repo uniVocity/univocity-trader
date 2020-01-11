@@ -23,7 +23,6 @@ public class ScrollBar extends MouseAdapter {
 	private boolean scrollRequired;
 	private boolean dragging;
 	private int dragStart;
-	private double visibleProportion;
 	private double scrollStep;
 
 	final ScrollHandle scrollHandle = new ScrollHandle(this);
@@ -43,14 +42,23 @@ public class ScrollBar extends MouseAdapter {
 		timer.start();
 	}
 
-	public boolean isScrollingView(){
+	public boolean isScrollingView() {
 		return scrollRequired;
 	}
 
-	public void draw(Graphics2D g) {
+	public void updateScroll() {
 		double required = parent.requiredWidth();
 		double available = parent.getWidth();
+
+		double scrollingArea = available < ScrollHandle.MIN_WIDTH ? ScrollHandle.MIN_WIDTH : available;
+		double handleWidth = scrollingArea * (available / required);
+		scrollStep = (required - available) / (available - handleWidth);
+		scrollHandle.setWidth((int) handleWidth);
+
 		scrollRequired = required > available;
+	}
+
+	public void draw(Graphics2D g) {
 
 		gradientStart.x = parent.getWidth() / 2;
 		gradientStart.y = -50;
@@ -61,12 +69,6 @@ public class ScrollBar extends MouseAdapter {
 		g.fillRect(0, parent.getHeight() - height, parent.getWidth(), height);
 
 		if (scrollRequired) {
-			double scrollingArea = available < ScrollHandle.MIN_WIDTH ? ScrollHandle.MIN_WIDTH : available;
-			visibleProportion = available / required;
-			double handleWidth = scrollingArea * visibleProportion;
-			scrollStep = (required - available) / (available - handleWidth);
-
-			scrollHandle.setWidth((int) handleWidth);
 			scrollHandle.draw(g, parent);
 		}
 	}
@@ -104,10 +106,6 @@ public class ScrollBar extends MouseAdapter {
 	@Override
 	public void mouseExited(MouseEvent e) {
 		updateHighlight(e.getPoint());
-	}
-
-	public double getVisibleProportion(){
-		return visibleProportion;
 	}
 
 	@Override

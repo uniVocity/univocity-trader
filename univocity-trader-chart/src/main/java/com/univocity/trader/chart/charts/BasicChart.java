@@ -88,13 +88,14 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 		applyAntiAliasing(ig);
 
+		updateScroll();
 		draw(ig);
 
 		for (Painter<?> painter : painters.get(Painter.Z.FRONT)) {
 			painter.paintOn(ig);
 		}
 
-		g.drawImage(image, 0, 0, width, height, getBoundaryLeft(), 0, getBoundaryLeft() + getBoundaryRight(), height, null);
+		g.drawImage(image, 0, 0, getWidth(), height, getBoundaryLeft(), 0, getBoundaryRight(), height, null);
 
 		for (Painter<?> painter : painters.get(Painter.Z.BACK)) {
 			painter.paintOn(g);
@@ -105,11 +106,10 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 	}
 
-	double getVisibleProportion() {
+	private void updateScroll() {
 		if (scrollBar != null) {
-			return scrollBar.getVisibleProportion();
+			scrollBar.updateScroll();
 		}
-		return 1.0;
 	}
 
 	private int getBoundaryRight() {
@@ -314,7 +314,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	int translateX(int x) {
 		if (scrollBar != null && scrollBar.isScrollingView()) {
-			return (int) (x * scrollBar.getVisibleProportion() + scrollBar.getBoundaryLeft());
+			return (int) (x + scrollBar.getBoundaryLeft());
 		}
 		return x;
 
