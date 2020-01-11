@@ -13,7 +13,7 @@ public class InteractiveChartController extends BasicChartController {
 
 	@Label("Selection color")
 	@ColorBound()
-	private Color selectionLineColor = new Color(220, 220, 255, 100);
+	private Color selectionLineColor = new Color(220, 220, 255, 150);
 
 	@CheckBoxBound("Horizontal selection")
 	private boolean horizontalSelectionLineEnabled = true;

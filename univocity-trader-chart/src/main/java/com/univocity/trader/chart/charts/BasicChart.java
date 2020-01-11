@@ -90,15 +90,19 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		insets.right = 0;
 		insets.left = 0;
 
-		runPainters(ig, Painter.Z.BACK);
+		runPainters(ig, Painter.Z.BACK, width);
 		draw(ig, width);
-		runPainters(ig, Painter.Z.FRONT);
+		runPainters(ig, Painter.Z.FRONT, width);
 
 		g.drawImage(image, 0, 0, getWidth(), height, getBoundaryLeft(), 0, getBoundaryRight(), height, null);
 
 		if (scrollBar != null) {
 			scrollBar.draw(g);
 		}
+	}
+
+	public int getScrollHeight(){
+		return scrollBar != null ? scrollBar.getHeight() : 0;
 	}
 
 	public boolean inDisabledSection(Point point) {
@@ -109,7 +113,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return insets.left + insets.right;
 	}
 
-	private void runPainters(Graphics2D g, Painter.Z z) {
+	private void runPainters(Graphics2D g, Painter.Z z, int width) {
 		for (Painter<?> painter : painters.get(z)) {
 			painter.paintOn(g, width);
 			insets.right = Math.max(painter.insets().right, insets.right);
@@ -188,6 +192,10 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		if (!candleHistory.isEmpty()) {
 			horizontalIncrement = (((double) Math.max(width, getRequiredWidth()) - (getInsetsWidth())) / (double) candleHistory.size());
 		}
+	}
+
+	public double getHorizontalIncrement(){
+		return horizontalIncrement;
 	}
 
 	public final Candle getCandleAtIndex(int index) {

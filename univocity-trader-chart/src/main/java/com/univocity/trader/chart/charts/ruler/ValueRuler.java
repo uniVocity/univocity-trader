@@ -17,18 +17,12 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 	private static final Color glassGray = new Color(222, 222, 222, 180);
 	private static final Color glassWhite = new Color(255, 255, 255, 128);
 
-	private final Insets insets = new Insets(0, 0, 0, 0);
-
 	public ValueRuler(BasicChart<?> chart) {
 		super(chart);
 	}
 
 	private int getRightValueTagSpacing() {
 		return getController().getRightValueTagSpacing();
-	}
-
-	private int getFontHeight() {
-		return getController().getFontHeight();
 	}
 
 	private void drawGlass(Graphics2D g) {
@@ -47,13 +41,11 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 	}
 
 	protected void drawBackground(Graphics2D g, int width) {
-		getController().setProfile(DEFAULT);
+		setProfile(DEFAULT);
 
 		drawGlass(g);
 
-		getController().updateFontSize(g);
-
-		final double yIncrement = getController().getFontHeight();
+		final double yIncrement = getFontHeight();
 
 		int y = chart.getHeight() - chart.getYCoordinate(chart.getMaximum());
 
@@ -65,12 +57,12 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 			insetRight = Math.max(insetRight, tagWidth);
 
 			int yy = chart.getHeight() - y;
-			getController().text(g);
+			text(g);
 			g.drawString(tag, chart.getBoundaryRight() - tagWidth - getRightValueTagSpacing(), yy + (getFontHeight() / 2));
 			y -= yIncrement;
 		}
 
-		getController().setProfile(DEFAULT);
+		setProfile(DEFAULT);
 
 		insets.right = insetRight;
 	}
@@ -84,12 +76,12 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 	}
 
 	private void drawLine(int y, Graphics2D g, int length, int width) {
-		getController().drawing(g);
+		drawing(g);
 		g.drawLine(width - length, y, width, y);
 	}
 
 	protected void drawSelection(Graphics2D g, int width, Candle candle, Point location) {
-		getController().setProfile(SELECTION);
+		setProfile(SELECTION);
 
 		final int y = chart.getYCoordinate(chart.getCentralValue(candle));
 		final int fontHeight = getController().getFontHeight();
@@ -100,18 +92,9 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		} else if (stringY < 0) {
 			stringY = 0;
 		}
-		drawGrid(y, g, width);
 		String tag = readFieldFormatted(candle);
 		int tagWidth = getController().getMaxStringWidth(tag, g);
-		getController().drawStringInBox(chart.getBoundaryRight() - tagWidth - getController().getRightValueTagSpacing(), stringY, chart.getWidth(), tag, g, 1);
-	}
-
-	private boolean isShowingGrid() {
-		return getController().isShowingGrid();
-	}
-
-	private Color getGridColor() {
-		return getController().getGridColor();
+		drawStringInBox(chart.getBoundaryRight() - tagWidth - getController().getRightValueTagSpacing(), stringY, chart.getWidth(), tag, g, 1);
 	}
 
 	private void drawGrid(int y, Graphics2D g, int width) {
@@ -126,7 +109,10 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		return new ValueRulerController(this);
 	}
 
-	@Override
+	protected String readFieldFormatted(Candle candle) {
+		return getValueFormat().format(chart.getCentralValue(candle));
+	}
+
 	protected Format getValueFormat() {
 		return Candle.PRICE_FORMAT.get();
 	}
@@ -134,10 +120,5 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 	@Override
 	public Z getZ() {
 		return Z.FRONT;
-	}
-
-	@Override
-	public Insets insets() {
-		return insets;
 	}
 }

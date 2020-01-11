@@ -18,6 +18,7 @@ public class ChartWindow extends JFrame {
 	private JPanel leftPanel;
 	private CandleHistoryView chartHistoryView;
 	private ValueRuler valueRuler;
+	private TimeRuler timeRuler;
 
 
 	public ChartWindow() {
@@ -35,14 +36,22 @@ public class ChartWindow extends JFrame {
 		addCandles();
 	}
 
-	private JPanel getLeftPanel(){
-		if(leftPanel == null){
+	private JPanel getLeftPanel() {
+		if (leftPanel == null) {
 			leftPanel = new JPanel();
 			leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
 			leftPanel.add(getChart().getController().getControlPanel());
 			leftPanel.add(getValueRuler().getController().getControlPanel());
+			leftPanel.add(getTimeRuler().getController().getControlPanel());
 		}
 		return leftPanel;
+	}
+
+	private TimeRuler getTimeRuler() {
+		if (timeRuler == null) {
+			timeRuler = new TimeRuler(getChart());
+		}
+		return timeRuler;
 	}
 
 	protected CandleHistory getCandleHistory() {
@@ -61,8 +70,8 @@ public class ChartWindow extends JFrame {
 		return centralPanel;
 	}
 
-	private ValueRuler getValueRuler(){
-		if(valueRuler == null){
+	private ValueRuler getValueRuler() {
+		if (valueRuler == null) {
 			valueRuler = new ValueRuler(getChart());
 
 		}

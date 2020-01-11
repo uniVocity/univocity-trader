@@ -13,7 +13,6 @@ public class RulerUpdateProcessor implements UpdateProcessor {
 	@Override
 	public void execute() {
 		if (controller != null) {
-//			controller.setCacheRefreshPending(true);
 			controller.getRuler().chart.revalidate();
 			controller.getRuler().chart.repaint();
 		}

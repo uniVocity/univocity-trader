@@ -84,7 +84,6 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 	@Override
 	protected void draw(Graphics2D g, int width) {
 		Point hoveredPosition = getCurrentCandleLocation();
-		System.out.println(hoveredPosition);
 
 		if (isVerticalSelectionLineEnabled() || isHorizontalSelectionLineEnabled()) {
 			g.setStroke(new BasicStroke(1));

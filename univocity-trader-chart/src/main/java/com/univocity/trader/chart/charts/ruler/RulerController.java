@@ -26,7 +26,7 @@ public class RulerController<T> implements Controller, DrawingProfile {
 	private DrawingProfile selectedProfile;
 
 	@CheckBoxBound("Display grid")
-	private boolean showingGrid = false;
+	private boolean showingGrid = true;
 
 	@Label("Font color")
 	@ColorBound()
@@ -37,12 +37,12 @@ public class RulerController<T> implements Controller, DrawingProfile {
 	private Color selectionFontColor = Color.BLACK;
 
 	private JPanel controlPanel;
-	private Ruler<?> ruler;
+	protected final Ruler<?> ruler;
 
 	public RulerController(Ruler<?> ruler) {
 		this.ruler = ruler;
 		profiles = new EnumMap<>(DrawingProfile.Profile.class);
-		profiles.put(DEFAULT, new DrawingProfileImpl(new BasicStroke(1), Color.GRAY, new Font("Arial", Font.PLAIN, 10), new Color(190, 190, 190)));
+		profiles.put(DEFAULT, new DrawingProfileImpl(new BasicStroke(1), new Color(233, 233, 233), new Font("Arial", Font.PLAIN, 10), new Color(190, 190, 190)));
 		profiles.put(SELECTION, new DrawingProfileImpl(new BasicStroke(1), Color.BLACK, new Font("Arial", Font.BOLD, 10), Color.BLACK));
 		selectedProfile = profiles.get(DEFAULT);
 	}
@@ -172,7 +172,7 @@ public class RulerController<T> implements Controller, DrawingProfile {
 		return max;
 	}
 
-	public int centralizeYToFontHeight(int y) {
+	public final int centralizeYToFontHeight(int y) {
 		return y - getFontHeight() / 2;
 	}
 
