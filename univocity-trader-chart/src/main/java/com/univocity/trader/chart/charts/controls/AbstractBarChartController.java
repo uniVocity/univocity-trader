@@ -27,7 +27,6 @@ public abstract class AbstractBarChartController<C extends InteractiveChart<?>> 
 
 	public AbstractBarChartController(C chart) {
 		super(chart);
-		setBackgroundColor(Color.BLACK);
 	}
 
 	public Color getUpColor() {
