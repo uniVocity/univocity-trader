@@ -41,8 +41,8 @@ public class RulerController<T> implements Controller, DrawingProfile {
 
 	public RulerController(Ruler<?> ruler) {
 		this.ruler = ruler;
-		profiles = new EnumMap<DrawingProfile.Profile, DrawingProfile>(DrawingProfile.Profile.class);
-		profiles.put(DEFAULT, new DrawingProfileImpl(new BasicStroke(1), Color.GRAY, new Font("Arial", Font.PLAIN, 10), new Color(204, 204, 204)));
+		profiles = new EnumMap<>(DrawingProfile.Profile.class);
+		profiles.put(DEFAULT, new DrawingProfileImpl(new BasicStroke(1), Color.GRAY, new Font("Arial", Font.PLAIN, 10), new Color(190, 190, 190)));
 		profiles.put(SELECTION, new DrawingProfileImpl(new BasicStroke(1), Color.BLACK, new Font("Arial", Font.BOLD, 10), Color.BLACK));
 		selectedProfile = profiles.get(DEFAULT);
 	}
