@@ -13,11 +13,11 @@ import java.awt.image.*;
 import java.util.concurrent.atomic.*;
 
 public class TimeIntervalSelector extends NullLayoutPanel {
-	private Handle startHandle = new Handle(true);
-	private Handle endHandle = new Handle(false);
-	private Handle boundaryHandle = endHandle;
+	private TimeIntervalHandle startHandle = new TimeIntervalHandle(true);
+	private TimeIntervalHandle endHandle = new TimeIntervalHandle(false);
+	private TimeIntervalHandle boundaryHandle = endHandle;
 
-	private static final Color glassBlue = new Color(0, 0, 255, 128);
+	private static final Color glassGray = new Color(128, 128, 128, 96);
 	private static final Color glassWhite = new Color(255, 255, 255, 128);
 	private Point gradientStart = new Point(0, 0);
 	private Point gradientEnd = new Point(0, 0);
@@ -39,7 +39,7 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 		this.setPreferredSize(new Dimension(100, 100));
 
 		addMouseMotionListener(new MouseAdapter() {
-			private Handle selectedHandle;
+			private TimeIntervalHandle selectedHandle;
 			private boolean mouseOverGlass = false;
 			private int glassDragStart;
 
@@ -106,7 +106,7 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 				}
 			}
 
-			private void moveHandle(Handle handle, int x) {
+			private void moveHandle(TimeIntervalHandle handle, int x) {
 				boundaryHandle = handle;
 				updateHandleBoundaries();
 				handle.setPosition(x);
@@ -211,7 +211,7 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 		gradientEnd.x = getWidth() / 2;
 		gradientEnd.y = getHeight() + 50;
 
-		g.setPaint(new GradientPaint(gradientStart, glassBlue, gradientEnd, glassWhite));
+		g.setPaint(new GradientPaint(gradientStart, glassGray, gradientEnd, glassWhite));
 		g.fillRect(start, 0, end, getHeight());
 	}
 

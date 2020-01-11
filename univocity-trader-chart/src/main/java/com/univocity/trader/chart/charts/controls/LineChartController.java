@@ -18,7 +18,7 @@ public class LineChartController extends InteractiveChartController {
 
 	@Label("Line color")
 	@ColorBound
-	private Color lineColor = Color.BLACK;
+	private Color lineColor = Color.WHITE;
 
 	public LineChartController(LineChart chart) {
 		super(chart);

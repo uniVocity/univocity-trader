@@ -15,7 +15,6 @@ public class ChartWindow extends JFrame {
 	private JButton addCandleButton;
 	private JPanel centralPanel;
 	private JPanel leftPanel;
-	private JScrollPane chartScroll;
 	private CandleHistoryView chartHistoryView;
 	private ValueRuler valueRuler;
 
@@ -55,7 +54,7 @@ public class ChartWindow extends JFrame {
 	private JPanel getCentralPanel() {
 		if (centralPanel == null) {
 			centralPanel = new JPanel(new BorderLayout());
-			centralPanel.add(getChartScroll(), BorderLayout.CENTER);
+			centralPanel.add(getChart(), BorderLayout.CENTER);
 			centralPanel.add(getTimeIntervalSelector(), BorderLayout.SOUTH);
 		}
 		return centralPanel;
@@ -67,22 +66,6 @@ public class ChartWindow extends JFrame {
 
 		}
 		return valueRuler;
-	}
-
-	private JScrollPane getChartScroll() {
-		if (chartScroll == null) {
-			chartScroll = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_NEVER, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-			chartScroll.getViewport().setView(getChart());
-
-			JScrollBar scrollBar = chartScroll.getHorizontalScrollBar();
-			getCandleHistory().addDataUpdateListener(() -> SwingUtilities.invokeLater(() -> {
-				if(getTimeIntervalSelector().lookingAtRecentHistory()) {
-					scrollBar.setValue(scrollBar.getMaximum());
-				}
-			}));
-
-		}
-		return chartScroll;
 	}
 
 	private JButton getAddCandleButton() {
@@ -106,6 +89,7 @@ public class ChartWindow extends JFrame {
 	private CandleChart getChart() {
 		if (chart == null) {
 			chart = new CandleChart(getChartHistoryView());
+			chart.enableScrolling();
 			getCandleHistory().addDataUpdateListener(() -> getTimeIntervalSelector().dataUpdated());
 
 			getTimeIntervalSelector().addIntervalListener(chartHistoryView::updateView);

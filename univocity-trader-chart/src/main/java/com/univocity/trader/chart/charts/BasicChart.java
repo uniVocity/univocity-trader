@@ -28,11 +28,17 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	protected final CandleHistoryView candleHistory;
 
+	private ScrollBar scrollBar;
+
 	public BasicChart(CandleHistoryView candleHistory) {
 		this.candleHistory = candleHistory;
 		painters.put(Painter.Z.BACK, new ArrayList<>());
 		painters.put(Painter.Z.FRONT, new ArrayList<>());
 		candleHistory.addDataUpdateListener(this::dataUpdated);
+	}
+
+	public void enableScrolling(){
+		scrollBar = new ScrollBar(this);
 	}
 
 	protected Color getBackgroundColor() {
@@ -48,23 +54,28 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		g.fillRect(0, 0, width, height);
 	}
 
-	public final void paintComponent(Graphics g) {
-		super.paintComponent(g);
+	public final void paintComponent(Graphics g1d) {
+		super.paintComponent(g1d);
+		Graphics2D g = (Graphics2D) g1d;
 
 		if (isAntialiased()) {
-			((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			(g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		}
 
 		clearGraphics(g);
 
 		for (Painter<?> painter : painters.get(Painter.Z.BACK)) {
-			painter.paintOn((Graphics2D) g);
+			painter.paintOn(g);
 		}
 
-		draw((Graphics2D) g);
+		draw(g);
 
 		for (Painter<?> painter : painters.get(Painter.Z.FRONT)) {
-			painter.paintOn((Graphics2D) g);
+			painter.paintOn(g);
+		}
+
+		if(scrollBar != null) {
+			scrollBar.draw(g);
 		}
 	}
 
@@ -224,22 +235,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return getController().getSpaceBetweenBars();
 	}
 
-	@Override
-	public Dimension getPreferredSize() {
-		Dimension out = super.getPreferredSize();
-		out.width = getWidth();
-		return out;
-
-	}
-
-	@Override
-	public int getWidth() {
-		int sw = super.getWidth();
-		int rw = requiredWidth();
-		return Math.max(rw, sw);
-	}
-
-	public final int requiredWidth() {
+	public int requiredWidth() {
 		return (getBarWidth() + getSpaceBetweenCandles()) * candleHistory.size();
 	}
 

@@ -7,10 +7,9 @@ import java.awt.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-class Handle {
+class TimeIntervalHandle extends Draggable {
 	private final boolean leftHandle;
 	private int width = 8;
-	private int position = 0;
 	private int maxPosition = width;
 	private int minPosition = 0;
 	private Cursor cursor;
@@ -21,7 +20,7 @@ class Handle {
 	private Point gradientStart = new Point(0, 0);
 	private Point gradientEnd = new Point(0, 0);
 
-	public Handle(boolean leftHandle) {
+	public TimeIntervalHandle(boolean leftHandle) {
 		this.leftHandle = leftHandle;
 
 		if (leftHandle) {
@@ -43,10 +42,10 @@ class Handle {
 	}
 
 	public boolean isCursorOver(Point p) {
-		if(leftHandle){
-			return p.x >= position && p.x <= position + width;
+		if (leftHandle) {
+			return p.x >= getPosition() && p.x <= getPosition() + width;
 		} else {
-			return p.x >= position - width && p.x <= position;
+			return p.x >= getPosition() - width && p.x <= getPosition();
 		}
 	}
 
@@ -64,7 +63,7 @@ class Handle {
 
 	public void setMaxPosition(int maxPosition) {
 		this.maxPosition = maxPosition;
-		setPosition(position);
+		setPosition(getPosition());
 	}
 
 	public int getMinPosition() {
@@ -73,47 +72,19 @@ class Handle {
 
 	public void setMinPosition(int minPosition) {
 		this.minPosition = minPosition;
-		setPosition(position);
-	}
-
-	public void move(int pixels) {
-		setPosition(position + pixels);
-	}
-
-	public int getMovablePixels(int pixels) {
-		int originalPos = position;
-		int newPos = position + pixels;
-		setPosition(newPos);
-		int movable = newPos - position;
-		setPosition(originalPos);
-
-		movable = pixels - movable;
-		return movable;
-	}
-
-	public int getPosition() {
-		return position;
-	}
-
-	public void setPosition(int position) {
-		if (position < minPosition) {
-			position = minPosition;
-		} else if (position > maxPosition) {
-			position = maxPosition;
-		}
-		this.position = position;
+		setPosition(getPosition());
 	}
 
 	public void draw(Graphics2D g, Component c, BasicChart<?> chart) {
 		if (chart != null) {
 			Point location = chart.locationOf(candle);
 			if (location != null) {
-				this.position = location.x;
+				setPosition(location.x);
 			}
 		}
 
-		int position = this.position;
-		if(!leftHandle){
+		int position = this.getPosition();
+		if (!leftHandle) {
 			position = position - width;
 		}
 
@@ -126,9 +97,22 @@ class Handle {
 		gradientEnd.x = position + width + 2;
 		g.setPaint(new GradientPaint(gradientStart, glassGray, gradientEnd, glassBlack));
 		g.fillRect(position + width / 2, 0, width / 2, c.getHeight());
+
+		g.setColor(glassGray);
+		if (leftHandle) {
+			g.drawRect(position + 1, 0, width, c.getHeight());
+		} else {
+			g.drawRect(position - 1, 0, width, c.getHeight());
+		}
 	}
 
-	public String toString() {
-		return position + ", [" + minPosition + " to " + maxPosition + "]";
+	@Override
+	protected int minPosition() {
+		return minPosition;
+	}
+
+	@Override
+	protected int maxPosition() {
+		return maxPosition;
 	}
 }

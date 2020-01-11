@@ -20,7 +20,7 @@ public class BasicChartController implements Controller {
 
 	@Label("Background color")
 	@ColorBound()
-	private Color backgroundColor = Color.WHITE;
+	private Color backgroundColor = Color.BLACK;
 
 	@CheckBoxBound("Anti-aliasing")
 	private boolean isAntialiased = true;

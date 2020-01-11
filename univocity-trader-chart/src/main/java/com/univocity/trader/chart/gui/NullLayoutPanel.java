@@ -47,24 +47,6 @@ public abstract class NullLayoutPanel extends JPanel {
 		}
 	}
 
-	private boolean boundsChanged(int x, int y, int width, int height) {
-		Rectangle bounds = this.getBounds();
-		boundsChanged = width != bounds.width || height != bounds.height || x != bounds.x || y != bounds.y;
-		return boundsChanged;
-	}
-
-	@Override
-	public void setBounds(int x, int y, int width, int height) {
-		int requiredWidth = requiredWidth();
-		if (requiredWidth != -1 && width < requiredWidth) {
-			width = requiredWidth;
-		}
-		if (boundsChanged(x, y, width, height)) {
-			super.setBounds(x, y, width, height);
-			updateLayout();
-		}
-	}
-
 	public int requiredWidth() {
 		return -1;
 	}
