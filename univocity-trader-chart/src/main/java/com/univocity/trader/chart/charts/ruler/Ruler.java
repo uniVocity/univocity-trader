@@ -48,25 +48,25 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		});
 	}
 
-	public final void paintOn(Graphics2D g) {
-		isCachedBackgroundReady &= cachedBackground != null && cachedBackground.getWidth() == chart.getWidth() && cachedBackground.getHeight() == chart.getHeight() /*&& !controller.isCacheRefreshPending()*/;
+	public final void paintOn(Graphics2D g, int width) {
+		isCachedBackgroundReady &= cachedBackground != null && cachedBackground.getWidth() == width && cachedBackground.getHeight() == chart.getHeight() /*&& !controller.isCacheRefreshPending()*/;
 		if (isCachedBackgroundReady) {
-			g.drawImage(cachedBackground, 0, 0, chart.getWidth(), chart.getHeight(), chart);
+			g.drawImage(cachedBackground, 0, 0, width, chart.getHeight(), chart);
 		} else {
-			drawBackground(g);
+			drawBackground(g, width);
 			//controller.setCacheRefreshPending(false);
 		}
 
 		Candle candle = chart.getSelectedCandle();
 		Point location = chart.getSelectedCandleLocation();
 		if (candle != null && location != null && isCachedBackgroundReady) {
-			drawSelection(g, candle, location);
+			drawSelection(g, width, candle, location);
 		}
 	}
 
-	protected abstract void drawBackground(Graphics2D g);
+	protected abstract void drawBackground(Graphics2D g, int width);
 
-	protected abstract void drawSelection(Graphics2D g, Candle selectedCandle, Point location);
+	protected abstract void drawSelection(Graphics2D g, int width, Candle selectedCandle, Point location);
 
 	protected boolean isCachingSupported() {
 		return false;

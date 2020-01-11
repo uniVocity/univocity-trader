@@ -11,7 +11,7 @@ public interface Painter<C extends Controller> {
 
 	Z getZ();
 
-	void paintOn(Graphics2D g);
+	void paintOn(Graphics2D g, int width);
 
 	C getController();
 }

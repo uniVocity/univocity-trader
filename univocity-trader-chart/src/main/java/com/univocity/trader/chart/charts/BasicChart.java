@@ -54,7 +54,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return getController().isAntialiased();
 	}
 
-	protected void clearGraphics(Graphics g) {
+	protected void clearGraphics(Graphics g, int width) {
 		g.setColor(getBackgroundColor());
 		g.fillRect(0, 0, width, height);
 	}
@@ -69,11 +69,10 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		super.paintComponent(g1d);
 		Graphics2D g = (Graphics2D) g1d;
 
-		applyAntiAliasing(g);
-
-		clearGraphics(g);
-
 		int width = Math.max(requiredWidth(), getWidth());
+		applyAntiAliasing(g);
+		clearGraphics(g, width);
+
 		boolean clearImage = image != null && image.getWidth() == width && image.getHeight() == height;
 		if (!clearImage) {
 			image = new BufferedImage(width, Math.max(1, height), BufferedImage.TYPE_INT_ARGB);
@@ -81,25 +80,22 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 		Graphics2D ig = (Graphics2D) image.getGraphics();
 
-		if (clearImage) {
-			ig.clearRect(0, 0, width, height);
-			ig.setColor(TRANSPARENT);
-		}
-
 		applyAntiAliasing(ig);
+		clearGraphics(ig, width);
 
 		updateScroll();
+
+		for (Painter<?> painter : painters.get(Painter.Z.BACK)) {
+			painter.paintOn(ig, width);
+		}
+
 		draw(ig);
 
 		for (Painter<?> painter : painters.get(Painter.Z.FRONT)) {
-			painter.paintOn(ig);
+			painter.paintOn(ig, width);
 		}
 
 		g.drawImage(image, 0, 0, getWidth(), height, getBoundaryLeft(), 0, getBoundaryRight(), height, null);
-
-		for (Painter<?> painter : painters.get(Painter.Z.BACK)) {
-			painter.paintOn(g);
-		}
 
 		if (scrollBar != null) {
 			scrollBar.draw(g);
@@ -112,14 +108,14 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 	}
 
-	private int getBoundaryRight() {
+	public int getBoundaryRight() {
 		if (scrollBar != null && scrollBar.isScrollingView()) {
 			return scrollBar.getBoundaryRight();
 		}
 		return width;
 	}
 
-	int getBoundaryLeft() {
+	public int getBoundaryLeft() {
 		if (scrollBar != null && scrollBar.isScrollingView()) {
 			return scrollBar.getBoundaryLeft();
 		}
@@ -312,7 +308,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return candle.close;
 	}
 
-	int translateX(int x) {
+	public int translateX(int x) {
 		if (scrollBar != null && scrollBar.isScrollingView()) {
 			return x + scrollBar.getBoundaryLeft();
 		}
