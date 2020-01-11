@@ -1,4 +1,4 @@
-package com.univocity.trader.chart.charts;
+package com.univocity.trader.chart.charts.scrolling;
 
 import com.univocity.trader.chart.gui.*;
 
@@ -9,7 +9,7 @@ import java.awt.event.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-class ScrollBar extends MouseAdapter {
+public class ScrollBar extends MouseAdapter {
 
 	private static final Color glassBlue = new Color(0, 0, 255, 128);
 	private static final Color barGray = new Color(128, 128, 128, 64);
@@ -26,7 +26,7 @@ class ScrollBar extends MouseAdapter {
 
 	final ScrollHandle scrollHandle = new ScrollHandle(this);
 
-	ScrollBar(NullLayoutPanel parent) {
+	public ScrollBar(NullLayoutPanel parent) {
 		this.parent = parent;
 		parent.addMouseMotionListener(this);
 
@@ -41,7 +41,7 @@ class ScrollBar extends MouseAdapter {
 		timer.start();
 	}
 
-	void draw(Graphics2D g) {
+	public void draw(Graphics2D g) {
 		int required = parent.requiredWidth();
 		int available = parent.getWidth();
 		scrollRequired = required > available;
@@ -71,7 +71,6 @@ class ScrollBar extends MouseAdapter {
 				int pixelsToMove = e.getX() - dragStart;
 
 				pixelsToMove = scrollHandle.getMovablePixels(pixelsToMove);
-				System.out.println(pixelsToMove);
 				if (pixelsToMove != 0) {
 					scrollHandle.move(pixelsToMove);
 					dragStart = e.getX();

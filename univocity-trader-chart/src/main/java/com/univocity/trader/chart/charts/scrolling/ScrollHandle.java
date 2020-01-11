@@ -1,4 +1,4 @@
-package com.univocity.trader.chart.charts;
+package com.univocity.trader.chart.charts.scrolling;
 
 import java.awt.*;
 

@@ -3,6 +3,7 @@ package com.univocity.trader.chart;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.ruler.*;
+import com.univocity.trader.chart.charts.scrolling.*;
 
 import javax.swing.*;
 import java.awt.*;

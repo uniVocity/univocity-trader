@@ -4,6 +4,7 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
 import com.univocity.trader.chart.charts.painter.*;
+import com.univocity.trader.chart.charts.scrolling.*;
 import com.univocity.trader.chart.gui.*;
 
 import java.awt.*;
@@ -26,7 +27,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private C controller;
 
-	protected final CandleHistoryView candleHistory;
+	public final CandleHistoryView candleHistory;
 
 	private ScrollBar scrollBar;
 
@@ -131,15 +132,15 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 	}
 
-	protected final Candle getCandleAtIndex(int index) {
+	public final Candle getCandleAtIndex(int index) {
 		return candleHistory.get(index);
 	}
 
-	protected final Candle getCandleAtCoordinate(int x) {
+	public final Candle getCandleAtCoordinate(int x) {
 		return candleHistory.get(getCandleIndexAtCoordinate(x));
 	}
 
-	protected final int getCandleIndexAtCoordinate(int x) {
+	public final int getCandleIndexAtCoordinate(int x) {
 		x = (int) Math.round((double) x / horizontalIncrement);
 		if (x >= candleHistory.size()) {
 			return candleHistory.size() - 1;

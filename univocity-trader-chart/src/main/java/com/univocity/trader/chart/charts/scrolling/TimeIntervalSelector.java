@@ -1,8 +1,9 @@
-package com.univocity.trader.chart.charts;
+package com.univocity.trader.chart.charts.scrolling;
 
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
+import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.gui.*;
 
 import javax.swing.*;
