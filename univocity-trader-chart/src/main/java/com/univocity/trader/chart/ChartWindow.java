@@ -12,7 +12,7 @@ public class ChartWindow extends JFrame {
 
 	private CandleHistory candleHistory;
 	private TimeIntervalSelector timeIntervalSelector;
-	private BasicChart chart;
+	private InteractiveChart<?> chart;
 	private JButton addCandleButton;
 	private JPanel centralPanel;
 	private JPanel leftPanel;
@@ -96,7 +96,7 @@ public class ChartWindow extends JFrame {
 		return chartHistoryView;
 	}
 
-	private BasicChart getChart() {
+	private InteractiveChart<?> getChart() {
 		if (chart == null) {
 			chart = new CandleChart(getChartHistoryView());
 			chart.enableScrolling();

@@ -11,6 +11,7 @@ import java.awt.event.*;
 public abstract class InteractiveChart<C extends InteractiveChartController> extends BasicChart<C> {
 
 	private Point mousePosition = null;
+	private boolean mouseDragging = false;
 
 	public InteractiveChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
@@ -19,6 +20,7 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				mouseDragging = false;
 				Candle current = getCurrentCandle();
 				Candle selected = getSelectedCandle();
 
@@ -28,12 +30,25 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 					setSelectedCandle(null);
 				}
 			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				mouseDragging = false;
+				invokeRepaint();
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				mouseDragging = true;
+				invokeRepaint();
+			}
 		});
 
 		addMouseMotionListener(new MouseMotionListener() {
 
 			@Override
 			public void mouseDragged(MouseEvent e) {
+				mouseDragging = true;
 				processMouseEvent(e);
 			}
 
@@ -52,6 +67,7 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 				if (candle != getCurrentCandle()) {
 					setCurrentCandle(candle);
 				}
+				invokeRepaint();
 			}
 		});
 
@@ -60,6 +76,10 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 				mousePosition = null;
 			}
 		});
+	}
+
+	public boolean isMouseDragging(){
+		return mouseDragging && mousePosition != null && mousePosition.getY() < getHeight() - getScrollHeight();
 	}
 
 	public Candle getCandleUnderCursor() {
@@ -79,6 +99,10 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 
 	private Color getSelectionLineColor() {
 		return getController().getSelectionLineColor();
+	}
+
+	public final Point getCurrentMousePosition() {
+		return mousePosition;
 	}
 
 	@Override

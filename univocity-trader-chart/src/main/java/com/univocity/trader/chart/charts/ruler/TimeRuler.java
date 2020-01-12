@@ -3,7 +3,6 @@ package com.univocity.trader.chart.charts.ruler;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
-import com.univocity.trader.indicators.base.*;
 
 import java.awt.*;
 import java.time.*;
@@ -13,9 +12,7 @@ import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
 public class TimeRuler extends Ruler<TimeRulerController> {
 
-	private static final long ONE_DAY = TimeInterval.days(1).ms;
-
-	public TimeRuler(BasicChart<?> chart) {
+	public TimeRuler(InteractiveChart<?> chart) {
 		super(chart);
 	}
 
@@ -116,6 +113,11 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 
 	public TimeRulerController newController() {
 		return new TimeRulerController(this);
+	}
+
+	@Override
+	protected void highlightMousePosition(Graphics2D g, int width) {
+
 	}
 
 	@Override

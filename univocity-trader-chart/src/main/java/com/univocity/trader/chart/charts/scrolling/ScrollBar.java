@@ -135,4 +135,8 @@ public class ScrollBar extends MouseAdapter {
 	public int getHeight(){
 		return height;
 	}
+
+	public boolean isDraggingScroll(){
+		return scrollRequired && dragging;
+	}
 }

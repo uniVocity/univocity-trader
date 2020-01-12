@@ -36,6 +36,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	private ScrollBar scrollBar;
 
 	private BufferedImage image;
+	private long lastPaint;
 
 	public BasicChart(CandleHistoryView candleHistory) {
 		this.candleHistory = candleHistory;
@@ -67,16 +68,24 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 	}
 
-	public final void paintComponent(Graphics g1d) {
-		super.paintComponent(g1d);
-		Graphics2D g = (Graphics2D) g1d;
+	public final boolean isDraggingScroll(){
+		return isScrollingView() && scrollBar.isDraggingScroll();
+	}
+	
+	protected final boolean isScrollingView(){
+		if(scrollBar == null){
+			return false;
+		}
+		return scrollBar.isScrollingView();
+	}
 
-		int width = Math.max(getRequiredWidth(), getWidth());
-		applyAntiAliasing(g);
-		clearGraphics(g, width);
+	private void paintImage() {
+		if (System.currentTimeMillis() - lastPaint <= 10 && !isScrollingView()) {
+			return;
+		}
+		final int width = Math.max(getRequiredWidth(), getWidth());
 
-		boolean clearImage = image != null && image.getWidth() == width && image.getHeight() == height;
-		if (!clearImage) {
+		if (!(image != null && image.getWidth() == width && image.getHeight() == height)) {
 			image = new BufferedImage(width, Math.max(1, height), BufferedImage.TYPE_INT_ARGB);
 		}
 
@@ -93,15 +102,29 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		runPainters(ig, Painter.Z.BACK, width);
 		draw(ig, width);
 		runPainters(ig, Painter.Z.FRONT, width);
+	}
+
+	public final void paintComponent(Graphics g1d) {
+		super.paintComponent(g1d);
+
+		Graphics2D g = (Graphics2D) g1d;
+
+		applyAntiAliasing(g);
+
+		clearGraphics(g, getWidth());
+
+		paintImage();
 
 		g.drawImage(image, 0, 0, getWidth(), height, getBoundaryLeft(), 0, getBoundaryRight(), height, null);
 
 		if (scrollBar != null) {
 			scrollBar.draw(g);
 		}
+
+		lastPaint = System.currentTimeMillis();
 	}
 
-	public int getScrollHeight(){
+	public int getScrollHeight() {
 		return scrollBar != null ? scrollBar.getHeight() : 0;
 	}
 
@@ -149,7 +172,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		updateEdgeValues();
 
 		revalidate();
-		repaint();
+		invokeRepaint();
 	}
 
 	public double getMaximum() {
@@ -194,7 +217,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 	}
 
-	public double getHorizontalIncrement(){
+	public double getHorizontalIncrement() {
 		return horizontalIncrement;
 	}
 
@@ -256,14 +279,14 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	public final void setSelectedCandle(Candle candle) {
 		if (this.selectedCandle != candle) {
 			selectedCandle = candle;
-			SwingUtilities.invokeLater(this::repaint);
+			invokeRepaint();
 		}
 	}
 
 	public final void setCurrentCandle(Candle candle) {
 		if (this.currentCandle != candle) {
 			currentCandle = candle;
-			SwingUtilities.invokeLater(this::repaint);
+			invokeRepaint();
 		}
 	}
 
@@ -352,6 +375,10 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 		return x;
 
+	}
+
+	protected final void invokeRepaint() {
+		SwingUtilities.invokeLater(this::repaint);
 	}
 
 	protected abstract void draw(Graphics2D g, int width);

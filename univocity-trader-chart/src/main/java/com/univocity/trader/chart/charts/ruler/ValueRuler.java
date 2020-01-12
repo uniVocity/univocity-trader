@@ -17,7 +17,9 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 	private static final Color glassGray = new Color(222, 222, 222, 180);
 	private static final Color glassWhite = new Color(255, 255, 255, 128);
 
-	public ValueRuler(BasicChart<?> chart) {
+	private int refY1, refY2, refY3;
+
+	public ValueRuler(InteractiveChart<?> chart) {
 		super(chart);
 	}
 
@@ -62,8 +64,6 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 			y -= yIncrement;
 		}
 
-		setProfile(DEFAULT);
-
 		insets.right = insetRight;
 	}
 
@@ -82,13 +82,26 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 
 	protected void drawSelection(Graphics2D g, int width, Candle candle, Point location) {
 		setProfile(SELECTION);
-
-		final int refY = drawPrices(g, location, candle, chart.getCentralValue(candle), true, -1, false);
+		refY1 = drawPrices(g, location, candle, chart.getCentralValue(candle), true, -1, false);
 
 		setProfile(HIGHLIGHT);
-		drawPrices(g, location, candle, chart.getHighestPlottedValue(candle), false, refY, true);
-		drawPrices(g, location, candle, chart.getLowestPlottedValue(candle), false, refY, false);
+		refY2 = drawPrices(g, location, candle, chart.getHighestPlottedValue(candle), false, refY1, true);
+		refY3 = drawPrices(g, location, candle, chart.getLowestPlottedValue(candle), false, refY1, false);
+	}
 
+	@Override
+	protected void highlightMousePosition(Graphics2D g, int width) {
+		Point mousePosition = chart.getCurrentMousePosition();
+		if (mousePosition != null && chart.isMouseDragging()) {
+			setProfile(HIGHLIGHT);
+			double valueAtMouseHeight = chart.getValueAtY(chart.getHeight() - mousePosition.y);
+			drawPrices(g, mousePosition, null, valueAtMouseHeight, true, -1, false);
+		}
+	}
+
+	private boolean collides(int stringY, int refY, int fontHeight) {
+		int fh = fontHeight / 2;
+		return (stringY + fh >= refY - fh) && (stringY - fh <= refY + fh);
 	}
 
 	private int drawPrices(Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY, boolean drawAboveRef) {
@@ -102,15 +115,11 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 			stringY = 0;
 		}
 
-		if (refY >= 0) {
-			if (drawAboveRef) {
-				if (stringY + fontHeight / 2 >= refY - fontHeight / 2) {
-					stringY -= fontHeight;
-				}
-			} else {
-				if (stringY - fontHeight / 2 <= refY + fontHeight / 2) {
-					stringY += fontHeight;
-				}
+		if (refY >= 0 && collides(stringY, refY, fontHeight)) {
+			stringY = stringY + (drawAboveRef ? -fontHeight : fontHeight);
+		} else if (candle == null) {
+			if (collides(stringY, refY1, fontHeight) || collides(stringY, refY2, fontHeight) || collides(stringY, refY3, fontHeight)) {
+				return -1;
 			}
 		}
 
@@ -119,16 +128,36 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 
 		int x = chart.getBoundaryRight() - tagWidth - getController().getRightValueTagSpacing();
 		if (drawInBox) {
-			drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, candle.isGreen() ? getProfitBackground() : getLossBackground());
+			drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, candle == null ? getBackgroundColor() : candle.isGreen() ? getProfitBackground() : getLossBackground());
 		} else {
+			if (drawAboveRef) {
+				setProfile(SELECTION);
+				drawing(g);
+				g.drawLine(x, stringY, x + chart.getWidth(), stringY);
+			}
+			setProfile(HIGHLIGHT);
+			text(g);
 			drawString(x, stringY, tag, g, 1);
-			drawing(g);
-
-			int heightAdjust = (fontHeight / 2);
-			g.drawLine(location.x, y, x, stringY + heightAdjust);
-
+			if (!drawAboveRef) {
+				setProfile(SELECTION);
+				drawing(g);
+				g.drawLine(x, stringY + fontHeight, x + chart.getWidth(), stringY + fontHeight);
+			}
 		}
+
+		if (!drawInBox || candle == null) {
+			setProfile(HIGHLIGHT);
+			drawing(g);
+			drawLineToPrice(g, fontHeight, location, x, y, stringY);
+		}
+
 		return stringY;
+	}
+
+	private void drawLineToPrice(Graphics2D g, int fontHeight, Point location, int x, int y, int stringY) {
+		drawing(g);
+		int heightAdjust = (fontHeight / 2);
+		g.drawLine(location.x, y, x, stringY + heightAdjust);
 	}
 
 	private void drawGrid(int y, Graphics2D g, int width) {

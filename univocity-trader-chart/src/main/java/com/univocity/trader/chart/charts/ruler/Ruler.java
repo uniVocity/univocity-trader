@@ -10,10 +10,10 @@ import java.awt.*;
 public abstract class Ruler<C extends RulerController<?>> implements Painter<C> {
 
 	protected final Insets insets = new Insets(0, 0, 0, 0);
-	protected final BasicChart<?> chart;
+	protected final InteractiveChart<?> chart;
 	private C controller;
 
-	public Ruler(BasicChart<?> chart) {
+	public Ruler(InteractiveChart<?> chart) {
 		this.chart = chart;
 		chart.register(this);
 	}
@@ -33,6 +33,8 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		if (candle != null && location != null) {
 			drawSelection(g, width, candle, location);
 		}
+
+		highlightMousePosition(g, width);
 	}
 
 	@Override
@@ -43,6 +45,8 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 	protected abstract void drawBackground(Graphics2D g, int width);
 
 	protected abstract void drawSelection(Graphics2D g, int width, Candle selectedCandle, Point location);
+
+	protected abstract void highlightMousePosition(Graphics2D g, int width);
 
 	public final C getController() {
 		if (controller == null) {
