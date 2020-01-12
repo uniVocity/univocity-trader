@@ -1,37 +1,120 @@
 package com.univocity.trader.chart.charts.ruler;
 
+import com.univocity.trader.chart.gui.*;
+
 import java.awt.*;
 
-public interface DrawingProfile {
-	enum Profile {
-		DEFAULT, SELECTION
+public final class DrawingProfile {
+
+	public enum Profile {
+		DEFAULT, HIGHLIGHT, SELECTION
 	}
 
-	Stroke getStroke();
+	private Stroke stroke = new BasicStroke(1);
+	private Color lineColor = new Color(233, 233, 233);
+	private Color fontColor = new Color(190, 190, 190);
+	private Font font = new Font("Arial", Font.PLAIN, 10);
 
-	void setStroke(Stroke stroke);
+	private Color profitBackground = new Color(150, 222, 150);
+	private Color lossBackground = new Color(255, 150, 150);
 
-	Color getLineColor();
+	private int fontHeight;
 
-	void setLineColor(Color lineColor);
+	public DrawingProfile() {
+	}
 
-	Color getFontColor();
+	public Stroke getStroke() {
+		return stroke;
+	}
 
-	void setFontColor(Color fontColor);
+	public DrawingProfile setStroke(Stroke stroke) {
+		this.stroke = stroke;
+		return this;
+	}
 
-	Font getFont();
+	public Color getLineColor() {
+		return lineColor;
+	}
 
-	void setFont(Font font);
+	public DrawingProfile setLineColor(Color lineColor) {
+		this.lineColor = lineColor;
+		return this;
+	}
 
-	int getFontHeight();
+	public Color getFontColor() {
+		return fontColor;
+	}
 
-	int getFontAscent(Graphics2D g);
+	public DrawingProfile setFontColor(Color fontColor) {
+		this.fontColor = fontColor;
+		return this;
+	}
 
-	void updateFontSize(Graphics2D g);
+	public Font getFont() {
+		return font;
+	}
 
-	void text(Graphics2D g);
+	public DrawingProfile setFont(Font font) {
+		if (this.font != font) {
+			this.font = font;
+			fontHeight = 0;
+		}
+		return this;
+	}
 
-	void drawing(Graphics2D g);
+	public int getFontHeight() {
+		return fontHeight;
+	}
 
-	int getStringWidth(String str, Graphics2D g);
+	public int getFontAscent(Graphics2D g) {
+		return GraphicUtils.getFontAscent(font, g);
+	}
+
+	public DrawingProfile setFontHeight(int fontHeight) {
+		this.fontHeight = fontHeight;
+		return this;
+	}
+
+	public void updateFontSize(Graphics2D g) {
+		if (fontHeight == 0) {
+			fontHeight = GraphicUtils.getFontHeight(font, g);
+		}
+	}
+
+	public DrawingProfile setProfitBackground(Color profitBackground) {
+		this.profitBackground = profitBackground;
+		return this;
+	}
+
+	public DrawingProfile setLossBackground(Color lossBackground) {
+		this.lossBackground = lossBackground;
+		return this;
+	}
+
+	public Color getProfitBackground() {
+		return profitBackground;
+	}
+
+	public Color getLossBackground() {
+		return lossBackground;
+	}
+
+	public void text(Graphics2D g) {
+		g.setFont(font);
+		g.setColor(fontColor);
+	}
+
+	public void drawing(Graphics2D g) {
+		g.setColor(lineColor);
+		g.setStroke(stroke);
+	}
+
+	public int getStringWidth(String str, Graphics2D g) {
+		Font originalFont = g.getFont();
+		g.setFont(font);
+
+		int width = GraphicUtils.getStringWidth(str, g);
+		g.setFont(originalFont);
+		return width;
+	}
 }

@@ -106,7 +106,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	}
 
 	public boolean inDisabledSection(Point point) {
-		return point.y < getHeight() - scrollBar.getHeight() && (point.x >= getWidth() - insets.right || point.x < insets.left);
+		return point.y < getHeight() - scrollBar.getHeight() && (point.x >= getWidth() - (insets.right + getBarWidth() * 2) || point.x < insets.left + getBarWidth());
 	}
 
 	public int getInsetsWidth() {
@@ -334,11 +334,11 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		painters.get(painter.getZ()).add(painter);
 	}
 
-	protected double getHighestPlottedValue(Candle candle) {
+	public double getHighestPlottedValue(Candle candle) {
 		return candle.high;
 	}
 
-	protected double getLowestPlottedValue(Candle candle) {
+	public double getLowestPlottedValue(Candle candle) {
 		return candle.low;
 	}
 

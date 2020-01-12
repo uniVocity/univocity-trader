@@ -19,12 +19,12 @@ public class LineChart extends InteractiveChart<LineChartController> {
 	}
 
 	@Override
-	protected double getHighestPlottedValue(Candle candle) {
+	public double getHighestPlottedValue(Candle candle) {
 		return candle.close;
 	}
 
 	@Override
-	protected double getLowestPlottedValue(Candle candle) {
+	public double getLowestPlottedValue(Candle candle) {
 		return candle.close;
 	}
 

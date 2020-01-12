@@ -96,7 +96,7 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 		g.setColor(getController().getBackgroundColor());
 
 		int position = getTextPosition(location.x, stringWidth, true);
-		drawStringInBox(position, chart.getHeight() - getFontHeight() - chart.getScrollHeight(), stringWidth, text, g, 1);
+		drawStringInBox(position, chart.getHeight() - getFontHeight() - chart.getScrollHeight(), stringWidth, text, g, 1, getBackgroundColor());
 	}
 
 	private int getTextPosition(int x, int stringWidth, boolean centralize) {

@@ -11,7 +11,7 @@ import java.util.*;
 import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
 @UIBoundClass(updateProcessor = RulerUpdateProcessor.class)
-public class RulerController<T> implements Controller, DrawingProfile {
+public class RulerController<T> implements Controller {
 
 	@Label("Background color")
 	@ColorBound()
@@ -40,11 +40,24 @@ public class RulerController<T> implements Controller, DrawingProfile {
 	protected final Ruler<?> ruler;
 
 	public RulerController(Ruler<?> ruler) {
+
 		this.ruler = ruler;
 		profiles = new EnumMap<>(DrawingProfile.Profile.class);
-		profiles.put(DEFAULT, new DrawingProfileImpl(new BasicStroke(1), new Color(233, 233, 233), new Font("Arial", Font.PLAIN, 10), new Color(190, 190, 190)));
-		profiles.put(SELECTION, new DrawingProfileImpl(new BasicStroke(1), Color.BLACK, new Font("Arial", Font.BOLD, 10), Color.BLACK));
-		selectedProfile = profiles.get(DEFAULT);
+
+		selectedProfile = new DrawingProfile();
+
+		profiles.put(DEFAULT, selectedProfile);
+
+		profiles.put(SELECTION, new DrawingProfile()
+				.setLineColor(Color.BLACK)
+				.setFont(new Font("Arial", Font.BOLD, 10))
+				.setFontColor(Color.BLACK));
+
+		profiles.put(HIGHLIGHT, new DrawingProfile()
+				.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2}, 0))
+				.setFont(new Font("Arial", Font.PLAIN, 10))
+				.setFontColor(Color.BLACK));
+
 	}
 
 	public boolean isShowingGrid() {
@@ -63,7 +76,7 @@ public class RulerController<T> implements Controller, DrawingProfile {
 		this.gridColor = gridColor;
 	}
 
-	public void setProfile(Profile profile) {
+	public void setProfile(DrawingProfile.Profile profile) {
 		this.selectedProfile = profiles.get(profile);
 	}
 
@@ -73,57 +86,56 @@ public class RulerController<T> implements Controller, DrawingProfile {
 		}
 	}
 
-	@Override
 	public void drawing(Graphics2D g) {
 		selectedProfile.drawing(g);
 	}
 
-	@Override
+
 	public Font getFont() {
 		return selectedProfile.getFont();
 	}
 
-	@Override
+
 	public Color getFontColor() {
 		return selectedProfile.getFontColor();
 	}
 
-	@Override
+
 	public int getFontHeight() {
 		return selectedProfile.getFontHeight();
 	}
 
-	@Override
+
 	public Color getLineColor() {
 		return selectedProfile.getLineColor();
 	}
 
-	@Override
+
 	public Stroke getStroke() {
 		return selectedProfile.getStroke();
 	}
 
-	@Override
+
 	public void setFont(Font font) {
 		selectedProfile.setFont(font);
 	}
 
-	@Override
+
 	public void setFontColor(Color fontColor) {
 		selectedProfile.setFontColor(fontColor);
 	}
 
-	@Override
+
 	public void setLineColor(Color lineColor) {
 		selectedProfile.setLineColor(lineColor);
 	}
 
-	@Override
+
 	public void setStroke(Stroke stroke) {
 		selectedProfile.setStroke(stroke);
 	}
 
-	@Override
+
 	public void text(Graphics2D g) {
 		selectedProfile.text(g);
 	}
@@ -156,7 +168,7 @@ public class RulerController<T> implements Controller, DrawingProfile {
 		profiles.get(SELECTION).setLineColor(selectionFontColor);
 	}
 
-	@Override
+
 	public int getStringWidth(String str, Graphics2D g) {
 		return selectedProfile.getStringWidth(str, g);
 	}
@@ -176,12 +188,19 @@ public class RulerController<T> implements Controller, DrawingProfile {
 		return y - getFontHeight() / 2;
 	}
 
-	@Override
+	public Color getProfitBackground(){
+		return selectedProfile.getProfitBackground();
+	}
+
+	public Color getLossBackground(){
+		return selectedProfile.getLossBackground();
+	}
+
 	public int getFontAscent(Graphics2D g) {
 		return selectedProfile.getFontAscent(g);
 	}
 
-	@Override
+
 	public JPanel getControlPanel() {
 		if (controlPanel == null) {
 			controlPanel = PanelBuilder.createPanel(this);

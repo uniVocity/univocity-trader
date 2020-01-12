@@ -83,7 +83,16 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 	protected void drawSelection(Graphics2D g, int width, Candle candle, Point location) {
 		setProfile(SELECTION);
 
-		final int y = chart.getYCoordinate(chart.getCentralValue(candle));
+		final int refY = drawPrices(g, location, candle, chart.getCentralValue(candle), true, -1, false);
+
+		setProfile(HIGHLIGHT);
+		drawPrices(g, location, candle, chart.getHighestPlottedValue(candle), false, refY, true);
+		drawPrices(g, location, candle, chart.getLowestPlottedValue(candle), false, refY, false);
+
+	}
+
+	private int drawPrices(Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY, boolean drawAboveRef) {
+		final int y = chart.getYCoordinate(value);
 		final int fontHeight = getController().getFontHeight();
 		int stringY = getController().centralizeYToFontHeight(y);
 
@@ -92,9 +101,34 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		} else if (stringY < 0) {
 			stringY = 0;
 		}
-		String tag = readFieldFormatted(candle);
+
+		if (refY >= 0) {
+			if (drawAboveRef) {
+				if (stringY + fontHeight / 2 >= refY - fontHeight / 2) {
+					stringY -= fontHeight;
+				}
+			} else {
+				if (stringY - fontHeight / 2 <= refY + fontHeight / 2) {
+					stringY += fontHeight;
+				}
+			}
+		}
+
+		String tag = format(value);
 		int tagWidth = getController().getMaxStringWidth(tag, g);
-		drawStringInBox(chart.getBoundaryRight() - tagWidth - getController().getRightValueTagSpacing(), stringY, chart.getWidth(), tag, g, 1);
+
+		int x = chart.getBoundaryRight() - tagWidth - getController().getRightValueTagSpacing();
+		if (drawInBox) {
+			drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, candle.isGreen() ? getProfitBackground() : getLossBackground());
+		} else {
+			drawString(x, stringY, tag, g, 1);
+			drawing(g);
+
+			int heightAdjust = (fontHeight / 2);
+			g.drawLine(location.x, y, x, stringY + heightAdjust);
+
+		}
+		return stringY;
 	}
 
 	private void drawGrid(int y, Graphics2D g, int width) {
@@ -109,8 +143,8 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		return new ValueRulerController(this);
 	}
 
-	protected String readFieldFormatted(Candle candle) {
-		return getValueFormat().format(chart.getCentralValue(candle));
+	protected String format(double value) {
+		return getValueFormat().format(value);
 	}
 
 	protected Format getValueFormat() {

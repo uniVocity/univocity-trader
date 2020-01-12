@@ -85,8 +85,16 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		return getController().getBackgroundColor();
 	}
 
-	protected void drawStringInBox(int x, int y, int width, String string, Graphics2D g, int stroke) {
-		g.setColor(getBackgroundColor());
+	protected final Color getProfitBackground(){
+		return getController().getProfitBackground();
+	}
+
+	protected final Color getLossBackground(){
+		return getController().getLossBackground();
+	}
+
+	protected void drawStringInBox(int x, int y, int width, String string, Graphics2D g, int stroke, Color background) {
+		g.setColor(background);
 		g.fillRect(x, y, width, getFontHeight());
 		drawing(g);
 		g.setStroke(new BasicStroke(stroke));

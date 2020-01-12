@@ -36,11 +36,11 @@ public class HistogramChart extends FilledBarChart<HistogramChartController> {
 		return new HistogramChartController(this);
 	}
 
-	protected double getHighestPlottedValue(Candle candle) {
+	public double getHighestPlottedValue(Candle candle) {
 		return valueReader.apply(candle);
 	}
 
-	protected double getLowestPlottedValue(Candle candle) {
+	public double getLowestPlottedValue(Candle candle) {
 		return valueReader.apply(candle);
 	}
 
