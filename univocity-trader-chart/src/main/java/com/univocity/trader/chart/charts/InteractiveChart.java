@@ -11,7 +11,7 @@ import java.awt.event.*;
 public abstract class InteractiveChart<C extends InteractiveChartController> extends BasicChart<C> {
 
 	private Point mousePosition = null;
-	private boolean mouseDragging = false;
+	private int draggingButton = -1;
 
 	public InteractiveChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
@@ -20,7 +20,7 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				mouseDragging = false;
+				draggingButton = -1;
 				Candle current = getCurrentCandle();
 				Candle selected = getSelectedCandle();
 
@@ -33,13 +33,13 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				mouseDragging = false;
+				draggingButton = -1;
 				invokeRepaint();
 			}
 
 			@Override
 			public void mousePressed(MouseEvent e) {
-				mouseDragging = true;
+				draggingButton = e.getButton();
 				invokeRepaint();
 			}
 		});
@@ -48,7 +48,7 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				mouseDragging = true;
+				draggingButton = e.getButton();
 				processMouseEvent(e);
 			}
 
@@ -79,7 +79,15 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 	}
 
 	public boolean isMouseDragging(){
-		return mouseDragging && mousePosition != null && mousePosition.getY() < getHeight() - getScrollHeight();
+		return draggingButton != -1 && mousePosition != null && mousePosition.getY() < getHeight() - getScrollHeight();
+	}
+
+	public boolean isMouseDraggingChart(){
+		return draggingButton == MouseEvent.BUTTON1 && isMouseDragging();
+	}
+
+	public boolean isMouseDraggingCursor(){
+		return draggingButton == MouseEvent.BUTTON3 && isMouseDragging();
 	}
 
 	public Candle getCandleUnderCursor() {

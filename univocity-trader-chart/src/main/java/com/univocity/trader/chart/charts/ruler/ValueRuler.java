@@ -92,7 +92,7 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 	@Override
 	protected void highlightMousePosition(Graphics2D g, int width) {
 		Point mousePosition = chart.getCurrentMousePosition();
-		if (mousePosition != null && chart.isMouseDragging()) {
+		if (mousePosition != null && chart.isMouseDraggingCursor()) {
 			setProfile(HIGHLIGHT);
 			double valueAtMouseHeight = chart.getValueAtY(chart.getHeight() - mousePosition.y);
 			drawPrices(g, mousePosition, null, valueAtMouseHeight, true, -1, false);
