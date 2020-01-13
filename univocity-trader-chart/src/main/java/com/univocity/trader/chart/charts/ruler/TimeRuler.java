@@ -36,7 +36,7 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 		for (int i = 0; i <= increments; i++) {
 			int x = (int) Math.round(i * columnWidth);
 
-			if(chart.isOverDisabledSectionAtRight(chart.getRequiredWidth(), x)){
+			if(chart.canvas.isOverDisabledSectionAtRight(chart.getRequiredWidth(), x)){
 				break;
 			}
 
@@ -59,7 +59,7 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 			int stringWidth = getStringWidth(text, g);
 			int position = getTextPosition(x, stringWidth, false);
 			text(g);
-			drawString(position, chart.getHeight() - getFontHeight() - chart.getScrollHeight(), text, g, 1);
+			drawString(position, chart.getHeight() - getFontHeight() - chart.canvas.getScrollHeight(), text, g, 1);
 		}
 
 	}
@@ -97,11 +97,11 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 		g.setColor(getController().getBackgroundColor());
 
 		int position = getTextPosition(location.x, stringWidth, true);
-		drawStringInBox(position, chart.getHeight() - getFontHeight() - chart.getScrollHeight(), stringWidth, text, g, 1, getBackgroundColor());
+		drawStringInBox(position, chart.getHeight() - getFontHeight() - chart.canvas.getScrollHeight(), stringWidth, text, g, 1, getBackgroundColor());
 	}
 
 	private int getTextPosition(int x, int stringWidth, boolean centralize) {
-		int rightLimit = chart.getBoundaryRight() - chart.getInsetsWidth() - stringWidth;
+		int rightLimit = chart.getBoundaryRight() - chart.canvas.getInsetsWidth() - stringWidth;
 
 		int position = centralize ? x - (stringWidth / 2) : x;
 

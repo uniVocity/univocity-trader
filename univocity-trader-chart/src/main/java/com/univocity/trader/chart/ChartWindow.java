@@ -99,7 +99,7 @@ public class ChartWindow extends JFrame {
 	private BasicChart<?> getChart() {
 		if (chart == null) {
 			chart = new CandleChart(getChartHistoryView());
-			chart.enableScrolling();
+			chart.canvas.enableScrolling();
 			getCandleHistory().addDataUpdateListener(() -> getTimeIntervalSelector().dataUpdated());
 
 			getTimeIntervalSelector().addIntervalListener(chartHistoryView::updateView);

@@ -51,7 +51,7 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 			public void mouseDragged(MouseEvent e) {
 				draggingButton = e.getButton();
 				if(isMouseDraggingChart()){
-					dragStart = scrollBar.drag(e, dragStart);
+					dragStart = canvas.scrollBar.drag(e, dragStart);
 				}
 				processMouseEvent(e);
 			}
@@ -64,10 +64,10 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 			private void processMouseEvent(final MouseEvent e) {
 				dragStart = e.getX();
 				mousePosition = e.getPoint();
-				if (inDisabledSection(mousePosition)) {
+				if (canvas.inDisabledSection(mousePosition)) {
 					return;
 				}
-				mousePosition.x = translateX(mousePosition.x);
+				mousePosition.x = canvas.translateX(mousePosition.x);
 				Candle candle = getCandleUnderCursor();
 				if (candle != getCurrentCandle()) {
 					setCurrentCandle(candle);
@@ -84,7 +84,7 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 	}
 
 	public boolean isMouseDragging(){
-		return draggingButton != -1 && mousePosition != null && mousePosition.getY() < getHeight() - getScrollHeight();
+		return draggingButton != -1 && mousePosition != null && mousePosition.getY() < getHeight() - canvas.getScrollHeight();
 	}
 
 	public boolean isMouseDraggingChart(){

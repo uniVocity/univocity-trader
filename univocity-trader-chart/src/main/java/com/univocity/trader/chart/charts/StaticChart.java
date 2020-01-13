@@ -4,7 +4,6 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
 import com.univocity.trader.chart.charts.painter.*;
-import com.univocity.trader.chart.charts.scrolling.*;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -12,8 +11,6 @@ import java.util.List;
 import java.util.*;
 
 public abstract class StaticChart<C extends BasicChartController> {
-
-	private final Insets insets = new Insets(0, 0, 0, 0);
 
 	private final EnumMap<Painter.Z, List<Painter<?>>> painters = new EnumMap<>(Painter.Z.class);
 
@@ -30,8 +27,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 	private C controller;
 
 	public final CandleHistoryView candleHistory;
-
-	protected ScrollBar scrollBar;
 
 	private BufferedImage image;
 	private long lastPaint;
@@ -54,10 +49,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 		candleHistory.addDataUpdateListener(this::dataUpdated);
 	}
 
-	public void enableScrolling() {
-		scrollBar = new ScrollBar(canvas);
-	}
-
 	protected Color getBackgroundColor() {
 		return getController().getBackgroundColor();
 	}
@@ -77,19 +68,9 @@ public abstract class StaticChart<C extends BasicChartController> {
 		}
 	}
 
-	public final boolean isDraggingScroll() {
-		return isScrollingView() && scrollBar.isDraggingScroll();
-	}
-
-	protected final boolean isScrollingView() {
-		if (scrollBar == null) {
-			return false;
-		}
-		return scrollBar.isScrollingView();
-	}
 
 	private void paintImage() {
-		if (System.currentTimeMillis() - lastPaint <= 10 && !isScrollingView() && image != null) {
+		if (System.currentTimeMillis() - lastPaint <= 10 && !canvas.isScrollingView() && image != null) {
 			return;
 		}
 		final int width = Math.max(getRequiredWidth(), getWidth());
@@ -102,11 +83,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 		applyAntiAliasing(ig);
 		clearGraphics(ig, width);
-
-		updateScroll();
-
-		insets.right = 0;
-		insets.left = 0;
 
 		runPainters(ig, Painter.Z.BACK, width);
 		draw(ig, width);
@@ -127,55 +103,23 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 		g.drawImage(image, 0, 0, getWidth(), getHeight(), getBoundaryLeft(), 0, getBoundaryRight(), getHeight(), null);
 
-		if (scrollBar != null) {
-			scrollBar.draw(g);
-		}
-
 		lastPaint = System.currentTimeMillis();
 	}
 
-	public int getScrollHeight() {
-		return scrollBar != null ? scrollBar.getHeight() : 0;
+	public int getBoundaryLeft(){
+		return canvas.getBoundaryLeft();
 	}
 
-	public boolean isOverDisabledSectionAtRight(int width, int x) {
-		return x >= width - (insets.right + getBarWidth() * 1.5);
-	}
-
-	public boolean inDisabledSection(Point point) {
-		return point.y < getHeight() - scrollBar.getHeight() && (isOverDisabledSectionAtRight(getWidth(), point.x) || point.x < insets.left + getBarWidth());
-	}
-
-	public int getInsetsWidth() {
-		return insets.left + insets.right;
+	public int getBoundaryRight(){
+		return canvas.getBoundaryRight();
 	}
 
 	private void runPainters(Graphics2D g, Painter.Z z, int width) {
 		for (Painter<?> painter : painters.get(z)) {
 			painter.paintOn(g, width);
-			insets.right = Math.max(painter.insets().right, insets.right);
-			insets.left = Math.max(painter.insets().left, insets.left);
+			canvas.insets.right = Math.max(painter.insets().right, canvas.insets.right);
+			canvas.insets.left = Math.max(painter.insets().left, canvas.insets.left);
 		}
-	}
-
-	private void updateScroll() {
-		if (scrollBar != null) {
-			scrollBar.updateScroll();
-		}
-	}
-
-	public int getBoundaryRight() {
-		if (scrollBar != null && scrollBar.isScrollingView()) {
-			return scrollBar.getBoundaryRight();
-		}
-		return getWidth();
-	}
-
-	public int getBoundaryLeft() {
-		if (scrollBar != null && scrollBar.isScrollingView()) {
-			return scrollBar.getBoundaryLeft();
-		}
-		return 0;
 	}
 
 
@@ -229,7 +173,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 	private void updateIncrements() {
 		if (!candleHistory.isEmpty()) {
-			horizontalIncrement = (((double) Math.max(getWidth(), getRequiredWidth()) - (getInsetsWidth())) / (double) candleHistory.size());
+			horizontalIncrement = (((double) Math.max(getWidth(), getRequiredWidth()) - (canvas.getInsetsWidth())) / (double) candleHistory.size());
 		}
 	}
 
@@ -356,7 +300,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		return locationOf(getCurrentCandle());
 	}
 
-	protected final int getBarWidth() {
+	public final int calculateBarWidth() {
 		return getController().getBarWidth();
 	}
 
@@ -365,7 +309,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 	}
 
 	public int calculateRequiredWidth() {
-		return (getBarWidth() + getSpaceBetweenCandles()) * candleHistory.size() + getInsetsWidth();
+		return (canvas.getBarWidth() + getSpaceBetweenCandles()) * candleHistory.size() + canvas.getInsetsWidth();
 	}
 
 	protected abstract C newController();
@@ -393,14 +337,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 		return candle.close;
 	}
 
-	public int translateX(int x) {
-		if (scrollBar != null && scrollBar.isScrollingView()) {
-			return x + scrollBar.getBoundaryLeft();
-		}
-		return x;
-
-	}
-
 	protected abstract void draw(Graphics2D g, int width);
 
 	public int getHeight() {
@@ -409,5 +345,9 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 	public final void setHeight(int height) {
 		this.height = height;
+	}
+
+	public int getBarWidth(){
+		return canvas.getBarWidth();
 	}
 }
