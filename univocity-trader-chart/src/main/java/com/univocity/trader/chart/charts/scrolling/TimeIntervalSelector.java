@@ -245,8 +245,4 @@ public class TimeIntervalSelector extends NullLayoutPanel {
 	public boolean lookingAtRecentHistory() {
 		return endHandle.candle == candleHistory.getLast();
 	}
-
-	private void invokeRepaint() {
-		SwingUtilities.invokeLater(this::repaint);
-	}
 }

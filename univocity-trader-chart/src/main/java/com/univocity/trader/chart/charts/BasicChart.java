@@ -3,11 +3,10 @@ package com.univocity.trader.chart.charts;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
-import com.univocity.trader.chart.charts.painter.Painter;
+import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.scrolling.*;
 import com.univocity.trader.chart.gui.*;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.util.List;
@@ -37,6 +36,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	private BufferedImage image;
 	private long lastPaint;
+	private boolean firstRun = true; //repaint on first run to use correct font sizes (first run computes them, second uses them to lay out things correctly).
 
 	public BasicChart(CandleHistoryView candleHistory) {
 		this.candleHistory = candleHistory;
@@ -80,7 +80,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	}
 
 	private void paintImage() {
-		if (System.currentTimeMillis() - lastPaint <= 10 && !isScrollingView()) {
+		if (System.currentTimeMillis() - lastPaint <= 10 && !isScrollingView() && image != null) {
 			return;
 		}
 		final int width = Math.max(getRequiredWidth(), getWidth());
@@ -102,6 +102,11 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		runPainters(ig, Painter.Z.BACK, width);
 		draw(ig, width);
 		runPainters(ig, Painter.Z.FRONT, width);
+
+		if(firstRun){
+			firstRun = false;
+			invokeRepaint();
+		}
 	}
 
 	public final void paintComponent(Graphics g1d) {
@@ -129,7 +134,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	}
 
 	public boolean inDisabledSection(Point point) {
-		return point.y < getHeight() - scrollBar.getHeight() && (point.x >= getWidth() - (insets.right + getBarWidth() * 2) || point.x < insets.left + getBarWidth());
+		return point.y < getHeight() - scrollBar.getHeight() && (point.x >= getWidth() - (insets.right + getBarWidth() * 1.5) || point.x < insets.left + getBarWidth());
 	}
 
 	public int getInsetsWidth() {
@@ -375,10 +380,6 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		}
 		return x;
 
-	}
-
-	protected final void invokeRepaint() {
-		SwingUtilities.invokeLater(this::repaint);
 	}
 
 	protected abstract void draw(Graphics2D g, int width);

@@ -42,7 +42,6 @@ public abstract class NullLayoutPanel extends JPanel {
 			height = getHeight();
 			width = getWidth();
 			layoutComponents();
-			revalidate();
 			boundsChanged = false;
 		}
 	}
@@ -58,5 +57,8 @@ public abstract class NullLayoutPanel extends JPanel {
 		return (Graphics2D) super.getGraphics();
 	}
 
+	protected final void invokeRepaint() {
+		SwingUtilities.invokeLater(this::repaint);
+	}
 
 }
