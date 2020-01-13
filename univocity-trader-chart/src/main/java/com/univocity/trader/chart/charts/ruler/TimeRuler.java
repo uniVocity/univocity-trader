@@ -36,6 +36,10 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 		for (int i = 0; i <= increments; i++) {
 			int x = (int) Math.round(i * columnWidth);
 
+			if(chart.isOverDisabledSectionAtRight(chart.getRequiredWidth(), x)){
+				break;
+			}
+
 			if (isShowingGrid()) {
 				g.setColor(getGridColor());
 				g.drawLine(x, 0, x, chart.getHeight());

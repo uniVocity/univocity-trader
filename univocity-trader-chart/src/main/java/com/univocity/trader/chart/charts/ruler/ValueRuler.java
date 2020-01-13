@@ -32,10 +32,10 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		int start = chart.getBoundaryRight() - width;
 		int end = insets.right + width;
 
-		gradientStart.x = start - 200;
-		gradientStart.y = 0;
-		gradientEnd.x = end + 200;
-		gradientEnd.y = chart.getHeight();
+		gradientStart.x = chart.getWidth();
+		gradientStart.y = chart.getHeight() + 250;
+		gradientEnd.x = chart.getWidth();
+		gradientEnd.y = -250;
 
 
 		g.setPaint(new GradientPaint(gradientStart, glassGray, gradientEnd, glassWhite));

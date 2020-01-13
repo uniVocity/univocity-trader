@@ -133,8 +133,12 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 		return scrollBar != null ? scrollBar.getHeight() : 0;
 	}
 
+	public boolean isOverDisabledSectionAtRight(int width, int x){
+		return x >= width - (insets.right + getBarWidth() * 1.5);
+	}
+
 	public boolean inDisabledSection(Point point) {
-		return point.y < getHeight() - scrollBar.getHeight() && (point.x >= getWidth() - (insets.right + getBarWidth() * 1.5) || point.x < insets.left + getBarWidth());
+		return point.y < getHeight() - scrollBar.getHeight() && (isOverDisabledSectionAtRight(getWidth(), point.x) || point.x < insets.left + getBarWidth());
 	}
 
 	public int getInsetsWidth() {
