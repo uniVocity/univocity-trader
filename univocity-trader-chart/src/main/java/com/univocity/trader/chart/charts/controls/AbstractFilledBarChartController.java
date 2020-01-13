@@ -8,7 +8,7 @@ import com.univocity.trader.chart.charts.*;
 
 import java.awt.*;
 
-public abstract class AbstractFilledBarChartController<C extends InteractiveChart<?>> extends AbstractBarChartController<C> {
+public abstract class AbstractFilledBarChartController<C extends BasicChart<?>> extends AbstractBarChartController<C> {
 
 	@CheckBoxBound("Fill positive candles")
 	private boolean positiveClosingFilled = true;

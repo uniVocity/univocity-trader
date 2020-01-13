@@ -10,10 +10,10 @@ import java.awt.*;
 public abstract class Ruler<C extends RulerController<?>> implements Painter<C> {
 
 	protected final Insets insets = new Insets(0, 0, 0, 0);
-	protected final InteractiveChart<?> chart;
+	protected final BasicChart<?> chart;
 	private C controller;
 
-	public Ruler(InteractiveChart<?> chart) {
+	public Ruler(BasicChart<?> chart) {
 		this.chart = chart;
 		chart.register(this);
 	}

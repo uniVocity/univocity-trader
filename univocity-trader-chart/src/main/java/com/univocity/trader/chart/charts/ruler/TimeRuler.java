@@ -12,7 +12,7 @@ import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
 public class TimeRuler extends Ruler<TimeRulerController> {
 
-	public TimeRuler(InteractiveChart<?> chart) {
+	public TimeRuler(BasicChart<?> chart) {
 		super(chart);
 	}
 

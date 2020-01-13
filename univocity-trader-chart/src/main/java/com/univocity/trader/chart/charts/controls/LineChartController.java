@@ -6,7 +6,7 @@ import com.univocity.trader.chart.charts.*;
 
 import java.awt.*;
 
-public class LineChartController extends InteractiveChartController {
+public class LineChartController extends BasicChartController {
 
 	@Label("Marker width")
 	@SpinnerBound(maximum = 20)

@@ -7,7 +7,7 @@ import com.univocity.trader.chart.charts.controls.*;
 
 import java.awt.*;
 
-public class LineChart extends InteractiveChart<LineChartController> {
+public class LineChart extends BasicChart<LineChartController> {
 
 	public LineChart(CandleHistoryView candleHistory) {
 		super(candleHistory);

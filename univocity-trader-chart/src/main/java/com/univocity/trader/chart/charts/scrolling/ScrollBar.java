@@ -16,7 +16,7 @@ public class ScrollBar extends MouseAdapter {
 	private final Point gradientStart = new Point(0, 0);
 	private final Point gradientEnd = new Point(0, 0);
 
-	final BasicChart<?> parent;
+	final StaticChart<?> parent;
 
 	int height = 10;
 	boolean scrolling;
@@ -27,7 +27,7 @@ public class ScrollBar extends MouseAdapter {
 
 	final ScrollHandle scrollHandle = new ScrollHandle(this);
 
-	public ScrollBar(BasicChart<?> parent) {
+	public ScrollBar(StaticChart<?> parent) {
 		this.parent = parent;
 		parent.addMouseMotionListener(this);
 

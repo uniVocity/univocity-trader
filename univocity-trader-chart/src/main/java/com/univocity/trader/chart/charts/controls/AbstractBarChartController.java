@@ -8,7 +8,7 @@ import com.univocity.trader.chart.charts.*;
 
 import java.awt.*;
 
-public abstract class AbstractBarChartController<C extends InteractiveChart<?>> extends InteractiveChartController {
+public abstract class AbstractBarChartController<C extends BasicChart<?>> extends BasicChartController {
 
 	@Label("Positive closing color")
 	@ColorBound()

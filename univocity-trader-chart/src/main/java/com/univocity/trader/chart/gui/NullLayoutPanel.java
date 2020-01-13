@@ -57,7 +57,7 @@ public abstract class NullLayoutPanel extends JPanel {
 		return (Graphics2D) super.getGraphics();
 	}
 
-	protected final void invokeRepaint() {
+	public final void invokeRepaint() {
 		SwingUtilities.invokeLater(this::repaint);
 	}
 

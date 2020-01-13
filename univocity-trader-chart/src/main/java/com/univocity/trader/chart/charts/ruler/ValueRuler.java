@@ -19,7 +19,7 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 
 	private int refY1, refY2, refY3;
 
-	public ValueRuler(InteractiveChart<?> chart) {
+	public ValueRuler(BasicChart<?> chart) {
 		super(chart);
 	}
 
