@@ -12,11 +12,11 @@ import java.awt.image.*;
 import java.util.List;
 import java.util.*;
 
-public abstract class StaticChart<C extends BasicChartController> extends NullLayoutPanel {
+public abstract class StaticChart<C extends BasicChartController> extends ChartCanvas {
 
 	private final Insets insets = new Insets(0, 0, 0, 0);
 
-	private final EnumMap<Painter.Z, List<Painter>> painters = new EnumMap<>(Painter.Z.class);
+	private final EnumMap<Painter.Z, List<Painter<?>>> painters = new EnumMap<>(Painter.Z.class);
 
 	private double horizontalIncrement = 0.0;
 	private double maximum = -1.0;

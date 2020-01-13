@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public abstract class NullLayoutPanel extends JPanel {
+public abstract class ChartCanvas extends JPanel {
 
 	private boolean isPanelBeingShown = false;
 	private boolean boundsChanged = false;
@@ -12,7 +12,7 @@ public abstract class NullLayoutPanel extends JPanel {
 	protected int height;
 	protected int width;
 
-	public NullLayoutPanel() {
+	public ChartCanvas() {
 		this.setLayout(null);
 		this.setOpaque(true);
 

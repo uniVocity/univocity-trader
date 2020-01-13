@@ -13,7 +13,7 @@ import java.awt.event.*;
 import java.awt.image.*;
 import java.util.concurrent.atomic.*;
 
-public class TimeIntervalSelector extends NullLayoutPanel {
+public class TimeIntervalSelector extends ChartCanvas {
 	private TimeIntervalHandle startHandle = new TimeIntervalHandle(true);
 	private TimeIntervalHandle endHandle = new TimeIntervalHandle(false);
 	private TimeIntervalHandle boundaryHandle = endHandle;
