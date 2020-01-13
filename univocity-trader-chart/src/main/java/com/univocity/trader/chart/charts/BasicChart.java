@@ -16,9 +16,9 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 
 	public BasicChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
-		this.setFocusable(true);
+		canvas.setFocusable(true);
 
-		addMouseListener(new MouseAdapter() {
+		canvas.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				draggingButton = -1;
@@ -45,7 +45,7 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 			}
 		});
 
-		addMouseMotionListener(new MouseMotionListener() {
+		canvas.addMouseMotionListener(new MouseMotionListener() {
 
 			@Override
 			public void mouseDragged(MouseEvent e) {
@@ -76,7 +76,7 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 			}
 		});
 
-		addMouseListener(new MouseAdapter() {
+		canvas.addMouseListener(new MouseAdapter() {
 			public void mouseExited(MouseEvent e) {
 				mousePosition = null;
 			}
@@ -127,7 +127,7 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 			if (hoveredPosition != null) {
 				g.setColor(getSelectionLineColor());
 				if (isVerticalSelectionLineEnabled()) {
-					g.drawLine(hoveredPosition.x, 0, hoveredPosition.x, height);
+					g.drawLine(hoveredPosition.x, 0, hoveredPosition.x, getHeight());
 				}
 				if (isHorizontalSelectionLineEnabled()) {
 					g.drawLine(0, hoveredPosition.y, width, hoveredPosition.y);

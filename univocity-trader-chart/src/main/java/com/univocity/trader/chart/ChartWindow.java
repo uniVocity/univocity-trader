@@ -64,7 +64,7 @@ public class ChartWindow extends JFrame {
 	private JPanel getCentralPanel() {
 		if (centralPanel == null) {
 			centralPanel = new JPanel(new BorderLayout());
-			centralPanel.add(getChart(), BorderLayout.CENTER);
+			centralPanel.add(getChart().canvas, BorderLayout.CENTER);
 			centralPanel.add(getTimeIntervalSelector(), BorderLayout.SOUTH);
 		}
 		return centralPanel;

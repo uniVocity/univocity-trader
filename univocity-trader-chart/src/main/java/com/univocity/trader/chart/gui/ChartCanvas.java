@@ -1,16 +1,20 @@
 package com.univocity.trader.chart.gui;
 
+import com.univocity.trader.chart.charts.*;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public abstract class ChartCanvas extends JPanel {
+public class ChartCanvas extends JPanel {
 
 	private boolean isPanelBeingShown = false;
 	private boolean boundsChanged = false;
 
 	protected int height;
 	protected int width;
+
+	private StaticChart<?> chart;
 
 	public ChartCanvas() {
 		this.setLayout(null);
@@ -32,25 +36,24 @@ public abstract class ChartCanvas extends JPanel {
 		});
 	}
 
+	public void addChart(StaticChart<?> chart){
+		this.chart = chart;
+	}
+
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		updateLayout();
+		chart.paintComponent((Graphics2D) g);
 	}
 
 	public void updateLayout() {
 		if (isPanelBeingShown || boundsChanged) {
 			height = getHeight();
 			width = getWidth();
-			layoutComponents();
+			chart.layoutComponents();
 			boundsChanged = false;
 		}
 	}
-
-	public int getRequiredWidth() {
-		return -1;
-	}
-
-	protected abstract void layoutComponents();
 
 	@Override
 	public Graphics2D getGraphics() {

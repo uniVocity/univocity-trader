@@ -23,12 +23,12 @@ public class HistogramChart extends FilledBarChart<HistogramChartController> {
 
 	@Override
 	protected void drawBar(Candle trade, Point location, Graphics2D g, Color lineColor, Color fillColor) {
-		int h = height - getYCoordinate(getCentralValue(trade));
+		int h = getHeight() - getYCoordinate(getCentralValue(trade));
 		g.setColor(fillColor);
-		g.fillRect(location.x - getBarWidth() / 2, height - h, getBarWidth(), h);
+		g.fillRect(location.x - getBarWidth() / 2, getHeight() - h, getBarWidth(), h);
 
 		g.setColor(lineColor);
-		g.drawRect(location.x - getBarWidth() / 2, height - h, getBarWidth(), h);
+		g.drawRect(location.x - getBarWidth() / 2, getHeight() - h, getBarWidth(), h);
 	}
 
 	@Override

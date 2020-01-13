@@ -29,12 +29,12 @@ public class ScrollBar extends MouseAdapter {
 
 	public ScrollBar(StaticChart<?> parent) {
 		this.parent = parent;
-		parent.addMouseMotionListener(this);
+		parent.canvas.addMouseMotionListener(this);
 
 		Timer timer = new Timer(500, (e) -> {
 			if (!dragging) {
 				Point p = MouseInfo.getPointerInfo().getLocation();
-				p = new Point(p.x - parent.getLocation().x, p.y - parent.getLocation().y);
+				p = new Point(p.x - parent.canvas.getLocation().x, p.y - parent.canvas.getLocation().y);
 				updateHighlight(p);
 			}
 		}
@@ -70,7 +70,7 @@ public class ScrollBar extends MouseAdapter {
 		g.fillRect(0, parent.getHeight() - height, parent.getWidth(), height);
 
 		if (scrollRequired) {
-			scrollHandle.draw(g, parent);
+			scrollHandle.draw(g, parent.canvas);
 		}
 	}
 
@@ -123,13 +123,13 @@ public class ScrollBar extends MouseAdapter {
 	private void updateHighlight(Point cursor) {
 		boolean prev = scrolling;
 		if (scrollRequired) {
-			scrolling = scrollHandle.isCursorOver(cursor, parent);
+			scrolling = scrollHandle.isCursorOver(cursor, parent.canvas);
 		} else {
 			scrolling = false;
 		}
 
 		if (prev != scrolling && !dragging) {
-			SwingUtilities.invokeLater(parent::repaint);
+			parent.invokeRepaint();
 		}
 
 		if (!scrollRequired) {

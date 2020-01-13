@@ -37,6 +37,7 @@ public class TimeIntervalSelector extends ChartCanvas {
 	public TimeIntervalSelector(CandleHistory fullCandleHistory, BasicChart<?> chart) {
 		this.candleHistory = fullCandleHistory;
 		this.chart = chart;
+		super.addChart(chart);
 		this.setPreferredSize(new Dimension(100, 100));
 
 		addMouseMotionListener(new MouseAdapter() {
@@ -166,7 +167,7 @@ public class TimeIntervalSelector extends ChartCanvas {
 			backgroundGraphics.setColor(Color.WHITE);
 			backgroundGraphics.fillRect(0, 0, getWidth(), getHeight());
 
-			chart.setBounds(0, 0, getWidth(), getHeight());
+			chart.canvas.setBounds(0, 0, getWidth(), getHeight());
 			chart.paintComponent(backgroundGraphics);
 
 			startHandle.draw(g, this, chart);
@@ -197,11 +198,6 @@ public class TimeIntervalSelector extends ChartCanvas {
 		endHandle.setMinPosition(startHandle.getPosition() + handleWidths);
 		endHandle.setMaxPosition(getWidth());
 		startHandle.setMaxPosition(endHandle.getPosition() - handleWidths);
-	}
-
-	@Override
-	protected void layoutComponents() {
-
 	}
 
 	private void drawGlass(Graphics2D g) {

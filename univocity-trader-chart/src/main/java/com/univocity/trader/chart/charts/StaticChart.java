@@ -12,7 +12,7 @@ import java.awt.image.*;
 import java.util.List;
 import java.util.*;
 
-public abstract class StaticChart<C extends BasicChartController> extends ChartCanvas {
+public abstract class StaticChart<C extends BasicChartController> {
 
 	private final Insets insets = new Insets(0, 0, 0, 0);
 
@@ -38,7 +38,17 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 	private long lastPaint;
 	private boolean firstRun = true; //repaint on first run to use correct font sizes (first run computes them, second uses them to lay out things correctly).
 
+	public final ChartCanvas canvas;
+
+	private int height = -1;
+
 	public StaticChart(CandleHistoryView candleHistory) {
+		this(new ChartCanvas(), candleHistory);
+	}
+
+	public StaticChart(ChartCanvas canvas, CandleHistoryView candleHistory) {
+		this.canvas = canvas;
+		this.canvas.addChart(this);
 		this.candleHistory = candleHistory;
 		painters.put(Painter.Z.BACK, new ArrayList<>());
 		painters.put(Painter.Z.FRONT, new ArrayList<>());
@@ -59,7 +69,7 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 
 	protected void clearGraphics(Graphics g, int width) {
 		g.setColor(getBackgroundColor());
-		g.fillRect(0, 0, width, height);
+		g.fillRect(0, 0, width, getHeight());
 	}
 
 	private void applyAntiAliasing(Graphics2D g) {
@@ -68,12 +78,12 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 		}
 	}
 
-	public final boolean isDraggingScroll(){
+	public final boolean isDraggingScroll() {
 		return isScrollingView() && scrollBar.isDraggingScroll();
 	}
 
-	protected final boolean isScrollingView(){
-		if(scrollBar == null){
+	protected final boolean isScrollingView() {
+		if (scrollBar == null) {
 			return false;
 		}
 		return scrollBar.isScrollingView();
@@ -85,8 +95,8 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 		}
 		final int width = Math.max(getRequiredWidth(), getWidth());
 
-		if (!(image != null && image.getWidth() == width && image.getHeight() == height)) {
-			image = new BufferedImage(width, Math.max(1, height), BufferedImage.TYPE_INT_ARGB);
+		if (!(image != null && image.getWidth() == width && image.getHeight() == getHeight())) {
+			image = new BufferedImage(width, Math.max(1, getHeight()), BufferedImage.TYPE_INT_ARGB);
 		}
 
 		Graphics2D ig = (Graphics2D) image.getGraphics();
@@ -103,24 +113,20 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 		draw(ig, width);
 		runPainters(ig, Painter.Z.FRONT, width);
 
-		if(firstRun){
+		if (firstRun) {
 			firstRun = false;
 			invokeRepaint();
 		}
 	}
 
-	public final void paintComponent(Graphics g1d) {
-		super.paintComponent(g1d);
-
-		Graphics2D g = (Graphics2D) g1d;
-
+	public final void paintComponent(Graphics2D g) {
 		applyAntiAliasing(g);
 
 		clearGraphics(g, getWidth());
 
 		paintImage();
 
-		g.drawImage(image, 0, 0, getWidth(), height, getBoundaryLeft(), 0, getBoundaryRight(), height, null);
+		g.drawImage(image, 0, 0, getWidth(), getHeight(), getBoundaryLeft(), 0, getBoundaryRight(), getHeight(), null);
 
 		if (scrollBar != null) {
 			scrollBar.draw(g);
@@ -133,7 +139,7 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 		return scrollBar != null ? scrollBar.getHeight() : 0;
 	}
 
-	public boolean isOverDisabledSectionAtRight(int width, int x){
+	public boolean isOverDisabledSectionAtRight(int width, int x) {
 		return x >= width - (insets.right + getBarWidth() * 1.5);
 	}
 
@@ -163,7 +169,7 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 		if (scrollBar != null && scrollBar.isScrollingView()) {
 			return scrollBar.getBoundaryRight();
 		}
-		return width;
+		return getWidth();
 	}
 
 	public int getBoundaryLeft() {
@@ -180,7 +186,7 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 
 		updateEdgeValues();
 
-		revalidate();
+		canvas.revalidate(); //TODO: check if required
 		invokeRepaint();
 	}
 
@@ -222,7 +228,7 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 
 	private void updateIncrements() {
 		if (!candleHistory.isEmpty()) {
-			horizontalIncrement = (((double) Math.max(width, getRequiredWidth()) - (getInsetsWidth())) / (double) candleHistory.size());
+			horizontalIncrement = (((double) Math.max(getWidth(), getRequiredWidth()) - (getInsetsWidth())) / (double) candleHistory.size());
 		}
 	}
 
@@ -251,21 +257,21 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 	}
 
 	private int getLogarithmicYCoordinate(double value) {
-		return height - (int) ((Math.log10(value) - logLow) * height / logRange);
+		return getHeight() - (int) ((Math.log10(value) - logLow) * getHeight() / logRange);
 	}
 
 	private int getLinearYCoordinate(double value) {
-		double linearRange = height - (height * minimum / maximum);
-		double proportion = (height - (height * value / maximum)) / linearRange;
+		double linearRange = getHeight() - (getHeight() * minimum / maximum);
+		double proportion = (getHeight() - (getHeight() * value / maximum)) / linearRange;
 
-		return (int) (height * proportion);
+		return (int) (getHeight() * proportion);
 	}
 
 	public double getValueAtY(int y) {
 		if (displayLogarithmicScale()) {
-			return Math.pow(10, (y + logLow * height / logRange) / height * logRange);
+			return Math.pow(10, (y + logLow * getHeight() / logRange) / getHeight() * logRange);
 		} else {
-			return maximum * y / (height - getLinearYCoordinate(maximum));
+			return maximum * y / (getHeight() - getLinearYCoordinate(maximum));
 		}
 	}
 
@@ -277,7 +283,7 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 		return getController().isDisplayingLogarithmicScale();
 	}
 
-	protected final void layoutComponents() {
+	public final void layoutComponents() {
 		updateIncrements();
 	}
 
@@ -297,6 +303,14 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 			currentCandle = candle;
 			invokeRepaint();
 		}
+	}
+
+	public final void invokeRepaint(){
+		canvas.invokeRepaint();
+	}
+
+	public final int getWidth(){
+		return canvas.getWidth();
 	}
 
 	public final Candle getCurrentCandle() {
@@ -388,4 +402,11 @@ public abstract class StaticChart<C extends BasicChartController> extends ChartC
 
 	protected abstract void draw(Graphics2D g, int width);
 
+	public int getHeight() {
+		return height < 0 ? canvas.getHeight() : height;
+	}
+
+	public final void setHeight(int height) {
+		this.height = height;
+	}
 }

@@ -14,7 +14,7 @@ public class ChartUpdateProcessor implements UpdateProcessor {
 	@Override
 	public void execute() {
 		if (controller != null && controller.getChart() != null) {
-			controller.getChart().repaint();
+			controller.getChart().canvas.invokeRepaint();
 		}
 	}
 }
