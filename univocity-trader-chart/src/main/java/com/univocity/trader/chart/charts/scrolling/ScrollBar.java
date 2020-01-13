@@ -16,7 +16,7 @@ public class ScrollBar extends MouseAdapter {
 	private final Point gradientStart = new Point(0, 0);
 	private final Point gradientEnd = new Point(0, 0);
 
-	final StaticChart<?> parent;
+	final ChartCanvas canvas;
 
 	int height = 10;
 	boolean scrolling;
@@ -27,14 +27,14 @@ public class ScrollBar extends MouseAdapter {
 
 	final ScrollHandle scrollHandle = new ScrollHandle(this);
 
-	public ScrollBar(StaticChart<?> parent) {
-		this.parent = parent;
-		parent.canvas.addMouseMotionListener(this);
+	public ScrollBar(ChartCanvas canvas) {
+		this.canvas = canvas;
+		canvas.addMouseMotionListener(this);
 
 		Timer timer = new Timer(500, (e) -> {
 			if (!dragging) {
 				Point p = MouseInfo.getPointerInfo().getLocation();
-				p = new Point(p.x - parent.canvas.getLocation().x, p.y - parent.canvas.getLocation().y);
+				p = new Point(p.x - canvas.getLocation().x, p.y - canvas.getLocation().y);
 				updateHighlight(p);
 			}
 		}
@@ -47,9 +47,8 @@ public class ScrollBar extends MouseAdapter {
 	}
 
 	public void updateScroll() {
-
-		double required = parent.getRequiredWidth();
-		double available = parent.getWidth();
+		double required = canvas.getRequiredWidth();
+		double available = canvas.getWidth();
 
 		double scrollingArea = available < ScrollHandle.MIN_WIDTH ? ScrollHandle.MIN_WIDTH : available;
 		double handleWidth = scrollingArea * (available / required);
@@ -61,16 +60,16 @@ public class ScrollBar extends MouseAdapter {
 
 	public void draw(Graphics2D g) {
 
-		gradientStart.x = parent.getWidth() / 2;
+		gradientStart.x = canvas.getWidth() / 2;
 		gradientStart.y = -50;
-		gradientEnd.x = parent.getWidth() / 2;
+		gradientEnd.x = canvas.getWidth() / 2;
 		gradientEnd.y = height + 50;
 
 		g.setPaint(new GradientPaint(gradientStart, glassBlue, gradientEnd, barGray));
-		g.fillRect(0, parent.getHeight() - height, parent.getWidth(), height);
+		g.fillRect(0, canvas.getHeight() - height, canvas.getWidth(), height);
 
 		if (scrollRequired) {
-			scrollHandle.draw(g, parent.canvas);
+			scrollHandle.draw(g, canvas);
 		}
 	}
 
@@ -123,13 +122,13 @@ public class ScrollBar extends MouseAdapter {
 	private void updateHighlight(Point cursor) {
 		boolean prev = scrolling;
 		if (scrollRequired) {
-			scrolling = scrollHandle.isCursorOver(cursor, parent.canvas);
+			scrolling = scrollHandle.isCursorOver(cursor, canvas);
 		} else {
 			scrolling = false;
 		}
 
 		if (prev != scrolling && !dragging) {
-			parent.invokeRepaint();
+			canvas.invokeRepaint();
 		}
 
 		if (!scrollRequired) {

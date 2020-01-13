@@ -5,7 +5,6 @@ import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
 import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.scrolling.*;
-import com.univocity.trader.chart.gui.*;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -56,7 +55,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 	}
 
 	public void enableScrolling() {
-		scrollBar = new ScrollBar(this);
+		scrollBar = new ScrollBar(canvas);
 	}
 
 	protected Color getBackgroundColor() {
@@ -96,7 +95,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		final int width = Math.max(getRequiredWidth(), getWidth());
 
 		if (!(image != null && image.getWidth() == width && image.getHeight() == getHeight())) {
-			image = new BufferedImage(width, Math.max(1, getHeight()), BufferedImage.TYPE_INT_ARGB);
+			image = new BufferedImage(Math.max(1, width), Math.max(1, getHeight()), BufferedImage.TYPE_INT_ARGB);
 		}
 
 		Graphics2D ig = (Graphics2D) image.getGraphics();
@@ -185,8 +184,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 		minimum = Double.MAX_VALUE;
 
 		updateEdgeValues();
-
-		canvas.revalidate(); //TODO: check if required
 		invokeRepaint();
 	}
 
@@ -224,6 +221,10 @@ public abstract class StaticChart<C extends BasicChartController> {
 		if (minimum > value && value != 0.0) {
 			minimum = value;
 		}
+	}
+
+	public int getRequiredWidth(){
+		return canvas.getRequiredWidth();
 	}
 
 	private void updateIncrements() {
@@ -363,7 +364,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		return getController().getSpaceBetweenBars();
 	}
 
-	public int getRequiredWidth() {
+	public int calculateRequiredWidth() {
 		return (getBarWidth() + getSpaceBetweenCandles()) * candleHistory.size() + getInsetsWidth();
 	}
 

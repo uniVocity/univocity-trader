@@ -52,7 +52,7 @@ class ScrollHandle extends Draggable {
 
 	@Override
 	protected int maxPosition() {
-		return scrollBar.parent.getWidth() - width;
+		return scrollBar.canvas.getWidth() - width;
 	}
 
 	public void draw(Graphics2D g, Component c) {

@@ -1,10 +1,10 @@
-package com.univocity.trader.chart.gui;
-
-import com.univocity.trader.chart.charts.*;
+package com.univocity.trader.chart.charts;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
+import java.util.*;
 
 public class ChartCanvas extends JPanel {
 
@@ -13,8 +13,9 @@ public class ChartCanvas extends JPanel {
 
 	protected int height;
 	protected int width;
+	private int requiredWidth = -1;
 
-	private StaticChart<?> chart;
+	private List<StaticChart<?>> charts = new ArrayList<>();
 
 	public ChartCanvas() {
 		this.setLayout(null);
@@ -36,23 +37,37 @@ public class ChartCanvas extends JPanel {
 		});
 	}
 
-	public void addChart(StaticChart<?> chart){
-		this.chart = chart;
+	public void addChart(StaticChart<?> chart) {
+		this.charts.add(chart);
 	}
 
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		updateLayout();
-		chart.paintComponent((Graphics2D) g);
+
+		for (StaticChart<?> chart : charts) {
+			this.requiredWidth = Math.max(chart.calculateRequiredWidth(), requiredWidth);
+		}
+
+		for (StaticChart<?> chart : charts) {
+			chart.paintComponent((Graphics2D) g);
+		}
 	}
 
 	public void updateLayout() {
 		if (isPanelBeingShown || boundsChanged) {
 			height = getHeight();
 			width = getWidth();
-			chart.layoutComponents();
+			for (StaticChart<?> chart : charts) {
+				chart.layoutComponents();
+			}
+
 			boundsChanged = false;
 		}
+	}
+
+	public int getRequiredWidth() {
+		return requiredWidth;
 	}
 
 	@Override
