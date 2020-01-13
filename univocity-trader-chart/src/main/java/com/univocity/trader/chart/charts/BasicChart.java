@@ -33,7 +33,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 
 	public final CandleHistoryView candleHistory;
 
-	private ScrollBar scrollBar;
+	protected ScrollBar scrollBar;
 
 	private BufferedImage image;
 	private long lastPaint;
@@ -71,7 +71,7 @@ public abstract class BasicChart<C extends BasicChartController> extends NullLay
 	public final boolean isDraggingScroll(){
 		return isScrollingView() && scrollBar.isDraggingScroll();
 	}
-	
+
 	protected final boolean isScrollingView(){
 		if(scrollBar == null){
 			return false;

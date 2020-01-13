@@ -12,6 +12,7 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 
 	private Point mousePosition = null;
 	private int draggingButton = -1;
+	private int dragStart;
 
 	public InteractiveChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
@@ -49,6 +50,9 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				draggingButton = e.getButton();
+				if(isMouseDraggingChart()){
+					dragStart = scrollBar.drag(e, dragStart);
+				}
 				processMouseEvent(e);
 			}
 
@@ -58,6 +62,7 @@ public abstract class InteractiveChart<C extends InteractiveChartController> ext
 			}
 
 			private void processMouseEvent(final MouseEvent e) {
+				dragStart = e.getX();
 				mousePosition = e.getPoint();
 				if (inDisabledSection(mousePosition)) {
 					return;

@@ -16,7 +16,7 @@ public class ScrollBar extends MouseAdapter {
 	private final Point gradientStart = new Point(0, 0);
 	private final Point gradientEnd = new Point(0, 0);
 
-	final BasicChart parent;
+	final BasicChart<?> parent;
 
 	int height = 10;
 	boolean scrolling;
@@ -27,7 +27,7 @@ public class ScrollBar extends MouseAdapter {
 
 	final ScrollHandle scrollHandle = new ScrollHandle(this);
 
-	public ScrollBar(BasicChart parent) {
+	public ScrollBar(BasicChart<?> parent) {
 		this.parent = parent;
 		parent.addMouseMotionListener(this);
 
@@ -78,17 +78,22 @@ public class ScrollBar extends MouseAdapter {
 	public void mouseDragged(MouseEvent e) {
 		if (scrollRequired) {
 			if (scrolling) {
-				dragging = true;
-
-				int pixelsToMove = e.getX() - dragStart;
-
-				pixelsToMove = scrollHandle.getMovablePixels(pixelsToMove);
-				if (pixelsToMove != 0) {
-					scrollHandle.move(pixelsToMove);
-					dragStart = e.getX();
-				}
+				dragStart = drag(e, dragStart);
 			}
 		}
+	}
+
+	public int drag(MouseEvent e, int dragStart){
+		dragging = true;
+
+		int pixelsToMove = e.getX() - dragStart;
+
+		pixelsToMove = scrollHandle.getMovablePixels(pixelsToMove);
+		if (pixelsToMove != 0) {
+			scrollHandle.move(pixelsToMove);
+			dragStart = e.getX();
+		}
+		return dragStart;
 	}
 
 	public int getBoundaryRight() {
