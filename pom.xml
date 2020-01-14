@@ -32,6 +32,7 @@
         <module>univocity-trader-core</module>
         <module>univocity-trader-binance</module>
         <module>univocity-trader-iqfeed</module>
+        <module>univocity-trader-interactivebrokers</module>
         <module>univocity-trader-examples</module>
         <module>univocity-trader-chart</module>
     </modules>
