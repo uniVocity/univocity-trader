@@ -7,13 +7,13 @@ import org.slf4j.*;
 import java.util.*;
 
 
-class InteractiveBrokersAccount implements ClientAccount {
+class IBAccount implements ClientAccount {
 
-	private static final Logger log = LoggerFactory.getLogger(InteractiveBrokersAccount.class);
+	private static final Logger log = LoggerFactory.getLogger(IBAccount.class);
 
 	private final IB ib;
 
-	public InteractiveBrokersAccount(IB ib) {
+	public IBAccount(IB ib) {
 		this.ib = ib;
 	}
 
