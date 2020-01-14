@@ -39,11 +39,4 @@ public final class InteractiveBrokers implements EntryPoint {
 	public static Trader trader() {
 		return new Trader();
 	}
-
-	//TODO: remove this once implementation is finalized
-	public static void main(String ... args){
-		try(Trader trader = trader()) {
-		}
-		System.exit(0);
-	}
 }
