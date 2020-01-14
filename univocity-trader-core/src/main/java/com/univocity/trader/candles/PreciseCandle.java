@@ -26,6 +26,16 @@ public class PreciseCandle {
 		this.volume = volume;
 	}
 
+	public PreciseCandle(Candle candle) {
+		this.openTime = candle.openTime;
+		this.closeTime = candle.closeTime;
+		this.open = new BigDecimal(candle.open);
+		this.high = new BigDecimal(candle.high);
+		this.low = new BigDecimal(candle.low);
+		this.close = new BigDecimal(candle.close);
+		this.volume = new BigDecimal(candle.volume);
+	}
+
 	@Override
 	public String toString() {
 		return "{" +

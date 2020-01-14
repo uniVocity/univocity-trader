@@ -1,6 +1,10 @@
 package com.univocity.trader.exchange.interactivebrokers;
 
+import com.ib.client.*;
 import com.univocity.trader.config.*;
+
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * InteractiveBrokers doesn't require an account login. We simply connect to their Trader Workstation
@@ -10,6 +14,8 @@ import com.univocity.trader.config.*;
  */
 public class Account extends AccountConfiguration<Account> {
 
+	private Map<String, Contract> tradedContracts = new ConcurrentHashMap<>();
+
 	public Account(String id) {
 		super(id);
 	}
@@ -17,5 +23,24 @@ public class Account extends AccountConfiguration<Account> {
 	@Override
 	protected void readExchangeAccountProperties(String accountId, PropertyBasedConfiguration properties) {
 
+	}
+
+	public Contract tradeWith(SecurityType securityType, String symbol, String currency) {
+		tradeWithPair(new String[]{symbol, currency});
+		String pair = symbol + currency;
+		Contract contract = tradedContracts.get(pair);
+		if (contract == null) {
+			contract = new Contract();
+			contract.symbol(symbol);
+			contract.secType(securityType.securityCode);
+			contract.currency(currency);
+			contract.exchange(securityType.defaultExchange);
+			tradedContracts.put(pair, contract);
+		}
+		return contract;
+	}
+
+	public Map<String, Contract> tradedContracts() {
+		return Collections.unmodifiableMap(tradedContracts);
 	}
 }

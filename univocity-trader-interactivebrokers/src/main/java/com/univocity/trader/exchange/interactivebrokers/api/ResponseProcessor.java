@@ -7,11 +7,12 @@ import com.univocity.trader.exchange.interactivebrokers.model.book.*;
 import org.slf4j.*;
 
 import java.util.*;
+import java.util.function.*;
 
- /**
-  * {@link EWrapper} implementation of methods that are being currently used or have some logic in them
-  * that is not simply logging.
-  *
+/**
+ * {@link EWrapper} implementation of methods that are being currently used or have some logic in them
+ * that is not simply logging.
+ *
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class ResponseProcessor extends IgnoredResponseProcessor {
@@ -29,11 +30,12 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	private final Map<Integer, ContractDetailsCallback> contractDetails = new HashMap<>();
 
 	private boolean disconnecting = false;
+	private final Map<Integer, Consumer<?>> pendingRequests;
 
-
-	public ResponseProcessor(Queue<Candle> realTimeCandles, Queue<Candle> historicalCandles) {
+	public ResponseProcessor(Queue<Candle> realTimeCandles, Queue<Candle> historicalCandles, Map<Integer, Consumer<?>> pendingRequests) {
 		this.realTimeCandles = realTimeCandles;
 		this.historicalCandles = historicalCandles;
+		this.pendingRequests = pendingRequests;
 	}
 
 	@Override
@@ -136,6 +138,10 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	}
 
 	public final void contractDetails(int reqId, ContractDetails contractDetails) {
+		log.info(EWrapperMsgGenerator.contractDetails(reqId, contractDetails));
+
+		var symbolInformationConsumer = (Consumer<SymbolInformation>) pendingRequests.get(reqId);
+		//TODO translate to symbol info
 		ContractDetailsCallback callback;
 		synchronized (this.contractDetails) {
 			callback = this.contractDetails.get(reqId);
@@ -144,19 +150,11 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 			callback.onContractDetails(contractDetails);
 		}
 
-		log.info(EWrapperMsgGenerator.contractDetails(reqId, contractDetails));
+
 	}
 
 	public final void contractDetailsEnd(int reqId) {
-		ContractDetailsCallback callback;
-		synchronized (contractDetails) {
-			callback = contractDetails.get(reqId);
-		}
-		if (callback != null) {
-			callback.onContractDetailsEnd();
-		}
-
-		log.info(EWrapperMsgGenerator.contractDetailsEnd(reqId));
+		pendingRequests.remove(reqId);
 	}
 
 	@Override
@@ -178,7 +176,7 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 			}
 		}
 
-		log.info(EWrapperMsgGenerator.error(id, errorCode, errorMsg));
+		log.error(EWrapperMsgGenerator.error(id, errorCode, errorMsg));
 	}
 
 	@Override
