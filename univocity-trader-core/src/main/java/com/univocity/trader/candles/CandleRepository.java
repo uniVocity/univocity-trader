@@ -3,6 +3,7 @@ package com.univocity.trader.candles;
 import com.univocity.trader.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.utils.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
 import org.springframework.jdbc.core.*;
@@ -268,7 +269,7 @@ public class CandleRepository {
 	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
 		log.info("Looking for gaps in history of {} from {}", symbol, getFormattedDateTimeWithYear(from.toEpochMilli()));
 
-		List<T> ticks = exchange.getLatestTicks(symbol, minGap);
+		IncomingCandles<T> ticks = exchange.getLatestTicks(symbol, minGap);
 		for (T tick : ticks) {
 			PreciseCandle candle = exchange.generatePreciseCandle(tick);
 			addToHistory(symbol, candle, true);
@@ -337,18 +338,21 @@ public class CandleRepository {
 				}
 				try {
 					ticks = exchange.getHistoricalTicks(symbol.toUpperCase(), minGap, start, end);
-					if (ticks.size() <= 2) {
+					int count = 0;
+					for (T tick : ticks) {
+						count++;
+						PreciseCandle candle = exchange.generatePreciseCandle(tick);
+						addToHistory(symbol, candle, true);
+					}
+
+					if (count <= 2) {
 						noDataCount++;
 //						log.info("No Candles found for {} between {} and {}", symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
 						log.warn("Found a historical gap between {} and {}. Interval blacklisted.", getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
 						addGap(symbol, start, end);
 					} else {
-						log.info("Loaded {} {} Candles between {} and {}", ticks.size(), symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
+						log.info("Loaded {} {} Candles between {} and {}", count, symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
 						noDataCount = 0;
-						for (T tick : ticks) {
-							PreciseCandle candle = exchange.generatePreciseCandle(tick);
-							addToHistory(symbol, candle, true);
-						}
 					}
 
 					Thread.sleep(200);

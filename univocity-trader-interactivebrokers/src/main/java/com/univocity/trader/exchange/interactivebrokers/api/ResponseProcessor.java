@@ -24,7 +24,6 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	private Map<Integer, TradingBook> marketBooks = new HashMap<>();
 	private Map<Integer, TradingBook> smartBooks = new HashMap<>();
-	private final Map<Integer, ContractDetailsCallback> contractDetails = new HashMap<>();
 
 	private boolean disconnecting = false;
 
@@ -39,14 +38,6 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	private static Candle translate(HistoricalTick tick) {
 		return new Candle(tick.time(), tick.time(), tick.price(), tick.price(), tick.price(), tick.price(), tick.size());
-	}
-
-	interface ContractDetailsCallback {
-		void onContractDetails(ContractDetails contractDetails);
-
-		void onContractDetailsEnd();
-
-		void onError(int errorCode, String errorMsg);
 	}
 
 	@Override
@@ -83,6 +74,16 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 		}
 	}
 
+	public final void historicalData(int reqId, Bar bar) {
+		requestHandler.handleResponse(reqId, translate(bar),
+				() -> EWrapperMsgGenerator.historicalData(reqId, bar.time(), bar.open(), bar.high(), bar.low(), bar.close(), bar.volume(), bar.count(), bar.wap()));
+	}
+
+	public final void historicalDataEnd(int reqId, String startDate, String endDate) {
+		log.debug(EWrapperMsgGenerator.historicalDataEnd(reqId, startDate, endDate));
+		requestHandler.closeOpenFeed(reqId);
+	}
+
 	@Override
 	public final void historicalNews(int requestId, String time, String providerCode, String articleId, String headline) {
 		log.info(EWrapperMsgGenerator.historicalNews(requestId, time, providerCode, articleId, headline));
@@ -103,14 +104,6 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 		log.info(EWrapperMsgGenerator.histogramData(reqId, items));
 	}
 
-
-	public final void historicalData(int reqId, Bar bar) {
-		log.info(EWrapperMsgGenerator.historicalData(reqId, bar.time(), bar.open(), bar.high(), bar.low(), bar.close(), bar.volume(), bar.count(), bar.wap()));
-	}
-
-	public final void historicalDataEnd(int reqId, String startDate, String endDate) {
-		log.info(EWrapperMsgGenerator.historicalDataEnd(reqId, startDate, endDate));
-	}
 
 	public final void realtimeBar(int reqId, long time, double open, double high, double low, double close, long volume, double wap, int count) {
 		requestHandler.handleResponse(reqId, new Candle(time, time, open, high, low, close, volume),
@@ -134,6 +127,11 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	public final void contractDetails(int reqId, ContractDetails contractDetails) {
 		requestHandler.handleResponse(reqId, translate(contractDetails),
 				() -> EWrapperMsgGenerator.contractDetails(reqId, contractDetails));
+	}
+
+	private Candle translate(Bar bar) {
+		long time = requestHandler.formattedDateToMillis(bar.time());
+		return new Candle(time, time, bar.open(), bar.high(), bar.low(), bar.close(), bar.volume());
 	}
 
 	private SymbolInformation translate(ContractDetails contractDetails) {

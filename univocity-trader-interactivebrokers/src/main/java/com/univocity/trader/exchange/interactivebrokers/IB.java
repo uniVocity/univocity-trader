@@ -6,6 +6,7 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.api.*;
 import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.utils.*;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -15,7 +16,7 @@ import static com.univocity.trader.exchange.interactivebrokers.SecurityType.*;
 
 class IB implements Exchange<Candle, Account> {
 
-	private final IBRequests ib;
+	private final InteractiveBrokersApi api;
 	private Map<String, Contract> tradedContracts;
 	private Map<String, SymbolInformation> symbolInformation;
 
@@ -24,11 +25,11 @@ class IB implements Exchange<Candle, Account> {
 	}
 
 	IB(String ip, int port, int clientID, String optionalCapabilities) {
-		ib = new IBRequests(ip, port, clientID, optionalCapabilities);
+		api = new InteractiveBrokersApi(ip, port, clientID, optionalCapabilities);
 	}
 
 	private void validateContracts() {
-		if (tradedContracts.isEmpty()) {
+		if (tradedContracts == null || tradedContracts.isEmpty()) {
 			throw new IllegalConfigurationException("No account configuration provided with one or more contracts to trade with. " +
 					"Use `configure().account().tradeWith(...)` to define the contracts");
 		}
@@ -36,7 +37,12 @@ class IB implements Exchange<Candle, Account> {
 
 	@Override
 	public IBAccount connectToAccount(Account account) {
-		tradedContracts = account.tradedContracts();
+		if (tradedContracts == null) {
+			tradedContracts = new ConcurrentHashMap<>(account.tradedContracts());
+		} else {
+			tradedContracts.putAll(account.tradedContracts());
+		}
+
 		return new IBAccount(this);
 	}
 
@@ -47,15 +53,17 @@ class IB implements Exchange<Candle, Account> {
 	}
 
 	@Override
-	public List<Candle> getLatestTicks(String symbol, TimeInterval interval) {
-		validateContracts();
-		return null;
+	public IncomingCandles<Candle> getLatestTicks(String symbol, TimeInterval interval) {
+		Calendar halfAnHourAgo = Calendar.getInstance();
+		halfAnHourAgo.set(Calendar.MINUTE, -30);
+
+		return getHistoricalTicks(symbol, interval, halfAnHourAgo.getTimeInMillis(), System.currentTimeMillis());
 	}
 
 	@Override
-	public List<Candle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
-		validateContracts();
-		return null;
+	public IncomingCandles<Candle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
+		Contract contract = getContract(symbol);
+		return api.loadHistoricalData(contract, startTime, endTime);
 	}
 
 	@Override
@@ -71,12 +79,12 @@ class IB implements Exchange<Candle, Account> {
 	@Override
 	public synchronized void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candle> consumer) {
 		validateContracts();
+		//TODO
 	}
 
 	@Override
 	public void closeLiveStream() throws Exception {
-		validateContracts();
-		ib.disconnect();
+		api.disconnect();
 	}
 
 	@Override
@@ -93,17 +101,25 @@ class IB implements Exchange<Candle, Account> {
 
 			List<Integer> requests = new ArrayList<>();
 			for (Map.Entry<String, Contract> e : tradedContracts.entrySet()) {
-				requests.add(ib.searchForContract(e.getValue(), (details) -> symbolInformation.put(e.getKey(), details)));
+				requests.add(this.api.searchForContract(e.getValue(), (details) -> symbolInformation.put(e.getKey(), details)));
 			}
-			ib.waitForResponses(requests);
+			this.api.waitForResponses(requests);
 		}
 
 		return symbolInformation;
 	}
 
+	private Contract getContract(String symbol) {
+		validateContracts();
+		return tradedContracts.get(symbol);
+	}
+
+	private Contract getContract(String assetSymbol, String fundSymbol) {
+		return getContract(assetSymbol + fundSymbol);
+	}
+
 	@Override
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
-		validateContracts();
 		return 0;
 	}
 
@@ -118,18 +134,20 @@ class IB implements Exchange<Candle, Account> {
 
 		InteractiveBrokers.Simulator simulator = InteractiveBrokers.simulator();
 		Account account = simulator.configure().account();
+		account.referenceCurrency("USD");
 
 //		account.tradeWith(FOREX, "USD", "EUR");
 
 		account.tradeWith(FOREX, "EUR", "GBP");
-		account.tradeWith(STOCKS, "GOOG", "USD").primaryExch("ISLAND");;
+		account.tradeWith(STOCKS, "GOOG", "USD").primaryExch("ISLAND");
+		;
 
-		IB ib = new IB();
-		ib.connectToAccount(account);
-
-		System.out.println(ib.getSymbolInformation());
+//		IB ib = new IB();
+//		ib.connectToAccount(account);
 //
-//		simulator.backfillHistory("USDEUR", "GOOGUSD");
+//		System.out.println(ib.getSymbolInformation());
+
+		simulator.backfillHistory("EURGBP", "GOOGUSD");
 
 	}
 }

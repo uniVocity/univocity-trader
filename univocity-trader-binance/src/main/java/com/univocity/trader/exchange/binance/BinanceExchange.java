@@ -7,6 +7,7 @@ import com.univocity.trader.exchange.binance.api.client.domain.event.*;
 import com.univocity.trader.exchange.binance.api.client.domain.general.*;
 import com.univocity.trader.exchange.binance.api.client.domain.market.*;
 import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.utils.*;
 import io.netty.channel.*;
 import io.netty.channel.nio.*;
 import org.asynchttpclient.*;
@@ -48,17 +49,17 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	}
 
 	@Override
-	public List<Candlestick> getLatestTicks(String symbol, TimeInterval interval) {
+	public IncomingCandles<Candlestick> getLatestTicks(String symbol, TimeInterval interval) {
 		try {
-			return restClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval));
+			return IncomingCandles.fromCollection(restClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval)));
 		} catch (Exception e) {
 			throw new IllegalStateException("Error returnning latest ticks of " + symbol, e);
 		}
 	}
 
 	@Override
-	public List<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
-		return restClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval), 1000, startTime, endTime);
+	public IncomingCandles<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
+		return IncomingCandles.fromCollection(restClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval), 1000, startTime, endTime));
 	}
 
 	@Override

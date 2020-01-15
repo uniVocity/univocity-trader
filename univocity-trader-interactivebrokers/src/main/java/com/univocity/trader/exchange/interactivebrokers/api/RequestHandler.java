@@ -1,7 +1,10 @@
 package com.univocity.trader.exchange.interactivebrokers.api;
 
+import com.univocity.trader.candles.*;
+import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
+import java.text.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -13,11 +16,16 @@ import java.util.function.*;
 class RequestHandler {
 	private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
 
+
+	private final ThreadLocal<SimpleDateFormat> dateTimeFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyyMMdd HH:mm:ss"));
+	private final ThreadLocal<SimpleDateFormat> dateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyyMMdd"));
+
 	private final AtomicInteger requestId = new AtomicInteger(1);
 	private final AtomicInteger orderId = new AtomicInteger(1);
 
 	private Map<Integer, Consumer> pendingRequests = new ConcurrentHashMap<>();
 	private Set<Integer> awaitingResponse = ConcurrentHashMap.newKeySet();
+	private Map<Integer, IncomingCandles<?>> activeFeeds = new ConcurrentHashMap<>();
 
 	private final Object syncLock = new Object();
 	private boolean twsDisconnected = false;
@@ -27,7 +35,7 @@ class RequestHandler {
 	}
 
 	int prepareRequest(Consumer consumer) {
-		if(twsDisconnected){
+		if (twsDisconnected) {
 			log.warn("Last request failed. Check if TWS is connected.");
 		}
 		int reqId = requestId.incrementAndGet();
@@ -48,14 +56,26 @@ class RequestHandler {
 		}
 	}
 
-	void responseFinalizedWithError(int requestId, int errorCode, String message) {
+	void closeOpenFeed(int requestId) {
+		IncomingCandles<?> feed = activeFeeds.remove(requestId);
+		if (feed != null) {
+			feed.stopProducing();
+		}
+		responseFinalized(requestId);
+	}
+
+	void responseFinalizedWithError(int requestId, int messageCode, String message) {
 		if (requestId < 0) {
 			// refer to error message codes: https://interactivebrokers.github.io/tws-api/message_codes.html
-			twsDisconnected = errorCode == 2103 || errorCode == 2105;
-			log.error("Server error: {} (Error code: {})", message, errorCode);
+			twsDisconnected = messageCode == 2103 || messageCode == 2105;
+			if (twsDisconnected) {
+				log.error("Server error: {} (Error code: {})", message, messageCode);
+			} else {
+				log.error("Server message: {} (Status code: {})", message, messageCode);
+			}
 		} else {
 			twsDisconnected = false;
-			log.warn("Error received for request ID [{}]: {} (Error code: {})", requestId, message, errorCode);
+			log.warn("Error received for request ID [{}]: {} (Error code: {})", requestId, message, messageCode);
 			pendingRequests.remove(requestId);
 			if (awaitingResponse.remove(requestId)) {
 				synchronized (syncLock) {
@@ -111,5 +131,32 @@ class RequestHandler {
 				}
 			}
 		}
+	}
+
+	public String getFormattedDateTime(long time) {
+		Calendar tmp = Calendar.getInstance();
+		tmp.setTimeInMillis(time);
+		return dateTimeFormat.get().format(time);
+	}
+
+	public long formattedDateToMillis(String date) {
+		try {
+			return dateTimeFormat.get().parse(date).getTime();
+		} catch (ParseException e) {
+			try {
+				return dateFormat.get().parse(date).getTime();
+			} catch (ParseException e1) {
+				//ignore and let the first one go.
+			}
+			log.error("Unable to parse date " + date, e);
+			return 0;
+		}
+	}
+
+	public IncomingCandles<Candle> openFeed(Function<Consumer<Candle>, Integer> request) {
+		IncomingCandles<Candle> out = new IncomingCandles<>();
+		int reqId = request.apply(out::add);
+		activeFeeds.put(reqId, out);
+		return out;
 	}
 }

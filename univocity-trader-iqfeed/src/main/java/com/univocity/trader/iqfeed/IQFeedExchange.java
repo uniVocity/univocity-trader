@@ -4,9 +4,9 @@ import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.iqfeed.api.*;
-import com.univocity.trader.iqfeed.api.constant.*;
 import com.univocity.trader.iqfeed.api.domain.candles.*;
 import com.univocity.trader.iqfeed.api.domain.request.*;
+import com.univocity.trader.utils.*;
 import io.netty.channel.*;
 import io.netty.channel.nio.*;
 import org.asynchttpclient.*;
@@ -74,7 +74,7 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 	}
 
 	@Override
-	public List<IQFeedCandle> getLatestTicks(String symbol, TimeInterval interval) {
+	public IncomingCandles<IQFeedCandle> getLatestTicks(String symbol, TimeInterval interval) {
 		// TODO: implement
 		ChronoUnit timeUnit = null;
 		switch (TimeInterval.getUnitStr(interval.unit)) {
@@ -105,12 +105,12 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 				.build();
 
 		List<IQFeedCandle> candles = socketClient().getHistoricalCandlestickBars(request);
-		return candles;
+		return IncomingCandles.fromCollection(candles);
 	}
 
 	//TODO: implement
 	@Override
-	public List<IQFeedCandle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
+	public IncomingCandles<IQFeedCandle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
 		StringBuilder requestIDBuilder = new StringBuilder("IQFeedHistoricalRequest_" + Instant.now().toString());
 		requestIDBuilder.append("_symbol:" + symbol + "_interval:" + interval.toString() + "_start:" + startTime + "_end:" + endTime);
 		IQFeedHistoricalRequest request = new IQFeedHistoricalRequestBuilder()
@@ -120,7 +120,7 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 				.setBeginDateTime(startTime)
 				.setEndDateTime(endTime)
 				.build();
-		return socketClient.getHistoricalCandlestickBars(request);
+		return IncomingCandles.fromCollection(socketClient.getHistoricalCandlestickBars(request));
 	}
 	// TODO: add callback for connection login via IQFeed
 

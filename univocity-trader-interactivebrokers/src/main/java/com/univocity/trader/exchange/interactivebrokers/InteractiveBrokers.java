@@ -4,6 +4,8 @@ import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.simulation.*;
 
+import java.util.*;
+
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
@@ -23,6 +25,14 @@ public final class InteractiveBrokers implements EntryPoint {
 	public static final class Simulator extends MarketSimulator<Configuration, Account> {
 		private Simulator() {
 			super(new Configuration(), IB::new);
+		}
+
+		@Override
+		protected void backfillHistory(Exchange<?, Account> exchange, Collection<String> symbols) {
+			for(Account account : configure().accounts()){
+				exchange.connectToAccount(account);
+			}
+			super.backfillHistory(exchange, symbols);
 		}
 	}
 

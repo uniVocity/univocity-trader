@@ -221,8 +221,12 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	}
 
 	public void backfillHistory(Collection<String> symbols) {
-		CandleRepository candleRepository = new CandleRepository(configure().database());
 		Exchange<?, A> exchange = exchangeSupplier.get();
+		backfillHistory(exchange, symbols);
+	}
+
+	protected void backfillHistory(Exchange<?, A> exchange, Collection<String> symbols) {
+		CandleRepository candleRepository = new CandleRepository(configure().database());
 		final Instant start = simulation.backfillStart();
 		for (String symbol : symbols) {
 			candleRepository.fillHistoryGaps(exchange, symbol, start, configuration.tickInterval());

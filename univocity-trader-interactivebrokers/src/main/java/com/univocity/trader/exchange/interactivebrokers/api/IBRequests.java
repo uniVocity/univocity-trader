@@ -1,7 +1,6 @@
 package com.univocity.trader.exchange.interactivebrokers.api;
 
 import com.ib.client.*;
-import com.univocity.trader.candles.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
@@ -11,15 +10,15 @@ import java.util.function.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class IBRequests {
+class IBRequests {
 
 	private static final Logger log = LoggerFactory.getLogger(IBRequests.class);
 
-	private final RequestHandler requestHandler = new RequestHandler();
+	final RequestHandler requestHandler = new RequestHandler();
 	private final ResponseProcessor responseProcessor = new ResponseProcessor(requestHandler);
 
 	private EJavaSignal signal = new EJavaSignal();
-	private EClientSocket client = new EClientSocket(responseProcessor, signal);
+	protected EClientSocket client = new EClientSocket(responseProcessor, signal);
 	private EReader reader;
 
 	public IBRequests(String ip, int port, int clientID, String optionalCapabilities) {
@@ -59,16 +58,6 @@ public class IBRequests {
 		log.warn("Disconnecting from IB live stream");
 		client.cancelRealTimeBars(3001);
 		client.eDisconnect();
-	}
-
-	public int searchForContract(Contract query, Consumer<SymbolInformation> resultConsumer) {
-		return submitRequest("Searching for contract\n" + query, resultConsumer,
-				(reqId) -> client.reqContractDetails(reqId, query));
-	}
-
-	public int searchForContracts(String symbolSearch, Consumer<SymbolInformation> resultConsumer) {
-		return submitRequest("Searching for contracts matching '" + symbolSearch + "'", resultConsumer,
-				(reqId) -> client.reqMatchingSymbols(reqId, symbolSearch));
 	}
 
 	public int submitRequest(String description, Consumer resultConsumer, Consumer<Integer> action) {

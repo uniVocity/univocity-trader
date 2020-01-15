@@ -2,10 +2,11 @@ package com.univocity.trader;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.config.AccountConfiguration;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
+import com.univocity.trader.utils.*;
 
 import java.time.*;
 import java.util.*;
@@ -54,11 +55,11 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *                 (typically with open and close time, open and close prices, highest and lowest prices, and traded volume).
 	 *                 Not every bit of information is required, but at least the closing price and the close time should be provided.
 	 *
-	 * @return a list with recent {@code Exchange}-specific candles/ticks, which will be converted to a {@link Candle} via
+	 * @return the recent {@code Exchange}-specific candles/ticks, which will be converted to a {@link Candle} via
 	 * {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
 	 * for storage.
 	 */
-	List<T> getLatestTicks(String symbol, TimeInterval interval);
+	IncomingCandles<T> getLatestTicks(String symbol, TimeInterval interval);
 
 	/**
 	 * Returns historical candles/ticks for a given symbol at the given time interval, for a given time period. Used to populate
@@ -76,11 +77,11 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 * @param startTime the starting time (in milliseconds) of the historical data to be returned.
 	 * @param endTime   the end time (in milliseconds) of the historical data to be returned.
 	 *
-	 * @return a list with historical {@code Exchange}-specific candles/ticks, for the given period (or less), which will be converted to a {@link Candle} via
+	 * @return candles with historical {@code Exchange}-specific candles/ticks, for the given period (or less), which will be converted to a {@link Candle} via
 	 * {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
 	 * for storage.
 	 */
-	List<T> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime);
+	IncomingCandles<T> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime);
 
 	/**
 	 * Converts an {@code Exchange}-specific candle/tick to a {@link Candle} that is used by the framework for fast in-memory calculations.
@@ -119,6 +120,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *                     for further processing (i.e. {@link Strategy} analysis, {@link Signal} generation and potential trading by {@link ExchangeClient})
 	 */
 	void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<T> consumer);
+
 	/**
 	 * Disconnects from the live exchange stream opened with {@link #openLiveStream(String, TimeInterval, TickConsumer)}
 	 *

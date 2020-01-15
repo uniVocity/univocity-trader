@@ -3,9 +3,9 @@ package com.univocity.trader;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
-import com.univocity.trader.config.AccountConfiguration;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
+import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import java.io.*;
@@ -170,7 +170,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 
 		//loads the very latest ticks and process them before we can finally connect to the live stream and trade for real.
 		for (String symbol : allPairs.keySet()) {
-			List<T> candles = exchange.getLatestTicks(symbol, tickInterval);
+			IncomingCandles<T> candles = exchange.getLatestTicks(symbol, tickInterval);
 			for (T candle : candles) {
 				clients.forEach(c -> c.processCandle(symbol, candle, true));
 			}

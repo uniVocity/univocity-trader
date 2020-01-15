@@ -5,6 +5,7 @@ import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.utils.*;
 
 import java.util.*;
 
@@ -24,12 +25,12 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 	}
 
 	@Override
-	public List<Candle> getLatestTicks(String symbol, TimeInterval interval) {
+	public IncomingCandles<Candle> getLatestTicks(String symbol, TimeInterval interval) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public List<Candle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
+	public IncomingCandles<Candle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
 		throw new UnsupportedOperationException();
 	}
 
