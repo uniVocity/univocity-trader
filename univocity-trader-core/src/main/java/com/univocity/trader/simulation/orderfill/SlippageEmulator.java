@@ -2,6 +2,7 @@ package com.univocity.trader.simulation.orderfill;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 
 import java.math.*;
 
@@ -75,7 +76,7 @@ public class SlippageEmulator implements OrderFillEmulator {
 		}
 
 		double pips = (candle.high - candle.low);
-		double decimals = getDecimals(pips);
+		double decimals = Utils.countDecimals(pips);
 		double multiplier = (Math.pow(10, decimals));
 
 		double increment = 1.0 / multiplier;
@@ -179,28 +180,4 @@ public class SlippageEmulator implements OrderFillEmulator {
 		order.setPrice(BigDecimal.valueOf(averagePrice));
 	}
 
-	private int getDecimals(double pips) {
-		String tmp = new BigDecimal(pips, new MathContext(8, RoundingMode.HALF_EVEN)).toPlainString();
-		int decimals = 0;
-
-		boolean in = false;
-		boolean started = false;
-
-		for (int i = 1; i < tmp.length(); i++) {
-			if (tmp.charAt(i) == '.') {
-				in = true;
-			} else if (in) {
-				if (tmp.charAt(i) != '0') {
-					started = true;
-				} else if (tmp.charAt(i) == '0' && decimals > 0 && started) {
-					if (i + 1 < tmp.length() && tmp.charAt(i + 1) == '0') {
-						return decimals;
-					}
-				}
-				decimals++;
-			}
-		}
-
-		return decimals;
-	}
 }

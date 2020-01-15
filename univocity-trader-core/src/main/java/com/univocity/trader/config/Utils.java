@@ -21,6 +21,7 @@ import org.apache.commons.lang3.*;
 import java.io.*;
 import java.lang.ref.*;
 import java.lang.reflect.*;
+import java.math.*;
 import java.net.*;
 import java.nio.charset.*;
 import java.util.*;
@@ -1387,5 +1388,31 @@ public class Utils {
 			consumer.accept(result, assets);
 		}
 	}
+
+	public static int countDecimals(double d) {
+		String tmp = new BigDecimal(d, new MathContext(8, RoundingMode.HALF_EVEN)).toPlainString();
+		int decimals = 0;
+
+		boolean in = false;
+		boolean started = false;
+
+		for (int i = 1; i < tmp.length(); i++) {
+			if (tmp.charAt(i) == '.') {
+				in = true;
+			} else if (in) {
+				if (tmp.charAt(i) != '0') {
+					started = true;
+				} else if (tmp.charAt(i) == '0' && decimals > 0 && started) {
+					if (i + 1 < tmp.length() && tmp.charAt(i + 1) == '0') {
+						return decimals;
+					}
+				}
+				decimals++;
+			}
+		}
+
+		return decimals;
+	}
 }
+
 

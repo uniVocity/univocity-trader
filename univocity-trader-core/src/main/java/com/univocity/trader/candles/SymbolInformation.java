@@ -59,4 +59,15 @@ public class SymbolInformation {
 		this.minimumAssetsPerOrderAmount = -1.0;
 		return this;
 	}
+
+	@Override
+	public String toString() {
+		return "{" +
+				"symbol='" + symbol + '\'' +
+				", priceDecimalPlaces=" + priceDecimalPlaces +
+				", quantityDecimalPlaces=" + quantityDecimalPlaces +
+				", minimumAssetsPerOrder=" + minimumAssetsPerOrder +
+				", minimumAssetsPerOrderAmount=" + minimumAssetsPerOrderAmount +
+				'}';
+	}
 }

@@ -2,12 +2,12 @@ package com.univocity.trader.exchange.interactivebrokers.api;
 
 import com.ib.client.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.model.account.*;
 import com.univocity.trader.exchange.interactivebrokers.model.book.*;
 import org.slf4j.*;
 
 import java.util.*;
-import java.util.function.*;
 
 /**
  * {@link EWrapper} implementation of methods that are being currently used or have some logic in them
@@ -18,11 +18,8 @@ import java.util.function.*;
 public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	private static final Logger log = LoggerFactory.getLogger(ResponseProcessor.class);
-	private final Queue<Candle> realTimeCandles;
-	private final Queue<Candle> historicalCandles;
 
-	private long nextOrderId;
-
+	private final RequestHandler requestHandler;
 	private AccountBalance accountBalance = new AccountBalance();
 
 	private Map<Integer, TradingBook> marketBooks = new HashMap<>();
@@ -30,12 +27,9 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	private final Map<Integer, ContractDetailsCallback> contractDetails = new HashMap<>();
 
 	private boolean disconnecting = false;
-	private final Map<Integer, Consumer<?>> pendingRequests;
 
-	public ResponseProcessor(Queue<Candle> realTimeCandles, Queue<Candle> historicalCandles, Map<Integer, Consumer<?>> pendingRequests) {
-		this.realTimeCandles = realTimeCandles;
-		this.historicalCandles = historicalCandles;
-		this.pendingRequests = pendingRequests;
+	public ResponseProcessor(RequestHandler requestHandler) {
+		this.requestHandler = requestHandler;
 	}
 
 	@Override
@@ -84,8 +78,8 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	@Override
 	public final void historicalTicks(int reqId, List<HistoricalTick> ticks, boolean last) {
 		for (HistoricalTick tick : ticks) {
-			log.info(EWrapperMsgGenerator.historicalTick(reqId, tick.time(), tick.price(), tick.size()));
-			historicalCandles.add(translate(tick));
+			requestHandler.handleResponse(reqId, translate(tick),
+					() -> EWrapperMsgGenerator.historicalTick(reqId, tick.time(), tick.price(), tick.size()));
 		}
 	}
 
@@ -119,8 +113,8 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	}
 
 	public final void realtimeBar(int reqId, long time, double open, double high, double low, double close, long volume, double wap, int count) {
-		log.info(EWrapperMsgGenerator.realtimeBar(reqId, time, open, high, low, close, volume, wap, count));
-		realTimeCandles.add(new Candle(time, time, open, high, low, close, volume));
+		requestHandler.handleResponse(reqId, new Candle(time, time, open, high, low, close, volume),
+				() -> EWrapperMsgGenerator.realtimeBar(reqId, time, open, high, low, close, volume, wap, count));
 	}
 
 	public final void error(Exception ex) {
@@ -134,56 +128,38 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 		log.info(EWrapperMsgGenerator.orderStatus(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice));
 
 		// make sure id for next order is at least orderId+1
-		this.nextOrderId = orderId + 1;
+		requestHandler.setNextOrderId(orderId + 1);
 	}
 
 	public final void contractDetails(int reqId, ContractDetails contractDetails) {
-		log.info(EWrapperMsgGenerator.contractDetails(reqId, contractDetails));
+		requestHandler.handleResponse(reqId, translate(contractDetails),
+				() -> EWrapperMsgGenerator.contractDetails(reqId, contractDetails));
+	}
 
-		var symbolInformationConsumer = (Consumer<SymbolInformation>) pendingRequests.get(reqId);
-		//TODO translate to symbol info
-		ContractDetailsCallback callback;
-		synchronized (this.contractDetails) {
-			callback = this.contractDetails.get(reqId);
-		}
-		if (callback != null) {
-			callback.onContractDetails(contractDetails);
-		}
+	private SymbolInformation translate(ContractDetails contractDetails) {
+		Contract contract = contractDetails.contract();
+		SymbolInformation out = new SymbolInformation(contract.symbol());
 
+		out.priceDecimalPlaces(Utils.countDecimals(contractDetails.minTick()));
+		out.quantityDecimalPlaces(8);
+//		out.minimumAssetsPerOrder(?);
 
+		return out;
 	}
 
 	public final void contractDetailsEnd(int reqId) {
-		pendingRequests.remove(reqId);
+		requestHandler.responseFinalized(reqId);
 	}
 
 	@Override
 	public final void error(int id, int errorCode, String errorMsg) {
-		final ContractDetailsCallback callback;
-		synchronized (contractDetails) {
-			callback = contractDetails.get(id);
-		}
-		if (callback != null) {
-			callback.onError(errorCode, errorMsg);
-		} else if (id == -1) {
-			final Collection<ContractDetailsCallback> callbacks;
-			synchronized (contractDetails) {
-				callbacks = new ArrayList<>(contractDetails.size());
-				callbacks.addAll(contractDetails.values());
-			}
-			for (final ContractDetailsCallback cb : callbacks) {
-				cb.onError(errorCode, errorMsg);
-			}
-		}
-
-		log.error(EWrapperMsgGenerator.error(id, errorCode, errorMsg));
+		requestHandler.responseFinalizedWithError(id, errorCode, errorMsg);
 	}
 
 	@Override
 	public final void nextValidId(int orderId) {
-		log.info(EWrapperMsgGenerator.nextValidId(orderId));
-
-		this.nextOrderId = orderId;
+		log.debug(EWrapperMsgGenerator.nextValidId(orderId));
+		requestHandler.setNextOrderId(orderId);
 	}
 
 	public final void updateAccountValue(String key, String value, String currency, String accountName) {

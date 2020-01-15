@@ -91,9 +91,11 @@ class IB implements Exchange<Candle, Account> {
 			validateContracts();
 			symbolInformation = new ConcurrentHashMap<>();
 
+			List<Integer> requests = new ArrayList<>();
 			for (Map.Entry<String, Contract> e : tradedContracts.entrySet()) {
-				ib.searchForContract(e.getValue(), (details) -> symbolInformation.put(e.getKey(), details));
+				requests.add(ib.searchForContract(e.getValue(), (details) -> symbolInformation.put(e.getKey(), details)));
 			}
+			ib.waitForResponses(requests);
 		}
 
 		return symbolInformation;
@@ -112,12 +114,22 @@ class IB implements Exchange<Candle, Account> {
 
 	//TODO: remove this once implementation is finalized
 	public static void main(String... args) throws Exception {
-		InteractiveBrokers.Trader trader = InteractiveBrokers.trader();
-		Account account = trader.configure().account();
 
-		account.tradeWith(FOREX, "USD", "EUR");
-		account.tradeWith(STOCKS, "GOOG", "USD");
 
-		trader.run();
+		InteractiveBrokers.Simulator simulator = InteractiveBrokers.simulator();
+		Account account = simulator.configure().account();
+
+//		account.tradeWith(FOREX, "USD", "EUR");
+
+		account.tradeWith(FOREX, "EUR", "GBP");
+		account.tradeWith(STOCKS, "GOOG", "USD").primaryExch("ISLAND");;
+
+		IB ib = new IB();
+		ib.connectToAccount(account);
+
+		System.out.println(ib.getSymbolInformation());
+//
+//		simulator.backfillHistory("USDEUR", "GOOGUSD");
+
 	}
 }

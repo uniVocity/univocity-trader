@@ -6,8 +6,6 @@ import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
 import java.util.function.*;
 
 /**
@@ -16,19 +14,13 @@ import java.util.function.*;
 public class IBRequests {
 
 	private static final Logger log = LoggerFactory.getLogger(IBRequests.class);
-	private AtomicInteger requestId = new AtomicInteger(1);
 
-	private final Queue<Candle> realTimeCandles = new ArrayBlockingQueue<>(10000);
-	private final Queue<Candle> historicalCandles = new ArrayBlockingQueue<>(10000);
-
-	private Map<Integer, Consumer<?>> pendingRequests = new ConcurrentHashMap<>();
-
-	private final ResponseProcessor responseProcessor = new ResponseProcessor(realTimeCandles, historicalCandles, pendingRequests);
+	private final RequestHandler requestHandler = new RequestHandler();
+	private final ResponseProcessor responseProcessor = new ResponseProcessor(requestHandler);
 
 	private EJavaSignal signal = new EJavaSignal();
 	private EClientSocket client = new EClientSocket(responseProcessor, signal);
 	private EReader reader;
-	private boolean ready = false;
 
 	public IBRequests(String ip, int port, int clientID, String optionalCapabilities) {
 
@@ -43,10 +35,12 @@ public class IBRequests {
 		reader = new EReader(client, signal);
 		reader.start();
 
+		boolean[] ready = new boolean[]{false};
+
 		new Thread(() -> {
 			Thread.currentThread().setName("IB live stream");
 			while (client.isConnected()) {
-				ready = true;
+				ready[0] = true;
 				signal.waitForSignal();
 				try {
 					reader.processMsgs();
@@ -56,7 +50,7 @@ public class IBRequests {
 			}
 		}).start();
 
-		while (!ready) {
+		while (!ready[0]) {
 			Thread.yield();
 		}
 	}
@@ -67,41 +61,36 @@ public class IBRequests {
 		client.eDisconnect();
 	}
 
-	private int prepareRequest(Consumer<?> consumer) {
-		int reqId = requestId.incrementAndGet();
-		pendingRequests.put(reqId, consumer);
-		return reqId;
+	public int searchForContract(Contract query, Consumer<SymbolInformation> resultConsumer) {
+		return submitRequest("Searching for contract\n" + query, resultConsumer,
+				(reqId) -> client.reqContractDetails(reqId, query));
 	}
 
-	public void searchForContract(Contract query, Consumer<SymbolInformation> resultConsumer) {
-		client.reqContractDetails(prepareRequest(resultConsumer), query);
+	public int searchForContracts(String symbolSearch, Consumer<SymbolInformation> resultConsumer) {
+		return submitRequest("Searching for contracts matching '" + symbolSearch + "'", resultConsumer,
+				(reqId) -> client.reqMatchingSymbols(reqId, symbolSearch));
 	}
 
-	public void searchForex(String symbol, String currency) {
-		Contract contract = new Contract();
-		contract.symbol(symbol);
-		contract.secType("CASH");
-		contract.currency(currency);
-		contract.exchange("IDEALPRO");
-
-		client.reqContractDetails(requestId.incrementAndGet(), contract);
-
-		//response goes to: ResponseProcessor.contractDetails(int reqId, ContractDetails contractDetails)
-		//when no more contracts left: ResponseProcessor.contractDetailsEnd(int reqId)
+	public int submitRequest(String description, Consumer resultConsumer, Consumer<Integer> action) {
+		int requestId = requestHandler.prepareRequest(resultConsumer);
+		log.debug("New request [" + requestId + "]: " + description);
+		action.accept(requestId);
+		return requestId;
 	}
 
-	public void searchStocks(String symbol, String currency) {
-		Contract contract = new Contract();
-		contract.symbol(symbol);
-		contract.secType("STK");
-		contract.currency(currency);
-		//In the API side, NASDAQ is always defined as ISLAND
-		contract.exchange("ISLAND");
-
+	public void waitForResponse(int requestId) {
+		waitForResponse(requestId, 10);
 	}
 
-	public void searchForContracts(String symbolSearch) {
-		client.reqMatchingSymbols(requestId.incrementAndGet(), symbolSearch);
+	public void waitForResponse(int requestId, int maxSecondsToWait) {
+		requestHandler.waitForResponse(requestId, maxSecondsToWait);
 	}
 
+	public void waitForResponses(Collection<Integer> requestIds) {
+		waitForResponses(requestIds, 10);
+	}
+
+	public void waitForResponses(Collection<Integer> requestIds, int maxSecondsToWait) {
+		requestHandler.waitForResponses(requestIds, maxSecondsToWait);
+	}
 }
