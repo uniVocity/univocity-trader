@@ -63,7 +63,8 @@ class IB implements Exchange<Candle, Account> {
 	@Override
 	public IncomingCandles<Candle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
 		Contract contract = getContract(symbol);
-		return api.loadHistoricalData(contract, startTime, endTime);
+		TradeType tradeType = TradeType.ADJUSTED_LAST;
+		return api.loadHistoricalData(contract, startTime, endTime, interval, tradeType);
 	}
 
 	@Override
