@@ -283,7 +283,7 @@ public class CandleRepository {
 	}
 
 	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
-		int limitPerRequest = exchange.historicalCandleCountLimit();
+		final int limitPerRequest = exchange.historicalCandleCountLimit();
 		if (limitPerRequest <= 0) {
 			fillHistory(exchange, symbol, from, minGap);
 			return;
@@ -322,9 +322,9 @@ public class CandleRepository {
 					long start = previous;
 					long end = minute;
 
-					limit -= 1000;
+					limit -= limitPerRequest;
 					if (limit > 0) {
-						end = start + (1000L * minGap.ms);
+						end = start + (limitPerRequest * minGap.ms);
 					}
 					gaps.add(new long[]{start, end});
 					previous = end;
