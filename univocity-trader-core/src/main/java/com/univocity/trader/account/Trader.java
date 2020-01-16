@@ -2,6 +2,7 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
@@ -40,6 +41,7 @@ public class Trader {
 	private final Set<Trade> pastTrades = ConcurrentHashMap.newKeySet();
 	final boolean allowMixedStrategies;
 	final OrderListener[] notifications;
+	private int pipSize;
 
 	/**
 	 * Creates a new trader for a given symbol. For internal use only.
@@ -516,5 +518,17 @@ public class Trader {
 
 	public Set<Trade> trades() {
 		return new TreeSet(trades);
+	}
+
+	public int pipSize(){
+		if(pipSize == 0){
+			pipSize = tradingManager.pipSize();
+		}
+
+		if(pipSize == 0){
+			pipSize = Utils.countDecimals(lastClosingPrice());
+		}
+
+		return pipSize;
 	}
 }

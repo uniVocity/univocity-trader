@@ -81,6 +81,9 @@ public class SlippageEmulator implements OrderFillEmulator {
 
 		double increment = 1.0 / multiplier;
 		double totalVolume = candle.volume;
+		if (totalVolume < 0) {
+			throw new IllegalStateException("Cannot emulate slippage on candles without volume information.");
+		}
 
 		if (totalVolume == 0 && order.isMarket()) {
 			pips = 10;

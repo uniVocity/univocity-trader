@@ -270,16 +270,19 @@ public class CandleRepository {
 		long start = from.toEpochMilli();
 		log.info("Refreshing history of {} from {} to present date.", symbol, getFormattedDateTimeWithYear(start));
 		IncomingCandles<T> ticks = exchange.getHistoricalTicks(symbol, minGap, start, Instant.now().toEpochMilli());
-		int count = 0;
+		int persisted = 0;
+		int received = 0;
 		for (T tick : ticks) {
 			PreciseCandle candle = exchange.generatePreciseCandle(tick);
-			addToHistory(symbol, candle, true);
-			count++;
+			if(addToHistory(symbol, candle, true)){
+				persisted++;
+			}
+			received++;
 		}
 		if (ticks.consumerStopped()) {
 			log.warn("Process interrupted while retrieving {} history since {}", symbol, getFormattedDateTimeWithYear(start));
 		}
-		log.info("{} history backfill process complete. {} candles loaded.", symbol, count);
+		log.info("{} history backfill process complete. {} candles received, {} new candles added to history.", symbol, received, persisted);
 	}
 
 	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {

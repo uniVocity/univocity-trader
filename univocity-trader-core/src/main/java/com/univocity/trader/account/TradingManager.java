@@ -301,6 +301,10 @@ public class TradingManager {
 		return tradingAccount.getBalance(symbol);
 	}
 
+	public int pipSize(){
+		return priceDetails.pipSize();
+	}
+
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
 //		return exchange.isDirectSwitchSupported(currentAssetSymbol, targetAssetSymbol);
 //	}

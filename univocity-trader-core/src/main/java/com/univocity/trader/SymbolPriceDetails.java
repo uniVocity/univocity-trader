@@ -116,4 +116,8 @@ public class SymbolPriceDetails {
 	public BigDecimal adjustPriceScale(BigDecimal price) {
 		return updateScale(getPriceDecimals(info), price);
 	}
+
+	public int pipSize(){
+		return getOrDefault(info, SymbolInformation::priceDecimalPlaces, 0);
+	}
 }

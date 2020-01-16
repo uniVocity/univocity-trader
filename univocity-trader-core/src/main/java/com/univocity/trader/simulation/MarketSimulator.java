@@ -130,15 +130,12 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		final long startTime = getStartTime();
 		final long endTime = getEndTime();
 
-		boolean ran = false;
-
-
+		long candlesProcessed = 0;
 
 		for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
 			boolean resetClock = false;
 			for (int i = 0; i < readers.length; i++) {
 				MarketReader reader = readers[i];
-				ran = true;
 				Candle candle = reader.pending;
 				if (candle != null) {
 					if (candle.openTime + 1 >= clock && candle.openTime <= clock + MINUTE.ms - 1) {
@@ -161,6 +158,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 					if (reader.input.hasMoreElements()) {
 						Candle next = reader.input.nextElement();
 						if (next != null) {
+							candlesProcessed++;
 							reader.pending = next;
 						}
 					}
@@ -170,7 +168,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 				clock -= MINUTE.ms;
 			}
 		}
-		if (!ran) {
+		if (candlesProcessed == 0) {
 			throw new IllegalStateException("No candles processed in real time trading simulation from " + start + " to " + end);
 		}
 	}
