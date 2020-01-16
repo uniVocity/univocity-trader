@@ -16,7 +16,7 @@ import java.util.concurrent.*;
  * If the consumer of candles returned by the exchange needs to stop processing them for some reason,
  * call {@link #stopConsuming()}.
  *
- * By default, after 10 seconds with an empty queue and without receiving anything since,
+ * By default, after 30 seconds with an empty queue and without receiving anything since,
  * {@link #stopConsuming()} will be invoked automatically and abort the process. The {@link com.univocity.trader.Exchange}
  * implementation can check if {@link #consumerStopped()} produces {@code true} to close any open resources instead
  * of running indefinitely.
@@ -36,7 +36,7 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 	private final long timeout;
 
 	public IncomingCandles() {
-		this(10_000);
+		this(30_000);
 	}
 
 	public IncomingCandles(long timeout) {
@@ -97,7 +97,8 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 					Thread.currentThread().interrupt();
 				}
 			}
-			if (System.currentTimeMillis() - waitStart >= timeout) {
+			if (input.isEmpty() && System.currentTimeMillis() - waitStart >= timeout) {
+				log.warn("Timeout waiting for candles to be returned from the exchange");
 				stopConsuming();
 			}
 		}

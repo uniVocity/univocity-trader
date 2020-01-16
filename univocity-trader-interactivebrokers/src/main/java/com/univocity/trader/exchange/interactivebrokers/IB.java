@@ -133,6 +133,12 @@ class IB implements Exchange<Candle, Account> {
 		return null;
 	}
 
+	@Override
+	public int historicalCandleCountLimit() {
+		// FIXME: technically there should be no limit, but it looks like backfills of 1 minute candles for longer than 1 day simply generate no response.
+		return 10000;
+	}
+
 	//TODO: remove this once implementation is finalized
 	public static void main(String... args) throws Exception {
 
@@ -151,15 +157,9 @@ class IB implements Exchange<Candle, Account> {
 //
 //		System.out.println(ib.getSymbolInformation());
 
+//		simulator.configure().simulation().backfillDays(1);
 		simulator.backfillHistory("EURGBP", "GOOGUSD");
 
 	}
 
-	@Override
-	public int historicalCandleCountLimit() {
-		//FIXME: technically there should be no limit, but
-		//I could not get the backfill to work reliably
-		//as the connection kept stopping.
-		return 10000;
-	}
 }

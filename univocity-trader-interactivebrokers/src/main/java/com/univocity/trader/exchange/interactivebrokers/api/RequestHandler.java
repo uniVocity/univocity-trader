@@ -59,6 +59,7 @@ class RequestHandler {
 	void closeOpenFeed(int requestId) {
 		IncomingCandles<?> feed = activeFeeds.remove(requestId);
 		if (feed != null) {
+			log.info("Closing active feed opened by request {}", requestId);
 			feed.stopProducing();
 		}
 		responseFinalized(requestId);
@@ -177,13 +178,17 @@ class RequestHandler {
 
 	public IncomingCandles<Candle> openFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
 		IncomingCandles<Candle> out = new IncomingCandles<>();
+
 		int[] reqId = new int[1];
 		reqId[0] = request.apply((candle) -> {
 					if (!out.consumerStopped()) {
 						out.add(candle);
 					} else {
-						log.warn("Cancelling feed opened by request {}. Consumer stopped reading from it.", reqId[0]);
-						cancelRequestHandler.accept(reqId[0]);
+						if(reqId[0] != 0) {
+							log.warn("Cancelling feed opened by request {}. Consumer stopped reading from it.", reqId[0]);
+							cancelRequestHandler.accept(reqId[0]);
+							reqId[0] = 0;
+						}
 					}
 				}
 		);

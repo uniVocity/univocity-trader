@@ -266,10 +266,30 @@ public class CandleRepository {
 		return executeQuery(symbol, query, from, to, out);
 	}
 
-	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
-		log.info("Looking for gaps in history of {} from {}", symbol, getFormattedDateTimeWithYear(from.toEpochMilli()));
+	public <T> void fillHistory(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
+		long start = from.toEpochMilli();
+		log.info("Refreshing history of {} from {} to present date.", symbol, getFormattedDateTimeWithYear(start));
+		IncomingCandles<T> ticks = exchange.getHistoricalTicks(symbol, minGap, start, Instant.now().toEpochMilli());
+		int count = 0;
+		for (T tick : ticks) {
+			PreciseCandle candle = exchange.generatePreciseCandle(tick);
+			addToHistory(symbol, candle, true);
+			count++;
+		}
+		if (ticks.consumerStopped()) {
+			log.warn("Process interrupted while retrieving {} history since {}", symbol, getFormattedDateTimeWithYear(start));
+		}
+		log.info("{} history backfill process complete. {} candles loaded.", symbol, count);
+	}
 
+	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
 		int limitPerRequest = exchange.historicalCandleCountLimit();
+		if (limitPerRequest <= 0) {
+			fillHistory(exchange, symbol, from, minGap);
+			return;
+		}
+
+		log.info("Looking for gaps in history of {} from {}", symbol, getFormattedDateTimeWithYear(from.toEpochMilli()));
 
 		IncomingCandles<T> ticks = exchange.getLatestTicks(symbol, minGap);
 		for (T tick : ticks) {
@@ -302,16 +322,11 @@ public class CandleRepository {
 					long start = previous;
 					long end = minute;
 
-					if (limitPerRequest > 0) {
-						limit -= limitPerRequest;
-						if (limit > 0) {
-							end = start + (limitPerRequest * minGap.ms);
-						}
-						gaps.add(new long[]{start, end});
-					} else {
-						gaps.add(new long[]{start, end});
-						break outer;
+					limit -= 1000;
+					if (limit > 0) {
+						end = start + (1000L * minGap.ms);
 					}
+					gaps.add(new long[]{start, end});
 					previous = end;
 				} while (limit > 0);
 				log.warn("Historical data of {} has a gap of {} minutes between {} and {}", symbol, (gap / minGap.ms), getFormattedDateTimeWithYear(gapStart), getFormattedDateTimeWithYear(minute));
