@@ -7,6 +7,8 @@ import com.univocity.trader.notification.*;
 
 import java.time.*;
 
+import static com.univocity.trader.exchange.interactivebrokers.SecurityType.*;
+
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
@@ -26,12 +28,10 @@ public class ForexMarketSimulation {
 
 		account
 				.referenceCurrency("GBP") //Balances will be calculated using the reference currency.
-				.tradeWith("EUR")
-				.minimumInvestmentAmountPerTrade(100.0)
-//				.maximumInvestmentPercentagePerAsset(30.0, "ADA", "ETH")
-//				.maximumInvestmentPercentagePerAsset(50.0, "BTC", "LTC")
-//				.maximumInvestmentAmountPerAsset(200, "XRP")
-		;
+				.tradeWith(FOREX, "EUR", "GBP");
+
+		account
+				.minimumInvestmentAmountPerTrade(500.0);
 
 		account.strategies()
 				.add(ScalpingStrategy::new);
@@ -55,5 +55,8 @@ public class ForexMarketSimulation {
 
 //		execute simulation
 		simulator.run();
+
+//		simulation.backfillMonths(6);
+//		simulator.backfillHistory("EURGBP");
 	}
 }
