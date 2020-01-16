@@ -14,7 +14,6 @@ import org.slf4j.*;
 
 import java.io.*;
 import java.math.*;
-import java.net.*;
 import java.time.*;
 import java.time.temporal.*;
 import java.util.*;
@@ -55,11 +54,9 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 		return new HashMap<>();
 	}
 
-	;
-
 	@Override
 	public IQFeedCandle getLatestTick(String symbol, TimeInterval interval) {
-		// TODO: implement
+		// TODO: implement - IF AND ONLY IF the exchange doesn't restrict polling .
 		return null;
 	}
 
@@ -153,19 +150,6 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 //        return socketClient().getC
 //    }
 
-	@Override
-	public TimeInterval handlePollingException(String symbol, Exception e) {
-		String message = "execute polling for " + symbol;
-		if (e.getCause() instanceof TimeoutException) {
-			logger.error("Timeout trying to " + message, e);
-		} else if (e.getCause() instanceof UnknownHostException) {
-			logger.error("Unable to " + message + ". Binance is offline.", e);
-			return TimeInterval.minutes(1);
-		} else {
-			logger.error("Error trying to " + message, e);
-		}
-		return null;
-	}
 
 	// TODO: implement this...
 	@Override

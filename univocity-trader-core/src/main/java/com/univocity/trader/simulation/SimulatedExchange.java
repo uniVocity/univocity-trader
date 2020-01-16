@@ -20,11 +20,6 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 	}
 
 	@Override
-	public Candle getLatestTick(String symbol, TimeInterval interval) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public IncomingCandles<Candle> getLatestTicks(String symbol, TimeInterval interval) {
 		throw new UnsupportedOperationException();
 	}
@@ -88,11 +83,6 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 			}
 		}
 		return price;
-	}
-
-	@Override
-	public TimeInterval handlePollingException(String symbol, Exception e) {
-		return TimeInterval.millis(0);
 	}
 
 	@Override

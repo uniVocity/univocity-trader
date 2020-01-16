@@ -7,9 +7,12 @@ import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 import com.univocity.trader.utils.*;
+import org.slf4j.*;
 
+import java.net.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * An {@code Exchange} implementation provides information about available instruments and their prices in a live
@@ -27,24 +30,7 @@ import java.util.*;
  * @see com.univocity.trader.simulation.SimulatedClientAccount
  */
 public interface Exchange<T, C extends AccountConfiguration<C>> {
-
-	/**
-	 * Provides the latest exchange-specific candle/tick for a given symbol at the given time interval.
-	 *
-	 * Used for polling candle details from the exchange in case no updates are received from the live stream.
-	 * The {@link LiveTrader} will continuously check for updates on the signals of the symbols subscribed to with
-	 * {@link #openLiveStream(String, TimeInterval, TickConsumer)}.
-	 *
-	 * @param symbol   the symbol whose latest price information should be returned from the exchange (e.g. BTCUSDT, MSFT, etc)
-	 * @param interval the duration of the candle. e.g. if {@code TimeInterval.minutes(5)} should ideally return the latest 5 minute candle
-	 *                 (typically with open and close time, open and close prices, highest and lowest prices, and traded volume).
-	 *                 Not every bit of information is required, but at least the closing price and the close time should be provided.
-	 *
-	 * @return the {@code Exchange}-specific candle/tick type, which will be converted to a {@link Candle} via
-	 * {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
-	 * for storage.
-	 */
-	T getLatestTick(String symbol, TimeInterval interval);
+	Logger log = LoggerFactory.getLogger(Exchange.class);
 
 	/**
 	 * Provides the latest exchange-specific candles/ticks for a given symbol at the given time interval. This method is intended to return
@@ -168,6 +154,26 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	ClientAccount connectToAccount(C accountConfiguration);
 
 	/**
+	 * Provides the latest exchange-specific candle/tick for a given symbol at the given time interval.
+	 *
+	 * Used for polling candle details from the exchange in case no updates are received from the live stream.
+	 * The {@link LiveTrader} will continuously check for updates on the signals of the symbols subscribed to with
+	 * {@link #openLiveStream(String, TimeInterval, TickConsumer)}.
+	 *
+	 * @param symbol   the symbol whose latest price information should be returned from the exchange (e.g. BTCUSDT, MSFT, etc)
+	 * @param interval the duration of the candle. e.g. if {@code TimeInterval.minutes(5)} should ideally return the latest 5 minute candle
+	 *                 (typically with open and close time, open and close prices, highest and lowest prices, and traded volume).
+	 *                 Not every bit of information is required, but at least the closing price and the close time should be provided.
+	 *
+	 * @return the {@code Exchange}-specific candle/tick type, which will be converted to a {@link Candle} via
+	 * {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
+	 * for storage.
+	 */
+	default T getLatestTick(String symbol, TimeInterval interval) {
+		return null;
+	}
+
+	/**
 	 * Handles errors from the exchange server that might be produced when polling for latest prices in case the live stream becomes unavailable, slow or
 	 * unreliable.
 	 *
@@ -180,7 +186,18 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *
 	 * @return a time to wait before retrying the execution of polling action.
 	 */
-	TimeInterval handlePollingException(String symbol, Exception e);
+	default TimeInterval handlePollingException(String symbol, Exception e) {
+		String message = "execute polling for " + symbol;
+		if (e.getCause() instanceof TimeoutException) {
+			log.error("Timeout trying to " + message, e);
+		} else if (e.getCause() instanceof UnknownHostException) {
+			log.error("Unable to " + message + ". Server is offline.", e);
+			return TimeInterval.minutes(1);
+		} else {
+			log.error("Error trying to " + message, e);
+		}
+		return null;
+	}
 
 
 	/**
@@ -190,7 +207,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 * @return the maximum number of candles returned from the exchange in a single request when fetching historical
 	 * data, or {@code 0} if no limit is imposed.
 	 */
-	default int historicalCandleCountLimit(){
+	default int historicalCandleCountLimit() {
 		return 0;
 	}
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol);

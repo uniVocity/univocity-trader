@@ -7,6 +7,7 @@ import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.api.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.utils.*;
+import org.slf4j.*;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -16,6 +17,8 @@ import static com.univocity.trader.exchange.interactivebrokers.TradeType.*;
 
 
 class IB implements Exchange<Candle, Account> {
+
+	private static final Logger log = LoggerFactory.getLogger(IB.class);
 
 	private final InteractiveBrokersApi api;
 	private Map<String, Contract> tradedContracts;
@@ -48,12 +51,6 @@ class IB implements Exchange<Candle, Account> {
 		tradeTypes.putAll(account.tradeTypes());
 
 		return new IBAccount(this);
-	}
-
-	@Override
-	public Candle getLatestTick(String symbol, TimeInterval interval) {
-		validateContracts();
-		return null;
 	}
 
 	@Override
@@ -129,14 +126,9 @@ class IB implements Exchange<Candle, Account> {
 	}
 
 	@Override
-	public TimeInterval handlePollingException(String symbol, Exception e) {
-		return null;
-	}
-
-	@Override
 	public int historicalCandleCountLimit() {
 		// FIXME: technically there should be no limit, but it looks like backfills of 1 minute candles for longer than 1 day simply generate no response.
-		return 10000;
+		return 1000;
 	}
 
 	//TODO: remove this once implementation is finalized

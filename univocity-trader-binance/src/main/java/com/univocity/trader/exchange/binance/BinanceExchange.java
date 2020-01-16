@@ -14,7 +14,6 @@ import org.asynchttpclient.*;
 import org.slf4j.*;
 
 import java.math.*;
-import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.*;
@@ -86,20 +85,6 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 				new BigDecimal(exchangeCandle.getClose()),
 				new BigDecimal(exchangeCandle.getVolume())
 		);
-	}
-
-	@Override
-	public TimeInterval handlePollingException(String symbol, Exception e) {
-		String message = "execute polling for " + symbol;
-		if (e.getCause() instanceof TimeoutException) {
-			log.error("Timeout trying to " + message, e);
-		} else if (e.getCause() instanceof UnknownHostException) {
-			log.error("Unable to " + message + ". Binance is offline.", e);
-			return TimeInterval.minutes(1);
-		} else {
-			log.error("Error trying to " + message, e);
-		}
-		return null;
 	}
 
 	@Override
