@@ -182,5 +182,16 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 */
 	TimeInterval handlePollingException(String symbol, Exception e);
 
+
+	/**
+	 * Returns the maximum number of candles returned by the exchange when fetching historical data through
+	 * {@link #getHistoricalTicks(String, TimeInterval, long, long)}.
+	 *
+	 * @return the maximum number of candles returned from the exchange in a single request when fetching historical
+	 * data, or {@code 0} if no limit is imposed.
+	 */
+	default int historicalCandleCountLimit(){
+		return 0;
+	}
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol);
 }

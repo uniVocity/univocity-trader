@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
 
+import static com.univocity.trader.exchange.interactivebrokers.TradeType.*;
 import static java.util.concurrent.TimeUnit.*;
 
 /**
@@ -43,7 +44,9 @@ public class InteractiveBrokersApi extends IBRequests {
 	}
 
 	public IncomingCandles<Candle> loadHistoricalData(Contract contract, long startTime, long endTime, TimeInterval interval, TradeType tradeType) {
-		return requestHandler.openFeed((consumer) -> loadHistoricalData(contract, startTime, endTime, interval, tradeType, consumer));
+		return requestHandler.openFeed(
+				(consumer) -> loadHistoricalData(contract, startTime, endTime, interval, tradeType, consumer),
+				(requestId) -> client.cancelHistoricalData(requestId));
 	}
 
 	private String getBarSizeString(TimeInterval interval) {
@@ -103,10 +106,19 @@ public class InteractiveBrokersApi extends IBRequests {
 		String durationStr = toDurationString(startTime, endTime);
 
 		String formattedStart = requestHandler.getFormattedDateTime(startTime);
-		String formattedEnd = requestHandler.getFormattedDateTime(endTime);
 
 		String candleStr = getBarSizeString(interval);
-		String description = "Loading historical " + tradeType + " " + candleStr + " candles of " + contract.symbol() + contract.currency() + " data between " + formattedStart + " and " + formattedEnd;
+
+		String description = "Loading historical " + tradeType + " " + candleStr + " candles of " + contract.symbol() + contract.currency() + " data";
+		String formattedEnd;
+		if (tradeType == ADJUSTED_LAST) {
+			formattedEnd = ""; // formatted end not supported with ADJUSTED LAST
+			description = " since " + formattedStart;
+		} else {
+			formattedEnd = requestHandler.getFormattedDateTime(endTime);
+			description += " between " + formattedStart + " and " + formattedEnd;
+		}
+
 
 		return submitRequest(description, candleConsumer,
 				(reqId) -> client.reqHistoricalData(reqId, contract, formattedEnd, durationStr, candleStr, tradeType.toString(), 1, 1, false, null));

@@ -38,8 +38,12 @@ public enum SecurityType {
 		this.availableTradeTypes = Arrays.asList(availableTradeTypes);
 	}
 
-	public List<TradeType> getAvailableTradeTypes() {
+	public List<TradeType> availableTradeTypes() {
 		return availableTradeTypes;
+	}
+
+	public TradeType defaultTradeType(){
+		return availableTradeTypes.get(0);
 	}
 
 	public boolean isTradeTypeAvailable(TradeType tradeType) {

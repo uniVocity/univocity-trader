@@ -191,7 +191,12 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 		return restClient;
 	}
 
-//	@Override
+	@Override
+	public int historicalCandleCountLimit() {
+		return 1000;
+	}
+
+	//	@Override
 //	public boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
 //		return symbolInformation.containsKey(currentAssetSymbol + targetAssetSymbol);
 //	}

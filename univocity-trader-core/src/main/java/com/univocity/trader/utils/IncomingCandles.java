@@ -1,5 +1,7 @@
 package com.univocity.trader.utils;
 
+import org.slf4j.*;
+
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -14,15 +16,32 @@ import java.util.concurrent.*;
  * If the consumer of candles returned by the exchange needs to stop processing them for some reason,
  * call {@link #stopConsuming()}.
  *
+ * By default, after 10 seconds with an empty queue and without receiving anything since,
+ * {@link #stopConsuming()} will be invoked automatically and abort the process. The {@link com.univocity.trader.Exchange}
+ * implementation can check if {@link #consumerStopped()} produces {@code true} to close any open resources instead
+ * of running indefinitely.
+ *
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
+
+	private static final Logger log = LoggerFactory.getLogger(IncomingCandles.class);
 
 	private final Queue<T> input = new ConcurrentLinkedQueue<>();
 	private final Object lock = new Object();
 
 	private boolean noMoreCandles = false;
 	private boolean consuming = true;
+
+	private final long timeout;
+
+	public IncomingCandles() {
+		this(10_000);
+	}
+
+	public IncomingCandles(long timeout) {
+		this.timeout = timeout;
+	}
 
 	public void stopProducing() {
 		noMoreCandles = true;
@@ -34,10 +53,16 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 		notifyNotEmpty();
 	}
 
+	public boolean consumerStopped() {
+		return !consuming;
+	}
+
 	public void add(T candle) {
 		if (consuming) {
 			input.offer(candle);
 			notifyNotEmpty();
+		} else {
+			log.warn("Consumer stopped. Rejected incoming candle {}", candle);
 		}
 	}
 
@@ -63,13 +88,17 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 	}
 
 	private void waitWhileEmpty() {
+		long waitStart = System.currentTimeMillis();
 		while (consuming && input.isEmpty() && !noMoreCandles) {
 			synchronized (lock) {
 				try {
-					lock.wait(100);
+					lock.wait(500);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 				}
+			}
+			if (System.currentTimeMillis() - waitStart >= timeout) {
+				stopConsuming();
 			}
 		}
 	}

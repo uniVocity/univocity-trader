@@ -269,6 +269,8 @@ public class CandleRepository {
 	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
 		log.info("Looking for gaps in history of {} from {}", symbol, getFormattedDateTimeWithYear(from.toEpochMilli()));
 
+		int limitPerRequest = exchange.historicalCandleCountLimit();
+
 		IncomingCandles<T> ticks = exchange.getLatestTicks(symbol, minGap);
 		for (T tick : ticks) {
 			PreciseCandle candle = exchange.generatePreciseCandle(tick);
@@ -280,6 +282,7 @@ public class CandleRepository {
 		long previous = from == null ? -1 : from.toEpochMilli();
 
 		Enumeration<Candle> result = iterate(symbol, from, Instant.now(), false);
+		outer:
 		while (result.hasMoreElements()) {
 			Candle candle = result.nextElement();
 			if (candle == null) {
@@ -299,11 +302,16 @@ public class CandleRepository {
 					long start = previous;
 					long end = minute;
 
-					limit -= 1000;
-					if (limit > 0) {
-						end = start + (1000L * minGap.ms);
+					if (limitPerRequest > 0) {
+						limit -= limitPerRequest;
+						if (limit > 0) {
+							end = start + (limitPerRequest * minGap.ms);
+						}
+						gaps.add(new long[]{start, end});
+					} else {
+						gaps.add(new long[]{start, end});
+						break outer;
 					}
-					gaps.add(new long[]{start, end});
 					previous = end;
 				} while (limit > 0);
 				log.warn("Historical data of {} has a gap of {} minutes between {} and {}", symbol, (gap / minGap.ms), getFormattedDateTimeWithYear(gapStart), getFormattedDateTimeWithYear(minute));
@@ -318,47 +326,55 @@ public class CandleRepository {
 //				log.warn("Too many gaps in history: {}. Will process the 30 most recent and ignore older transactions", gaps.size());
 //				gaps = gaps.subList(gaps.size() - 30, gaps.size());
 //			}
-			log.info("Filling {} gaps in history of {}", gaps.size(), symbol);
-
 			Collections.reverse(gaps);
+			fillGaps(exchange, symbol, minGap, gaps);
+		}
+		log.info("{} history backfill process complete", symbol);
+	}
 
-			int noDataCount = 0;
-			for (long[] gap : gaps) {
-				long start = gap[0];
-				long end = gap[1];
+	private <T> void fillGaps(Exchange<T, ?> exchange, String symbol, TimeInterval minGap, List<long[]> gaps) {
+		log.info("Filling {} gaps in history of {}", gaps.size(), symbol);
 
-				if (noDataCount > 20) {
-					log.info("Aborting gap filling of {} as there is no data before {}", symbol, getFormattedDateTimeWithYear(start));
-					return;
+		int noDataCount = 0;
+		for (long[] gap : gaps) {
+			long start = gap[0];
+			long end = gap[1];
+
+			if (noDataCount > 20) {
+				log.info("Aborting gap filling of {} as there is no data before {}", symbol, getFormattedDateTimeWithYear(start));
+				return;
+			}
+
+			if (isKnownGap(symbol, start, end)) {
+				noDataCount++;
+				continue;
+			}
+			try {
+				IncomingCandles<T> ticks = exchange.getHistoricalTicks(symbol.toUpperCase(), minGap, start, end);
+				int count = 0;
+				for (T tick : ticks) {
+					count++;
+					PreciseCandle candle = exchange.generatePreciseCandle(tick);
+					addToHistory(symbol, candle, true);
 				}
 
-				if (isKnownGap(symbol, start, end)) {
+				if (count <= 2 && exchange.historicalCandleCountLimit() > 0) {
 					noDataCount++;
-					continue;
-				}
-				try {
-					ticks = exchange.getHistoricalTicks(symbol.toUpperCase(), minGap, start, end);
-					int count = 0;
-					for (T tick : ticks) {
-						count++;
-						PreciseCandle candle = exchange.generatePreciseCandle(tick);
-						addToHistory(symbol, candle, true);
-					}
-
-					if (count <= 2) {
-						noDataCount++;
 //						log.info("No Candles found for {} between {} and {}", symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
-						log.warn("Found a historical gap between {} and {}. Interval blacklisted.", getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
-						addGap(symbol, start, end);
-					} else {
-						log.info("Loaded {} {} Candles between {} and {}", count, symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
-						noDataCount = 0;
-					}
-
-					Thread.sleep(200);
-				} catch (Exception e) {
-					log.error("Error retrieving history between {} and {}", start, end);
+					log.warn("Found a historical gap between {} and {}. Interval blacklisted.", getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
+					addGap(symbol, start, end);
+				} else {
+					log.info("Loaded {} {} candles between {} and {}", count, symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
+					noDataCount = 0;
 				}
+
+				if (ticks.consumerStopped()) {
+					log.warn("Process interrupted while retrieving {} history between {} and {}", symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
+				}
+
+				Thread.sleep(200);
+			} catch (Exception e) {
+				log.error("Error retrieving history between {} and {}", start, end);
 			}
 		}
 	}

@@ -12,12 +12,14 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static com.univocity.trader.exchange.interactivebrokers.SecurityType.*;
+import static com.univocity.trader.exchange.interactivebrokers.TradeType.*;
 
 
 class IB implements Exchange<Candle, Account> {
 
 	private final InteractiveBrokersApi api;
 	private Map<String, Contract> tradedContracts;
+	private Map<String, TradeType> tradeTypes = new ConcurrentHashMap<>();
 	private Map<String, SymbolInformation> symbolInformation;
 
 	IB() {
@@ -43,6 +45,8 @@ class IB implements Exchange<Candle, Account> {
 			tradedContracts.putAll(account.tradedContracts());
 		}
 
+		tradeTypes.putAll(account.tradeTypes());
+
 		return new IBAccount(this);
 	}
 
@@ -63,7 +67,7 @@ class IB implements Exchange<Candle, Account> {
 	@Override
 	public IncomingCandles<Candle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
 		Contract contract = getContract(symbol);
-		TradeType tradeType = TradeType.ADJUSTED_LAST;
+		TradeType tradeType = tradeTypes.get(symbol);
 		return api.loadHistoricalData(contract, startTime, endTime, interval, tradeType);
 	}
 
@@ -137,10 +141,9 @@ class IB implements Exchange<Candle, Account> {
 		Account account = simulator.configure().account();
 		account.referenceCurrency("USD");
 
-//		account.tradeWith(FOREX, "USD", "EUR");
 
 		account.tradeWith(FOREX, "EUR", "GBP");
-		account.tradeWith(STOCKS, "GOOG", "USD").primaryExch("ISLAND");
+		account.tradeWith(STOCKS, "GOOG", "USD", ADJUSTED_LAST).primaryExch("ISLAND");
 		;
 
 //		IB ib = new IB();
@@ -150,5 +153,13 @@ class IB implements Exchange<Candle, Account> {
 
 		simulator.backfillHistory("EURGBP", "GOOGUSD");
 
+	}
+
+	@Override
+	public int historicalCandleCountLimit() {
+		//FIXME: technically there should be no limit, but
+		//I could not get the backfill to work reliably
+		//as the connection kept stopping.
+		return 10000;
 	}
 }

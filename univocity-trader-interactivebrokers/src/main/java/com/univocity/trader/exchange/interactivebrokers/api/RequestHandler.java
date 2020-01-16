@@ -72,17 +72,39 @@ class RequestHandler {
 				log.error("Server error: {} (Error code: {})", message, messageCode);
 			} else {
 				log.error("Server message: {} (Status code: {})", message, messageCode);
+				if (messageCode == 507) { //bad message length, connection issues (still connected though).
+					cancelAllPendingRequests();
+				}
 			}
 		} else {
 			twsDisconnected = false;
 			log.warn("Error received for request ID [{}]: {} (Error code: {})", requestId, message, messageCode);
+			cancelPendingRequest(requestId);
+		}
+	}
+
+	private void cancelPendingRequest(int requestId) {
+		try {
 			pendingRequests.remove(requestId);
+			closeOpenFeed(requestId);
+		} finally {
 			if (awaitingResponse.remove(requestId)) {
 				synchronized (syncLock) {
 					syncLock.notifyAll();
 				}
 			}
 		}
+	}
+
+	private void cancelAllPendingRequests() {
+		Integer[] requestIds = pendingRequests.keySet().toArray(new Integer[0]);
+		Arrays.sort(requestIds);
+		log.warn("Cancelling all pending requests due to connection issues. Request IDs: {}", Arrays.toString(requestIds));
+
+		for (Integer requestId : requestIds) {
+			cancelPendingRequest(requestId);
+		}
+
 	}
 
 	void handleResponse(int requestId, Object responseToConsume, Supplier<String> messageLogger) {
@@ -153,10 +175,19 @@ class RequestHandler {
 		}
 	}
 
-	public IncomingCandles<Candle> openFeed(Function<Consumer<Candle>, Integer> request) {
+	public IncomingCandles<Candle> openFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
 		IncomingCandles<Candle> out = new IncomingCandles<>();
-		int reqId = request.apply(out::add);
-		activeFeeds.put(reqId, out);
+		int[] reqId = new int[1];
+		reqId[0] = request.apply((candle) -> {
+					if (!out.consumerStopped()) {
+						out.add(candle);
+					} else {
+						log.warn("Cancelling feed opened by request {}. Consumer stopped reading from it.", reqId[0]);
+						cancelRequestHandler.accept(reqId[0]);
+					}
+				}
+		);
+		activeFeeds.put(reqId[0], out);
 		return out;
 	}
 }
