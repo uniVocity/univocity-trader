@@ -104,18 +104,18 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		this.mailSender = mail.isConfigured() ? new SmtpMailSender(mail) : null;
 	}
 
-	public C configure(){
+	public C configure() {
 		return configuration;
 	}
 
 	private void initialize() {
 		this.tickInterval = configuration.tickInterval();
-		if(candleRepository == null) {
+		if (candleRepository == null) {
 			candleRepository = new CandleRepository(configuration.database());
 		}
 
-		if(clients.isEmpty()){
-			for(var account : configuration.accounts()){
+		if (clients.isEmpty()) {
+			for (var account : configuration.accounts()) {
 				ClientAccount clientAccount = exchange.connectToAccount(account);
 				AccountManager accountManager = new AccountManager(clientAccount, account, null);
 				var client = new ExchangeClient<T>(accountManager);

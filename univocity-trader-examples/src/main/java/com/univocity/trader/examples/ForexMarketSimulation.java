@@ -3,6 +3,7 @@ package com.univocity.trader.examples;
 import com.univocity.trader.account.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.*;
+import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
 
 import java.time.*;
@@ -53,10 +54,13 @@ public class ForexMarketSimulation {
 		simulator.symbolInformation("GBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 		simulator.symbolInformation("EUR").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 
-//		execute simulation
-		simulator.run();
+		simulator.configure().tickInterval(TimeInterval.millis(1));
 
-//		simulation.backfillMonths(6);
-//		simulator.backfillHistory("EURGBP");
+//		execute simulation
+//		simulator.run();
+
+		simulation.backfillMonths(1);
+		simulation.backfillTo(LocalDateTime.of(2020, 1, 10, 4, 0));
+		simulator.backfillHistory("EURGBP");
 	}
 }

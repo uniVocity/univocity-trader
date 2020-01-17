@@ -36,8 +36,19 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 		log.info("Connected");
 	}
 
-	private static Candle translate(HistoricalTick tick) {
+	private static Candle translateHistoricalTick(HistoricalTick tick) {
+		return new Candle(tick.time() * 1000L, tick.time() * 1000L, tick.price(), tick.price(), tick.price(), tick.price(), tick.size());
+	}
+
+	private static Candle translateHistoricalTickLast(HistoricalTickLast tick) {
 		return new Candle(tick.time(), tick.time(), tick.price(), tick.price(), tick.price(), tick.price(), tick.size());
+	}
+
+	private static Candle translateHistoricalTickBidAsk(HistoricalTickBidAsk tick) {
+//		TODO: no abstraction available for this type of candle
+//		tick.time(), tick.tickAttribBidAsk(), tick.priceBid(), tick.priceAsk(), tick.sizeBid(), tick.sizeAsk()));
+//		return new Candle(tick.time(), tick.time(), tick.price(), tick.price(), tick.price(), tick.price(), tick.size());
+		return null;
 	}
 
 	@Override
@@ -68,10 +79,24 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	@Override
 	public final void historicalTicks(int reqId, List<HistoricalTick> ticks, boolean last) {
-		for (HistoricalTick tick : ticks) {
-			requestHandler.handleResponse(reqId, translate(tick),
-					() -> EWrapperMsgGenerator.historicalTick(reqId, tick.time(), tick.price(), tick.size()));
-		}
+		requestHandler.handleResponse(reqId, last, ticks,
+				ResponseProcessor::translateHistoricalTick,
+				(t) -> EWrapperMsgGenerator.historicalTick(reqId, t.time(), t.price(), t.size()));
+	}
+
+	@Override
+	public final void historicalTicksLast(int reqId, List<HistoricalTickLast> ticks, boolean done) {
+		requestHandler.handleResponse(reqId, done, ticks,
+				ResponseProcessor::translateHistoricalTickLast,
+				(tick) -> EWrapperMsgGenerator.historicalTickLast(reqId, tick.time(), tick.tickAttribLast(), tick.price(), tick.size(), tick.exchange(), tick.specialConditions()));
+	}
+
+	@Override
+	public final void historicalTicksBidAsk(int reqId, List<HistoricalTickBidAsk> ticks, boolean done) {
+		log.warn("Ignoring response for request ID: [{}] BID_ASK candles not supported.", reqId);
+//		requestHandler.handleResponse(reqId, ticks,
+//				ResponseProcessor::translateHistoricalTickBidAsk,
+//				(tick) -> EWrapperMsgGenerator.historicalTickBidAsk(reqId, tick.time(), tick.tickAttribBidAsk(), tick.priceBid(), tick.priceAsk(), tick.sizeBid(), tick.sizeAsk()));
 	}
 
 	public final void historicalData(int reqId, Bar bar) {

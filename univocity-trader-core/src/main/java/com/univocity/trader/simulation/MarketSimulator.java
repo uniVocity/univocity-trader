@@ -164,7 +164,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 					}
 				}
 			}
-			if(resetClock) {
+			if (resetClock) {
 				clock -= MINUTE.ms;
 			}
 		}
@@ -225,9 +225,10 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 	protected void backfillHistory(Exchange<?, A> exchange, Collection<String> symbols) {
 		CandleRepository candleRepository = new CandleRepository(configure().database());
-		final Instant start = simulation.backfillStart();
+		final Instant start = simulation.backfillFrom().toInstant(ZoneOffset.UTC);
+		final Instant end = simulation.backfillTo().toInstant(ZoneOffset.UTC);
 		for (String symbol : symbols) {
-			candleRepository.fillHistoryGaps(exchange, symbol, start, configuration.tickInterval());
+			candleRepository.fillHistoryGaps(exchange, symbol, start, end, configuration.tickInterval());
 		}
 	}
 
@@ -238,7 +239,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		Engine[] engines;
 	}
 
-	public CandleRepository getCandleRepository(){
+	public CandleRepository getCandleRepository() {
 		return candleRepository;
 	}
 }

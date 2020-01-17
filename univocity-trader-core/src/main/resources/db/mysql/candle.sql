@@ -7,12 +7,12 @@ CREATE TABLE candle
 	high       DECIMAL(20, 10) NOT NULL,
 	low        DECIMAL(20, 10) NOT NULL,
 	close      DECIMAL(20, 10) NOT NULL,
-	volume     DECIMAL(20, 10) NOT NULL,
-
-	CONSTRAINT candle_symbol_time_uq UNIQUE (symbol, open_time, close_time)
+	volume     DECIMAL(20, 10) NOT NULL
 )
 	PARTITION BY KEY (symbol) PARTITIONS 1000
 ;
+
+ALTER TABLE candle ADD CONSTRAINT candle_symbol_time_uq UNIQUE (symbol, open_time, close_time);
 
 CREATE INDEX candle_symbol_idx ON candle (symbol) USING HASH;
 CREATE INDEX candle_symbol_open_idx ON candle (symbol, open_time) USING BTREE;

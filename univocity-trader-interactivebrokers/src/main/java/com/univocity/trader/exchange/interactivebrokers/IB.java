@@ -6,7 +6,6 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.api.*;
 import com.univocity.trader.indicators.base.*;
-import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import java.util.*;
@@ -54,7 +53,7 @@ class IB implements Exchange<Candle, Account> {
 	}
 
 	@Override
-	public IncomingCandles<Candle> getLatestTicks(String symbol, TimeInterval interval) {
+	public IBIncomingCandles getLatestTicks(String symbol, TimeInterval interval) {
 		Calendar halfAnHourAgo = Calendar.getInstance();
 		halfAnHourAgo.set(Calendar.MINUTE, -30);
 
@@ -62,7 +61,7 @@ class IB implements Exchange<Candle, Account> {
 	}
 
 	@Override
-	public IncomingCandles<Candle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
+	public IBIncomingCandles getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
 		Contract contract = getContract(symbol);
 		TradeType tradeType = tradeTypes.get(symbol);
 		return api.loadHistoricalData(contract, startTime, endTime, interval, tradeType);

@@ -48,6 +48,8 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 
 	private int backfillLength = 6;
 	private ChronoUnit backfillUnit = ChronoUnit.MONTHS;
+	private LocalDateTime backfillFrom = null;
+	private LocalDateTime backfillTo = null;
 
 
 	private Map<String, Double> initialFunds = new ConcurrentHashMap<>();
@@ -142,6 +144,9 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 			this.backfillLength = Integer.parseInt(backfill);
 		}
 
+		backfillFrom(parseDateTime(properties, "simulation.history.backfill.from"));
+		backfillTo(parseDateTime(properties, "simulation.history.backfill.to"));
+
 		parseInitialFunds(properties);
 
 		String pathToParameters = properties.getOptionalProperty("simulation.parameters.file");
@@ -207,8 +212,26 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return this;
 	}
 
-	public int getBackfillLength() {
-		return backfillLength;
+	public LocalDateTime backfillTo() {
+		if(backfillTo != null){
+			return backfillTo;
+		}
+		return LocalDateTime.now();
+	}
+
+	public void backfillTo(LocalDateTime backfillTo) {
+		this.backfillTo = backfillTo;
+	}
+
+	public LocalDateTime backfillFrom() {
+		if(backfillFrom != null){
+			return backfillFrom;
+		}
+		return backfillTo().minus(backfillLength, backfillUnit);
+	}
+
+	public void backfillFrom(LocalDateTime backfillTo) {
+		this.backfillFrom = backfillFrom;
 	}
 
 	public void parameters(String pathToParametersFile, Class<? extends Parameters> typeOfParameters) {
@@ -342,10 +365,6 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	public Simulation clearParameters() {
 		this.parameters.clear();
 		return this;
-	}
-
-	public Instant backfillStart() {
-		return LocalDate.now().minus(backfillLength, backfillUnit).atStartOfDay().toInstant(ZoneOffset.UTC);
 	}
 
 	public final TradingFees tradingFees() {

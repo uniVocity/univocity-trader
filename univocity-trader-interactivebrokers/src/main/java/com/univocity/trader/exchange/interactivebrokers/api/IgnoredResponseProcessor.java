@@ -47,22 +47,6 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 		log.info(EWrapperMsgGenerator.pnlSingle(reqId, pos, dailyPnL, unrealizedPnL, realizedPnL, value));
 	}
 
-
-
-	@Override
-	public final void historicalTicksBidAsk(int reqId, List<HistoricalTickBidAsk> ticks, boolean done) {
-		for (HistoricalTickBidAsk tick : ticks) {
-			log.info(EWrapperMsgGenerator.historicalTickBidAsk(reqId, tick.time(), tick.tickAttribBidAsk(), tick.priceBid(), tick.priceAsk(), tick.sizeBid(), tick.sizeAsk()));
-		}
-	}
-
-	@Override
-	public final void historicalTicksLast(int reqId, List<HistoricalTickLast> ticks, boolean done) {
-		for (HistoricalTickLast tick : ticks) {
-			log.info(EWrapperMsgGenerator.historicalTickLast(reqId, tick.time(), tick.tickAttribLast(), tick.price(), tick.size(), tick.exchange(), tick.specialConditions()));
-		}
-	}
-
 	@Override
 	public final void tickByTickAllLast(int reqId, int tickType, long time, double price, int size, TickAttribLast tickAttribLast, String exchange, String specialConditions) {
 		log.info(EWrapperMsgGenerator.tickByTickAllLast(reqId, tickType, time, price, size, tickAttribLast, exchange, specialConditions));

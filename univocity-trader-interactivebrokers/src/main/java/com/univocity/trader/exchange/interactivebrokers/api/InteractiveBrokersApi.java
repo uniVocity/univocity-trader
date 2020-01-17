@@ -4,7 +4,6 @@ import com.ib.client.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.exchange.interactivebrokers.*;
 import com.univocity.trader.indicators.base.*;
-import com.univocity.trader.utils.*;
 
 import java.time.*;
 import java.util.*;
@@ -43,10 +42,15 @@ public class InteractiveBrokersApi extends IBRequests {
 				(reqId) -> client.reqMatchingSymbols(reqId, symbolSearch));
 	}
 
-	public IncomingCandles<Candle> loadHistoricalData(Contract contract, long startTime, long endTime, TimeInterval interval, TradeType tradeType) {
-		return requestHandler.openFeed(
-				(consumer) -> loadHistoricalData(contract, startTime, endTime, interval, tradeType, consumer),
-				(requestId) -> client.cancelHistoricalData(requestId));
+	public IBIncomingCandles loadHistoricalData(Contract contract, long startTime, long endTime, TimeInterval interval, TradeType tradeType) {
+		if (interval.ms <= 1) {
+			return requestHandler.openFeed(
+					(consumer) -> loadHistoricalData(contract, startTime, endTime, interval, tradeType, consumer));
+		} else {
+			return requestHandler.openFeed(
+					(consumer) -> loadHistoricalData(contract, startTime, endTime, interval, tradeType, consumer),
+					(requestId) -> client.cancelHistoricalData(requestId));
+		}
 	}
 
 	private String getBarSizeString(TimeInterval interval) {
@@ -105,23 +109,43 @@ public class InteractiveBrokersApi extends IBRequests {
 	private int loadHistoricalData(Contract contract, long startTime, long endTime, TimeInterval interval, TradeType tradeType, Consumer<Candle> candleConsumer) {
 		String durationStr = toDurationString(startTime, endTime);
 
-		String formattedStart = requestHandler.getFormattedDateTime(startTime);
 
-		String candleStr = getBarSizeString(interval);
+		boolean requestTicks = interval.ms <= 1;
 
-		String description = "Loading historical " + tradeType + " " + candleStr + " candles of " + contract.symbol() + contract.currency() + " data";
+		String candleStr = requestTicks ? "" : getBarSizeString(interval);
+		String description = "Loading historical " + tradeType + " " + candleStr + " " + (requestTicks ? "ticks" : "candles") + " of " + contract.symbol() + contract.currency() + " data";
 		String formattedEnd;
-		if (tradeType == ADJUSTED_LAST) {
+		String formattedStart;
+		if (!requestTicks && tradeType == ADJUSTED_LAST) {
 			formattedEnd = ""; // formatted end not supported with ADJUSTED LAST
-			description = " since " + formattedStart;
+			formattedStart = requestHandler.getFormattedDateTime(startTime);
+			description += " since " + formattedStart;
 		} else {
 			formattedEnd = requestHandler.getFormattedDateTime(endTime);
-			description += " between " + formattedStart + " and " + formattedEnd;
+			if (requestTicks) {
+				formattedStart = "";
+				description += "from " + formattedEnd + " and back";
+			} else {
+				formattedStart = requestHandler.getFormattedDateTime(startTime);
+				description += " between " + formattedStart + " and " + formattedEnd;
+			}
+		}
+
+		Consumer<Integer> request;
+		if (requestTicks) {
+			// Data is returned to the functions
+			// IBApi.EWrapper.historicalTicks (for whatToShow=MIDPOINT),
+			// IBApi.EWrapper.historicalTicksBidAsk (for whatToShow=BID_ASK),
+			// IBApi.EWrapper.historicalTicksLast for (for whatToShow=TRADES)
+			// depending on the type of data requested.
+			request = (reqId) ->
+					client.reqHistoricalTicks(reqId, contract, formattedStart, formattedEnd, 1000, tradeType.toString(), 1, true, null);
+		} else {
+			request = (reqId) ->
+					client.reqHistoricalData(reqId, contract, formattedEnd, durationStr, candleStr, tradeType.toString(), 1, 1, false, null);
 		}
 
 
-		return submitRequest(description, candleConsumer,
-				(reqId) -> client.reqHistoricalData(reqId, contract, formattedEnd, durationStr, candleStr, tradeType.toString(), 1, 1, false, null));
-
+		return submitRequest(description, candleConsumer, request);
 	}
 }

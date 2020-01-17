@@ -1,7 +1,6 @@
 package com.univocity.trader.exchange.interactivebrokers.api;
 
 import com.univocity.trader.candles.*;
-import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import java.text.*;
@@ -25,7 +24,7 @@ class RequestHandler {
 
 	private Map<Integer, Consumer> pendingRequests = new ConcurrentHashMap<>();
 	private Set<Integer> awaitingResponse = ConcurrentHashMap.newKeySet();
-	private Map<Integer, IncomingCandles<?>> activeFeeds = new ConcurrentHashMap<>();
+	private Map<Integer, IBIncomingCandles> activeFeeds = new ConcurrentHashMap<>();
 
 	private final Object syncLock = new Object();
 	private boolean twsDisconnected = false;
@@ -46,7 +45,7 @@ class RequestHandler {
 
 	void responseFinalized(int requestId) {
 		pendingRequests.remove(requestId);
-		if (awaitingResponse.remove(requestId)) {
+		if (!awaitingResponse.remove(requestId)) {
 			log.warn("No response received for request id {}", requestId);
 			synchronized (syncLock) {
 				syncLock.notifyAll();
@@ -57,7 +56,7 @@ class RequestHandler {
 	}
 
 	void closeOpenFeed(int requestId) {
-		IncomingCandles<?> feed = activeFeeds.remove(requestId);
+		IBIncomingCandles feed = activeFeeds.remove(requestId);
 		if (feed != null) {
 			log.info("Closing active feed opened by request {}", requestId);
 			feed.stopProducing();
@@ -109,20 +108,64 @@ class RequestHandler {
 	}
 
 	void handleResponse(int requestId, Object responseToConsume, Supplier<String> messageLogger) {
+		handleResponse(requestId, responseToConsume,
+				(consumer) -> handleMessageResponse(consumer, responseToConsume, messageLogger));
+	}
+
+	<I, O> void handleResponse(int requestId, boolean done, Collection<I> responseToConsume, Function<I, O> objectTransformation, Function<I, String> messageLogger) {
+		handleResponse(requestId, responseToConsume,
+				(consumer) -> processCollection(done, responseToConsume, consumer, objectTransformation, messageLogger));
+	}
+
+	<I, O> void handleResponse(int requestId, Collection<I> responseToConsume, Function<I, O> objectTransformation, Function<I, String> messageLogger) {
+		handleResponse(requestId, responseToConsume,
+				(consumer) -> processCollection(true, responseToConsume, consumer, objectTransformation, messageLogger));
+	}
+
+	private void handleMessageResponse(Consumer consumer, Object responseToConsume, Supplier<String> messageLogger) {
+		try {
+			consumer.accept(responseToConsume);
+		} catch (Exception e) {
+			log.error("Error processing response for request ID " + requestId + ". Received: " + messageLogger.get(), e);
+		}
+	}
+
+	private void handleResponse(int requestId, Object responseToConsume, Consumer<Consumer> handler) {
 		try {
 			Consumer consumer = pendingRequests.get(requestId);
 			if (consumer == null) {
 				log.error("No consumer for response received for request ID {}. Response: {}", requestId, responseToConsume);
 				return;
 			}
-			consumer.accept(responseToConsume);
-		} catch (Exception e) {
-			log.error("Error processing response for request ID " + requestId + ". Received: " + messageLogger.get(), e);
+
+			handler.accept(consumer);
 		} finally {
 			awaitingResponse.remove(requestId);
 			synchronized (syncLock) {
 				syncLock.notifyAll();
 			}
+		}
+	}
+
+	private <I, O> void processCollection(boolean done, Collection<I> responseToConsume, Consumer consumer, Function<I, O> objectTransformation, Function<I, String> messageLogger) {
+		for (I i : responseToConsume) {
+			processElement(i, consumer, objectTransformation, messageLogger);
+		}
+		if (done) {
+			consumer.accept(null); //notifies end of list.
+		}
+	}
+
+	private <I, O> void processElement(I i, Consumer consumer, Function<I, O> objectTransformation, Function<I, String> messageLogger) {
+		try {
+			Object o = i;
+			if (objectTransformation != null) {
+				o = objectTransformation.apply(i);
+			}
+			consumer.accept(o);
+
+		} catch (Exception e) {
+			log.error("Error processing response for request ID " + requestId + ". Received: " + messageLogger.apply(i), e);
 		}
 	}
 
@@ -176,15 +219,27 @@ class RequestHandler {
 		}
 	}
 
-	public IncomingCandles<Candle> openFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
-		IncomingCandles<Candle> out = new IncomingCandles<>();
+	public IBIncomingCandles openFeed(Function<Consumer<Candle>, Integer> request) {
+		return doOpenFeed(request, null);
+	}
+
+	public IBIncomingCandles openFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
+		return doOpenFeed(request, cancelRequestHandler);
+	}
+
+	private IBIncomingCandles doOpenFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
+		IBIncomingCandles out = new IBIncomingCandles();
 
 		int[] reqId = new int[1];
 		reqId[0] = request.apply((candle) -> {
 					if (!out.consumerStopped()) {
-						out.add(candle);
-					} else {
-						if(reqId[0] != 0) {
+						if (candle == null) { //null candle must be sent manually after processing a fixed list of ticks.
+							closeOpenFeed(reqId[0]);
+						} else {
+							out.add(candle);
+						}
+					} else if (cancelRequestHandler != null) {
+						if (reqId[0] != 0) {
 							log.warn("Cancelling feed opened by request {}. Consumer stopped reading from it.", reqId[0]);
 							cancelRequestHandler.accept(reqId[0]);
 							reqId[0] = 0;

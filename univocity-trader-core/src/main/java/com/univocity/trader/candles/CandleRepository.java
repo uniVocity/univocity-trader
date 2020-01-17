@@ -266,15 +266,18 @@ public class CandleRepository {
 		return executeQuery(symbol, query, from, to, out);
 	}
 
-	public <T> void fillHistory(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
-		long start = from.toEpochMilli();
-		log.info("Refreshing history of {} from {} to present date.", symbol, getFormattedDateTimeWithYear(start));
-		IncomingCandles<T> ticks = exchange.getHistoricalTicks(symbol, minGap, start, Instant.now().toEpochMilli());
+	private PreciseCandle firstCandleReceived;
+
+	private <T> int persistIncomingCandles(Exchange<T, ?> exchange, IncomingCandles<T> ticks, String symbol, long start) {
+		firstCandleReceived = null;
 		int persisted = 0;
 		int received = 0;
 		for (T tick : ticks) {
 			PreciseCandle candle = exchange.generatePreciseCandle(tick);
-			if(addToHistory(symbol, candle, true)){
+			if (firstCandleReceived == null) {
+				firstCandleReceived = candle;
+			}
+			if (addToHistory(symbol, candle, true)) {
 				persisted++;
 			}
 			received++;
@@ -282,29 +285,69 @@ public class CandleRepository {
 		if (ticks.consumerStopped()) {
 			log.warn("Process interrupted while retrieving {} history since {}", symbol, getFormattedDateTimeWithYear(start));
 		}
-		log.info("{} history backfill process complete. {} candles received, {} new candles added to history.", symbol, received, persisted);
+		log.info("{} {} candles received, {} new candles added to history.", received, symbol, persisted);
+		return received;
+	}
+
+	public <T> void fillHistory(Exchange<T, ?> exchange, String symbol, Instant from, Instant to, TimeInterval minGap) {
+		long start = from.toEpochMilli();
+		long end = to.toEpochMilli();
+		log.info("Refreshing history of {} from {} to {}.", symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
+		IncomingCandles<T> ticks = exchange.getHistoricalTicks(symbol, minGap, start, end);
+		persistIncomingCandles(exchange, ticks, symbol, start);
+		log.info("{} history backfill process complete.", symbol);
+	}
+
+	private <T> void fillTickHistory(Exchange<T, ?> exchange, String symbol, Instant from, Instant to, TimeInterval minGap) {
+		long end = to.toEpochMilli(); //we go backwards from most recent date.
+		final long stop = from.toEpochMilli();
+
+		log.info("Refreshing tick history of {} from {} to {}.", symbol, getFormattedDateTimeWithYear(stop), getFormattedDateTimeWithYear(end));
+		long start = end - TimeInterval.HOUR.ms;
+
+		while (end > stop) {
+			IncomingCandles<T> ticks = exchange.getHistoricalTicks(symbol, minGap, start, end);
+			persistIncomingCandles(exchange, ticks, symbol, start);
+			if (firstCandleReceived == null) {
+				log.info("No more ticks available for {}.", symbol);
+				break;
+			}
+			end = firstCandleReceived.closeTime;
+			start = end - TimeInterval.HOUR.ms;
+		}
+
+		log.info("{} tick history backfill process complete.", symbol);
 	}
 
 	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
+		fillHistoryGaps(exchange, symbol, from, null, minGap);
+	}
+
+	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, Instant to, TimeInterval minGap) {
+		to = to == null ? Instant.now() : to;
 		final int limitPerRequest = exchange.historicalCandleCountLimit();
 		if (limitPerRequest <= 0) {
-			fillHistory(exchange, symbol, from, minGap);
+			fillHistory(exchange, symbol, from, to, minGap);
 			return;
 		}
 
-		log.info("Looking for gaps in history of {} from {}", symbol, getFormattedDateTimeWithYear(from.toEpochMilli()));
+		if (minGap.ms <= 1) {
+			fillTickHistory(exchange, symbol, from, to, minGap);
+			return;
+		}
+
+		log.info("Looking for gaps in history of {} between {} and {}", symbol, getFormattedDateTimeWithYear(from.toEpochMilli()), getFormattedDateTimeWithYear(to.toEpochMilli()));
 
 		IncomingCandles<T> ticks = exchange.getLatestTicks(symbol, minGap);
-		for (T tick : ticks) {
-			PreciseCandle candle = exchange.generatePreciseCandle(tick);
-			addToHistory(symbol, candle, true);
+		if (persistIncomingCandles(exchange, ticks, symbol, from.toEpochMilli()) == 0) {
+			throw new IllegalStateException("No recent history data received");
 		}
 
 		List<long[]> gaps = new ArrayList<>();
 
 		long previous = from == null ? -1 : from.toEpochMilli();
 
-		Enumeration<Candle> result = iterate(symbol, from, Instant.now(), false);
+		Enumeration<Candle> result = iterate(symbol, from, to, false);
 		outer:
 		while (result.hasMoreElements()) {
 			Candle candle = result.nextElement();

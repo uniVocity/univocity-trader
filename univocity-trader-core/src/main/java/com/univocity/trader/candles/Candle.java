@@ -13,7 +13,7 @@ public class Candle implements Comparable<Candle>, Cloneable {
 	public static final ThreadLocal<DecimalFormat> CHANGE_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00%"));
 	public static final ThreadLocal<DecimalFormat> VOLUME_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,###"));
 
-	public final long openTime;
+	public long openTime;
 	public long closeTime;
 	public final double open;
 	public double high;
@@ -157,6 +157,10 @@ public class Candle implements Comparable<Candle>, Cloneable {
 		return Instant.ofEpochMilli(openTime).atZone(ZoneId.systemDefault()).toLocalDateTime();
 	}
 
+
+	public boolean isTick(){
+		return openTime == closeTime && openTime == close && close == high && high == low;
+	}
 
 	public Candle clone() {
 		try {
