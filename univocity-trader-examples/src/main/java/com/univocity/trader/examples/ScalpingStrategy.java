@@ -13,6 +13,7 @@ public class ScalpingStrategy extends IndicatorStrategy {
 
 	public ScalpingStrategy() {
 		indicators.add(boll5m = new BollingerBand(TimeInterval.minutes(5)));
+		boll5m.recalculateEveryTick(true);
 	}
 
 	@Override
