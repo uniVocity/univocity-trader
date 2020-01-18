@@ -210,5 +210,32 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	default int historicalCandleCountLimit() {
 		return 0;
 	}
+
+	/**
+	 * Returns the minimum time interval required to wait before executing a request for data from the exchange.
+	 * This interval is used in {@link #waitBeforeNextRequest()}.
+	 *
+	 * @return the time to wait per request.
+	 */
+	default long timeToWaitPerRequest() {
+		return 200;
+	}
+
+	/**
+	 * Convenience method used to pace the rate at which requests to the exchange are made. Will make the current
+	 * thread sleep for the time interval specified by {@link #timeToWaitPerRequest()}.
+	 *
+	 * Currently used to when historical data increments are requested when performing a history
+	 * backfill through {@link CandleRepository#fillHistoryGaps(Exchange, String, Instant, Instant, TimeInterval)}
+	 */
+	default void waitBeforeNextRequest() {
+		try {
+			Thread.sleep(timeToWaitPerRequest());
+		} catch (InterruptedException e) {
+			log.error("Thread interrupted waiting for next request to exchange " + getClass().getName(), e);
+			Thread.currentThread().interrupt();
+		}
+	}
+
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol);
 }

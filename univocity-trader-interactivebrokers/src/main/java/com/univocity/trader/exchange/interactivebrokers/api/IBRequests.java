@@ -28,7 +28,7 @@ class IBRequests {
 		if (client.isConnected()) {
 			log.info("Connected to TWS server (version {}})", client.serverVersion());
 		} else {
-			throw new IllegalStateException("Could not connect to TWS. Make sure it's running om " + (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
+			throw new IllegalStateException("Could not connect to TWS. Make sure it's running on " + (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
 		}
 
 		reader = new EReader(client, signal);

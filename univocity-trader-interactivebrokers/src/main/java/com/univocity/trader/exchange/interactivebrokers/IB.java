@@ -11,9 +11,6 @@ import org.slf4j.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static com.univocity.trader.exchange.interactivebrokers.SecurityType.*;
-import static com.univocity.trader.exchange.interactivebrokers.TradeType.*;
-
 
 class IB implements Exchange<Candle, Account> {
 
@@ -126,31 +123,11 @@ class IB implements Exchange<Candle, Account> {
 
 	@Override
 	public int historicalCandleCountLimit() {
-		// FIXME: technically there should be no limit, but it looks like backfills of 1 minute candles for longer than 1 day simply generate no response.
 		return 1000;
 	}
 
-	//TODO: remove this once implementation is finalized
-	public static void main(String... args) throws Exception {
-
-
-		InteractiveBrokers.Simulator simulator = InteractiveBrokers.simulator();
-		Account account = simulator.configure().account();
-		account.referenceCurrency("USD");
-
-
-		account.tradeWith(FOREX, "EUR", "GBP");
-		account.tradeWith(STOCKS, "GOOG", "USD", ADJUSTED_LAST).primaryExch("ISLAND");
-		;
-
-//		IB ib = new IB();
-//		ib.connectToAccount(account);
-//
-//		System.out.println(ib.getSymbolInformation());
-
-//		simulator.configure().simulation().backfillDays(1);
-		simulator.backfillHistory("EURGBP", "GOOGUSD");
-
+	@Override
+	public long timeToWaitPerRequest() {
+		return 1000L;
 	}
-
 }

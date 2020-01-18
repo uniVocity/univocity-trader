@@ -306,6 +306,7 @@ public class CandleRepository {
 		long start = end - TimeInterval.HOUR.ms;
 
 		while (end > stop) {
+			exchange.waitBeforeNextRequest();
 			IncomingCandles<T> ticks = exchange.getHistoricalTicks(symbol, minGap, start, end);
 			persistIncomingCandles(exchange, ticks, symbol, start);
 			if (firstCandleReceived == null) {
@@ -433,7 +434,7 @@ public class CandleRepository {
 					log.warn("Process interrupted while retrieving {} history between {} and {}", symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
 				}
 
-				Thread.sleep(200);
+				exchange.waitBeforeNextRequest();
 			} catch (Exception e) {
 				log.error("Error retrieving history between {} and {}", start, end);
 			}

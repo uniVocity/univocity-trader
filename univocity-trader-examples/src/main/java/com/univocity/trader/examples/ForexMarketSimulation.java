@@ -54,6 +54,7 @@ public class ForexMarketSimulation {
 		simulator.symbolInformation("GBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 		simulator.symbolInformation("EUR").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 
+		//Interval of 1ms = REAL TIME TICKS
 		simulator.configure().tickInterval(TimeInterval.millis(1));
 
 //		execute simulation
@@ -62,5 +63,6 @@ public class ForexMarketSimulation {
 		simulation.backfillMonths(1);
 		simulation.backfillTo(LocalDateTime.of(2020, 1, 10, 4, 0));
 		simulator.backfillHistory("EURGBP");
+		System.exit(0);
 	}
 }
