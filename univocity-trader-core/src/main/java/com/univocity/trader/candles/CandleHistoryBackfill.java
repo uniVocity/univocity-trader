@@ -38,9 +38,13 @@ public class CandleHistoryBackfill {
 
 		log.info("Refreshing tick history of {} from {} to {}.", symbol, getFormattedDateTimeWithYear(stop), getFormattedDateTimeWithYear(end));
 		long start = end - TimeInterval.HOUR.ms;
+		long lastRequest = -1;
 
 		while (end > stop) {
-			exchange.waitBeforeNextRequest();
+			if (lastRequest != -1) {
+				exchange.waitBeforeNextRequest(lastRequest);
+			}
+			lastRequest = System.currentTimeMillis();
 			IncomingCandles<T> ticks = exchange.getHistoricalTicks(symbol, minGap, start, end);
 			persistIncomingCandles(exchange, ticks, symbol, start);
 			if (firstCandleReceived == null) {
@@ -145,7 +149,9 @@ public class CandleHistoryBackfill {
 				noDataCount++;
 				continue;
 			}
+
 			try {
+				long lastRequest = System.currentTimeMillis();
 				IncomingCandles<T> ticks = exchange.getHistoricalTicks(symbol.toUpperCase(), minGap, start, end);
 				int count = 0;
 				for (T tick : ticks) {
@@ -168,7 +174,7 @@ public class CandleHistoryBackfill {
 					log.warn("Process interrupted while retrieving {} history between {} and {}", symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
 				}
 
-				exchange.waitBeforeNextRequest();
+				exchange.waitBeforeNextRequest(lastRequest);
 			} catch (Exception e) {
 				log.error("Error retrieving history between {} and {}", start, end);
 			}

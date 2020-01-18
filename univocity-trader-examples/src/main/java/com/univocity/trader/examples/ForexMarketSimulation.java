@@ -34,11 +34,8 @@ public class ForexMarketSimulation {
 		account
 				.minimumInvestmentAmountPerTrade(500.0);
 
-		account.strategies()
-				.add(ScalpingStrategy::new);
-
-		account.monitors()
-				.add(ScalpingStrategyMonitor::new);
+		account.strategies().add(ScalpingStrategy::new);
+		account.monitors().add(ScalpingStrategyMonitor::new);
 
 		account.listeners()
 				.add(new OrderExecutionToLog())

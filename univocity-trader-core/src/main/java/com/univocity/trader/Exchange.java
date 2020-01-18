@@ -227,13 +227,20 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *
 	 * Currently used to when historical data increments are requested when performing a history
 	 * backfill through {@link CandleHistoryBackfill#fillHistoryGaps(Exchange, String, Instant, Instant, TimeInterval)}
+	 *
+	 * @param lastRequestTime timestamp of last request made, use to discount the time already spent processing
+	 *                        the response received from the previous request.
 	 */
-	default void waitBeforeNextRequest() {
-		try {
-			Thread.sleep(timeToWaitPerRequest());
-		} catch (InterruptedException e) {
-			log.error("Thread interrupted waiting for next request to exchange " + getClass().getName(), e);
-			Thread.currentThread().interrupt();
+	default void waitBeforeNextRequest(long lastRequestTime) {
+		long sleepTime = timeToWaitPerRequest() - (System.currentTimeMillis() - lastRequestTime);
+		sleepTime = Math.min(sleepTime, timeToWaitPerRequest());
+		if (sleepTime > 0) {
+			try {
+				Thread.sleep(sleepTime);
+			} catch (InterruptedException e) {
+				log.error("Thread interrupted waiting for next request to exchange " + getClass().getName(), e);
+				Thread.currentThread().interrupt();
+			}
 		}
 	}
 
