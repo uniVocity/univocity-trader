@@ -30,8 +30,6 @@ public class ModifiedMovingAverage extends SingleValueCalculationIndicator {
 		return ((value - previousValue) * multiplier) + previousValue;
 	}
 
-
-
 	@Override
 	protected Indicator[] children() {
 		return new Indicator[]{};

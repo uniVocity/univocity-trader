@@ -6,76 +6,20 @@ import com.univocity.trader.strategy.*;
 
 import java.util.function.*;
 
-public abstract class SingleValueIndicator implements Indicator {
+public abstract class SingleValueIndicator extends AggregatedTicksIndicator {
 
-	private boolean testing = false;
 
-	private final TimeInterval timeInterval;
-	private Aggregator aggregator;
-	private long accumulationCount;
 	private ToDoubleFunction<Candle> valueGetter;
-	private boolean recalculateEveryTick = false;
-
 	private Signal signal = null;
 
 	public SingleValueIndicator(TimeInterval timeInterval, ToDoubleFunction<Candle> valueGetter) {
-		this.timeInterval = timeInterval;
+		super(timeInterval);
 		this.valueGetter = valueGetter;
-	}
-
-	@Override
-	public final void initialize(Aggregator root) {
-		if (this.aggregator == null) {
-			aggregator = root.getInstance(timeInterval);
-			for (Indicator indicator : children()) {
-				indicator.initialize(root);
-			}
-		}
 	}
 
 	protected abstract Indicator[] children();
 
 	protected abstract boolean process(Candle candle, double value, boolean updating);
-
-	@Override
-	public final boolean accumulate(Candle candle) {
-		if (aggregator == null) {
-			try {
-				throw new IllegalStateException(getClass().getSimpleName() + " not properly initialized. Ensure nested indicators are returned in method `protected Indicator[] children()`");
-			} catch (IllegalStateException e) {
-				StackTraceElement[] s = Thread.currentThread().getStackTrace();
-				for (StackTraceElement ste : s) {
-					if (ste.toString().contains("junit")) {
-						aggregator = new Aggregator("fakeTestRoot").getInstance(timeInterval);
-						testing = true;
-					}
-				}
-				if (aggregator == null) {
-					throw e;
-				}
-			}
-		}
-		if (testing) {
-			aggregator.aggregate(candle);
-		}
-
-		if (recalculateEveryTick) {
-			candle = aggregator.getPartial();
-			if (candle != null && process(candle, true)) {
-				signal = null;
-				getSignal(candle);
-				return true;
-			}
-		}
-		candle = aggregator.getFull();
-		if (candle != null && process(candle, false)) {
-			signal = null;
-			accumulationCount++;
-			getSignal(candle);
-			return true;
-		}
-		return false;
-	}
 
 	/**
 	 * Override me!
@@ -92,9 +36,13 @@ public abstract class SingleValueIndicator implements Indicator {
 		return 0.0;
 	}
 
-	private boolean process(Candle candle, boolean updating) {
+	final boolean process(Candle candle, boolean updating) {
 		double value = extractValue(candle, updating);
-		return process(candle, value, updating);
+		if(process(candle, value, updating)){
+			signal = calculateSignal(candle);
+			return true;
+		}
+		return false;
 	}
 
 	public final boolean accumulate(double value) {
@@ -110,16 +58,6 @@ public abstract class SingleValueIndicator implements Indicator {
 	}
 
 	@Override
-	public final long getInterval() {
-		return timeInterval.ms;
-	}
-
-	@Override
-	public final long getAccumulationCount() {
-		return accumulationCount;
-	}
-
-	@Override
 	public final Signal getSignal(Candle candle) {
 		if (signal == null) {
 			signal = calculateSignal(candle);
@@ -129,22 +67,5 @@ public abstract class SingleValueIndicator implements Indicator {
 
 	protected Signal calculateSignal(Candle candle) {
 		return Signal.NEUTRAL;
-	}
-
-	public String toString() {
-		return timeInterval + "_" + getClass().getSimpleName();
-	}
-
-	public final boolean recalculateEveryTick() {
-		return recalculateEveryTick;
-	}
-
-	public final void recalculateEveryTick(boolean recalculateEveryTick) {
-		this.recalculateEveryTick = recalculateEveryTick;
-		for (Indicator indicator : children()) {
-			if (indicator instanceof SingleValueIndicator) {
-				indicator.recalculateEveryTick(recalculateEveryTick);
-			}
-		}
 	}
 }

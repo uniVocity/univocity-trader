@@ -61,8 +61,7 @@ public class ForexMarketSimulation {
 //		execute simulation
 //		simulator.run();
 
-		simulation.backfillMonths(10);
-		simulation.backfillTo(LocalDateTime.of(2019, 11, 11, 1, 0));
+		simulation.backfillMonths(6);
 		simulator.backfillHistory("EURGBP");
 		System.exit(0);
 	}
