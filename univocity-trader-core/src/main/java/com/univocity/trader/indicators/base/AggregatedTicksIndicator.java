@@ -76,6 +76,9 @@ public class AggregatedTicksIndicator implements Indicator {
 	}
 
 	public final Candle getLastFullCandle() {
+		if(lastFullCandle == null){
+			return aggregator.getPartial();
+		}
 		return lastFullCandle;
 	}
 

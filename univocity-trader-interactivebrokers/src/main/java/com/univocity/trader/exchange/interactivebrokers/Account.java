@@ -26,6 +26,10 @@ public class Account extends AccountConfiguration<Account> {
 
 	}
 
+	public Contract tradeWith(SecurityType securityType, String symbol) {
+		return tradeWith(securityType, symbol, referenceCurrency());
+	}
+
 	public Contract tradeWith(SecurityType securityType, String symbol, String currency) {
 		return tradeWith(securityType, symbol, currency, tradeTypes.getOrDefault(symbol + currency, securityType.defaultTradeType()));
 	}
