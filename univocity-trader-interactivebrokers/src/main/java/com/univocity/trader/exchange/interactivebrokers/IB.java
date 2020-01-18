@@ -128,6 +128,6 @@ class IB implements Exchange<Candle, Account> {
 
 	@Override
 	public long timeToWaitPerRequest() {
-		return 1000L;
+		return 10000L;
 	}
 }
