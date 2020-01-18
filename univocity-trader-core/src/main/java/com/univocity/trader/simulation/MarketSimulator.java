@@ -227,8 +227,9 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		CandleRepository candleRepository = new CandleRepository(configure().database());
 		final Instant start = simulation.backfillFrom().toInstant(ZoneOffset.UTC);
 		final Instant end = simulation.backfillTo().toInstant(ZoneOffset.UTC);
+		CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository);
 		for (String symbol : symbols) {
-			candleRepository.fillHistoryGaps(exchange, symbol, start, end, configuration.tickInterval());
+			backfill.fillHistoryGaps(exchange, symbol, start, end, configuration.tickInterval());
 		}
 	}
 

@@ -145,15 +145,17 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 			}
 			tmp.append(symbol);
 		}
+		CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository);
+
 		this.allClientPairs = tmp.toString().toLowerCase();
 		//fill history with last 30 days of data
 		for (String symbol : allPairs.keySet()) {
-			candleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
+			backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
 		}
 
 		//quick update for the last 30 minutes in case the previous step takes too long and we miss a few ticks
 		for (String symbol : allPairs.keySet()) {
-			candleRepository.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
+			backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
 			symbols.put(symbol, System.currentTimeMillis());
 		}
 

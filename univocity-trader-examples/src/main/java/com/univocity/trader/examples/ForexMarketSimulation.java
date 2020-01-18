@@ -49,7 +49,8 @@ public class ForexMarketSimulation {
 		simulation.initialFunds(1000.0)
 				.tradingFees(SimpleTradingFees.percentage(0.0)) // NO FEE WARNING!!
 				.fillOrdersOnPriceMatch()
-				.simulateFrom(LocalDate.of(2019, 6, 1).atStartOfDay());
+				.simulateFrom(LocalDate.of(2019, 12, 24).atStartOfDay())
+				.simulateTo(LocalDate.of(2020, 1, 10).atStartOfDay());
 
 		simulator.symbolInformation("GBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 		simulator.symbolInformation("EUR").priceDecimalPlaces(5).quantityDecimalPlaces(2);
@@ -60,8 +61,8 @@ public class ForexMarketSimulation {
 //		execute simulation
 //		simulator.run();
 
-		simulation.backfillMonths(1);
-		simulation.backfillTo(LocalDateTime.of(2020, 1, 10, 4, 0));
+		simulation.backfillMonths(10);
+		simulation.backfillTo(LocalDateTime.of(2019, 11, 11, 1, 0));
 		simulator.backfillHistory("EURGBP");
 		System.exit(0);
 	}

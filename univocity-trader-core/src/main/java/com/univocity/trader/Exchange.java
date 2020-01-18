@@ -226,7 +226,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 * thread sleep for the time interval specified by {@link #timeToWaitPerRequest()}.
 	 *
 	 * Currently used to when historical data increments are requested when performing a history
-	 * backfill through {@link CandleRepository#fillHistoryGaps(Exchange, String, Instant, Instant, TimeInterval)}
+	 * backfill through {@link CandleHistoryBackfill#fillHistoryGaps(Exchange, String, Instant, Instant, TimeInterval)}
 	 */
 	default void waitBeforeNextRequest() {
 		try {
