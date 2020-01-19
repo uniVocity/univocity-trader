@@ -14,7 +14,7 @@ class IBRequests {
 
 	private static final Logger log = LoggerFactory.getLogger(IBRequests.class);
 
-	final RequestHandler requestHandler = new RequestHandler();
+	final RequestHandler requestHandler = new RequestHandler(this::reconnect);
 	private final ResponseProcessor responseProcessor = new ResponseProcessor(requestHandler);
 
 	private EJavaSignal signal = new EJavaSignal();
@@ -30,7 +30,15 @@ class IBRequests {
 		} else {
 			throw new IllegalStateException("Could not connect to TWS. Make sure it's running on " + (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
 		}
+		connect();
+	}
 
+	public void reconnect(){
+		disconnect();
+		connect();
+	}
+
+	private void connect(){
 		reader = new EReader(client, signal);
 		reader.start();
 

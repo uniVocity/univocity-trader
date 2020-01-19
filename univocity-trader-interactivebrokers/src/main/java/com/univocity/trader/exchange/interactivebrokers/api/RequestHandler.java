@@ -29,6 +29,12 @@ class RequestHandler {
 	private final Object syncLock = new Object();
 	private boolean twsDisconnected = false;
 
+	private Runnable reconnectProcess;
+
+	public RequestHandler(Runnable reconnectProcess){
+		this.reconnectProcess = reconnectProcess;
+	}
+
 	void setNextOrderId(int nextOrder) {
 		orderId.set(nextOrder);
 	}
@@ -70,10 +76,12 @@ class RequestHandler {
 			twsDisconnected = messageCode == 2103 || messageCode == 2105;
 			if (twsDisconnected) {
 				log.error("Server error: {} (Error code: {})", message, messageCode);
+				reconnectProcess.run();
 			} else {
 				log.error("Server message: {} (Status code: {})", message, messageCode);
 				if (messageCode == 507) { //bad message length, connection issues (still connected though).
 					cancelAllPendingRequests();
+					reconnectProcess.run();
 				}
 			}
 		} else {
