@@ -63,18 +63,23 @@ public class CandleHistoryBackfill {
 	}
 
 	private Instant resume(String symbol) {
+		log.info("Checking if backfill process of {} can be resumed", symbol);
 		var q = "SELECT max(close_time) FROM candle WHERE symbol = ? AND ts = (SELECT max(ts) FROM candle WHERE symbol = ? LIMIT 1)";
 		Number closeOfLatestCandleLoaded = candleRepository.db().queryForObject(q, new Object[]{symbol, symbol}, Number.class);
-		if(closeOfLatestCandleLoaded != null){
+		if (closeOfLatestCandleLoaded != null) {
 			long ts = closeOfLatestCandleLoaded.longValue();
 			return Instant.ofEpochMilli(ts);
 		}
 		return null;
 	}
 
-	private Instant resumeIfPossible(String symbol, Instant startingTime){
+	private Instant resumeIfPossible(String symbol, Instant startingTime) {
 		Instant lastClose = resume(symbol);
-		return lastClose != null ? lastClose : startingTime;
+		if (lastClose != null) {
+			log.info("Resuming backfill process of symbol {} from {}", symbol, getFormattedDateTimeWithYear(lastClose.toEpochMilli()));
+			return lastClose;
+		}
+		return startingTime;
 	}
 
 	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, Instant to, TimeInterval minGap) {
@@ -227,6 +232,20 @@ public class CandleHistoryBackfill {
 		if (ticks.consumerStopped()) {
 			log.warn("Process interrupted while retrieving {} history since {}", symbol, getFormattedDateTimeWithYear(start));
 		}
+
+		//all candles received are already in the database. Making a checkpoint so the backfill process can be
+		//interrupted and resume from there.
+		if(received > 0 && persisted == 0){
+			// deleting then inserting on purpose to avoid using a database-specific function to update the
+			// timestamp is column `candle.ts`. This allows people to use the database they prefer.
+			var delete = "DELETE FROM CANDLE WHERE symbol = ? AND open_time = ? AND close_time = ?";
+			candleRepository.db().update(delete, symbol, firstCandleReceived.openTime, firstCandleReceived.closeTime);
+
+			if (candleRepository.addToHistory(symbol, firstCandleReceived, true)) {
+				log.info("Made a checkpoint to resume future {} backfills from {}", symbol, getFormattedDateTimeWithYear(firstCandleReceived.closeTime));
+			}
+		}
+
 		log.info("{} {} candles received, {} new candles added to history.", received, symbol, persisted);
 		return received;
 	}
