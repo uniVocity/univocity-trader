@@ -7,7 +7,8 @@ CREATE TABLE candle
 	high       DECIMAL(20, 10) NOT NULL,
 	low        DECIMAL(20, 10) NOT NULL,
 	close      DECIMAL(20, 10) NOT NULL,
-	volume     DECIMAL(20, 10) NOT NULL
+	volume     DECIMAL(20, 10) NOT NULL,
+    ts         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 	PARTITION BY KEY (symbol) PARTITIONS 1000
 ;

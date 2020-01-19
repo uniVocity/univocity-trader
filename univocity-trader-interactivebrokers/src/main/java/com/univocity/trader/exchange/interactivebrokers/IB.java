@@ -123,11 +123,11 @@ class IB implements Exchange<Candle, Account> {
 
 	@Override
 	public int historicalCandleCountLimit() {
-		return 1000;
+		return 1_000;
 	}
 
 	@Override
 	public long timeToWaitPerRequest() {
-		return 10000L;
+		return 10_000L;
 	}
 }

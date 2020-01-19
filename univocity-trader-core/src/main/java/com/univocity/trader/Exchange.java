@@ -213,12 +213,12 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 
 	/**
 	 * Returns the minimum time interval required to wait before executing a request for data from the exchange.
-	 * This interval is used in {@link #waitBeforeNextRequest()}.
+	 * This interval is used in {@link #waitBeforeNextRequest(long)}.
 	 *
 	 * @return the time to wait per request.
 	 */
 	default long timeToWaitPerRequest() {
-		return 200;
+		return 1_000;
 	}
 
 	/**

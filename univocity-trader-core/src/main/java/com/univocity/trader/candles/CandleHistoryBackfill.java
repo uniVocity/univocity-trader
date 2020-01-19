@@ -24,7 +24,7 @@ public class CandleHistoryBackfill {
 	}
 
 	public <T> void fillHistory(Exchange<T, ?> exchange, String symbol, Instant from, Instant to, TimeInterval minGap) {
-		long start = from.toEpochMilli();
+		long start = resumeIfPossible(symbol, from).toEpochMilli();
 		long end = to.toEpochMilli();
 		log.info("Refreshing history of {} from {} to {}.", symbol, getFormattedDateTimeWithYear(start), getFormattedDateTimeWithYear(end));
 		IncomingCandles<T> ticks = exchange.getHistoricalTicks(symbol, minGap, start, end);
@@ -33,7 +33,7 @@ public class CandleHistoryBackfill {
 	}
 
 	private <T> void fillTickHistory(Exchange<T, ?> exchange, String symbol, Instant from, Instant to, TimeInterval minGap) {
-		long end = to.toEpochMilli(); //we go backwards from most recent date.
+		long end = resumeIfPossible(symbol, to).toEpochMilli(); //we go backwards from most recent date.
 		final long stop = from.toEpochMilli();
 
 		log.info("Refreshing tick history of {} from {} to {}.", symbol, getFormattedDateTimeWithYear(stop), getFormattedDateTimeWithYear(end));
@@ -60,6 +60,21 @@ public class CandleHistoryBackfill {
 
 	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, TimeInterval minGap) {
 		fillHistoryGaps(exchange, symbol, from, null, minGap);
+	}
+
+	private Instant resume(String symbol) {
+		var q = "SELECT max(close_time) FROM candle WHERE symbol = ? AND ts = (SELECT max(ts) FROM candle WHERE symbol = ? LIMIT 1)";
+		Number closeOfLatestCandleLoaded = candleRepository.db().queryForObject(q, new Object[]{symbol, symbol}, Number.class);
+		if(closeOfLatestCandleLoaded != null){
+			long ts = closeOfLatestCandleLoaded.longValue();
+			return Instant.ofEpochMilli(ts);
+		}
+		return null;
+	}
+
+	private Instant resumeIfPossible(String symbol, Instant startingTime){
+		Instant lastClose = resume(symbol);
+		return lastClose != null ? lastClose : startingTime;
 	}
 
 	public <T> void fillHistoryGaps(Exchange<T, ?> exchange, String symbol, Instant from, Instant to, TimeInterval minGap) {

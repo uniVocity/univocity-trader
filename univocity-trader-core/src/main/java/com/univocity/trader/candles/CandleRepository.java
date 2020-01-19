@@ -11,7 +11,7 @@ import java.util.concurrent.*;
 
 public class CandleRepository {
 	private static final Logger log = LoggerFactory.getLogger(CandleRepository.class);
-	private static final String INSERT = "INSERT INTO candle VALUES (?,?,?,?,?,?,?,?)";
+	private static final String INSERT = "INSERT INTO candle (symbol,open_time,close_time,open,high,low,close,volume) VALUES (?,?,?,?,?,?,?,?)";
 	private static final RowMapper<Candle> CANDLE_MAPPER = (rs, rowNum) -> {
 		Candle out = new Candle(
 				rs.getLong(1),
