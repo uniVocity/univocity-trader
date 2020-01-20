@@ -65,6 +65,18 @@ public abstract class StrategyMonitor extends IndicatorGroup {
 	}
 
 	/**
+	 * Checks if the {@code SELL} signal emitted by a given {@link Strategy} must be discarded, preventing the
+	 * {@link Trader} to sell short.
+	 *
+	 * @param strategy the strategy the emitted a {@code SELL} signal
+	 *
+	 * @return {@code false} if the {@link #trader} is allowed to open a short trade using the instrument it is responsible for; {@code true} if the {@code SELL} signal should be ignored.
+	 */
+	public boolean discardShortSell(Strategy strategy) {
+		return false;
+	}
+
+	/**
 	 * Indicates whether this monitor allows signals from multiple strategies, i.e. if more than one {@link Strategy}
 	 * is being used, one can emit {@code BUY} signals and another {@code SELL} signals,
 	 * and both will be accepted. If disallowed, once a {@link Strategy} enters a trade the signals emitted by another

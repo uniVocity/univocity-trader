@@ -78,7 +78,7 @@ public class OrderExecutionToLog implements OrderListener {
 				} else {
 					details += " - PENDING     worth $" + rf.priceToString(order.getTotalOrderAmount()) + currency;
 					details += ". Expected P/L " + trade.formattedEstimateProfitLossPercentage(order);
-					details += " | " + trade.tradeLength() + " ticks [min $" + f.priceToString(trade.minPrice()) + " (" + trade.formattedMinChangePct() + "), max $" + f.priceToString(trade.maxPrice()) + " (" + trade.formattedMaxChangePct() + ")]";
+					details += " | " + trade.ticks() + " ticks [min $" + f.priceToString(trade.minPrice()) + " (" + trade.formattedMinChangePct() + "), max $" + f.priceToString(trade.maxPrice()) + " (" + trade.formattedMaxChangePct() + ")]";
 					details += " " + trade.exitReason();
 				}
 			}

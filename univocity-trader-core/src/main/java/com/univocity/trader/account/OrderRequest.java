@@ -10,6 +10,7 @@ public class OrderRequest {
 	private final String assetsSymbol;
 	private final String fundsSymbol;
 	private final Order.Side side;
+	private final Trade.Side tradeSide;
 	private final long time;
 	private final Order resubmittedFrom;
 
@@ -17,7 +18,7 @@ public class OrderRequest {
 	private BigDecimal quantity = BigDecimal.ZERO;
 	private Order.Type type = Order.Type.LIMIT;
 
-	public OrderRequest(String assetsSymbol, String fundsSymbol, Order.Side side, long time, Order resubmittedFrom) {
+	public OrderRequest(String assetsSymbol, String fundsSymbol, Order.Side side, Trade.Side tradeSide, long time, Order resubmittedFrom) {
 		this.resubmittedFrom = resubmittedFrom;
 		this.time = time;
 		if (StringUtils.isBlank(assetsSymbol)) {
@@ -32,6 +33,7 @@ public class OrderRequest {
 		this.assetsSymbol = assetsSymbol;
 		this.fundsSymbol = fundsSymbol;
 		this.side = side;
+		this.tradeSide = tradeSide;
 	}
 
 	public String getAssetsSymbol() {
@@ -64,6 +66,10 @@ public class OrderRequest {
 
 	public Order.Side getSide() {
 		return side;
+	}
+
+	public Trade.Side getTradeSide() {
+		return tradeSide;
 	}
 
 	public Order.Type getType() {

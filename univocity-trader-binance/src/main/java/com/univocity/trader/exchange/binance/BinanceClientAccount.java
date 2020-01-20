@@ -2,13 +2,14 @@ package com.univocity.trader.exchange.binance;
 
 import com.univocity.trader.*;
 import com.univocity.trader.account.Order;
-import com.univocity.trader.account.*;
 import com.univocity.trader.account.OrderBook;
 import com.univocity.trader.account.OrderRequest;
+import com.univocity.trader.account.Trade;
+import com.univocity.trader.account.*;
 import com.univocity.trader.exchange.binance.api.client.*;
 import com.univocity.trader.exchange.binance.api.client.domain.*;
-import com.univocity.trader.exchange.binance.api.client.domain.account.*;
 import com.univocity.trader.exchange.binance.api.client.domain.account.Account;
+import com.univocity.trader.exchange.binance.api.client.domain.account.*;
 import com.univocity.trader.exchange.binance.api.client.domain.account.request.*;
 import com.univocity.trader.exchange.binance.api.client.domain.market.*;
 import com.univocity.trader.exchange.binance.api.client.exception.*;
@@ -115,7 +116,7 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	private Order translate(OrderRequest preparation, OrderDetails response) {
-		DefaultOrder out = new DefaultOrder(preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), response.getTime());
+		DefaultOrder out = new DefaultOrder(preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), Trade.Side.LONG, response.getTime());
 
 		out.setPrice(new BigDecimal(response.getPrice()));
 		out.setQuantity(new BigDecimal(response.getOrigQty()));
@@ -193,7 +194,7 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	private Order translate(Order original, com.univocity.trader.exchange.binance.api.client.domain.account.Order order) {
-		DefaultOrder out = new DefaultOrder(original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), order.getTime());
+		DefaultOrder out = new DefaultOrder(original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), Trade.Side.LONG, order.getTime());
 		out.setStatus(translate(order.getStatus()));
 		out.setExecutedQuantity(new BigDecimal(order.getExecutedQty()));
 		out.setPrice(new BigDecimal(order.getPrice()));

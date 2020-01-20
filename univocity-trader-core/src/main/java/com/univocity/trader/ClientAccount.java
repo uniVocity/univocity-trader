@@ -63,15 +63,20 @@ public interface ClientAccount {
 	Map<String, Balance> updateBalances();
 
 	/**
-	 * Returns the {@link TradingFees} applied to this account as determined by the exchange. Defaults to {@code 0.0} as the exchange generally
-	 * subtracts the amount from the account directly. Test implementations of {@code ClientAccount} might (should!) want to
+	 * Returns the {@link TradingFees} applied to this account as determined by the exchange. Even though the exchange generally
+	 * subtracts the amount from the account directly, for live trading it's best to provide a worst case estimate so that
+	 * order quantities are correctly calculated to take fees into account.
+	 *
+	 * Test implementations of {@code ClientAccount} might (should!) want to
 	 * return {@link TradingFees} that would calculate how much a simulated trade would pay in fees.
 	 *
 	 * @return A {@link TradingFees} implementation that applies the correct fees on every trade made by this
 	 * account based on the fee structure used by the live exchange.
 	 */
 	default TradingFees getTradingFees() {
-		//default to 0 fees for live exchange implementation - the exchanges do that "service" for us.
+		//default to 0 fees for live exchange implementation - the exchanges do that service for us. However it's best
+		//to return the exchange fees to correctly calculate quantities and amounts for orders when balances get close to
+		//0, or you might get insufficient balance errors.
 		return SimpleTradingFees.percentage(0.0);
 	}
 
@@ -133,5 +138,23 @@ public interface ClientAccount {
 	 */
 	default boolean isSimulated() {
 		return false;
+	}
+
+	/**
+	 * Returns the margin reserve percentage applied over the available funds when short selling. If
+	 * {@link AccountConfiguration#shortingEnabled()} evaluates to {@code true}, and a {@code SELL} signal
+	 * is received, the {@link Trader} can sell the given instrument short. The proceeds of a filled {@code SHORT SELL}
+	 * order, in addition to the required margin reserve percentage returned by this method (which will lock the corresponding
+	 * amount of available funds to trade) will be locked until the instrument is bought back.
+	 *
+	 * For example, if the available funds in the account are US$ 100.00, and a short sell for 10 units of GOOG
+	 * at US$5.00 is made, the margin reserve will be calculated to be: US$ 50.00 (sale of 10 GOOG x $5.00) + 150%
+	 * (margin reserve) = $75.00 locked to buy 10 GOOG at a later time. This will leave only US$ 25.00 available in
+	 * the account for other trades.
+	 *
+	 * @return the margin reserve percentage. Must be at least 100%.
+	 */
+	default int marginReservePercentage() {
+		return 150;
 	}
 }

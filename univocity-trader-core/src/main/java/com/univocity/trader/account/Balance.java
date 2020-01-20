@@ -9,7 +9,10 @@ public class Balance implements Cloneable {
 	private final String symbol;
 	private BigDecimal free = BigDecimal.ZERO;
 	private BigDecimal locked = BigDecimal.ZERO;
+	private BigDecimal shorted = BigDecimal.ZERO;
+	private BigDecimal marginReserve = BigDecimal.ZERO;
 	private double freeAmount = -1.0;
+	private double shortedAmount = -1.0;
 
 	public static final MathContext ROUND_MC = new MathContext(8, RoundingMode.FLOOR);
 
@@ -50,16 +53,42 @@ public class Balance implements Cloneable {
 		this.locked = round(locked == null ? BigDecimal.ZERO : locked);
 	}
 
+	public double getShortedAmount() {
+		if (shortedAmount < 0.0) {
+			shortedAmount = shorted.doubleValue();
+		}
+		return shortedAmount;
+	}
+
+	public BigDecimal getShorted() {
+		return shorted;
+	}
+
+	public void setShorted(BigDecimal shorted) {
+		this.shorted = round(shorted == null ? BigDecimal.ZERO : shorted);
+		this.shortedAmount = -1.0;
+	}
+
+	public BigDecimal getMarginReserve() {
+		return marginReserve;
+	}
+
+	public void setMarginReserve(BigDecimal marginReserve) {
+		this.marginReserve = round(marginReserve == null ? BigDecimal.ZERO : marginReserve);
+	}
+
 	public BigDecimal getTotal() {
-		return round(free.add(locked));
+		return round(free.add(locked).add(shorted));
 	}
 
 	@Override
 	public String toString() {
 		return "{" +
 				"'" + symbol + '\'' +
-				", free=" + free +
-				", locked=" + locked +
+				", free=" + getFree() +
+				", locked=" + getLocked() +
+				", shorted=" + getShorted() +
+				", margin reserve=" + getMarginReserve() +
 				'}';
 	}
 

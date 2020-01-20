@@ -13,6 +13,7 @@ import org.slf4j.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static com.univocity.trader.account.Trade.Side.*;
 import static com.univocity.trader.indicators.Signal.*;
 import static com.univocity.trader.utils.NewInstances.*;
 
@@ -60,9 +61,9 @@ public class Trader {
 
 		this.monitors = createStrategyMonitors(allInstances);
 		List<OrderListener> tmp = new ArrayList<>();
-		for(StrategyMonitor monitor : monitors){
-			if(monitor instanceof OrderListener){
-				tmp.add((OrderListener)monitor);
+		for (StrategyMonitor monitor : monitors) {
+			if (monitor instanceof OrderListener) {
+				tmp.add((OrderListener) monitor);
 			}
 		}
 		this.notifications = tmp.toArray(new OrderListener[0]);
@@ -94,7 +95,7 @@ public class Trader {
 	 * <ul>
 	 * <li>signal = {@code BUY} - an order will be submitted when:
 	 * <ol>
-	 * <li>there are funds available to purchase that asset (via {@link TradingManager#allocateFunds()});</li>
+	 * <li>there are funds available to purchase that asset (via {@link TradingManager#allocateFunds(Trade.Side)});</li>
 	 * <li>none of the associated strategy monitors (from {@link #monitors()} produce
 	 * {@link StrategyMonitor#discardBuy(Strategy)};</li>
 	 * <li>the {@link OrderRequest} processed by the {@link OrderManager} associated with the symbol is not cancelled
@@ -103,7 +104,7 @@ public class Trader {
 	 * </li>
 	 * <li>signal = {@code SELL}: Sells all assets held for the current symbol, closing any open orders, if:
 	 * <ol>
-	 * <li>the account has assets available to sell (via {@link TradingManager#hasAssets(Candle, boolean)});</li>
+	 * <li>the account has assets available to sell (via {@link TradingManager#hasPosition(Candle, boolean, boolean)} )</li>
 	 * <li>none of the associated strategy monitors (from {@link #monitors()} produce {@code false} upon
 	 * invoking {@link StrategyMonitor#allowExit(Trade)};</li>
 	 * <li>the {@link OrderRequest} processed by the {@link OrderManager} associated with the symbol is not cancelled
@@ -130,12 +131,12 @@ public class Trader {
 	public void trade(Candle candle, Signal signal, Strategy strategy) {
 		latestCandle = candle;
 
-		boolean hasAssets = tradingManager.hasAssets(candle, false);
+		boolean hasPosition = tradingManager.hasPosition(candle, false, true);
 		boolean sold = false;
 
 		List<Trade> stoppedOut = Collections.emptyList();
 
-		if (hasAssets) {
+		if (hasPosition) {
 			stoppedOut = new ArrayList<>();
 			for (Trade trade : trades) {
 				if (trade.tick(candle, signal, strategy) != null) {
@@ -152,13 +153,17 @@ public class Trader {
 		if (signal == BUY) {
 			buy(candle, strategy);
 		} else if (signal == SELL) {
-			for (Trade trade : trades) {
+			for (Trade trade : trades) { //TODO: need to work the same for all sides
 				sold |= sell(trade, strategy, "Sell signal");
 			}
-			if (!sold && hasAssets && trades.isEmpty()) {
+			if (!sold && hasPosition && trades.isEmpty()) {
 				// Sell without having a trade open. Might happen after starting up
 				// with assets in the account. Will generate a warning in the log.
-				sellAssets(null, strategy, "Sell signal");
+				sold = sellAssets(null, strategy, "Sell signal");
+			}
+
+			if (!sold && tradingManager.canShortSell()) {
+				sellShort(candle, strategy);
 			}
 		}
 	}
@@ -177,63 +182,104 @@ public class Trader {
 		return out;
 	}
 
-	private boolean buy(Candle candle, Strategy strategy) {
+	private double prepareTrade(Trade.Side side, Candle candle, Strategy strategy) {
+		boolean isLong = side == LONG;
+		boolean isShort = side == SHORT;
+
 		for (int i = 0; i < monitors.length; i++) {
-			if (monitors[i].discardBuy(strategy)) {
-				return false;
+			if ((isLong && monitors[i].discardBuy(strategy)) || (isShort && monitors[i].discardShortSell(strategy))) {
+				return -1.0;
 			}
 		}
 		if (!trades.isEmpty()) {
 			for (Trade trade : trades) {
-				if (trade.tryingToExit()) {
-					log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
-					return false;
+				if (trade.tryingToExit() && ((trade.isLong() && isLong) || (trade.isShort() && isShort))) {
+					if (isLong) {
+						log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
+					} else {
+						log.trace("Discarding short sell of {} @ {}: attempting to buy more", tradingManager.getSymbol(), candle.close);
+					}
+					return -1.0;
 				}
 			}
 		}
 
-		if (tradingManager.waitingForBuyOrderToFill()) {
-			tradingManager.cancelStaleOrdersFor(this);
-			if (tradingManager.waitingForBuyOrderToFill()) {
-				log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
-				return false;
+		if ((isLong && tradingManager.waitingForBuyOrderToFill()) || (isShort && tradingManager.waitingForSellOrderToFill())) {
+			tradingManager.cancelStaleOrdersFor(side, this);
+			if ((isLong && tradingManager.waitingForBuyOrderToFill()) || (isShort && tradingManager.waitingForSellOrderToFill())) {
+				if (isLong) {
+					log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
+				} else {
+					log.trace("Discarding short sell of {} @ {}: got sell order waiting to be filled", tradingManager.getSymbol(), candle.close);
+				}
+				return -1.0;
 			}
 		}
-		if (tradingManager.isBuyLocked()) {
-			log.trace("Discarding buy of {} @ {}: purchase order already being processed", tradingManager.getSymbol(), candle.close);
-			return false;
+		if ((isLong && tradingManager.isBuyLocked()) || (isShort && tradingManager.isShortSellLocked())) {
+			if (isLong) {
+				log.trace("Discarding buy of {} @ {}: purchase order already being processed", tradingManager.getSymbol(), candle.close);
+			} else {
+				log.trace("Discarding short sell of {} @ {}: sell order already being processed", tradingManager.getSymbol(), candle.close);
+			}
+			return -1.0;
 		}
-		double amountToSpend = tradingManager.allocateFunds();
+		double amountToSpend = tradingManager.allocateFunds(side);
 		final double minimum = priceDetails().getMinimumOrderAmount(candle.close);
 		if (amountToSpend <= minimum) {
-			tradingManager.cancelStaleOrdersFor(this);
-			amountToSpend = tradingManager.allocateFunds();
+			tradingManager.cancelStaleOrdersFor(side, this);
+			amountToSpend = tradingManager.allocateFunds(side);
 			if (amountToSpend <= minimum) {
 				if (tradingManager.exitExistingPositions(tradingManager.assetSymbol, candle)) {
 					tradingManager.updateBalances();
-					return true;
+					return amountToSpend;
 				} else {
 					tradingManager.updateBalances();
-					amountToSpend = tradingManager.allocateFunds();
+					amountToSpend = tradingManager.allocateFunds(side);
 					if (amountToSpend <= minimum) {
-						log.trace("Discarding buy of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
-						return false;
+						if(isLong) {
+							log.trace("Discarding buy of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
+						} else {
+							log.trace("Discarding short selling of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
+						}
+						return amountToSpend;
 					}
 				}
 			}
 		}
-		Order order = tradingManager.buy(amountToSpend / candle.close);
-		if (order != null) {
-			processOrder(null, order, strategy, null);
-			return true;
+		return amountToSpend;
+	}
+
+	private boolean sellShort(Candle candle, Strategy strategy) {
+		double amountToSpend = prepareTrade(SHORT, candle, strategy);
+		if (amountToSpend > 0) {
+			amountToSpend /= tradingManager.marginReserveFactorPct();
+			Order order = tradingManager.sell(amountToSpend / candle.close, SHORT);
+			if (order != null) {
+				processOrder(null, order, strategy, null);
+				return true;
+			}
+			log.trace("Could not short {} @ {}", tradingManager.getSymbol(), candle.close);
 		}
-		log.trace("Could not buy {} @ {}", tradingManager.getSymbol(), candle.close);
 		return false;
 	}
 
-	public double allocateFunds() {
+
+	private boolean buy(Candle candle, Strategy strategy) {
+		double amountToSpend = prepareTrade(LONG,  candle, strategy);
+		if (amountToSpend > 0) {
+			Order order = tradingManager.buy(amountToSpend / candle.close, LONG);
+			if (order != null) {
+				processOrder(null, order, strategy, null);
+				return true;
+			}
+			log.trace("Could not buy {} @ {}", tradingManager.getSymbol(), candle.close);
+		}
+		return false;
+	}
+
+	public double allocateFunds(Trade.Side tradeSide) {
 		final double minimum = priceDetails().getMinimumOrderAmount(latestCandle.close);
-		double funds = tradingManager.allocateFunds();
+		double funds = tradingManager.allocateFunds(tradeSide);
 		if (funds < minimum) {
 			return 0.0;
 		}
@@ -245,7 +291,7 @@ public class Trader {
 			for (Order order : trade.position()) {
 				tradingManager.cancelOrder(order);
 			}
-			if (!tradingManager.hasAssets(latestCandle, false)) {
+			if (!tradingManager.hasPosition(latestCandle, false, false)) {
 				log.trace("Ignoring sell signal of {}: no assets ({})", symbol(), tradingManager.getAssets());
 				return false;
 			}
@@ -256,7 +302,7 @@ public class Trader {
 	}
 
 	private boolean sellAssets(Trade trade, Strategy strategy, String reason) {
-		Order order = tradingManager.sell(tradingManager.getAssets());
+		Order order = tradingManager.sell(tradingManager.getAssets(), trade.getSide());
 		if (order != null) {
 			processOrder(trade, order, strategy, reason);
 			return true;
@@ -301,8 +347,8 @@ public class Trader {
 		tradingManager.notifySimulationEnd();
 	}
 
-	public Order submitOrder(Order.Type type, Order.Side side, double quantity) {
-		return tradingManager.getAccount().submitOrder(this, quantity, side, type);
+	public Order submitOrder(Order.Type type, Order.Side side, Trade.Side tradeSide, double quantity) {
+		return tradingManager.getAccount().submitOrder(this, quantity, side, tradeSide, type);
 	}
 
 	void processOrder(Trade trade, Order order, Strategy strategy, String reason) {
@@ -329,17 +375,23 @@ public class Trader {
 	private Trade processBuyOrder(Order order, Strategy strategy) {
 		Trade trade = null;
 		for (Trade t : trades) {
-			if (!t.tradeFinalized()) {
+			if (!t.tradeFinalized() && t.getSide() == order.getTradeSide()) {
 				trade = t;
 				break;
 			}
 		}
 
 		if (trade == null) {
-			trade = new Trade(order, this, strategy);
-			trades.add(trade);
+			if(order.isLong()) {
+				trade = new Trade(order, this, strategy);
+				trades.add(trade);
+			}
 		} else {
-			trade.increasePosition(order);
+			if(order.isLong()) {
+				trade.increasePosition(order);
+			} else {
+
+			}
 		}
 		return trade;
 	}
@@ -356,10 +408,19 @@ public class Trader {
 		}
 
 		if (trade != null) {
-			trade.decreasePosition(order, reason);
+			if(trade.isShort()) {
+				trade.increasePosition(order);
+			} else {
+				trade.decreasePosition(order, reason);
+			}
 		} else {
-			//could be manual
-			log.warn("Received a sell order without an open trade: " + order);
+			if(order.isShort()){
+				trade = new Trade(order, this, strategy);
+				trades.add(trade);
+			} else {
+				//could be manual
+				log.warn("Received a sell order without an open trade: " + order);
+			}
 		}
 		return trade;
 	}
@@ -499,7 +560,7 @@ public class Trader {
 		if (!allowMixedStrategies) {
 			for (Trade trade : trades) {
 				if (trade.hasOrder(order)) {
-					return trade.boughtStrategy();
+					return trade.openingStrategy();
 				}
 			}
 		}
@@ -520,12 +581,12 @@ public class Trader {
 		return new TreeSet(trades);
 	}
 
-	public int pipSize(){
-		if(pipSize == 0){
+	public int pipSize() {
+		if (pipSize == 0) {
 			pipSize = tradingManager.pipSize();
 		}
 
-		if(pipSize == 0){
+		if (pipSize == 0) {
 			pipSize = Utils.countDecimals(lastClosingPrice());
 		}
 

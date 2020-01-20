@@ -16,6 +16,7 @@ import java.util.concurrent.*;
 import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
+import static com.univocity.trader.account.Trade.Side.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 public class AccountManager implements ClientAccount, SimulatedAccountConfiguration {
@@ -35,6 +36,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	private final ClientAccount account;
 	private final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
 	private final Simulation simulation;
+	private final BigDecimal marginReserveFactor;
+	private final double marginReserveFactorPct;
 
 	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration, Simulation simulation) {
 		if (StringUtils.isBlank(configuration.referenceCurrency())) {
@@ -46,7 +49,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		this.simulation = simulation;
 		this.account = account;
 		this.configuration = configuration;
+		this.marginReserveFactor = BigDecimal.valueOf(account.marginReservePercentage()).divide(BigDecimal.valueOf(100));
+		this.marginReserveFactorPct = marginReserveFactor.doubleValue();
 		this.client = new ExchangeClient(this);
+
+		if (account.marginReservePercentage() < 100) {
+			throw new IllegalStateException("Margin reserve percentage must be at least 100%");
+		}
 	}
 
 	public ExchangeClient getClient() {
@@ -62,6 +71,10 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return balances;
 	}
 
+	public BigDecimal applyMarginReserve(BigDecimal amount) {
+		return amount.multiply(marginReserveFactor);
+	}
+
 	/**
 	 * Returns the amount held in the account for the given symbol.
 	 *
@@ -71,6 +84,10 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	 */
 	public double getAmount(String symbol) {
 		return balances.getOrDefault(symbol, Balance.ZERO).getFreeAmount();
+	}
+
+	public double getShortedAmount(String symbol) {
+		return balances.getOrDefault(symbol, Balance.ZERO).getShortedAmount();
 	}
 
 	public Balance getBalance(String symbol) {
@@ -103,6 +120,32 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		balance.setLocked(result);
 	}
 
+	public void subtractFromShortedBalance(String symbol, final BigDecimal amount) {
+		Balance balance = getBalance(symbol);
+		BigDecimal result = round(balance.getShorted().subtract(amount));
+		if (amount.compareTo(BigDecimal.ZERO) < 0) {
+			if (result.setScale(2, RoundingMode.HALF_UP).compareTo(BigDecimal.ZERO) < 0) {
+				throw new IllegalStateException("Can't subtract " + amount + " from " + symbol + "'s current short balance of: " + balance.getShorted() + ". Insufficient funds.");
+			} else {
+				result = BigDecimal.ZERO;
+			}
+		}
+		balance.setShorted(result);
+	}
+
+	public void subtractFromMarginReserveBalance(String symbol, final BigDecimal amount) {
+		Balance balance = getBalance(symbol);
+		BigDecimal result = round(balance.getMarginReserve().subtract(amount));
+		if (amount.compareTo(BigDecimal.ZERO) < 0) {
+			if (result.setScale(2, RoundingMode.HALF_UP).compareTo(BigDecimal.ZERO) < 0) {
+				throw new IllegalStateException("Can't subtract " + amount + " from " + symbol + "'s margin reserve: " + balance.getMarginReserve() + ". Insufficient funds.");
+			} else {
+				result = BigDecimal.ZERO;
+			}
+		}
+		balance.setMarginReserve(result);
+	}
+
 	private void addToLockedBalance(String symbol, BigDecimal amount) {
 		Balance balance = balances.get(symbol);
 		if (balance == null) {
@@ -112,11 +155,24 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		balance.setLocked(amount);
 	}
 
+	//TODO: need to implement margin release/call according to price movement.
+	public void addToMarginReserveBalance(String symbol, BigDecimal amount) {
+		Balance balance = balances.get(symbol);
+		amount = balance.getMarginReserve().add(amount);
+		balance.setMarginReserve(amount);
+	}
+
 
 	public void addToFreeBalance(String symbol, BigDecimal amount) {
 		Balance balance = getBalance(symbol);
 		amount = balance.getFree().add(amount);
 		balance.setFree(amount);
+	}
+
+	public void addToShortedBalance(String symbol, BigDecimal amount) {
+		Balance balance = getBalance(symbol);
+		amount = balance.getShorted().add(amount);
+		balance.setShorted(amount);
 	}
 
 	@Override
@@ -138,7 +194,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 
-	public double allocateFunds(String assetSymbol, String fundSymbol) {
+	public double allocateFunds(String assetSymbol, String fundSymbol, Trade.Side tradeSide) {
 		TradingManager tradingManager = getTradingManagerOf(assetSymbol + fundSymbol);
 		if (tradingManager == null) {
 			Trader trader = getTraderOf(assetSymbol + configuration.referenceCurrency());
@@ -163,12 +219,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		double totalFunds = getTotalFundsIn(fundSymbol);
 		maxAmountPerTrade = Math.min(totalFunds * percentagePerTrade, maxAmountPerTrade);
 
-
 		double allocated = getAmount(assetSymbol);
+		double shorted = getShortedAmount(assetSymbol);
 		double unitPrice = tradingManager.getLatestPrice();
 		allocated = allocated * unitPrice;
+		shorted = shorted * unitPrice;
 
-		double available = totalFunds - allocated;
+		double available = (totalFunds - allocated) - shorted;
 		double allocation = totalFunds * percentage;
 		if (allocation > maxAmount) {
 			allocation = maxAmount;
@@ -181,15 +238,21 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 		final double freeAmount = getAmount(fundSymbol);
 		double out = Math.min(available, freeAmount);
+
+		if (tradeSide == SHORT) {
+			out *= marginReserveFactorPct;
+			out = Math.min(out, freeAmount);
+		}
+
 		if (out < minimumInvestment) {
 			out = 0.0;
 		}
 
-		return out;
+		return out > 0.0 ? getTradingFees().takeFee(out, Order.Type.LIMIT, SELL) : 0.0;
 	}
 
-	public double allocateFunds(String assetSymbol) {
-		return allocateFunds(assetSymbol, getReferenceCurrencySymbol());
+	public double allocateFunds(String assetSymbol, Trade.Side tradeSide) {
+		return allocateFunds(assetSymbol, getReferenceCurrencySymbol(), tradeSide);
 	}
 
 	public synchronized double getTotalFundsInReferenceCurrency() {
@@ -261,17 +324,29 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 	}
 
-	private void lockBuy(String assetSymbol) {
+	public boolean isShortSellLocked(String assetSymbol) {
 		synchronized (lockedPairs) {
-			log.trace("Locking purchases of {}", assetSymbol);
+			if (lockedPairs.contains(assetSymbol)) {
+				return true;
+			}
+			if (waitingForFill(assetSymbol, SELL)) {
+				return true;
+			}
+			return false;
+		}
+	}
+
+	private void lockTrading(String assetSymbol) {
+		synchronized (lockedPairs) {
+			log.trace("Locking trading on {}", assetSymbol);
 			lockedPairs.add(assetSymbol);
 		}
 	}
 
-	private void unlockBuy(String assetSymbol) {
+	private void unlockTrading(String assetSymbol) {
 		synchronized (lockedPairs) {
 			if (lockedPairs.contains(assetSymbol)) {
-				log.trace("Unlocking purchases of {}", assetSymbol);
+				log.trace("Unlocking trading on {}", assetSymbol);
 				lockedPairs.remove(assetSymbol);
 			}
 		}
@@ -322,17 +397,17 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return configuration.referenceCurrency();
 	}
 
-	public Order buy(String assetSymbol, String fundSymbol, double quantity) {
+	public Order buy(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity) {
 		synchronized (lockedPairs) {
 			if (!isBuyLocked(assetSymbol)) {
 				try {
-					lockBuy(assetSymbol);
+					lockTrading(assetSymbol);
 					String symbol = assetSymbol + fundSymbol;
 					TradingManager tradingManager = getTradingManagerOf(symbol);
 					if (tradingManager == null) {
 						throw new IllegalStateException("Unable to buy " + quantity + " units of unknown symbol: " + symbol);
 					}
-					double maxSpend = allocateFunds(assetSymbol);
+					double maxSpend = allocateFunds(assetSymbol, tradeSide);
 					if (maxSpend > 0) {
 						maxSpend = getTradingFees().takeFee(maxSpend, Order.Type.MARKET, BUY);
 						double expectedCost = quantity * tradingManager.getLatestPrice();
@@ -340,24 +415,24 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 							quantity = quantity * (maxSpend / expectedCost);
 						}
 						quantity = quantity * 0.9999;
-						OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, quantity, null);
+						OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, tradeSide, quantity, null);
 						return executeOrder(orderPreparation);
 					}
 				} finally {
-					unlockBuy(assetSymbol);
+					unlockTrading(assetSymbol);
 				}
 			}
 			return null;
 		}
 	}
 
-	public Order sell(String assetSymbol, String fundSymbol, double quantity) {
+	public Order sell(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity) {
 		String symbol = assetSymbol + fundSymbol;
 		TradingManager tradingManager = getTradingManagerOf(symbol);
 		if (tradingManager == null) {
 			throw new IllegalStateException("Unable to sell " + quantity + " units of unknown symbol: " + symbol);
 		}
-		OrderRequest orderPreparation = prepareOrder(tradingManager, SELL, quantity, null);
+		OrderRequest orderPreparation = prepareOrder(tradingManager, SELL, tradeSide, quantity, null);
 		return executeOrder(orderPreparation);
 	}
 
@@ -394,10 +469,10 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return null;
 	}
 
-	private OrderRequest prepareOrder(TradingManager tradingManager, Order.Side side, double quantity, Order resubmissionFrom) {
+	private OrderRequest prepareOrder(TradingManager tradingManager, Order.Side side, Trade.Side tradeSide, double quantity, Order resubmissionFrom) {
 		SymbolPriceDetails priceDetails = tradingManager.getPriceDetails();
 		long time = tradingManager.getLatestCandle().closeTime;
-		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side, time, resubmissionFrom);
+		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side, tradeSide, time, resubmissionFrom);
 		orderPreparation.setPrice(priceDetails.priceToBigDecimal(tradingManager.getLatestPrice()));
 		orderPreparation.setQuantity(priceDetails.adjustQuantityScale(quantity));
 
@@ -595,7 +670,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 		tradingManager.updateOpenOrders(order.getSymbol(), tradingManager.trader.latestCandle());
 
-		OrderRequest request = prepareOrder(tradingManager, order.getSide(), order.getRemainingQuantity().doubleValue(), order);
+		OrderRequest request = prepareOrder(tradingManager, order.getSide(), order.getTradeSide(), order.getRemainingQuantity().doubleValue(), order);
 		order = executeOrder(request);
 
 		Strategy strategy = tradingManager.getTrader().strategyOf(order);
@@ -603,8 +678,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		tradingManager.trader.processOrder(trade, order, strategy, trade == null ? "Order resubmission" : "Order resubmission: " + trade.exitReason());
 	}
 
-	public Order submitOrder(Trader trader, double quantity, Order.Side side, Order.Type type) {
-		OrderRequest request = prepareOrder(trader.tradingManager, side, quantity, null);
+	public Order submitOrder(Trader trader, double quantity, Order.Side side, Trade.Side tradeSide, Order.Type type) {
+		OrderRequest request = prepareOrder(trader.tradingManager, side, tradeSide, quantity, null);
 		Order order = executeOrder(request);
 		trader.processOrder(null, order, null, null);
 		return order;
@@ -677,5 +752,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	public AccountConfiguration<?> configuration() {
 		return configuration;
+	}
+
+	public boolean canShortSell() {
+		return configuration().shortingEnabled();
+	}
+
+	public final double marginReserveFactorPct() {
+		return marginReserveFactorPct;
 	}
 }

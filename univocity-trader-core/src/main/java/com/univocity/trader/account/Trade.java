@@ -31,7 +31,13 @@ import java.util.concurrent.*;
  * position being held.
  */
 public class Trade implements Comparable<Trade> {
+
 	private static final Logger log = LoggerFactory.getLogger(Trade.class);
+
+	public enum Side {
+		LONG,
+		SHORT
+	}
 
 	private String exitReason;
 	private double averagePrice = 0.0;
@@ -51,27 +57,44 @@ public class Trade implements Comparable<Trade> {
 	private double maxChange;
 	private double change;
 	private Candle firstCandle;
-	private Strategy boughtStrategy;
+	private Strategy openingStrategy;
+	private boolean stopped = false;
+
+	private double finalizedQuantity = -1.0;
 
 	private double actualProfitLoss;
 	private double actualProfitLossPct;
 	private final StrategyMonitor[] monitors;
 
 	private final Trader trader;
+	private Side side;
 
-	Trade(Order buyOrder, Trader trader, Strategy boughtStrategy) {
+	Trade(Order openingOrder, Trader trader, Strategy openingStrategy) {
 		this.trader = trader;
 		this.firstCandle = trader.latestCandle();
-		this.boughtStrategy = boughtStrategy;
+		this.openingStrategy = openingStrategy;
 		this.monitors = trader.monitors();
 
 		this.max = this.min = firstCandle.close;
+		this.side = openingOrder.isSell() ? Side.SHORT : Side.LONG;
 
-		increasePosition(buyOrder);
+		increasePosition(openingOrder);
+	}
+
+	public boolean isShort() {
+		return side == Side.SHORT;
+	}
+
+	public boolean isLong() {
+		return side == Side.LONG;
+	}
+
+	public Trade.Side getSide() {
+		return side;
 	}
 
 	public String tick(Candle candle, Signal signal, Strategy strategy) {
-		if (this.boughtStrategy == strategy || this.boughtStrategy == null) {
+		if (this.openingStrategy == strategy || this.openingStrategy == null) {
 			averagePrice = 0.0;
 
 			double nextChange = priceChangePct(candle.close);
@@ -85,10 +108,10 @@ public class Trade implements Comparable<Trade> {
 			change = nextChange;
 
 			double prevMax = maxChange;
-			maxChange = priceChangePct(max);
-
 			double prevMin = minChange;
-			minChange = priceChangePct(min);
+
+			maxChange = isLong() ? priceChangePct(max) : priceChangePct(min);
+			minChange = isLong() ? priceChangePct(min) : priceChangePct(max);
 
 			if (maxChange > prevMax) {
 				for (int i = 0; i < monitors.length; i++) {
@@ -105,6 +128,7 @@ public class Trade implements Comparable<Trade> {
 			for (int i = 0; i < monitors.length; i++) {
 				String exit = monitors[i].handleStop(this, signal, strategy);
 				if (exit != null) {
+					stopped = true;
 					return exitReason = exit;
 				}
 			}
@@ -129,7 +153,7 @@ public class Trade implements Comparable<Trade> {
 	 * @return the maximum closing price recorded for the traded symbol since opening latest the position.
 	 */
 	public double maxPrice() {
-		if (!position.isEmpty()) {
+		if (traded()) {
 			return max;
 		}
 		return 0.0;
@@ -141,7 +165,7 @@ public class Trade implements Comparable<Trade> {
 	 * @return the minimum closing price recorded for the traded symbol since opening latest the position.
 	 */
 	public double minPrice() {
-		if (!position.isEmpty()) {
+		if (traded()) {
 			return min;
 		}
 		return 0.0;
@@ -182,20 +206,41 @@ public class Trade implements Comparable<Trade> {
 	 * @return the change percentage, formatted as {@code #,##0.00%}
 	 */
 	public String formattedPriceChangePct(BigDecimal paid) {
-		return formattedPriceChangePct(paid.doubleValue());
+		if (isLong()) {
+			return formattedLongPriceChangePct(paid.doubleValue());
+		} else {
+			return formattedShortPriceChangePct(paid.doubleValue());
+		}
 	}
 
-	private static double priceChangePct(double paid, double currentPrice) {
-		double out = (currentPrice / paid) - 1.0;
+	private String formattedShortPriceChangePct(double totalSpent) {
+		double pct = shortPriceChangePct(totalSpent);
+		return formattedPct(pct);
+	}
+
+	private double shortPriceChangePct(double totalSpent) {
+		return priceChangePct(totalSpent, averagePrice());
+	}
+
+	private double priceChangePct(double spent) {
+		if (isLong()) {
+			return longPriceChangePct(spent);
+		} else {
+			return shortPriceChangePct(spent);
+		}
+	}
+
+	private static double priceChangePct(double spent, double currentPrice) {
+		double out = (currentPrice / spent) - 1.0;
 		return out * 100;
 	}
 
-	private double priceChangePct(double price) {
+	private double longPriceChangePct(double price) {
 		return priceChangePct(averagePrice(), price);
 	}
 
-	private String formattedPriceChangePct(double paid) {
-		double pct = priceChangePct(paid);
+	private String formattedLongPriceChangePct(double spent) {
+		double pct = longPriceChangePct(spent);
 		return formattedPct(pct);
 	}
 
@@ -217,8 +262,8 @@ public class Trade implements Comparable<Trade> {
 	 *
 	 * @return the count of ticks registered so far for the trade.
 	 */
-	public int tradeLength() {
-		if (!position.isEmpty()) {
+	public int ticks() {
+		if (traded()) {
 			return ticks;
 		}
 		return 0;
@@ -239,9 +284,9 @@ public class Trade implements Comparable<Trade> {
 			averagePrice = 0.0;
 		} else {
 			averagePrice = totalSpent / totalUnits;
-			change = priceChangePct(averagePrice, trader.lastClosingPrice());
-			maxChange = priceChangePct(averagePrice, maxPrice());
-			minChange = priceChangePct(averagePrice, minPrice());
+			change = isLong() ? priceChangePct(averagePrice, trader.lastClosingPrice()) : priceChangePct(trader.lastClosingPrice(), averagePrice);
+			maxChange = isLong() ? priceChangePct(averagePrice, maxPrice()) : priceChangePct(minPrice(), averagePrice);
+			minChange = isLong() ? priceChangePct(averagePrice, minPrice()) : priceChangePct(maxPrice(), averagePrice);
 		}
 	}
 
@@ -257,19 +302,16 @@ public class Trade implements Comparable<Trade> {
 		return averagePrice;
 	}
 
-	public int ticks() {
-		if (!position.isEmpty()) {
-			return ticks;
-		}
-		return 0;
-	}
-
 	public long tradeDuration() {
-		if (!position.isEmpty()) {
+		if (traded()) {
 			return trader.latestCandle().closeTime - firstCandle.closeTime;
 		}
 		return 0L;
 
+	}
+
+	private boolean traded() {
+		return !position.isEmpty() || finalizedQuantity > 0.0;
 	}
 
 	public String formattedTradeLength() {
@@ -297,7 +339,7 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public boolean stopped() {
-		return exitReason != null;
+		return stopped;
 	}
 
 	public Collection<Order> position() {
@@ -382,14 +424,15 @@ public class Trade implements Comparable<Trade> {
 		double sold = removeCancelledAndSumQuantities(exitOrders);
 
 		if ((bought - sold) * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() / 5.0) {
+			finalizedQuantity = bought;
 			return true;
 		}
 
 		return false;
 	}
 
-	public Strategy boughtStrategy() {
-		return boughtStrategy;
+	public Strategy openingStrategy() {
+		return openingStrategy;
 	}
 
 	public String formattedProfitLossPct() {
@@ -424,7 +467,7 @@ public class Trade implements Comparable<Trade> {
 		}
 
 		// or received a SELL signal from a relevant strategy
-		return this.boughtStrategy == null || strategy == null || trader.allowMixedStrategies || this.boughtStrategy == strategy;
+		return this.openingStrategy == null || strategy == null || trader.allowMixedStrategies || this.openingStrategy == strategy;
 
 	}
 
@@ -446,7 +489,7 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public boolean hasOrder(Order order) {
-		if (order.isBuy()) {
+		if (order.isBuy() || (order.isShort() && order.isSell())) {
 			if (position.get(order.getOrderId()) != null) {
 				return true;
 			}
@@ -454,6 +497,7 @@ public class Trade implements Comparable<Trade> {
 			if (exitOrders.get(order.getOrderId()) != null) {
 				return true;
 			}
+
 		}
 		return pastOrders.get(order.getOrderId()) != null;
 	}
@@ -502,6 +546,10 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public double quantity() {
-		return removeCancelledAndSumQuantities(position);
+		if (finalizedQuantity < 0) {
+			return removeCancelledAndSumQuantities(position);
+		} else {
+			return finalizedQuantity;
+		}
 	}
 }

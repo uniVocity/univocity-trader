@@ -18,6 +18,7 @@ public class SimulatedClientAccount implements ClientAccount {
 	private TradingFees tradingFees;
 	private final AccountManager account;
 	private OrderFillEmulator orderFillEmulator;
+	private final int marginReservePercentage;
 
 	private static class PendingOrder {
 		final Order order;
@@ -30,6 +31,7 @@ public class SimulatedClientAccount implements ClientAccount {
 	}
 
 	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, Simulation simulation) {
+		this.marginReservePercentage = accountConfiguration.marginReservePercentage();
 		this.account = new AccountManager(this, accountConfiguration, simulation);
 		this.orderFillEmulator = simulation.orderFillEmulator();
 	}
@@ -62,12 +64,23 @@ public class SimulatedClientAccount implements ClientAccount {
 		if (orderDetails.getSide() == BUY && availableFunds - fees >= orderAmount - 0.000000001) {
 			locked = orderDetails.getTotalOrderAmount();
 			account.lockAmount(fundsSymbol, locked);
-			order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, BUY, orderType, orderDetails.getTime());
+			order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, BUY, orderDetails.getTradeSide(), orderType, orderDetails.getTime());
 
-		} else if (orderDetails.getSide() == SELL && availableAssets >= quantity) {
-			locked = orderDetails.getQuantity();
-			account.lockAmount(assetsSymbol, locked);
-			order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL, orderType, orderDetails.getTime());
+		} else if (orderDetails.getSide() == SELL) {
+			if(orderDetails.getTradeSide() == Trade.Side.LONG){
+				 if(availableAssets >= quantity){
+					 locked = orderDetails.getQuantity();
+					 account.lockAmount(assetsSymbol, locked);
+					 order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL, orderDetails.getTradeSide(), orderType, orderDetails.getTime());
+				 }
+			} else if(orderDetails.getTradeSide() == Trade.Side.SHORT){
+				if(availableFunds >= orderAmount * account.marginReserveFactorPct()){
+					locked = account.applyMarginReserve(orderDetails.getTotalOrderAmount());
+					account.lockAmount(fundsSymbol, locked);
+					order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL, orderDetails.getTradeSide(), orderType, orderDetails.getTime());
+				}
+			}
+
 		}
 
 		if (order != null) {
@@ -77,8 +90,8 @@ public class SimulatedClientAccount implements ClientAccount {
 		return order;
 	}
 
-	protected DefaultOrder createOrder(String assetsSymbol, String fundSymbol, double quantity, double price, Order.Side orderSide, Order.Type orderType, long closeTime) {
-		DefaultOrder out = new DefaultOrder(assetsSymbol, fundSymbol, orderSide, closeTime);
+	protected DefaultOrder createOrder(String assetsSymbol, String fundSymbol, double quantity, double price, Order.Side orderSide, Trade.Side tradeSide, Order.Type orderType, long closeTime) {
+		DefaultOrder out = new DefaultOrder(assetsSymbol, fundSymbol, orderSide, tradeSide, closeTime);
 		out.setPrice(BigDecimal.valueOf(price));
 		out.setQuantity(BigDecimal.valueOf(quantity));
 		out.setType(orderType);
@@ -155,11 +168,27 @@ public class SimulatedClientAccount implements ClientAccount {
 			BigDecimal unspentAmount = locked.subtract(order.getTotalTraded());
 			account.addToFreeBalance(funds, unspentAmount);
 		} else if (order.isSell()) {
-			account.subtractFromLockedBalance(asset, locked);
-			account.addToFreeBalance(asset, order.getRemainingQuantity());
-			account.addToFreeBalance(funds, order.getTotalTraded());
+			if(order.isLong()){
+				account.subtractFromLockedBalance(asset, locked);
+				account.addToFreeBalance(asset, order.getRemainingQuantity());
+				account.addToFreeBalance(funds, order.getTotalTraded());
+			} else {
+				account.subtractFromLockedBalance(funds, locked);
+				account.addToFreeBalance(funds, locked);
+
+				BigDecimal reserve = account.applyMarginReserve(order.getTotalTraded());
+				account.subtractFromFreeBalance(funds, reserve);
+				account.addToMarginReserveBalance(funds, reserve);
+				account.addToShortedBalance(asset, order.getExecutedQuantity());
+			}
+
 		}
 		account.subtractFromFreeBalance(funds, new BigDecimal(fees));
+	}
+
+	@Override
+	public int marginReservePercentage() {
+		return marginReservePercentage;
 	}
 }
 

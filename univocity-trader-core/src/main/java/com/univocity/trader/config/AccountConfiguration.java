@@ -1,6 +1,5 @@
 package com.univocity.trader.config;
 
-import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.strategy.*;
@@ -38,6 +37,8 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 	private String email;
 	private String referenceCurrency;
 	private TimeZone timeZone;
+	private boolean shortingEnabled;
+	private int marginReservePercentage = 150;
 	protected boolean parsingProperties = false;
 
 
@@ -75,6 +76,7 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 			}
 			email = properties.getOptionalProperty(accountId + "email");
 			referenceCurrency = properties.getProperty(accountId + "reference.currency");
+			shortingEnabled = properties.getBoolean(accountId + "enable.shorting", false);
 
 			String tz = properties.getOptionalProperty(accountId + "timezone");
 			timeZone = getTimeZone(tz);
@@ -536,6 +538,27 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 		}
 	}
 
+	public T enableShorting(int marginReservePercentage) {
+		shortingEnabled = true;
+		if(marginReservePercentage < 100){
+			throw new IllegalArgumentException("Margin reserve percentage must be at least 100%");
+		}
+		this.marginReservePercentage = marginReservePercentage;
+		return (T) this;
+	}
+
+	public T disableShorting() {
+		shortingEnabled = false;
+		return (T) this;
+	}
+
+	public boolean shortingEnabled() {
+		return shortingEnabled;
+	}
+
+	public int marginReservePercentage(){
+		return marginReservePercentage;
+	}
 
 	Set<String> getRequiredPropertyNames() {
 		requiredPropertyNames.add("reference.currency");

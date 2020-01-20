@@ -9,6 +9,7 @@ import com.univocity.trader.notification.*;
 import java.time.*;
 
 import static com.univocity.trader.exchange.interactivebrokers.SecurityType.*;
+import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -59,7 +60,18 @@ public class ForexMarketSimulation {
 
 		simulation.backfillTo(LocalDateTime.now());
 		simulation.backfillMonths(6);
-		simulator.backfillHistory("EURGBP");
-		System.exit(0);
+
+		while (true) {
+			try {
+				simulator.backfillHistory("EURGBP");
+				System.out.println(">>>>>>>>>> DISCONNECTED <<<<<<<<<<<<");
+
+				Thread.sleep(minutes(1).ms);
+			} catch (InterruptedException ex) {
+				Thread.currentThread().interrupt();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

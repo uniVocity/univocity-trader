@@ -14,39 +14,67 @@ class IBRequests {
 
 	private static final Logger log = LoggerFactory.getLogger(IBRequests.class);
 
+	private final EJavaSignal signal = new EJavaSignal();
+
 	final RequestHandler requestHandler = new RequestHandler(this::reconnect);
 	private final ResponseProcessor responseProcessor = new ResponseProcessor(requestHandler);
 
-	private EJavaSignal signal = new EJavaSignal();
-	protected EClientSocket client = new EClientSocket(responseProcessor, signal);
-	private EReader reader;
+	protected EClientSocket client;
+
+	private String ip;
+	private int port;
+	private int clientID;
+	private String optionalCapabilities;
+	private boolean reconnecting = false;
 
 	public IBRequests(String ip, int port, int clientID, String optionalCapabilities) {
+		this.ip = ip;
+		this.port = port;
+		this.clientID = clientID;
+		this.optionalCapabilities = optionalCapabilities;
+		connect();
+	}
 
-		client.optionalCapabilities(optionalCapabilities);
-		client.eConnect(ip, port, clientID);
-		if (client.isConnected()) {
-			log.info("Connected to TWS server (version {}})", client.serverVersion());
-		} else {
-			throw new IllegalStateException("Could not connect to TWS. Make sure it's running on " + (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
+	private synchronized EClientSocket getClient() {
+		if (client == null) {
+			client = new EClientSocket(responseProcessor, signal);
+			client.optionalCapabilities(optionalCapabilities);
+			client.eConnect(ip, port, clientID);
+			if (client.isConnected()) {
+				log.info("Connected to TWS server (version {}})", client.serverVersion());
+			} else {
+				throw new IllegalStateException("Could not connect to TWS. Make sure it's running on " + (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
+			}
 		}
-		connect();
+		return client;
 	}
 
-	public void reconnect(){
-		disconnect();
-		connect();
+	public void reconnect() {
+		if(!reconnecting){
+			synchronized (this){
+				if(!reconnecting) {
+					try {
+						this.reconnecting = true;
+						disconnect();
+						log.info("Reconnecting to TWS");
+						connect();
+					} finally {
+						reconnecting = false;
+					}
+				}
+			}
+		}
 	}
 
-	private void connect(){
-		reader = new EReader(client, signal);
+	private synchronized void connect() {
+		EReader reader = new EReader(getClient(), signal);
 		reader.start();
 
 		boolean[] ready = new boolean[]{false};
 
 		new Thread(() -> {
 			Thread.currentThread().setName("IB live stream");
-			while (client.isConnected()) {
+			while (client != null && client.isConnected()) {
 				ready[0] = true;
 				signal.waitForSignal();
 				try {
@@ -55,17 +83,22 @@ class IBRequests {
 					log.error("Error processing messages", e);
 				}
 			}
+			log.warn("IB live stream stopped");
 		}).start();
 
 		while (!ready[0]) {
 			Thread.yield();
 		}
+		log.info("Connected to TWS.");
 	}
 
 	public void disconnect() {
-		log.warn("Disconnecting from IB live stream");
-		client.cancelRealTimeBars(3001);
-		client.eDisconnect();
+		if(client != null) {
+			log.warn("Disconnecting from IB live stream");
+			client.cancelRealTimeBars(3001);
+			client.eDisconnect();
+			client = null;
+		}
 	}
 
 	public int submitRequest(String description, Consumer resultConsumer, Consumer<Integer> action) {

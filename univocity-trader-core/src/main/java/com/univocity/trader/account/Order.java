@@ -36,7 +36,9 @@ public interface Order {
 
 	BigDecimal getFeesPaid();
 
-	Side getSide();
+	Order.Side getSide();
+
+	Trade.Side getTradeSide();
 
 	Type getType();
 
@@ -82,12 +84,27 @@ public interface Order {
 		return getType() == Type.LIMIT;
 	}
 
+	default boolean isShort(){
+		return getTradeSide() == Trade.Side.SHORT;
+	}
+
+	default boolean isLong(){
+		return getTradeSide() == Trade.Side.LONG;
+	}
+
 	default String print(long latestClose) {
 		StringBuilder description = new StringBuilder();
 
 		description
 				.append(getStatus()).append(' ')
-				.append(getType()).append(' ')
+				.append(getType()).append(' ');
+
+
+		if(isShort()){
+			description.append(getTradeSide()).append(' ');
+		}
+
+		description
 				.append(getSide()).append(' ')
 				.append(roundStr(getQuantity())).append(' ')
 				.append(getAssetsSymbol());

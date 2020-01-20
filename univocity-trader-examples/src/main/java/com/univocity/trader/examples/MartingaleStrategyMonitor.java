@@ -69,7 +69,7 @@ public class MartingaleStrategyMonitor extends StrategyMonitor {
 
 			double quantity = Math.min(trader.assetQuantity(), maxQuantity);
 
-			Order order = trader.submitOrder(Order.Type.LIMIT, Order.Side.BUY, quantity);
+			Order order = trader.submitOrder(Order.Type.LIMIT, Order.Side.BUY, Trade.Side.LONG, quantity);
 			if (order != null && !order.isCancelled()) {
 				lastBuy = trader.latestCandle().closeTime;
 				log.info(">>> Lost {} in {}, doubling position with {}", trade.formattedPriceChangePct(), trader.symbol(), order);

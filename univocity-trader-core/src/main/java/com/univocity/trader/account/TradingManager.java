@@ -103,9 +103,16 @@ public class TradingManager {
 		return exchange.getLatestPrices();
 	}
 
-	public boolean hasAssets(Candle c, boolean includeLocked) {
+	public boolean hasPosition(Candle c, boolean includeLocked, boolean includeShort) {
 		double minimum = getPriceDetails().getMinimumOrderAmount(c.close);
-		double positionValue = (includeLocked ? getTotalAssets() : getAssets()) * c.close;
+
+		double assets = (includeLocked ? getTotalAssets() : getAssets());
+
+		if (includeShort) {
+			assets += getShortedAssets();
+		}
+
+		double positionValue = assets * c.close;
 		return positionValue > minimum && positionValue > minimumInvestmentAmountPerTrade();
 	}
 
@@ -113,8 +120,8 @@ public class TradingManager {
 		return getAccount().configuration().minimumInvestmentAmountPerTrade(assetSymbol);
 	}
 
-	public final Order buy(double quantity) {
-		return tradingAccount.buy(assetSymbol, fundSymbol, quantity);
+	public final Order buy(double quantity, Trade.Side tradeSide) {
+		return tradingAccount.buy(assetSymbol, fundSymbol, tradeSide, quantity);
 	}
 
 //	public boolean switchTo(String ticker, Signal trade, String exitSymbol) {
@@ -142,19 +149,23 @@ public class TradingManager {
 //		return false;
 //	}
 
-	public Order sell(double quantity) {
+	public Order sell(double quantity, Trade.Side tradeSide) {
 		if (quantity * getLatestPrice() < minimumInvestmentAmountPerTrade()) {
 			return null;
 		}
-		return tradingAccount.sell(assetSymbol, fundSymbol, quantity);
+		return tradingAccount.sell(assetSymbol, fundSymbol, tradeSide, quantity);
 	}
 
-	public Order sell() {
-		return sell(getAssets());
+	public Order sell(Trade.Side tradeSide) {
+		return sell(getAssets(), tradeSide);
 	}
 
 	public double getAssets() {
 		return tradingAccount.getAmount(assetSymbol);
+	}
+
+	public double getShortedAssets() {
+		return tradingAccount.getShortedAmount(assetSymbol);
 	}
 
 	public double getTotalAssets() {
@@ -165,8 +176,8 @@ public class TradingManager {
 		return tradingAccount.getAmount(fundSymbol);
 	}
 
-	public double allocateFunds() {
-		return tradingAccount.allocateFunds(assetSymbol);
+	public double allocateFunds(Trade.Side tradeSide) {
+		return tradingAccount.allocateFunds(assetSymbol, tradeSide);
 	}
 
 	public double getTotalFundsInReferenceCurrency() {
@@ -180,7 +191,7 @@ public class TradingManager {
 	public boolean exitExistingPositions(String exitSymbol, Candle c) {
 		boolean exited = false;
 		for (TradingManager action : tradingAccount.getAllTradingManagers()) {
-			if (action != this && action.hasAssets(c, false) && action.trader.switchTo(exitSymbol, c, action.symbol)) {
+			if (action != this && action.hasPosition(c, false, true) && action.trader.switchTo(exitSymbol, c, action.symbol)) {
 				exited = true;
 				break;
 			}
@@ -190,6 +201,10 @@ public class TradingManager {
 
 	public boolean waitingForBuyOrderToFill() {
 		return tradingAccount.waitingForFill(assetSymbol, BUY);
+	}
+
+	public boolean waitingForSellOrderToFill() {
+		return tradingAccount.waitingForFill(assetSymbol, SELL);
 	}
 
 	public final Map<String, Balance> updateBalances() {
@@ -209,11 +224,15 @@ public class TradingManager {
 		return tradingAccount.isBuyLocked(assetSymbol);
 	}
 
+	public boolean isShortSellLocked() {
+		return tradingAccount.isShortSellLocked(assetSymbol);
+	}
+
 	public AccountManager getAccount() {
 		return tradingAccount;
 	}
 
-	public void cancelStaleOrdersFor(Trader trader) {
+	public void cancelStaleOrdersFor(Trade.Side side, Trader trader) {
 		tradingAccount.cancelStaleOrdersFor(trader);
 	}
 
@@ -301,8 +320,16 @@ public class TradingManager {
 		return tradingAccount.getBalance(symbol);
 	}
 
-	public int pipSize(){
+	public int pipSize() {
 		return priceDetails.pipSize();
+	}
+
+	public boolean canShortSell() {
+		return tradingAccount.canShortSell();
+	}
+
+	public double marginReserveFactorPct() {
+		return tradingAccount.marginReserveFactorPct();
 	}
 
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
