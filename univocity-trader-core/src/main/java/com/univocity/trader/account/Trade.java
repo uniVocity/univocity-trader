@@ -93,6 +93,15 @@ public class Trade implements Comparable<Trade> {
 		return side;
 	}
 
+	private void updateMinAndMaxPrices(Candle candle) {
+		if (max < candle.close) {
+			max = candle.close;
+		}
+		if (min > candle.close) {
+			min = candle.close;
+		}
+	}
+
 	public String tick(Candle candle, Signal signal, Strategy strategy) {
 		if (strategy != null && strategy.tradeSide() != null && strategy.tradeSide() != this.side) {
 			return null;
@@ -103,12 +112,7 @@ public class Trade implements Comparable<Trade> {
 
 			double nextChange = priceChangePct(candle.close);
 			ticks++;
-			if (max < candle.close) {
-				max = candle.close;
-			}
-			if (min > candle.close) {
-				min = candle.close;
-			}
+			updateMinAndMaxPrices(candle);
 			change = nextChange;
 
 			double prevMax = maxChange;
@@ -288,9 +292,9 @@ public class Trade implements Comparable<Trade> {
 			averagePrice = 0.0;
 		} else {
 			averagePrice = totalSpent / totalUnits;
-			change = isLong() ? priceChangePct(averagePrice, trader.lastClosingPrice()) : priceChangePct(trader.lastClosingPrice(), averagePrice);
-			maxChange = isLong() ? priceChangePct(averagePrice, maxPrice()) : priceChangePct(minPrice(), averagePrice);
-			minChange = isLong() ? priceChangePct(averagePrice, minPrice()) : priceChangePct(maxPrice(), averagePrice);
+			change = isLong() ? priceChangePct(averagePrice, trader.lastClosingPrice()) : -priceChangePct(averagePrice, trader.lastClosingPrice());
+			maxChange = isLong() ? priceChangePct(averagePrice, maxPrice()) : -priceChangePct(averagePrice, minPrice());
+			minChange = isLong() ? priceChangePct(averagePrice, minPrice()) : -priceChangePct(averagePrice, maxPrice());
 		}
 	}
 
@@ -365,7 +369,7 @@ public class Trade implements Comparable<Trade> {
 				updateAveragePrice(exitOrders.values());
 				double totalSold = this.totalSpent;
 				double soldUnits = this.totalUnits;
-				double sellPrice = averagePrice;
+				double exitPrice = averagePrice;
 
 				updateAveragePrice(position.values());
 
@@ -374,7 +378,7 @@ public class Trade implements Comparable<Trade> {
 					throw new IllegalStateException("Profit/loss amount can't be determined");
 				}
 
-				actualProfitLossPct = priceChangePct(averagePrice, sellPrice);
+				actualProfitLossPct = priceChangePct(averagePrice, exitPrice);
 				if (Double.isNaN(actualProfitLossPct)) {
 					throw new IllegalStateException("Profit/loss % can't be determined");
 				}
@@ -390,6 +394,11 @@ public class Trade implements Comparable<Trade> {
 
 				actualProfitLossPct = priceChangePct(averagePrice, sellPrice);
 				actualProfitLoss = totalSold - (order.getExecutedQuantity().doubleValue() * averagePrice);
+			}
+
+			if (isShort()) {
+				actualProfitLoss = -actualProfitLoss;
+				actualProfitLossPct = -actualProfitLossPct;
 			}
 		}
 	}
@@ -424,11 +433,11 @@ public class Trade implements Comparable<Trade> {
 			return false;
 		}
 
-		double bought = removeCancelledAndSumQuantities(position);
-		double sold = removeCancelledAndSumQuantities(exitOrders);
+		double qtyInPosition = removeCancelledAndSumQuantities(position);
+		double qtyInExit = removeCancelledAndSumQuantities(exitOrders);
 
-		if ((bought - sold) * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() / 5.0) {
-			finalizedQuantity = bought;
+		if ((qtyInPosition - qtyInExit) * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() / 5.0) {
+			finalizedQuantity = qtyInPosition;
 			return true;
 		}
 
@@ -464,11 +473,11 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	boolean canExit(Strategy strategy) {
-		if((this.side == Side.SHORT && !trader.isShort(strategy)) || (this.side == Side.LONG && !trader.isLong(strategy))){
+		if ((this.side == Side.SHORT && !trader.isShort(strategy)) || (this.side == Side.LONG && !trader.isLong(strategy))) {
 			return false;
 		}
 
-		if(this.openingStrategy == null || strategy == null || trader.allowMixedStrategies || this.openingStrategy == strategy) {
+		if (this.openingStrategy == null || strategy == null || trader.allowMixedStrategies || this.openingStrategy == strategy) {
 			for (int i = 0; i < monitors.length; i++) {
 				if (!monitors[i].allowExit(this)) {
 					return false;
@@ -491,22 +500,23 @@ public class Trade implements Comparable<Trade> {
 		notifyOrderSubmission(order);
 	}
 
-	private void notifyOrderSubmission(Order order){
+	private void notifyOrderSubmission(Order order) {
+		updateMinAndMaxPrices(latestCandle());
 		for (int i = 0; i < monitors.length; i++) {
-			if(order.isSell()){
+			if (order.isSell()) {
 				monitors[i].sold(this, order);
-			} else if(order.isBuy()){
+			} else if (order.isBuy()) {
 				monitors[i].bought(this, order);
 			}
 		}
 	}
 
 	public boolean hasOrder(Order order) {
-		if (order.isBuy() || (order.isShort() && order.isSell())) {
+		if ((order.isBuy() && order.isLong()) || (order.isSell() && order.isShort())) {
 			if (position.get(order.getOrderId()) != null) {
 				return true;
 			}
-		} else if (order.isSell()) {
+		} else if ((order.isSell() && isLong()) || (order.isShort() && order.isBuy())) {
 			if (exitOrders.get(order.getOrderId()) != null) {
 				return true;
 			}
