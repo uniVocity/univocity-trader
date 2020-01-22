@@ -49,7 +49,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		this.simulation = simulation;
 		this.account = account;
 		this.configuration = configuration;
-		this.marginReserveFactor = BigDecimal.valueOf(account.marginReservePercentage()).divide(BigDecimal.valueOf(100));
+		this.marginReserveFactor = round(BigDecimal.valueOf(account.marginReservePercentage()).divide(BigDecimal.valueOf(100), ROUND_MC));
 		this.marginReserveFactorPct = marginReserveFactor.doubleValue();
 		this.client = new ExchangeClient(this);
 
@@ -72,7 +72,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public BigDecimal applyMarginReserve(BigDecimal amount) {
-		return amount.multiply(marginReserveFactor);
+		return round(amount.multiply(marginReserveFactor));
 	}
 
 	/**
@@ -133,17 +133,22 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		balance.setShorted(result);
 	}
 
-	public void subtractFromMarginReserveBalance(String symbol, final BigDecimal amount) {
-		Balance balance = getBalance(symbol);
-		BigDecimal result = round(balance.getMarginReserve().subtract(amount));
+	public BigDecimal getMarginReserve(String fundSymbol, String assetSymbol) {
+		return getBalance(fundSymbol).getMarginReserve(assetSymbol);
+
+	}
+
+	public void subtractFromMarginReserveBalance(String fundSymbol, String assetSymbol, final BigDecimal amount) {
+		Balance balance = getBalance(fundSymbol);
+		BigDecimal result = round(balance.getMarginReserve(assetSymbol).subtract(amount));
 		if (amount.compareTo(BigDecimal.ZERO) < 0) {
 			if (result.setScale(2, RoundingMode.HALF_UP).compareTo(BigDecimal.ZERO) < 0) {
-				throw new IllegalStateException("Can't subtract " + amount + " from " + symbol + "'s margin reserve: " + balance.getMarginReserve() + ". Insufficient funds.");
+				throw new IllegalStateException("Can't subtract " + amount + " from " + fundSymbol + "'s margin reserve: " + balance.getMarginReserve(assetSymbol) + ". Insufficient funds.");
 			} else {
 				result = BigDecimal.ZERO;
 			}
 		}
-		balance.setMarginReserve(result);
+		balance.setMarginReserve(assetSymbol, result);
 	}
 
 	private void addToLockedBalance(String symbol, BigDecimal amount) {
@@ -156,10 +161,10 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	//TODO: need to implement margin release/call according to price movement.
-	public void addToMarginReserveBalance(String symbol, BigDecimal amount) {
-		Balance balance = balances.get(symbol);
-		amount = balance.getMarginReserve().add(amount);
-		balance.setMarginReserve(amount);
+	public void addToMarginReserveBalance(String fundSymbol, String assetSymbol, BigDecimal amount) {
+		Balance balance = balances.get(fundSymbol);
+		amount = balance.getMarginReserve(assetSymbol).add(amount);
+		balance.setMarginReserve(assetSymbol, amount);
 	}
 
 
@@ -205,7 +210,6 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 				throw new IllegalStateException("Unable to allocate funds to buy " + assetSymbol + ". Unknown symbol: " + assetSymbol);
 			}
 		}
-
 		double minimumInvestment = configuration.minimumInvestmentAmountPerTrade(assetSymbol);
 		double percentage = configuration.maximumInvestmentPercentagePerAsset(assetSymbol) / 100.0;
 		double maxAmount = configuration.maximumInvestmentAmountPerAsset(assetSymbol);
@@ -271,21 +275,40 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			String symbol = e.getKey();
 			double quantity = e.getValue().getTotal().doubleValue();
 
+
+			for (String shorted : e.getValue().getShortedAssetSymbols()) {
+				double reserve = e.getValue().getMarginReserve(shorted).doubleValue();
+				double marginWithoutReserve = e.getValue().getMarginReserve(shorted).doubleValue() / marginReserveFactorPct;
+				double shortedQuantity = balances.get(shorted).getShortedAmount();
+				double originalShortedPrice = marginWithoutReserve / shortedQuantity;
+				double totalInvestetOnShort = shortedQuantity * originalShortedPrice;
+				double totalAtCurrentPrice = multiplyWithLatestPrice(shortedQuantity, shorted, symbol, allPrices);
+				double shortProfitLoss = totalInvestetOnShort - totalAtCurrentPrice;
+
+				total += shortProfitLoss;
+				total += (reserve - marginWithoutReserve);
+			}
+
 			if (currency.equals(symbol)) {
 				total += quantity;
 			} else {
-				double price = allPrices.getOrDefault(symbol + currency, -1.0);
-				if (price > 0.0) {
-					total += quantity * price;
-				} else {
-					price = allPrices.getOrDefault(currency + symbol, -1.0);
-					if (price > 0.0) {
-						total += quantity / price;
-					}
-				}
+				total += multiplyWithLatestPrice(quantity, symbol, currency, allPrices);
 			}
 		}
 		return total;
+	}
+
+	private double multiplyWithLatestPrice(double quantity, String symbol, String currency, Map<String, Double> allPrices) {
+		double price = allPrices.getOrDefault(symbol + currency, -1.0);
+		if (price > 0.0) {
+			return quantity * price;
+		} else {
+			price = allPrices.getOrDefault(currency + symbol, -1.0);
+			if (price > 0.0) {
+				return quantity / price;
+			}
+		}
+		return 0.0;
 	}
 
 	public boolean waitingForFill(String assetSymbol, Order.Side side) {
@@ -407,6 +430,10 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 					if (tradingManager == null) {
 						throw new IllegalStateException("Unable to buy " + quantity + " units of unknown symbol: " + symbol);
 					}
+					if (tradeSide == SHORT) {
+						OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, SHORT, quantity, null);
+						return executeOrder(orderPreparation);
+					}
 					double maxSpend = allocateFunds(assetSymbol, tradeSide);
 					if (maxSpend > 0) {
 						maxSpend = getTradingFees().takeFee(maxSpend, Order.Type.MARKET, BUY);
@@ -474,6 +501,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		long time = tradingManager.getLatestCandle().closeTime;
 		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side, tradeSide, time, resubmissionFrom);
 		orderPreparation.setPrice(priceDetails.priceToBigDecimal(tradingManager.getLatestPrice()));
+
 		orderPreparation.setQuantity(priceDetails.adjustQuantityScale(quantity));
 
 		OrderBook book = account.getOrderBook(tradingManager.getSymbol(), 0);

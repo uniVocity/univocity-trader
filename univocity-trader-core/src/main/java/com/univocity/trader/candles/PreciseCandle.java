@@ -29,11 +29,11 @@ public class PreciseCandle {
 	public PreciseCandle(Candle candle) {
 		this.openTime = candle.openTime;
 		this.closeTime = candle.closeTime;
-		this.open = new BigDecimal(candle.open);
-		this.high = new BigDecimal(candle.high);
-		this.low = new BigDecimal(candle.low);
-		this.close = new BigDecimal(candle.close);
-		this.volume = new BigDecimal(candle.volume);
+		this.open = BigDecimal.valueOf(candle.open);
+		this.high = BigDecimal.valueOf(candle.high);
+		this.low = BigDecimal.valueOf(candle.low);
+		this.close = BigDecimal.valueOf(candle.close);
+		this.volume = BigDecimal.valueOf(candle.volume);
 	}
 
 	@Override

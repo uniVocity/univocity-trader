@@ -1,6 +1,8 @@
 package com.univocity.trader.account;
 
 import java.math.*;
+import java.util.*;
+import java.util.concurrent.*;
 
 public class Balance implements Cloneable {
 
@@ -10,7 +12,7 @@ public class Balance implements Cloneable {
 	private BigDecimal free = BigDecimal.ZERO;
 	private BigDecimal locked = BigDecimal.ZERO;
 	private BigDecimal shorted = BigDecimal.ZERO;
-	private BigDecimal marginReserve = BigDecimal.ZERO;
+	private Map<String, BigDecimal> marginReserves = new ConcurrentHashMap<>();
 	private double freeAmount = -1.0;
 	private double shortedAmount = -1.0;
 
@@ -69,16 +71,25 @@ public class Balance implements Cloneable {
 		this.shortedAmount = -1.0;
 	}
 
-	public BigDecimal getMarginReserve() {
-		return marginReserve;
+	public BigDecimal getMarginReserve(String assetSymboll) {
+		return round(marginReserves.getOrDefault(assetSymboll, BigDecimal.ZERO));
 	}
 
-	public void setMarginReserve(BigDecimal marginReserve) {
-		this.marginReserve = round(marginReserve == null ? BigDecimal.ZERO : marginReserve);
+	public Set<String> getShortedAssetSymbols() {
+		return marginReserves.keySet();
+	}
+
+	public void setMarginReserve(String assetSymbol, BigDecimal marginReserve) {
+		marginReserve = round(marginReserve == null ? BigDecimal.ZERO : marginReserve);
+		if(marginReserve.compareTo(BigDecimal.ZERO) <= 0){
+			this.marginReserves.remove(assetSymbol);
+		} else {
+			this.marginReserves.put(assetSymbol, marginReserve);
+		}
 	}
 
 	public BigDecimal getTotal() {
-		return round(free.add(locked).add(shorted));
+		return round(free.add(locked));
 	}
 
 	@Override
@@ -88,7 +99,7 @@ public class Balance implements Cloneable {
 				", free=" + getFree() +
 				", locked=" + getLocked() +
 				", shorted=" + getShorted() +
-				", margin reserve=" + getMarginReserve() +
+				", margin reserves=" + marginReserves +
 				'}';
 	}
 

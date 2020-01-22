@@ -2,6 +2,8 @@ package com.univocity.trader.config;
 
 public class Allocation implements Cloneable{
 
+	public static final double EFFECTIVELY_ZERO = 0.0000001;
+
 	static Allocation NO_LIMITS = new Allocation();
 
 	private double maximumAmountPerAsset = Integer.MAX_VALUE;
@@ -10,7 +12,7 @@ public class Allocation implements Cloneable{
 	private double maximumAmountPerTrade = Integer.MAX_VALUE;
 	private double maximumPercentagePerTrade = 100.0;
 
-	private double minimumAmountPerTrade = 0.0000001;
+	private double minimumAmountPerTrade = EFFECTIVELY_ZERO;
 
 	Allocation() {
 

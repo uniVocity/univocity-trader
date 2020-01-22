@@ -94,6 +94,10 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public String tick(Candle candle, Signal signal, Strategy strategy) {
+		if (strategy != null && strategy.tradeSide() != null && strategy.tradeSide() != this.side) {
+			return null;
+		}
+
 		if (this.openingStrategy == strategy || this.openingStrategy == null) {
 			averagePrice = 0.0;
 
@@ -459,23 +463,24 @@ public class Trade implements Comparable<Trade> {
 		return false;
 	}
 
-	boolean canSell(Strategy strategy) {
-		for (int i = 0; i < monitors.length; i++) {
-			if (!monitors[i].allowExit(this)) {
-				return false;
-			}
+	boolean canExit(Strategy strategy) {
+		if((this.side == Side.SHORT && !trader.isShort(strategy)) || (this.side == Side.LONG && !trader.isLong(strategy))){
+			return false;
 		}
 
-		// or received a SELL signal from a relevant strategy
-		return this.openingStrategy == null || strategy == null || trader.allowMixedStrategies || this.openingStrategy == strategy;
-
+		if(this.openingStrategy == null || strategy == null || trader.allowMixedStrategies || this.openingStrategy == strategy) {
+			for (int i = 0; i < monitors.length; i++) {
+				if (!monitors[i].allowExit(this)) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	public void increasePosition(Order order) {
 		this.position.put(order.getOrderId(), order);
-		for (int i = 0; i < monitors.length; i++) {
-			monitors[i].bought(this, order);
-		}
+		notifyOrderSubmission(order);
 	}
 
 	public void decreasePosition(Order order, String exitReason) {
@@ -483,8 +488,16 @@ public class Trade implements Comparable<Trade> {
 			this.exitReason = exitReason;
 		}
 		exitOrders.put(order.getOrderId(), order);
+		notifyOrderSubmission(order);
+	}
+
+	private void notifyOrderSubmission(Order order){
 		for (int i = 0; i < monitors.length; i++) {
-			monitors[i].sold(this, order);
+			if(order.isSell()){
+				monitors[i].sold(this, order);
+			} else if(order.isBuy()){
+				monitors[i].bought(this, order);
+			}
 		}
 	}
 

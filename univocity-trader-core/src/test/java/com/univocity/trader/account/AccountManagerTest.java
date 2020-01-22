@@ -288,7 +288,9 @@ public class AccountManagerTest {
 		AccountManager account = getAccountManager();
 
 		account.setAmount("USDT", 100);
-		account.configuration().maximumInvestmentAmountPerTrade(40.0);
+		account.configuration()
+				.maximumInvestmentAmountPerTrade(40.0)
+				.minimumInvestmentAmountPerTrade(10.0);
 
 		Trader trader = account.getTraderOf("ADAUSDT");
 
@@ -311,8 +313,8 @@ public class AccountManagerTest {
 		assertEquals(44.40, trade.quantity(), 0.01);
 		assertEquals(account.getAmount("ADA"), 0.0, 0.000001);
 		assertEquals(trade.quantity(), account.getShortedAmount("ADA"), 0.01);
-		assertEquals(40.02, account.getAmount("USDT"), 0.01); //~ 40 bucks trade + 50% margin reserve
-
+		assertEquals(79.98, account.getAmount("USDT"), 0.01); //(~ 40 bucks trade, with 50% margin reserve, 20 bucks go away)
+		assertEquals(59.94, account.getMarginReserve("USDT", "ADA").doubleValue(), 0.001);
 		assertFalse(trade.stopped());
 		assertNull(trade.exitReason());
 		assertFalse(trade.tryingToExit());
@@ -321,17 +323,15 @@ public class AccountManagerTest {
 
 		tradeOnPrice(trader, 10, 1.2, SELL);
 
-		assertEquals(66.61, trade.quantity(), 0.01);
+		assertEquals(77.69, trade.quantity(), 0.01);
 		assertEquals(account.getAmount("ADA"), 0.0, 0.000001);
 		assertEquals(trade.quantity(), account.getShortedAmount("ADA"), 0.01);
 		assertEquals(0.013, account.getAmount("USDT"), 0.01); //previous + ~ 22 bucks trade + 50% margin reserve, no more funds.
-
 		assertEquals(0.999, trade.averagePrice(), 0.001);
 		// percentages are calculated using updated average price against max price ever reached since first trade
 		assertEquals(11.00, trade.maxChange(), 0.01);
 		assertEquals(-16.75, trade.minChange(), 0.01);
 		assertEquals(-16.75, trade.priceChangePct(), 0.01);
-
 		assertEquals(0.2, trade.breakEvenChange(), 0.01);
 		assertEquals(1.2, trade.maxPrice());
 		assertEquals(0.9, trade.minPrice());
@@ -341,19 +341,16 @@ public class AccountManagerTest {
 		assertEquals(66.61, trade.quantity(), 0.01);
 		assertEquals(account.getShortedAmount("ADA"), trade.quantity(), 0.000001);
 		assertEquals(0.013, account.getAmount("USDT"), 0.01);
-
+		assertEquals(99.92, account.getMarginReserve("USDT", "ADA").doubleValue(), 0.001);
 		assertFalse(trade.stopped());
 		assertNull(trade.exitReason());
 		assertFalse(trade.tryingToExit());
 		assertEquals(0.0, trade.actualProfitLoss(), 0.00001);
 		assertEquals(0.0, trade.actualProfitLossPct(), 0.00001);
 
-		tradeOnPrice(trader, 20, 0.95, SELL);
-
+		tradeOnPrice(trader, 20, 0.1, BUY);
 		assertEquals(105.32, account.getAmount("USDT"), 0.01);
 		assertEquals(0.0, account.getAmount("ADA"), 0.000001);
-
-
 		assertEquals(0.889, trade.averagePrice(), 0.001);
 		// percentages are calculated using updated average price against max price ever reached since first trade
 		assertEquals(23.62, trade.maxChange(), 0.01);
@@ -369,7 +366,6 @@ public class AccountManagerTest {
 		assertEquals(89.9, trade.quantity(), 0.01);
 		assertEquals(0.0, account.getAmount("ADA"), 0.000001);
 		assertEquals(105.32, account.getAmount("USDT"), 0.01);
-
 		assertFalse(trade.stopped());
 		assertEquals("Rebuy signal", trade.exitReason());
 		assertFalse(trade.tryingToExit());

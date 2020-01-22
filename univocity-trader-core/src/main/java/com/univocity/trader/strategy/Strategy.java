@@ -2,6 +2,7 @@ package com.univocity.trader.strategy;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.*;
 
 /**
@@ -30,4 +31,21 @@ public interface Strategy {
 	 */
 	Signal getSignal(Candle candle);
 
+	/**
+	 * The {@link Trade.Side} side ({@code LONG}, {@code SHORT} or both) this strategy applies to.
+	 * When {@link #getSignal(Candle)} produces a {@code BUY}, and the trade side returned by this method is {@code null},
+	 * the {@link Trader} working with the instrument being traded will try to exit any opened short positions and
+	 * will also attempt to go long on the given instrument. If the signal is {@code SELL}, the trader will try to
+	 * close any open long positions, and sell the current instrument short.
+	 *
+	 * If the signals produced by this strategy only apply to {@code LONG} or {@code SHORT} positions, the {@code tradeSide}
+	 * method must return which side to work with.
+	 *
+	 * This method is only relevant if shorting is enabled in the account (i.e. {@link AccountConfiguration#shortingEnabled()}).
+	 *
+	 * @return the trade side of this strategy, {@code null} if both can be considered.
+	 */
+	default Trade.Side tradeSide() {
+		return null;
+	}
 }

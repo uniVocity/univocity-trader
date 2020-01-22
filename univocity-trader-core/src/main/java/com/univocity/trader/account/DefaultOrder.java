@@ -19,8 +19,8 @@ public class DefaultOrder extends OrderRequest implements Order {
 		super(order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), order.getTradeSide(), order.getTime(), null);
 		this.setOrderId(order.getOrderId());
 		this.setType(order.getType());
-		this.setQuantity(round(order.getQuantity()));
-		this.setPrice(round(order.getPrice()));
+		this.setQuantity(order.getQuantity());
+		this.setPrice(order.getPrice());
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class DefaultOrder extends OrderRequest implements Order {
 	}
 
 	public void setFeesPaid(BigDecimal feesPaid) {
-		this.feesPaid = feesPaid;
+		this.feesPaid = round(feesPaid);
 	}
 
 	@Override

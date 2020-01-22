@@ -138,11 +138,11 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 		return new PreciseCandle(
 				c.getOpenTime(),
 				c.getCloseTime(),
-				new BigDecimal(c.getOpen()),
-				new BigDecimal(c.getHigh()),
-				new BigDecimal(c.getLow()),
-				new BigDecimal(c.getClose()),
-				new BigDecimal(c.getVolume()));
+				BigDecimal.valueOf(c.getOpen()),
+				BigDecimal.valueOf(c.getHigh()),
+				BigDecimal.valueOf(c.getLow()),
+				BigDecimal.valueOf(c.getClose()),
+				BigDecimal.valueOf(c.getVolume()));
 	}
 
 //    @Override

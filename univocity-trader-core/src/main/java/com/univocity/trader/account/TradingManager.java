@@ -5,6 +5,7 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
+import com.univocity.trader.strategy.*;
 import com.univocity.trader.utils.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
@@ -12,6 +13,7 @@ import org.slf4j.*;
 import java.util.*;
 
 import static com.univocity.trader.account.Order.Side.*;
+import static com.univocity.trader.config.Allocation.*;
 
 public class TradingManager {
 
@@ -103,16 +105,24 @@ public class TradingManager {
 		return exchange.getLatestPrices();
 	}
 
-	public boolean hasPosition(Candle c, boolean includeLocked, boolean includeShort) {
+	public boolean hasPosition(Candle c, boolean includeLocked, boolean includeLong, boolean includeShort) {
 		double minimum = getPriceDetails().getMinimumOrderAmount(c.close);
 
-		double assets = (includeLocked ? getTotalAssets() : getAssets());
+		double assets = 0.0;
+
+		if (includeLong) {
+			assets = (includeLocked ? getTotalAssets() : getAssets());
+		}
 
 		if (includeShort) {
 			assets += getShortedAssets();
 		}
 
 		double positionValue = assets * c.close;
+
+		if (includeShort && !includeLong) {
+			return positionValue > EFFECTIVELY_ZERO;
+		}
 		return positionValue > minimum && positionValue > minimumInvestmentAmountPerTrade();
 	}
 
@@ -188,10 +198,10 @@ public class TradingManager {
 		return tradingAccount.getTotalFundsIn(symbol);
 	}
 
-	public boolean exitExistingPositions(String exitSymbol, Candle c) {
+	public boolean exitExistingPositions(String exitSymbol, Candle c, Strategy strategy) {
 		boolean exited = false;
 		for (TradingManager action : tradingAccount.getAllTradingManagers()) {
-			if (action != this && action.hasPosition(c, false, true) && action.trader.switchTo(exitSymbol, c, action.symbol)) {
+			if (action != this && action.hasPosition(c, false, true, true) && action.trader.switchTo(exitSymbol, c, action.symbol, strategy)) {
 				exited = true;
 				break;
 			}

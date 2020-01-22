@@ -92,7 +92,7 @@ public class SymbolPriceDetails {
 	}
 
 	public static BigDecimal toBigDecimal(int decimals, double quantity) {
-		BigDecimal bd = new BigDecimal(quantity);
+		BigDecimal bd = BigDecimal.valueOf(quantity);
 		bd = bd.setScale(decimals, RoundingMode.FLOOR);
 		return bd;
 	}

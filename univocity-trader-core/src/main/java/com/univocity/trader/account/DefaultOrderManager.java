@@ -34,9 +34,9 @@ public class DefaultOrderManager implements OrderManager {
 
 			//aims price at central price point of the spread.
 			if (order.getSide() == Order.Side.BUY) {
-				order.setPrice(new BigDecimal(bid + (spread / 2.0)));
+				order.setPrice(BigDecimal.valueOf(bid + (spread / 2.0)));
 			} else {
-				order.setPrice(new BigDecimal(ask - (spread / 2.0)));
+				order.setPrice(BigDecimal.valueOf(ask - (spread / 2.0)));
 			}
 
 			log.debug("{} - spread of {}: Ask {}, Bid {}. Closed at {}. Going to {} at ${}.",

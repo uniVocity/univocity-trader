@@ -4,6 +4,8 @@ import org.apache.commons.lang3.*;
 
 import java.math.*;
 
+import static com.univocity.trader.account.Balance.*;
+
 public class OrderRequest {
 
 	private boolean cancelled = false;
@@ -53,7 +55,7 @@ public class OrderRequest {
 	}
 
 	public void setPrice(BigDecimal price) {
-		this.price = price;
+		this.price = round(price);
 	}
 
 	public BigDecimal getQuantity() {
@@ -61,7 +63,7 @@ public class OrderRequest {
 	}
 
 	public void setQuantity(BigDecimal quantity) {
-		this.quantity = quantity;
+		this.quantity = round(quantity);
 	}
 
 	public Order.Side getSide() {
@@ -81,7 +83,7 @@ public class OrderRequest {
 	}
 
 	public BigDecimal getTotalOrderAmount() {
-		return price.multiply(quantity);
+		return round(price.multiply(quantity));
 	}
 
 	public long getTime() {
@@ -113,5 +115,21 @@ public class OrderRequest {
 
 	public final Order getOriginalOrder() {
 		return resubmittedFrom;
+	}
+
+	public final boolean isShort() {
+		return tradeSide == Trade.Side.SHORT;
+	}
+
+	public final boolean isLong() {
+		return tradeSide == Trade.Side.LONG;
+	}
+
+	public final boolean isBuy() {
+		return side == Order.Side.BUY;
+	}
+
+	public final boolean isSell() {
+		return side == Order.Side.SELL;
 	}
 }
