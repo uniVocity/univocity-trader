@@ -294,7 +294,7 @@ public class Trade implements Comparable<Trade> {
 			averagePrice = totalSpent / totalUnits;
 			change = isLong() ? priceChangePct(averagePrice, trader.lastClosingPrice()) : -priceChangePct(averagePrice, trader.lastClosingPrice());
 			maxChange = isLong() ? priceChangePct(averagePrice, maxPrice()) : -priceChangePct(averagePrice, minPrice());
-			minChange = isLong() ? priceChangePct(averagePrice, minPrice()) : -priceChangePct(averagePrice, maxPrice());
+			minChange = isLong() ? priceChangePct(averagePrice, minPrice()) : priceChangePct(maxPrice());
 		}
 	}
 

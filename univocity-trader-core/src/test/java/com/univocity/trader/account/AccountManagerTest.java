@@ -330,8 +330,8 @@ public class AccountManagerTest {
 		assertEquals(1.027, trade.averagePrice(), 0.001);
 		// percentages are calculated using updated average price against max price ever reached since first trade
 		assertEquals(14.171, trade.maxChange(), 0.01);
-		assertEquals(-16.78, trade.minChange(), 0.01);
-		assertEquals(-16.78, trade.priceChangePct(), 0.01);
+		assertEquals(-14.371, trade.minChange(), 0.01);
+		assertEquals(-14.371, trade.priceChangePct(), 0.01);
 		assertEquals(0.2, trade.breakEvenChange(), 0.01);
 		assertEquals(1.2, trade.maxPrice());
 		assertEquals(0.9, trade.minPrice());
@@ -354,7 +354,7 @@ public class AccountManagerTest {
 		assertEquals(1.027, trade.averagePrice(), 0.001);
 		// percentages are calculated using updated average price against max price ever reached since first trade
 		assertEquals(90.268, trade.maxChange(), 0.01);
-		assertEquals(-16.78, trade.minChange(), 0.01);
+		assertEquals(-14.371, trade.minChange(), 0.01);
 		assertEquals(90.268, trade.priceChangePct(), 0.01);
 
 		assertEquals(0.2, trade.breakEvenChange(), 0.01);

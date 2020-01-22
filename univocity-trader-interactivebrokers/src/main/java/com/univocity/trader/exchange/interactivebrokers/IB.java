@@ -16,7 +16,7 @@ class IB implements Exchange<Candle, Account> {
 
 	private static final Logger log = LoggerFactory.getLogger(IB.class);
 
-	private final InteractiveBrokersApi api;
+	private InteractiveBrokersApi api;
 	private Map<String, Contract> tradedContracts;
 	private Map<String, TradeType> tradeTypes = new ConcurrentHashMap<>();
 	private Map<String, SymbolInformation> symbolInformation;
@@ -26,7 +26,11 @@ class IB implements Exchange<Candle, Account> {
 	}
 
 	IB(String ip, int port, int clientID, String optionalCapabilities) {
-		api = new InteractiveBrokersApi(ip, port, clientID, optionalCapabilities);
+		api = new InteractiveBrokersApi(ip, port, clientID, optionalCapabilities, this::reconnectApi);
+	}
+
+	private void reconnectApi(){
+		api = (InteractiveBrokersApi) InteractiveBrokersApi.reconnect(api);
 	}
 
 	private void validateContracts() {

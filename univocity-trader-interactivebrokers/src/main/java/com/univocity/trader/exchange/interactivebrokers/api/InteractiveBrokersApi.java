@@ -28,8 +28,8 @@ public class InteractiveBrokersApi extends IBRequests {
 	}
 
 
-	public InteractiveBrokersApi(String ip, int port, int clientID, String optionalCapabilities) {
-		super(ip, port, clientID, optionalCapabilities);
+	public InteractiveBrokersApi(String ip, int port, int clientID, String optionalCapabilities, Runnable reconnectionProcess) {
+		super(ip, port, clientID, optionalCapabilities, reconnectionProcess);
 	}
 
 	public int searchForContract(Contract query, Consumer<SymbolInformation> resultConsumer) {
@@ -147,5 +147,10 @@ public class InteractiveBrokersApi extends IBRequests {
 
 
 		return submitRequest(description, candleConsumer, request);
+	}
+
+	@Override
+	IBRequests newInstance(IBRequests old) {
+		return new InteractiveBrokersApi(old.ip, old.port, old.clientID, old.optionalCapabilities, old.requestHandler.reconnectProcess);
 	}
 }

@@ -10,75 +10,102 @@ import java.util.function.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-class IBRequests {
+abstract class IBRequests {
 
 	private static final Logger log = LoggerFactory.getLogger(IBRequests.class);
 
-	private final EJavaSignal signal = new EJavaSignal();
-
-	final RequestHandler requestHandler = new RequestHandler(this::reconnect);
-	private final ResponseProcessor responseProcessor = new ResponseProcessor(requestHandler);
-
 	protected EClientSocket client;
+	private EJavaSignal signal;
+	private EReader reader;
 
-	private String ip;
-	private int port;
-	private int clientID;
-	private String optionalCapabilities;
+	final RequestHandler requestHandler;
+	final ResponseProcessor responseProcessor;
+
+
+	final String ip;
+	final int port;
+	final int clientID;
+	final String optionalCapabilities;
 	private boolean reconnecting = false;
 
-	public IBRequests(String ip, int port, int clientID, String optionalCapabilities) {
+	public IBRequests(String ip, int port, int clientID, String optionalCapabilities, Runnable reconnectionProcess) {
 		this.ip = ip;
 		this.port = port;
 		this.clientID = clientID;
 		this.optionalCapabilities = optionalCapabilities;
+
+		this.requestHandler = new RequestHandler(reconnectionProcess);
+		this.responseProcessor = new ResponseProcessor(requestHandler);
 		connect();
 	}
 
-	private synchronized EClientSocket getClient() {
+	abstract IBRequests newInstance(IBRequests oldInstance);
+
+	private EJavaSignal getSignal() {
+		if (signal == null) {
+			synchronized (this) {
+				if (signal == null) {
+					signal = new EJavaSignal();
+				}
+			}
+		}
+		return signal;
+	}
+
+	private EClientSocket getClient() {
 		if (client == null) {
-			client = new EClientSocket(responseProcessor, signal);
-			client.optionalCapabilities(optionalCapabilities);
-			client.eConnect(ip, port, clientID);
-			if (client.isConnected()) {
-				log.info("Connected to TWS server (version {}})", client.serverVersion());
-			} else {
-				throw new IllegalStateException("Could not connect to TWS. Make sure it's running on " + (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
+			synchronized (this) {
+				if (client == null) {
+					signal = null;
+					client = new EClientSocket(responseProcessor, getSignal());
+					client.optionalCapabilities(optionalCapabilities);
+					client.eConnect(ip, port, clientID);
+					if (client.isConnected()) {
+						log.info("Connected to TWS server (version {}})", client.serverVersion());
+					} else {
+						throw new IllegalStateException("Could not connect to TWS. Make sure it's running on " + (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
+					}
+				}
 			}
 		}
 		return client;
 	}
 
-	public void reconnect() {
-		if(!reconnecting){
-			synchronized (this){
-				if(!reconnecting) {
-					try {
-						this.reconnecting = true;
-						disconnect();
-						log.info("Reconnecting to TWS");
-						connect();
-					} finally {
-						reconnecting = false;
-					}
+	public static IBRequests reconnect(IBRequests ibRequests) {
+		if (ibRequests != null && !ibRequests.reconnecting) {
+			synchronized (IBRequests.class) {
+				if (!ibRequests.reconnecting) {
+					ibRequests.reconnecting = true;
+					return ibRequests.newInstance(ibRequests);
 				}
 			}
 		}
+		return ibRequests;
+	}
+
+	private EReader getReader() {
+		if (reader == null) {
+			synchronized (this) {
+				if (reader == null) {
+					reader = new EReader(getClient(), getSignal());
+					reader.start();
+				}
+			}
+		}
+		return reader;
 	}
 
 	private synchronized void connect() {
-		EReader reader = new EReader(getClient(), signal);
-		reader.start();
-
 		boolean[] ready = new boolean[]{false};
+		getReader();
 
 		new Thread(() -> {
 			Thread.currentThread().setName("IB live stream");
-			while (client != null && client.isConnected()) {
+			while (getClient().isConnected()) {
 				ready[0] = true;
-				signal.waitForSignal();
+				getSignal().waitForSignal();
 				try {
-					reader.processMsgs();
+					getReader().processMsgs();
 				} catch (Exception e) {
 					log.error("Error processing messages", e);
 				}
@@ -92,12 +119,36 @@ class IBRequests {
 		log.info("Connected to TWS.");
 	}
 
-	public void disconnect() {
-		if(client != null) {
+	public synchronized void disconnect() {
+		if (client != null) {
 			log.warn("Disconnecting from IB live stream");
 			client.cancelRealTimeBars(3001);
-			client.eDisconnect();
+
+			if (signal != null) {
+				try {
+					signal.issueSignal();
+				} catch (Exception e) {
+					//ignore. Don't care.
+				}
+			}
+
+			if (reader != null) {
+				try {
+					reader.interrupt();
+					reader = null;
+				} catch (Exception e) {
+					//ignore. Don't care.
+				}
+			}
+
+			try {
+				client.eDisconnect();
+			} catch (Exception e) {
+				//ignore. Don't care.
+			}
+
 			client = null;
+			signal = null;
 		}
 	}
 
