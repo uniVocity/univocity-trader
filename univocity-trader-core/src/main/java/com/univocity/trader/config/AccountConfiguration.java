@@ -77,6 +77,7 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 			email = properties.getOptionalProperty(accountId + "email");
 			referenceCurrency = properties.getProperty(accountId + "reference.currency");
 			shortingEnabled = properties.getBoolean(accountId + "enable.shorting", false);
+			marginReservePercentage = properties.getInteger(accountId +"margin.reserve.percentage", 150);
 
 			String tz = properties.getOptionalProperty(accountId + "timezone");
 			timeZone = getTimeZone(tz);
