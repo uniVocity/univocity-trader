@@ -207,8 +207,9 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 		for (String[] pair : getTradedPairs()) {
 			if (assetSymbol.equals(pair[0])) {
-				if (getAmount(pair[1]) > 0) {
-					return getTraderOf(pair[0] + pair[1]);
+				trader = getTraderOf(pair[0] + pair[1]);
+				if(trader != null){
+					return trader;
 				}
 			}
 		}
