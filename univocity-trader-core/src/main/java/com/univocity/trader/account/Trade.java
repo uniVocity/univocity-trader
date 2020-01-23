@@ -227,7 +227,7 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	private double shortPriceChangePct(double totalSpent) {
-		return priceChangePct(totalSpent, averagePrice());
+		return negativePriceChangePct(averagePrice(), totalSpent);
 	}
 
 	private double priceChangePct(double spent) {
@@ -238,13 +238,16 @@ public class Trade implements Comparable<Trade> {
 		}
 	}
 
-	private static double priceChangePct(double spent, double currentPrice) {
-		double out = (currentPrice / spent) - 1.0;
-		return out * 100;
+	private static double positivePriceChangePct(double spent, double currentPrice) {
+		return ((currentPrice - spent) / spent) * 100.0;
+	}
+
+	private static double negativePriceChangePct(double spent, double currentPrice) {
+		return ((spent - currentPrice) / spent) * 100.0;
 	}
 
 	private double longPriceChangePct(double price) {
-		return priceChangePct(averagePrice(), price);
+		return positivePriceChangePct(averagePrice(), price);
 	}
 
 	private String formattedLongPriceChangePct(double spent) {
@@ -292,9 +295,9 @@ public class Trade implements Comparable<Trade> {
 			averagePrice = 0.0;
 		} else {
 			averagePrice = totalSpent / totalUnits;
-			change = isLong() ? priceChangePct(averagePrice, trader.lastClosingPrice()) : -priceChangePct(averagePrice, trader.lastClosingPrice());
-			maxChange = isLong() ? priceChangePct(averagePrice, maxPrice()) : -priceChangePct(averagePrice, minPrice());
-			minChange = isLong() ? priceChangePct(averagePrice, minPrice()) : priceChangePct(maxPrice());
+			change = isLong() ? positivePriceChangePct(averagePrice, trader.lastClosingPrice()) : -positivePriceChangePct(averagePrice, trader.lastClosingPrice());
+			maxChange = isLong() ? positivePriceChangePct(averagePrice, maxPrice()) : -positivePriceChangePct(averagePrice, minPrice());
+			minChange = isLong() ? positivePriceChangePct(averagePrice, minPrice()) : priceChangePct(maxPrice());
 		}
 	}
 
@@ -373,12 +376,13 @@ public class Trade implements Comparable<Trade> {
 
 				updateAveragePrice(position.values());
 
-				actualProfitLoss = totalSold - (totalSpent * (soldUnits / this.totalUnits));
+				final double cost = (totalSpent * (soldUnits / this.totalUnits));
+				actualProfitLoss = totalSold - cost;
 				if (Double.isNaN(actualProfitLoss)) {
 					throw new IllegalStateException("Profit/loss amount can't be determined");
 				}
 
-				actualProfitLossPct = priceChangePct(averagePrice, exitPrice);
+				actualProfitLossPct = positivePriceChangePct(averagePrice, exitPrice);
 				if (Double.isNaN(actualProfitLossPct)) {
 					throw new IllegalStateException("Profit/loss % can't be determined");
 				}
@@ -392,7 +396,7 @@ public class Trade implements Comparable<Trade> {
 
 				updateAveragePrice(position.values());
 
-				actualProfitLossPct = priceChangePct(averagePrice, sellPrice);
+				actualProfitLossPct = positivePriceChangePct(averagePrice, sellPrice);
 				actualProfitLoss = totalSold - (order.getExecutedQuantity().doubleValue() * averagePrice);
 			}
 

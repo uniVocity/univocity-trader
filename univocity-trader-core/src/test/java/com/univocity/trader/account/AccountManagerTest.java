@@ -1,5 +1,6 @@
 package com.univocity.trader.account;
 
+import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.*;
@@ -184,89 +185,112 @@ public class AccountManagerTest {
 		assertEquals(0.0, funds, 0.001);
 	}
 
+	private double getInvestmentAmount(Trader trader, double totalSpent) {
+		final TradingFees fees = trader.tradingFees();
+		return fees.takeFee(totalSpent, Order.Type.LIMIT, Order.Side.BUY);
+	}
+
+	private double checkTradeAfterLongBuy(double usdBalanceBeforeTrade, Trade trade, double totalSpent, double previousQuantity, double unitPrice, double maxUnitPrice, double minUnitPrice) {
+		Trader trader = trade.trader();
+
+		double amountAfterFees = getInvestmentAmount(trader, totalSpent);
+		double amountToInvest = getInvestmentAmount(trader, amountAfterFees); //take fees again to ensure there are funds for fees when closing
+		double quantityAfterFees = (amountToInvest / unitPrice) * 0.9999; //quantity adjustment to ensure exchange doesn't reject order for mismatching decimals
+
+		double totalQuantity = quantityAfterFees + previousQuantity;
+
+		checkLongTradeStats(trade, unitPrice, maxUnitPrice, minUnitPrice);
+
+		assertEquals(totalQuantity, trade.quantity(), 0.01);
+
+		AccountManager account = trader.tradingManager.getAccount();
+		assertEquals(totalQuantity, account.getAmount("ADA"), 0.001);
+		assertEquals(usdBalanceBeforeTrade - amountAfterFees, account.getAmount("USDT"), 0.01);
+
+		return quantityAfterFees;
+	}
+
+	private void checkTradeAfterLongSell(double usdBalanceBeforeTrade, Trade trade, double quantity, double unitPrice, double maxUnitPrice, double minUnitPrice) {
+		Trader trader = trade.trader();
+		final TradingFees fees = trader.tradingFees();
+
+		double totalToReceive = quantity * unitPrice;
+
+		final double receivedAfterFees = fees.takeFee(totalToReceive, Order.Type.LIMIT, Order.Side.SELL);
+
+		checkLongTradeStats(trade, unitPrice, maxUnitPrice, minUnitPrice);
+
+		assertEquals(quantity, trade.quantity(), 0.01);
+		AccountManager account = trader.tradingManager.getAccount();
+		assertEquals(0.0, account.getAmount("ADA"), 0.001);
+		assertEquals(usdBalanceBeforeTrade + receivedAfterFees, account.getAmount("USDT"), 0.01);
+	}
+
+
+	private void checkLongTradeStats(Trade trade, double unitPrice, double maxUnitPrice, double minUnitPrice) {
+		final double change = ((unitPrice - trade.averagePrice()) / trade.averagePrice()) * 100.0;
+		final double minChange = ((minUnitPrice - trade.averagePrice()) / trade.averagePrice()) * 100.0;
+		final double maxChange = ((maxUnitPrice - trade.averagePrice()) / trade.averagePrice()) * 100.0;
+
+		assertEquals(maxChange, trade.maxChange(), 0.01);
+		assertEquals(minChange, trade.minChange(), 0.01);
+		assertEquals(change, trade.priceChangePct(), 0.01);
+		assertEquals(maxUnitPrice, trade.maxPrice());
+		assertEquals(minUnitPrice, trade.minPrice());
+		assertEquals(unitPrice, trade.lastClosingPrice());
+
+	}
+
 	@Test
 	public void testLongPositionTrading() {
 		AccountManager account = getAccountManager();
 
-		account.setAmount("USDT", 100);
-		account.configuration().maximumInvestmentAmountPerTrade(40.0);
+		final double MAX = 40.0;
+		final double initialBalance = 100;
+
+		account.setAmount("USDT", initialBalance);
+		account.configuration().maximumInvestmentAmountPerTrade(MAX);
 
 		Trader trader = account.getTraderOf("ADAUSDT");
 
+		double usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, 1, 1.0, BUY);
-		assertTrue(trader.trades().iterator().hasNext());
+		final Trade trade = trader.trades().iterator().next();
 
+		double quantity1 = checkTradeAfterLongBuy(usdBalance, trade, MAX, 0.0, 1.0, 1.0, 1.0);
 		tradeOnPrice(trader, 5, 1.1, NEUTRAL);
+		checkLongTradeStats(trade, 1.1, 1.1, 1.0);
 
-		Trade trade = trader.trades().iterator().next();
-		assertEquals(9.9, trade.maxChange(), 0.01);
-		assertEquals(-0.1, trade.minChange(), 0.01);
-		assertEquals(9.9, trade.priceChangePct(), 0.01);
-		assertEquals(1.0, trade.averagePrice(), 0.01);
-		assertEquals(0.2, trade.breakEvenChange(), 0.01);
-		assertEquals(1.1, trade.maxPrice());
-		assertEquals(1.0, trade.minPrice());
-		assertEquals(2, trade.ticks());
-		assertEquals(4, trade.tradeDuration());
-		assertEquals(1.1, trade.lastClosingPrice());
-		assertEquals(39.91, trade.quantity(), 0.01);
-		assertEquals(account.getAmount("ADA"), trade.quantity(), 0.000001);
-		assertEquals(60.04, account.getAmount("USDT"), 0.01);
-
-		assertFalse(trade.stopped());
-		assertNull(trade.exitReason());
-		assertFalse(trade.tryingToExit());
-		assertEquals(0.0, trade.actualProfitLoss(), 0.00001);
-		assertEquals(0.0, trade.actualProfitLossPct(), 0.00001);
-
+		usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, 10, 0.8, BUY);
+		double quantity2 = checkTradeAfterLongBuy(usdBalance, trade, MAX, quantity1, 0.8, 1.1, 0.8);
 
-		assertEquals(trade.averagePrice(), 0.889, 0.001);
-		// percentages are calculated using updated average price against max price ever reached since first trade
-		assertEquals(23.62, trade.maxChange(), 0.01);
-		assertEquals(-10.08, trade.minChange(), 0.01);
-		assertEquals(-10.08, trade.priceChangePct(), 0.01);
+		double averagePrice = ((quantity1 * 1.0) + (quantity2 * 0.8)) / (quantity1 + quantity2);
+		assertEquals(averagePrice, trade.averagePrice(), 0.001);
 
-		assertEquals(0.2, trade.breakEvenChange(), 0.01);
-		assertEquals(1.1, trade.maxPrice());
-		assertEquals(0.8, trade.minPrice());
-		assertEquals(4, trade.ticks());
-		assertEquals(10, trade.tradeDuration());
-		assertEquals(0.8, trade.lastClosingPrice());
-		assertEquals(89.81, trade.quantity(), 0.01);
-		assertEquals(trade.quantity(), account.getAmount("ADA"), 0.000001);
-		assertEquals(20.08, account.getAmount("USDT"), 0.01);
-
-		assertFalse(trade.stopped());
-		assertNull(trade.exitReason());
-		assertFalse(trade.tryingToExit());
-		assertEquals(0.0, trade.actualProfitLoss(), 0.00001);
-		assertEquals(0.0, trade.actualProfitLossPct(), 0.00001);
-
+		usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, 20, 0.95, SELL);
-
-		assertEquals(0.889, trade.averagePrice(), 0.001);
-		// percentages are calculated using updated average price against max price ever reached since first trade
-		assertEquals(23.62, trade.maxChange(), 0.01);
-		assertEquals(-10.08, trade.minChange(), 0.01);
-		assertEquals(6.76, trade.priceChangePct(), 0.01);
-
-		assertEquals(0.2, trade.breakEvenChange(), 0.01);
-		assertEquals(1.1, trade.maxPrice());
-		assertEquals(0.8, trade.minPrice());
-		assertEquals(5, trade.ticks());
-		assertEquals(20, trade.tradeDuration());
-		assertEquals(0.95, trade.lastClosingPrice());
-		assertEquals(89.81, trade.quantity(), 0.01);
-		assertEquals(0.0, account.getAmount("ADA"), 0.000001);
-		assertEquals(105.32, account.getAmount("USDT"), 0.01);
+		checkTradeAfterLongSell(usdBalance, trade, (quantity1 + quantity2), 0.95, 1.1, 0.8);
+		assertEquals(averagePrice, trade.averagePrice(), 0.001); //average price is about 0.889
 
 		assertFalse(trade.stopped());
 		assertEquals("Sell signal", trade.exitReason());
 		assertFalse(trade.tryingToExit());
-		assertEquals(5.408, trade.actualProfitLoss(), 0.001);
-		assertEquals(6.768, trade.actualProfitLossPct(), 0.001);
 
+		checkProfitLoss(trade, initialBalance, (quantity1 * 1.0) + (quantity2 * 0.8));
+	}
+
+	private void checkProfitLoss(Trade trade, double initialBalance, double totalInvested) {
+		Trader trader = trade.trader();
+		AccountManager account = trader.tradingManager.getAccount();
+
+		double finalBalance = account.getAmount("USDT");
+		double profitLoss = finalBalance - initialBalance;
+		assertEquals(profitLoss, trade.actualProfitLoss(), 0.001);
+
+		double invested = totalInvested + trader.tradingFees().feesOnAmount(totalInvested, Order.Type.LIMIT, Order.Side.SELL);
+		double profitLossPercentage = ((profitLoss / invested)) * 100.0;
+		assertEquals(profitLossPercentage, trade.actualProfitLossPct(), 0.001);
 	}
 
 	private void tradeOnPrice(Trader trader, long time, double price, Signal signal) {
@@ -282,96 +306,113 @@ public class AccountManagerTest {
 		return new Candle(time, time, price, price, price, price, 100.0);
 	}
 
+	private double checkTradeAfterShortSell(double usdBalanceBeforeTrade, double usdReservedBeforeTrade, Trade trade, double totalSpent, double previousQuantity, double unitPrice, double maxUnitPrice, double minUnitPrice) {
+		Trader trader = trade.trader();
+
+		double amountToInvest = getInvestmentAmount(trader, totalSpent);
+		double feesPaid = totalSpent - amountToInvest;
+		double quantityAfterFees = (amountToInvest / unitPrice);
+
+		double totalQuantity = quantityAfterFees + previousQuantity;
+
+		checkShortTradeStats(trade, unitPrice, maxUnitPrice, minUnitPrice);
+
+		assertEquals(totalQuantity, trade.quantity(), 0.01);
+
+		AccountManager account = trader.tradingManager.getAccount();
+		assertEquals(0.0, account.getAmount("ADA"), 0.001);
+		assertEquals(totalQuantity, account.getShortedAmount("ADA"), 0.001);
+
+		double inReserve = account.marginReserveFactorPct() * amountToInvest;
+		assertEquals(inReserve + usdReservedBeforeTrade, account.getMarginReserve("USDT", "ADA").doubleValue(), 0.001);
+
+		double movedToReserve = inReserve - amountToInvest;
+		double freeBalance = usdBalanceBeforeTrade - (movedToReserve + feesPaid);
+		assertEquals(freeBalance, account.getAmount("USDT"), 0.01);
+
+		return quantityAfterFees;
+	}
+
+	private void checkShortTradeStats(Trade trade, double unitPrice, double maxUnitPrice, double minUnitPrice) {
+		final double change = ((trade.averagePrice() - unitPrice) / trade.averagePrice()) * 100.0;
+		final double minChange = ((trade.averagePrice() - maxUnitPrice) / trade.averagePrice()) * 100.0;
+		final double maxChange = ((trade.averagePrice() - minUnitPrice) / trade.averagePrice()) * 100.0;
+
+		assertEquals(maxChange, trade.maxChange(), 0.001);
+		assertEquals(minChange, trade.minChange(), 0.001);
+		assertEquals(change, trade.priceChangePct(), 0.001);
+		assertEquals(maxUnitPrice, trade.maxPrice());
+		assertEquals(minUnitPrice, trade.minPrice());
+		assertEquals(unitPrice, trade.lastClosingPrice());
+	}
+
+	private void checkTradeAfterShortBuy(double usdBalanceBeforeTrade, double usdReservedBeforeTrade, Trade trade, double quantity, double unitPrice, double maxUnitPrice, double minUnitPrice) {
+		Trader trader = trade.trader();
+		final TradingFees fees = trader.tradingFees();
+
+		checkShortTradeStats(trade, unitPrice, maxUnitPrice, minUnitPrice);
+
+		assertEquals(quantity, trade.quantity(), 0.01);
+		AccountManager account = trader.tradingManager.getAccount();
+		assertEquals(0.0, account.getAmount("ADA"), 0.001);
+
+		assertEquals(0.0, account.getBalance("ADA").getFreeAmount(), 0.01);
+		assertEquals(0.0, account.getBalance("ADA").getLocked().doubleValue(), 0.01);
+		assertEquals(0.0, account.getBalance("ADA").getShortedAmount(), 0.01);
+		assertEquals(0.0, account.getMarginReserve("USDT", "ADA").doubleValue(), 0.01);
+
+		double pricePaid = quantity * unitPrice;
+		double rebuyCostAfterFees = pricePaid + fees.feesOnAmount(pricePaid, Order.Type.LIMIT, Order.Side.BUY);
+
+		double tradeProfit = usdReservedBeforeTrade - rebuyCostAfterFees;
+		double netAccountBalance = usdBalanceBeforeTrade + tradeProfit;
+
+		assertEquals(netAccountBalance, account.getAmount("USDT"), 0.01);
+	}
 
 	@Test
 	public void testShortPositionTrading() {
 		AccountManager account = getAccountManager();
 
-		account.setAmount("USDT", 100);
+		final double MAX = 40.0;
+		final double initialBalance = 100;
+
+		account.setAmount("USDT", initialBalance);
 		account.configuration()
-				.maximumInvestmentAmountPerTrade(40.0)
+				.maximumInvestmentAmountPerTrade(MAX)
 				.minimumInvestmentAmountPerTrade(10.0);
 
 		Trader trader = account.getTraderOf("ADAUSDT");
 
+		double usdBalance = account.getAmount("USDT");
+		double reservedBalance = account.getMarginReserve("USDT", "ADA").doubleValue();
 		tradeOnPrice(trader, 1, 0.9, SELL);
-		assertTrue(trader.trades().iterator().hasNext());
+		Trade trade = trader.trades().iterator().next();
+		double quantity1 = checkTradeAfterShortSell(usdBalance, reservedBalance, trade, MAX, 0.0, 0.9, 0.9, 0.9);
 
 		tradeOnPrice(trader, 5, 1.0, NEUTRAL);
+		checkShortTradeStats(trade, 1.0, 1.0, 0.9);
 
-		Trade trade = trader.trades().iterator().next();
-		assertEquals(-0.1, trade.maxChange(), 0.01);
-		assertEquals(-10.09, trade.minChange(), 0.01);
-		assertEquals(-10.09, trade.priceChangePct(), 0.01);
-		assertEquals(0.899, trade.averagePrice(), 0.01);
-		assertEquals(0.2, trade.breakEvenChange(), 0.01);
-		assertEquals(1.0, trade.maxPrice());
-		assertEquals(0.9, trade.minPrice());
-		assertEquals(2, trade.ticks());
-		assertEquals(4, trade.tradeDuration());
-		assertEquals(1.0, trade.lastClosingPrice());
-		assertEquals(44.40, trade.quantity(), 0.01);
-		assertEquals(account.getAmount("ADA"), 0.0, 0.000001);
-		assertEquals(trade.quantity(), account.getShortedAmount("ADA"), 0.01);
-		assertEquals(79.98, account.getAmount("USDT"), 0.01); //(~ 40 bucks trade, with 50% margin reserve, 20 bucks go away)
-		assertEquals(59.94, account.getMarginReserve("USDT", "ADA").doubleValue(), 0.001);
-		assertFalse(trade.stopped());
-		assertNull(trade.exitReason());
-		assertFalse(trade.tryingToExit());
-		assertEquals(0.0, trade.actualProfitLoss(), 0.00001);
-		assertEquals(0.0, trade.actualProfitLossPct(), 0.00001);
-
+		usdBalance = account.getAmount("USDT");
+		reservedBalance = account.getMarginReserve("USDT", "ADA").doubleValue();
 		tradeOnPrice(trader, 10, 1.2, SELL);
+		double quantity2 = checkTradeAfterShortSell(usdBalance, reservedBalance, trade, MAX, quantity1, 1.2, 1.2, 0.9);
 
-		assertEquals(77.69, trade.quantity(), 0.01);
-		assertEquals(account.getAmount("ADA"), 0.0, 0.000001);
-		assertEquals(trade.quantity(), account.getShortedAmount("ADA"), 0.01);
-		assertEquals(59.96, account.getAmount("USDT"), 0.01); //(~ 40 bucks trade, with 50% margin reserve, another 20 bucks go away)
-		assertEquals(1.027, trade.averagePrice(), 0.001);
-		// percentages are calculated using updated average price against max price ever reached since first trade
-		assertEquals(14.171, trade.maxChange(), 0.01);
-		assertEquals(-14.371, trade.minChange(), 0.01);
-		assertEquals(-14.371, trade.priceChangePct(), 0.01);
-		assertEquals(0.2, trade.breakEvenChange(), 0.01);
-		assertEquals(1.2, trade.maxPrice());
-		assertEquals(0.9, trade.minPrice());
-		assertEquals(4, trade.ticks());
-		assertEquals(10, trade.tradeDuration());
-		assertEquals(1.2, trade.lastClosingPrice());
-		assertEquals(77.69, trade.quantity(), 0.01);
-		assertEquals(account.getShortedAmount("ADA"), trade.quantity(), 0.000001);
-		assertEquals(59.96, account.getAmount("USDT"), 0.01);
-		assertEquals(119.88, account.getMarginReserve("USDT", "ADA").doubleValue(), 0.001);
-		assertFalse(trade.stopped());
-		assertNull(trade.exitReason());
-		assertFalse(trade.tryingToExit());
-		assertEquals(0.0, trade.actualProfitLoss(), 0.00001);
-		assertEquals(0.0, trade.actualProfitLossPct(), 0.00001);
+		//average price calculated to include fees to exit
+		double averagePrice = getInvestmentAmount(trader, ((quantity1 * 0.9) + (quantity2 * 1.2))) / (quantity1 + quantity2);
+		assertEquals(averagePrice, trade.averagePrice(), 0.001);
 
+		usdBalance = account.getAmount("USDT");
+		reservedBalance = account.getMarginReserve("USDT", "ADA").doubleValue();
 		tradeOnPrice(trader, 20, 0.1, BUY);
-		assertEquals(172.06, account.getAmount("USDT"), 0.01);
-		assertEquals(0.0, account.getAmount("ADA"), 0.000001);
-		assertEquals(1.027, trade.averagePrice(), 0.001);
-		// percentages are calculated using updated average price against max price ever reached since first trade
-		assertEquals(90.268, trade.maxChange(), 0.01);
-		assertEquals(-14.371, trade.minChange(), 0.01);
-		assertEquals(90.268, trade.priceChangePct(), 0.01);
 
-		assertEquals(0.2, trade.breakEvenChange(), 0.01);
-		assertEquals(1.2, trade.maxPrice());
-		assertEquals(0.1, trade.minPrice());
-		assertEquals(4, trade.ticks());
-		assertEquals(20, trade.tradeDuration());
-		assertEquals(0.1, trade.lastClosingPrice());
-		assertEquals(77.69, trade.quantity(), 0.01);
-		assertEquals(0.0, account.getAmount("ADA"), 0.000001);
-		assertEquals(172.062, account.getAmount("USDT"), 0.01);
+		checkTradeAfterShortBuy(usdBalance, reservedBalance, trade, quantity1 + quantity2, 0.1, 1.2, 0.1);
+
 		assertFalse(trade.stopped());
 		assertEquals("Buy signal", trade.exitReason());
 		assertFalse(trade.tryingToExit());
 		assertEquals(72.062, trade.actualProfitLoss(), 0.001);
 		assertEquals(90.258, trade.actualProfitLossPct(), 0.001);
-
 	}
 
 }
