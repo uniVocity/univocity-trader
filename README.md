@@ -156,7 +156,11 @@ For signals relevant only for regular (long) trades, `tradeSide()` must return `
 can work for both long and short trades, simply let the default implementation do its job and return `null`.
 
 > NOTE: Shorting is disabled by default, to enable it, invoke `enableShorting()` from your  
-> [AccountConfiguration](./univocity-trader-core/src/main/java/com/univocity/trader/config/AccountConfiguration.java);
+> [AccountConfiguration](./univocity-trader-core/src/main/java/com/univocity/trader/config/AccountConfiguration.java).
+> You may also want to adjust the margin reserve percentage with `account.marginReservePercentage(<percentage>)`, which
+> defaults to 150%. This means that if you short 50 EUR on pair EURUSD, the proceeds of the short will be locked away,
+> along with 50% of the value of that short. So the USD required to buy 25 EUR at the time this short fills will
+> be taken out of the free USD amount of your account and locked away until the short position is covered.
 
 During simulations or live trading, every single candle received will be sent to your 
 [Strategy](./univocity-trader-core/src/main/java/com/univocity/trader/strategy/Strategy.java)'s `getSignal` method. 
