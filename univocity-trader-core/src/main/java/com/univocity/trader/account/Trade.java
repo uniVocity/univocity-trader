@@ -238,11 +238,11 @@ public class Trade implements Comparable<Trade> {
 		}
 	}
 
-	private static double positivePriceChangePct(double spent, double currentPrice) {
+	public static double positivePriceChangePct(double spent, double currentPrice) {
 		return ((currentPrice - spent) / spent) * 100.0;
 	}
 
-	private static double negativePriceChangePct(double spent, double currentPrice) {
+	public static double negativePriceChangePct(double spent, double currentPrice) {
 		return ((spent - currentPrice) / spent) * 100.0;
 	}
 

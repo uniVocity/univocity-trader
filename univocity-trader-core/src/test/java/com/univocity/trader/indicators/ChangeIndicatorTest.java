@@ -44,10 +44,10 @@ public class ChangeIndicatorTest {
 		//end candle 2
 
 		b.accumulate(newCandle(5, 2.0));
-		assertEquals(-19.999, b.getValue(), 0.001);
+		assertEquals(-20.0, b.getValue(), 0.001);
 
 		b.accumulate(newCandle(6, 3.0));
-		assertEquals(19.999, b.getValue(), 0.001);
+		assertEquals(20.0, b.getValue(), 0.001);
 		//end candle 3
 	}
 

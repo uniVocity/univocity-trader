@@ -1,5 +1,6 @@
 package com.univocity.trader.indicators;
 
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -22,7 +23,7 @@ public class ChangeIndicator extends SingleValueIndicator {
 	@Override
 	protected boolean process(Candle candle, double value, boolean updating) {
 		if (getAccumulationCount() != 0) {
-			this.value = ((value / startingPoint) - 1.0) * 100.0;
+			this.value = Trade.positivePriceChangePct(startingPoint, value);
 			if (!updating) {
 				startingPoint = value;
 			}
