@@ -1,16 +1,17 @@
 package com.univocity.trader.examples;
 
-import java.util.*;
-
 import com.univocity.trader.account.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
+import java.util.*;
+
 public class ExampleStrategyMonitor extends StrategyMonitor {
 	private final Set<Indicator> indicators = new HashSet<>();
 	private final InstantaneousTrendline trend;
 	private boolean waitForUptrend = false;
+	private boolean waitForDowntrend = false;
 
 	public ExampleStrategyMonitor() {
 		indicators.add(trend = new InstantaneousTrendline(TimeInterval.minutes(25)));
@@ -25,6 +26,14 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
 	}
 
 	@Override
+	public boolean discardShortSell(Strategy strategy) {
+		if (trend.getSignal(trader.latestCandle()) == Signal.SELL) {
+			waitForDowntrend = false;
+		}
+		return waitForDowntrend;
+	}
+
+	@Override
 	protected Set<Indicator> getAllIndicators() {
 		return indicators;
 	}
@@ -33,12 +42,22 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
 	public String handleStop(Trade trade, Signal signal, Strategy strategy) {
 		final double currentReturns = trade.priceChangePct();
 		final double bestReturns = trade.maxChange();
-		if ((currentReturns - bestReturns) < -2.0) {
-			if (currentReturns < 0.0) {
-				waitForUptrend = true;
-				return "stop loss";
+		if(trade.isLong()) {
+			if ((currentReturns - bestReturns) < -2.0) {
+				if (currentReturns < 0.0) {
+					waitForUptrend = true;
+					return "stop loss on long position";
+				}
+				return "exit long with some profit";
 			}
-			return "exit with some profit";
+		} else if(trade.isShort()){
+			if ((currentReturns - bestReturns) < -2.0) {
+				if (currentReturns < 0.0) {
+					waitForDowntrend = true;
+					return "stop loss on short position";
+				}
+				return "exit short with some profit";
+			}
 		}
 		return null;
 	}

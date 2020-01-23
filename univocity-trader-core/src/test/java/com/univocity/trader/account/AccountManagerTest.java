@@ -22,7 +22,7 @@ public class AccountManagerTest {
 		accountCfg
 				.referenceCurrency("USDT")
 				.tradeWithPair("ADA", "BNB")
-				.enableShorting(150);
+				.enableShorting();
 
 		SimulatedClientAccount clientAccount = new SimulatedClientAccount(accountCfg, configuration.simulation());
 		AccountManager account = clientAccount.getAccount();

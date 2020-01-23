@@ -538,12 +538,8 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 		}
 	}
 
-	public T enableShorting(int marginReservePercentage) {
+	public T enableShorting() {
 		shortingEnabled = true;
-		if(marginReservePercentage < 100){
-			throw new IllegalArgumentException("Margin reserve percentage must be at least 100%");
-		}
-		this.marginReservePercentage = marginReservePercentage;
 		return (T) this;
 	}
 
@@ -556,7 +552,15 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 		return shortingEnabled;
 	}
 
-	public int marginReservePercentage(){
+	public T marginReservePercentage(int marginReservePercentage) {
+		if (marginReservePercentage < 100) {
+			throw new IllegalArgumentException("Margin reserve percentage must be at least 100%");
+		}
+		this.marginReservePercentage = marginReservePercentage;
+		return (T) this;
+	}
+
+	public int marginReservePercentage() {
 		return marginReservePercentage;
 	}
 

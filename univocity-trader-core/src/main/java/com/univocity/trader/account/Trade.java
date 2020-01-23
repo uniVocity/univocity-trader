@@ -579,4 +579,14 @@ public class Trade implements Comparable<Trade> {
 			return finalizedQuantity;
 		}
 	}
+
+	public String formattedMinPriceAndPercentage() {
+		SymbolPriceDetails f = trader.priceDetails();
+		return '$' + f.priceToString(minPrice()) + " (" + (isLong() ? formattedMinChangePct() : formattedMaxChangePct()) + ')';
+	}
+
+	public String formattedMaxPriceAndPercentage() {
+		SymbolPriceDetails f = trader.priceDetails();
+		return '$' + f.priceToString(maxPrice()) + " (" + (isLong() ? formattedMaxChangePct() : formattedMinChangePct()) + ')';
+	}
 }

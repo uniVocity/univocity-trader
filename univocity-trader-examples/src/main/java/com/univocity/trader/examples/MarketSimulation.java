@@ -23,6 +23,7 @@ public class MarketSimulation {
 
 		//you can test with one or more accounts at the same time
 		Account account = simulator.configure().account();
+		account.enableShorting();
 
 		account
 				.referenceCurrency("USDT") //Balances will be calculated using the reference currency.

@@ -68,27 +68,43 @@ public interface Order {
 		return getStatus() == FILLED || getStatus() == Status.CANCELLED;
 	}
 
-	default boolean isBuy(){
+	default boolean isBuy() {
 		return getSide() == Side.BUY;
 	}
 
-	default boolean isSell(){
+	default boolean isLongBuy() {
+		return isLong() && isBuy();
+	}
+
+	default boolean isLongSell() {
+		return isLong() && isSell();
+	}
+
+	default boolean isShortSell() {
+		return isShort() && isSell();
+	}
+
+	default boolean isShortCover() {
+		return isShort() && isBuy();
+	}
+
+	default boolean isSell() {
 		return getSide() == Side.SELL;
 	}
 
-	default boolean isMarket(){
+	default boolean isMarket() {
 		return getType() == Type.MARKET;
 	}
 
-	default boolean isLimit(){
+	default boolean isLimit() {
 		return getType() == Type.LIMIT;
 	}
 
-	default boolean isShort(){
+	default boolean isShort() {
 		return getTradeSide() == Trade.Side.SHORT;
 	}
 
-	default boolean isLong(){
+	default boolean isLong() {
 		return getTradeSide() == Trade.Side.LONG;
 	}
 
@@ -100,7 +116,7 @@ public interface Order {
 				.append(getType()).append(' ');
 
 
-		if(isShort()){
+		if (isShort()) {
 			description.append(getTradeSide()).append(' ');
 		}
 
@@ -144,7 +160,7 @@ public interface Order {
 					.append(getFundsSymbol());
 		}
 
-		if(latestClose > 0) {
+		if (latestClose > 0) {
 			description
 					.append(". Open for ")
 					.append(TimeInterval.getFormattedDuration(getTimeElapsed(latestClose)));
@@ -165,6 +181,17 @@ public interface Order {
 
 	default double getFillPct() {
 		return getExecutedQuantity().divide(getQuantity(), RoundingMode.FLOOR).doubleValue() * 100.0;
+	}
+
+	default String sideDescription() {
+		if (isShort()) {
+			if (isSell()) {
+				return "SHORT";
+			} else if (isBuy()) {
+				return "COVER";
+			}
+		}
+		return getSide().toString();
 	}
 
 	enum Side {

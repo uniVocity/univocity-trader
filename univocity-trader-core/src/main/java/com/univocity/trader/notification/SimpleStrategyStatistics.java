@@ -10,7 +10,8 @@ import static com.univocity.trader.candles.Candle.*;
 
 public class SimpleStrategyStatistics implements OrderListener {
 
-	private Map<String, List<double[]>> parameterReturns = new TreeMap<>();
+	private Map<String, List<double[]>> longReturns = new TreeMap<>();
+	private Map<String, List<double[]>> shortReturns = new TreeMap<>();
 	private double initialInvestment = 0.0;
 	private Trader trader;
 
@@ -27,6 +28,12 @@ public class SimpleStrategyStatistics implements OrderListener {
 		this.symbol = symbol;
 	}
 
+	private void register(Map<String, List<double[]>> returns, Trade trade) {
+		returns
+				.computeIfAbsent(trader.parameters().toString(), s -> new ArrayList<>())
+				.add(new double[]{trade.actualProfitLoss(), trade.actualProfitLossPct()});
+	}
+
 	@Override
 	public void orderFinalized(Order order, Trade trade, Client client) {
 		if (order.getFillPct() == 0.0) {
@@ -37,17 +44,21 @@ public class SimpleStrategyStatistics implements OrderListener {
 			initialInvestment = this.trader.totalFundsInReferenceCurrency();
 			firstCandle = this.trader.latestCandle();
 		}
-		if (order.isSell()) {
-			parameterReturns
-					.computeIfAbsent(trader.parameters().toString(), s -> new ArrayList<>())
-					.add(new double[]{trade.actualProfitLoss(), trade.actualProfitLossPct()});
-
+		if (order.isLongSell()) {
+			register(longReturns, trade);
+		} else if (order.isShortCover()) {
+			register(shortReturns, trade);
 		}
 		lastCandle = trader.latestCandle();
 	}
 
-	public void printTradeStats() {
-		for (Map.Entry<String, List<double[]>> e : parameterReturns.entrySet()) {
+	private void printTradeStats() {
+		printTradeStats(longReturns);
+		printTradeStats(shortReturns);
+	}
+
+	private void printTradeStats(Map<String, List<double[]>> returns) {
+		for (Map.Entry<String, List<double[]>> e : returns.entrySet()) {
 			double totalNegativeAmount = 0.0;
 			double totalPositiveAmount = 0.0;
 			double totalNegativePct = 0.0;
@@ -76,16 +87,26 @@ public class SimpleStrategyStatistics implements OrderListener {
 			double averageGainAmount = positiveCount == 0 ? 0 : totalPositiveAmount / positiveCount;
 			double averageLossAmount = negativeCount == 0 ? 0 : totalNegativeAmount / negativeCount;
 
-			double pl = averageGainAmount + averageLossAmount;
+			String side;
+			if (returns == longReturns) {
+				side = "";
+				System.out.println("===[ " + (symbol == null ? "" : symbol) + " results using parameters: " + e.getKey() + " ]===");
+			} else {
+				side = "short trades";
+			}
 
-			System.out.println("===[ " + (symbol == null ? "" : symbol) + " results using parameters: " + e.getKey() + " ]===");
-			System.out.println("Negative: " + negativeCount + " trades, avg. loss: " + printAmountAndPercentage(averageLossAmount, averageLossPct));
-			System.out.println("Positive: " + positiveCount + " trades, avg. gain: " + printAmountAndPercentage(averageGainAmount, averageGainPct));
-			System.out.println("Returns : " + printAmountAndPercentage(pl, (pl / initialInvestment) * 100));
-			if (symbol != null) {
-				double buyAndHold = (initialInvestment / firstCandle.close) * lastCandle.close;
-				pl = buyAndHold - initialInvestment;
-				System.out.println("Buy&Hold: " + printAmountAndPercentage(pl, (pl / initialInvestment) * 100));
+			double pl = totalPositiveAmount + totalNegativeAmount;
+			System.out.println("Negative " + side + ": " + negativeCount + " trades, avg. loss: " + printAmountAndPercentage(averageLossAmount, averageLossPct));
+			System.out.println("Positive " + side + ": " + positiveCount + " trades, avg. gain: " + printAmountAndPercentage(averageGainAmount, averageGainPct));
+			System.out.println("Returns  " + side + ": " + printAmountAndPercentage(pl, (pl / initialInvestment) * 100));
+
+
+			if (returns == shortReturns) {
+				if (symbol != null) {
+					double buyAndHold = (initialInvestment / firstCandle.close) * lastCandle.close;
+					pl = buyAndHold - initialInvestment;
+					System.out.println("Buy&Hold: " + printAmountAndPercentage(pl, (pl / initialInvestment) * 100));
+				}
 			}
 		}
 	}

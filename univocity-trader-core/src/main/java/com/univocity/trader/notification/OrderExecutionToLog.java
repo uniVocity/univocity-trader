@@ -45,7 +45,7 @@ public class OrderExecutionToLog implements OrderListener {
 			SymbolPriceDetails f = trader.priceDetails();
 			SymbolPriceDetails rf = trader.referencePriceDetails();
 			String currency = " " + trader.referenceCurrencySymbol();
-			String type = StringUtils.rightPad(order.getSide().toString(), 4);
+			String type = StringUtils.rightPad(order.sideDescription(), 4);
 
 			String quantity = f.quantityToString(order.getQuantity());
 			if (maxQuantityLength < quantity.length()) {
@@ -62,10 +62,10 @@ public class OrderExecutionToLog implements OrderListener {
 			String details = trader.latestCandle().getFormattedCloseTime("yy-MM-dd HH:mm") + " ";
 			details += StringUtils.rightPad(trader.assetSymbol(), 8) + " " + type + " " + quantity + " @ $" + price;
 //			details += "[" + order.getOrderId() + "]";
-			if (order.isBuy()) {
+			if (order.isLongBuy() || order.isShortSell()) {
 				if (order.isFinalized()) {
 					details += " + " + printFillDetails(order, trade, rf) + ".";
-					if(order.getExecutedQuantity().compareTo(BigDecimal.ZERO) != 0){
+					if (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) != 0) {
 						details += " Worth $" + rf.priceToString(order.getExecutedQuantity().doubleValue() * trader.lastClosingPrice()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
 					}
 				} else {
@@ -77,8 +77,15 @@ public class OrderExecutionToLog implements OrderListener {
 					details += " Holdings $" + rf.priceToString(trader.holdings()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
 				} else {
 					details += " - PENDING     worth $" + rf.priceToString(order.getTotalOrderAmount()) + currency;
-					details += ". Expected P/L " + trade.formattedEstimateProfitLossPercentage(order);
-					details += " | " + trade.ticks() + " ticks [min $" + f.priceToString(trade.minPrice()) + " (" + trade.formattedMinChangePct() + "), max $" + f.priceToString(trade.maxPrice()) + " (" + trade.formattedMaxChangePct() + ")]";
+
+					String pl = trade.formattedEstimateProfitLossPercentage(order);
+					if (!pl.startsWith("-")) {
+						pl = '+' + pl;
+					}
+
+					details += ". Expected P/L " + pl;
+
+					details += " | " + trade.ticks() + " ticks [min " + trade.formattedMinPriceAndPercentage() + ", max $" + trade.formattedMaxPriceAndPercentage() + ")]";
 					details += " " + trade.exitReason();
 				}
 			}

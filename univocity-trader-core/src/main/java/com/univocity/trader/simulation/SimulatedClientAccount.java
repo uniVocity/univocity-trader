@@ -73,7 +73,7 @@ public class SimulatedClientAccount implements ClientAccount {
 
 		Order order = null;
 		if (orderDetails.isBuy() && availableFunds - fees >= orderAmount - 0.000000001) {
-			if(orderDetails.isLong()) {
+			if (orderDetails.isLong()) {
 				locked = orderDetails.getTotalOrderAmount();
 				account.lockAmount(fundsSymbol, locked);
 			}
@@ -147,7 +147,7 @@ public class SimulatedClientAccount implements ClientAccount {
 	@Override
 	public final synchronized boolean updateOpenOrders(String symbol, Candle candle) {
 		Set<PendingOrder> s = orders.get(symbol);
-  		if (s == null || s.isEmpty()) {
+		if (s == null || s.isEmpty()) {
 			return false;
 		}
 		Iterator<PendingOrder> it = s.iterator();
@@ -167,16 +167,24 @@ public class SimulatedClientAccount implements ClientAccount {
 		return true;
 	}
 
-	private void updateMarginReserve(String assetSymbol, String fundSymbol, Candle candle){
+	private void updateMarginReserve(String assetSymbol, String fundSymbol, Candle candle) {
 		Balance funds = account.getBalance(fundSymbol);
 		BigDecimal reserved = funds.getMarginReserve(assetSymbol);
 
 		BigDecimal shortedQuantity = account.getBalance(assetSymbol).getShorted();
-		if(shortedQuantity.doubleValue() <= EFFECTIVELY_ZERO){
+		if (shortedQuantity.doubleValue() <= EFFECTIVELY_ZERO) {
 			funds.setFree(funds.getFree().add(reserved));
 			funds.setMarginReserve(assetSymbol, BigDecimal.ZERO);
 		} else {
-			BigDecimal newReserve = account.applyMarginReserve(shortedQuantity.multiply(BigDecimal.valueOf(candle.close)));
+			double close;
+			if (candle == null) {
+				Trader trader = getAccount().getTraderOf(assetSymbol + fundSymbol);
+				close = trader.lastClosingPrice();
+			} else {
+				close = candle.close;
+			}
+
+			BigDecimal newReserve = account.applyMarginReserve(shortedQuantity.multiply(BigDecimal.valueOf(close)));
 			funds.setFree(funds.getFree().add(reserved).subtract(newReserve));
 			funds.setMarginReserve(assetSymbol, newReserve);
 		}
