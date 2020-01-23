@@ -142,8 +142,8 @@ public class CandleRepository {
 			int count = 0;
 
 			try (Connection c = db().getDataSource().getConnection();
-				 PreparedStatement s = c.prepareStatement(query);
-				 ResultSet rs = s.executeQuery()) {
+				 final PreparedStatement s = c.prepareStatement(query);
+				 ResultSet rs = executeQuery(s)) {
 
 				while (rs.next()) {
 					Candle candle = CANDLE_MAPPER.mapRow(rs, 0);
@@ -159,6 +159,11 @@ public class CandleRepository {
 		};
 
 		return toEnumeration(symbol, query, from, to, readingProcess, out, ended);
+	}
+
+	private ResultSet executeQuery(PreparedStatement s) throws SQLException {
+		s.setFetchSize(Integer.MIN_VALUE);
+		return s.executeQuery();
 	}
 
 	public void clearCaches() {

@@ -279,10 +279,17 @@ public class TradingManager {
 		notifyOrderSubmitted(order, trade, trader.notifications);
 	}
 
+	private Trade getTradeForOrder(Trade trade, Order order){
+		if(trade != null){
+			return trade;
+		}
+		return Trade.createPlaceholder(getTrader(), order.getTradeSide());
+	}
+
 	private void notifyOrderSubmitted(Order order, Trade trade, OrderListener[] notifications) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
-				notifications[i].orderSubmitted(order, trade, client);
+				notifications[i].orderSubmitted(order, getTradeForOrder(trade, order), client);
 			} catch (Exception e) {
 				log.error("Error sending orderSubmitted notification for order: " + order, e);
 			}
@@ -292,7 +299,7 @@ public class TradingManager {
 	private void notifyOrderFinalized(Order order, Trade trade, OrderListener[] notifications) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
-				notifications[i].orderFinalized(order, trade, client);
+				notifications[i].orderFinalized(order, getTradeForOrder(trade, order), client);
 			} catch (Exception e) {
 				log.error("Error sending orderFinalized notification for order: " + order, e);
 			}

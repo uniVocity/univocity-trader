@@ -65,6 +65,10 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			String assetSymbol = pair[0];
 			String fundSymbol = pair[1];
 
+			if(assetSymbol.equals(fundSymbol)){
+				return;
+			}
+
 			List<AccountManager> accountsTradingSymbol = new ArrayList<>();
 			for (AccountManager account : accounts()) {
 				if (account.configuration().symbolPairs().keySet().contains(symbol)) {

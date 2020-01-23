@@ -68,17 +68,26 @@ public class Trade implements Comparable<Trade> {
 
 	private final Trader trader;
 	private Side side;
+	final boolean isPlaceholder;
 
 	Trade(Order openingOrder, Trader trader, Strategy openingStrategy) {
+		this(trader, openingOrder.isSell() ? Side.SHORT : Side.LONG, openingStrategy, trader.monitors(), false);
+		increasePosition(openingOrder);
+	}
+
+	private Trade(Trader trader, Trade.Side side, Strategy openingStrategy, StrategyMonitor[] monitors, boolean isPlaceholder) {
 		this.trader = trader;
 		this.firstCandle = trader.latestCandle();
 		this.openingStrategy = openingStrategy;
-		this.monitors = trader.monitors();
+		this.monitors = monitors;
 
 		this.max = this.min = firstCandle.close;
-		this.side = openingOrder.isSell() ? Side.SHORT : Side.LONG;
+		this.side = side;
+		this.isPlaceholder = isPlaceholder;
+	}
 
-		increasePosition(openingOrder);
+	static Trade createPlaceholder(Trader trader, Trade.Side side) {
+		return new Trade(trader, side, null, new StrategyMonitor[0], true);
 	}
 
 	public boolean isShort() {
@@ -103,6 +112,9 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public String tick(Candle candle, Signal signal, Strategy strategy) {
+		if (isPlaceholder) {
+			return null;
+		}
 		if (strategy != null && strategy.tradeSide() != null && strategy.tradeSide() != this.side) {
 			return null;
 		}
@@ -281,6 +293,9 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	private void updateAveragePrice(Collection<Order> orders) {
+		if (isPlaceholder) {
+			return;
+		}
 		change = maxChange = minChange = 0.0;
 
 		//calculate average price
@@ -358,6 +373,9 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	void orderFinalized(Order order) {
+		if (isPlaceholder) {
+			return;
+		}
 		if (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) == 0) { // nothing filled, cancelled
 			position.remove(order.getOrderId());
 			return;
@@ -426,6 +444,9 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public boolean tradeFinalized() {
+		if (isPlaceholder) {
+			return true;
+		}
 		if (position.isEmpty()) {
 			if (!exitOrders.isEmpty()) {
 				throw new IllegalStateException("Can't hold a position without buy order information.");
@@ -466,6 +487,9 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public boolean tryingToExit() {
+		if (isPlaceholder) {
+			return true;
+		}
 		if (!exitOrders.isEmpty()) {
 			for (Order order : exitOrders.values()) {
 				if (!order.isFinalized()) {
@@ -477,6 +501,9 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	boolean canExit(Strategy strategy) {
+		if (isPlaceholder) {
+			return false;
+		}
 		if ((this.side == Side.SHORT && !trader.isShort(strategy)) || (this.side == Side.LONG && !trader.isLong(strategy))) {
 			return false;
 		}
@@ -520,11 +547,10 @@ public class Trade implements Comparable<Trade> {
 			if (position.get(order.getOrderId()) != null) {
 				return true;
 			}
-		} else if ((order.isSell() && isLong()) || (order.isShort() && order.isBuy())) {
+		} else if ((order.isSell() && isLong()) || (order.isShort() && order.isBuy()) || isPlaceholder) {
 			if (exitOrders.get(order.getOrderId()) != null) {
 				return true;
 			}
-
 		}
 		return pastOrders.get(order.getOrderId()) != null;
 	}

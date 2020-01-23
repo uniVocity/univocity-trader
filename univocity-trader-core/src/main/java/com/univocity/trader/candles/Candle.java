@@ -159,7 +159,7 @@ public class Candle implements Comparable<Candle>, Cloneable {
 
 
 	public boolean isTick(){
-		return openTime == closeTime && openTime == close && close == high && high == low;
+		return openTime == closeTime && open == close && close == high && high == low;
 	}
 
 	public Candle clone() {

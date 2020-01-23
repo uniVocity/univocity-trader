@@ -35,8 +35,12 @@ public class Account extends AccountConfiguration<Account> {
 	}
 
 	public Contract tradeWith(SecurityType securityType, String symbol, String currency, TradeType tradeType) {
-		tradeWithPair(new String[]{symbol, currency});
 		String pair = symbol + currency;
+		if(tradeTypes.containsKey(pair)){
+			tradeTypes.get(pair);
+		}
+
+		tradeWithPair(new String[]{symbol, currency});
 		Contract contract = tradedContracts.get(pair);
 		if (contract == null) {
 			contract = new Contract();

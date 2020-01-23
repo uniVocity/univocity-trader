@@ -12,6 +12,7 @@ import org.slf4j.*;
 import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.*;
 
 import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
@@ -198,16 +199,35 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		throw configuration.reportUnknownSymbol("Can't set funds", symbol);
 	}
 
+	private Trader findTrader(String assetSymbol, String fundSymbol) {
+		Trader trader = getTraderOf(assetSymbol + fundSymbol);
+		if (trader != null) {
+			return trader;
+		}
+
+		for (String[] pair : getTradedPairs()) {
+			if (assetSymbol.equals(pair[0])) {
+				if (getAmount(pair[1]) > 0) {
+					return getTraderOf(pair[0] + pair[1]);
+				}
+			}
+		}
+		return null;
+	}
+
 
 	public double allocateFunds(String assetSymbol, String fundSymbol, Trade.Side tradeSide) {
 		TradingManager tradingManager = getTradingManagerOf(assetSymbol + fundSymbol);
 		if (tradingManager == null) {
 			Trader trader = getTraderOf(assetSymbol + configuration.referenceCurrency());
+			if(trader == null){
+				trader = findTrader(assetSymbol, fundSymbol);
+			}
 			if (trader != null) {
 				tradingManager = trader.tradingManager;
-				//fundSymbol = tradingManager.getFundSymbol();
+				fundSymbol = tradingManager.getFundSymbol();
 			} else {
-				throw new IllegalStateException("Unable to allocate funds to buy " + assetSymbol + ". Unknown symbol: " + assetSymbol);
+				throw new IllegalStateException("Unable to allocate funds to buy " + assetSymbol + ". Unknown symbol: " + assetSymbol + fundSymbol + ". Trading with " + getTradedSymbols());
 			}
 		}
 		double minimumInvestment = configuration.minimumInvestmentAmountPerTrade(assetSymbol);
@@ -554,6 +574,18 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	public Collection<String[]> getTradedPairs() {
 		return configuration.tradedWithPairs();
+	}
+
+	public Collection<String> getTradedAssetSymbols() {
+		return configuration.tradedWithPairs().stream().map(p -> p[0]).collect(Collectors.toList());
+	}
+
+	public Collection<String> getTradedSymbols() {
+		return configuration.tradedWithPairs().stream().map(p -> p[0] + p[1]).collect(Collectors.toList());
+	}
+
+	public Collection<String> getTradedFundSymbols() {
+		return configuration.tradedWithPairs().stream().map(p -> p[1]).collect(Collectors.toList());
 	}
 
 	public TradingFees getTradingFees() {

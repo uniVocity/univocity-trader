@@ -170,20 +170,20 @@ public class Trader {
 			if (isShort && trade.isShort()) {
 				bought |= exit(trade, candle, strategy, "Buy signal");
 			} else if (isLong && trade.isLong()) {
-				bought |= buy(LONG, trade, candle, strategy); //increment position on existing trade
+				bought |= buy(LONG, candle, strategy); //increment position on existing trade
 			}
 		}
 
 		if (!bought) {
 			if (isLong) {
-				buy(LONG, null, candle, strategy); //opens new trade. Can only go long here.
+				buy(LONG, candle, strategy); //opens new trade. Can only go long here.
 			}
 			if (isShort) {
 				boolean hasShortPosition = tradingManager.hasPosition(candle, false, false, true);
 				if (hasShortPosition) {
 					// Buys without having a short trade open. Might happen after starting up
 					// with short order in the account. Will generate a warning in the log.
-					buy(SHORT, null, candle, strategy);
+					buy(SHORT, candle, strategy);
 				}
 			}
 		}
@@ -215,7 +215,8 @@ public class Trader {
 				if (hasLongPosition) {
 					// Sell without having a trade open. Might happen after starting up
 					// with assets in the account. Will generate a warning in the log.
-					sellAssets(null, strategy, "Sell signal");
+					Trade trade = Trade.createPlaceholder(this, LONG);
+					sellAssets(trade, strategy, "Sell signal");
 				}
 			}
 		}
@@ -346,7 +347,7 @@ public class Trader {
 	}
 
 
-	private boolean buy(Trade.Side tradeSide, Trade trade, Candle candle, Strategy strategy) {
+	private boolean buy(Trade.Side tradeSide, Candle candle, Strategy strategy) {
 		double amountToSpend = prepareTrade(tradeSide, candle, strategy);
 		if (amountToSpend > 0) {
 			Order order = tradingManager.buy(amountToSpend / candle.close, LONG);
@@ -471,7 +472,9 @@ public class Trader {
 				trade = new Trade(order, this, strategy);
 				trades.add(trade);
 			} else if (order.isShort()) {
-				//could be manual
+				trade = Trade.createPlaceholder(this, order.getTradeSide());
+				trade.decreasePosition(order, "Exit short position");
+				trades.add(trade);
 				log.warn("Received a short-covering buy order without an open trade: " + order);
 			}
 		} else {
@@ -506,6 +509,9 @@ public class Trader {
 				trade = new Trade(order, this, strategy);
 				trades.add(trade);
 			} else {
+				trade = Trade.createPlaceholder(this, order.getTradeSide());
+				trade.decreasePosition(order, "Exit long position");
+				trades.add(trade);
 				//could be manual
 				log.warn("Received a sell order without an open trade: " + order);
 			}

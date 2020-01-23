@@ -294,12 +294,7 @@ public class AccountManagerTest {
 	}
 
 	private void tradeOnPrice(Trader trader, long time, double price, Signal signal) {
-		Candle next = newTick(time, price);
-		trader.trade(next, signal, null);
-		if (signal != Signal.NEUTRAL) {
-			trader.tradingManager.updateOpenOrders(trader.symbol(), next = newTick(time + 1, price));
-			trader.trade(next, Signal.NEUTRAL, null);
-		}
+		tradeOnPrice(trader, time, price, signal, false);
 	}
 
 	private Candle newTick(long time, double price) {
@@ -404,6 +399,15 @@ public class AccountManagerTest {
 
 		usdBalance = account.getAmount("USDT");
 		reservedBalance = account.getMarginReserve("USDT", "ADA").doubleValue();
+
+		//CANCEL
+		tradeOnPrice(trader, 11, 1.1, SELL, true);
+		averagePrice = getInvestmentAmount(trader, ((quantity1 * 0.9) + (quantity2 * 1.2))) / (quantity1 + quantity2);
+		assertEquals(averagePrice, trade.averagePrice(), 0.001);
+		assertEquals(usdBalance, account.getAmount("USDT"), 0.001);
+		assertEquals(reservedBalance, account.getMarginReserve("USDT", "ADA").doubleValue(), 0.001);
+
+
 		tradeOnPrice(trader, 20, 0.1, BUY);
 
 		checkTradeAfterShortBuy(usdBalance, reservedBalance, trade, quantity1 + quantity2, 0.1, 1.2, 0.1);
@@ -413,6 +417,18 @@ public class AccountManagerTest {
 		assertFalse(trade.tryingToExit());
 		assertEquals(72.062, trade.actualProfitLoss(), 0.001);
 		assertEquals(90.258, trade.actualProfitLossPct(), 0.001);
+	}
+
+	private void tradeOnPrice(Trader trader, long time, double price, Signal signal, boolean cancel) {
+		Candle next = newTick(time, price);
+		trader.trade(next, signal, null);
+		if (signal != Signal.NEUTRAL) {
+			if(cancel) {
+				trader.trades().iterator().next().position().forEach(Order::cancel);
+			}
+			trader.tradingManager.updateOpenOrders(trader.symbol(), next = newTick(time + 1, price));
+			trader.trade(next, Signal.NEUTRAL, null);
+		}
 	}
 
 }
