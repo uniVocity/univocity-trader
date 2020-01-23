@@ -142,8 +142,21 @@ Yet, it is simply defined as:
 ```java
 public interface Strategy {
   Signal getSignal(Candle candle);
+ 
+  default Trade.Side tradeSide() {
+  	return null;
+  }
 }
 ```
+
+A  [Strategy](./univocity-trader-core/src/main/java/com/univocity/trader/strategy/Strategy.java) that only generates 
+signals relevant for shorting has to return `Trade.Side.SHORT` when `tradeSide()` is called by the framework.
+
+For signals relevant only for regular (long) trades, `tradeSide()` must return `Trade.Side.LONG`. If the same strategy
+can work for both long and short trades, simply let the default implementation do its job and return `null`.
+
+> NOTE: Shorting is disabled by default, to enable it, invoke `enableShorting()` from your  
+> [AccountConfiguration](./univocity-trader-core/src/main/java/com/univocity/trader/config/AccountConfiguration.java);
 
 During simulations or live trading, every single candle received will be sent to your 
 [Strategy](./univocity-trader-core/src/main/java/com/univocity/trader/strategy/Strategy.java)'s `getSignal` method. 
@@ -151,8 +164,6 @@ Once your [Strategy](./univocity-trader-core/src/main/java/com/univocity/trader/
 `BUY`, an [Order](./univocity-trader-core/src/main/java/com/univocity/trader/account/Order.java) will be made to buy the instrument at the given price.
 If `SELL` is returned, any open [Order](./univocity-trader-core/src/main/java/com/univocity/trader/account/Order.java) will be sold at the current price.
 Anything else will be ignored.
-
-> NOTE: at this stage shorting is not supported. This will be added soon. 
 
 You can use the [Indicator](./univocity-trader-core/src/main/java/com/univocity/trader/strategy/Indicator.java) implementations
 provided in the [com.univocity.trader.indicators](./univocity-trader-core/src/main/java/com/univocity/trader/indicators) package to
@@ -786,7 +797,7 @@ This is my personal TODO list of what is going to come to this library (in order
  
  * release the first stable version to maven central. 
  
- * support additional functions such as: placing and managing stops, shorting, margin, etc. Right now the library only buys then sells. 
+ * support additional functions such as: placing and managing stops,  margin, etc. 
  
  * add more indicators - we are trying to migrate everything already implemented by [ta4j](https://github.com/ta4j/ta4j), and will add more.
  
