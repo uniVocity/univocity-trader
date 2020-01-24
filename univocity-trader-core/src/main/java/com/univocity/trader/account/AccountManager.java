@@ -92,7 +92,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public Balance getBalance(String symbol) {
-		return balances.computeIfAbsent(symbol, Balance::new);
+		return balances.computeIfAbsent(symbol.trim(), Balance::new);
 	}
 
 	public void subtractFromFreeBalance(String symbol, final BigDecimal amount) {

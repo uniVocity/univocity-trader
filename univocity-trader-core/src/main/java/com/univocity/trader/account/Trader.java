@@ -614,6 +614,10 @@ public class Trader {
 		return tradingManager.getBalance(referenceCurrencySymbol()).clone();
 	}
 
+	public Balance balanceOf(String symbol) {
+		return tradingManager.getBalance(symbol).clone();
+	}
+
 	public SymbolPriceDetails priceDetails() {
 		return tradingManager.getPriceDetails();
 	}

@@ -1,5 +1,6 @@
 package com.univocity.trader.candles;
 
+import java.sql.*;
 import java.text.*;
 import java.time.*;
 import java.time.format.*;
@@ -153,12 +154,16 @@ public class Candle implements Comparable<Candle>, Cloneable {
 		return Instant.ofEpochMilli(closeTime).atZone(ZoneId.systemDefault()).toLocalDateTime();
 	}
 
+	public Timestamp closeTimestamp() {
+		return new Timestamp(closeTime);
+	}
+
 	public LocalDateTime localOpenDateTime() {
 		return Instant.ofEpochMilli(openTime).atZone(ZoneId.systemDefault()).toLocalDateTime();
 	}
 
 
-	public boolean isTick(){
+	public boolean isTick() {
 		return openTime == closeTime && open == close && close == high && high == low;
 	}
 

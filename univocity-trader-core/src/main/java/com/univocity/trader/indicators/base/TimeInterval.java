@@ -1,5 +1,6 @@
 package com.univocity.trader.indicators.base;
 
+import java.time.*;
 import java.util.concurrent.*;
 
 public class TimeInterval {
@@ -110,12 +111,30 @@ public class TimeInterval {
 		return getFormattedDuration(interval.ms);
 	}
 
+	public static String getFormattedDurationShort(TimeInterval interval) {
+		return getFormattedDurationShort(interval.ms);
+	}
+
+	public static String getFormattedDurationShort(long ms) {
+		int[] duration = getDurationComponents(ms);
+		return duration[0] + append(duration[1]) + append(duration[2]);
+	}
+
+	private static String append(long duration) {
+		if (duration < 10) {
+			return ":0" + duration;
+		}
+		return ":" + duration;
+	}
+
 	public static String getFormattedDuration(long ms) {
-		long seconds = ms / 1000;
-		long minutes = ms / MINUTE.ms;
-		long hours = ms / HOUR.ms;
+		int[] duration = getDurationComponents(ms);
+
+		int hours = duration[0];
+		int minutes = duration[1];
+		int seconds = duration[2];
+
 		if (hours > 0) {
-			minutes -= hours * 60;
 			if (minutes == 0) {
 				return pluralize("hour", hours);
 			} else {
@@ -123,7 +142,6 @@ public class TimeInterval {
 			}
 		}
 		if (minutes > 0) {
-			seconds -= minutes * 60;
 			if (seconds == 0) {
 				return pluralize("minute", minutes);
 			} else {
@@ -133,10 +151,15 @@ public class TimeInterval {
 		return pluralize("second", seconds);
 	}
 
-	private static String pluralize(String word, long len) {
+	private static String pluralize(String word, int len) {
 		if (len != 1) {
 			return len + " " + word + 's';
 		}
 		return len + " " + word;
+	}
+
+	private static int[] getDurationComponents(long ms) {
+		Duration duration = Duration.ofMillis(ms);
+		return new int[]{duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart()};
 	}
 }

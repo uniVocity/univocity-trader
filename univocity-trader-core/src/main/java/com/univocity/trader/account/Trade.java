@@ -356,6 +356,30 @@ public class Trade implements Comparable<Trade> {
 		return actualProfitLoss;
 	}
 
+	public double actualProfitLossInReferenceCurrency() {
+		return actualProfitLossIn(trader.referenceCurrencySymbol());
+	}
+
+	public double actualProfitLossIn(String currency) {
+		if (currency.equals(trader.fundSymbol())) {
+			return actualProfitLoss;
+		}
+		if (trader.assetSymbol().equals(currency)) {
+			return actualProfitLoss / lastClosingPrice();
+		}
+//		double price = trader.tradingManager.getLatestPrice(currency, trader.fundSymbol());
+//		if (price > 0) {
+//			return actualProfitLoss * price;
+//		} else {
+//			price = trader.tradingManager.getLatestPrice(trader.fundSymbol(), currency);
+//			if (price > 0) {
+//				return actualProfitLoss / price;
+//			}
+//		}
+
+		throw new IllegalStateException("Unable to convert profit/loss of " + actualProfitLoss + " " + trader.fundSymbol() + " to " + currency);
+	}
+
 	public double actualProfitLossPct() {
 		return actualProfitLossPct;
 	}
@@ -483,7 +507,11 @@ public class Trade implements Comparable<Trade> {
 	 * @return the current change percentage, formatted as {@code #,##0.00%}
 	 */
 	public String formattedEstimateProfitLossPercentage(Order order) {
-		return formattedPct(priceChangePct() - 100.0 * ((trader.tradingFees().feesOnOrder(order)) / order.getTotalOrderAmount().doubleValue()));
+		return formattedPct(estimateProfitLossPercentage(order));
+	}
+
+	public double estimateProfitLossPercentage(Order order) {
+		return priceChangePct() - 100.0 * ((trader.tradingFees().feesOnOrder(order)) / order.getTotalOrderAmount().doubleValue());
 	}
 
 	public boolean tryingToExit() {

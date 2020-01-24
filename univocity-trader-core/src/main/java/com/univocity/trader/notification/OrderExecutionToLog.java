@@ -33,7 +33,7 @@ public class OrderExecutionToLog implements OrderListener {
 			if (order.getStatus() != Order.Status.FILLED && order.getRemainingQuantity().compareTo(BigDecimal.ZERO) > 0) {
 				details += order.getFormattedFillPct() + " filled, ";
 			}
-			details += (order.isBuy() ? "spent" : "sold") + " $" + f.priceToString(order.getTotalTraded());
+			details += (order.isBuy() ? "spent" : "sold") + " $" + f.priceToString(order.getTotalTraded()) + " " + order.getFundsSymbol();
 			details += time;
 		}
 		return details;
@@ -44,8 +44,9 @@ public class OrderExecutionToLog implements OrderListener {
 			Trader trader = trade.trader();
 			SymbolPriceDetails f = trader.priceDetails();
 			SymbolPriceDetails rf = trader.referencePriceDetails();
-			String currency = " " + trader.referenceCurrencySymbol();
-			String type = StringUtils.rightPad(order.sideDescription(), 4);
+			String currency = " " + order.getFundsSymbol();
+			String refCurrency = " " + trader.referenceCurrencySymbol();
+			String type = StringUtils.rightPad(order.sideDescription(), 5);
 
 			String quantity = f.quantityToString(order.getQuantity());
 			if (maxQuantityLength < quantity.length()) {
@@ -66,15 +67,21 @@ public class OrderExecutionToLog implements OrderListener {
 				if (order.isFinalized()) {
 					details += " + " + printFillDetails(order, trade, rf) + ".";
 					if (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) != 0) {
-						details += " Worth $" + rf.priceToString(order.getExecutedQuantity().doubleValue() * trader.lastClosingPrice()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
+						if (order.isLongBuy()) {
+							details += " Worth $" + rf.priceToString(order.getExecutedQuantity().doubleValue() * trader.lastClosingPrice()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
+						} else if (order.isShortSell()) {
+							Balance balance = trader.balanceOf(currency);
+							details += " Shorting total $" + rf.priceToString(trader.balance().getShorted()) + " " + order.getAssetsSymbol() + " (" + currency.trim() + " margin reserve: $" + rf.priceToString(balance.getMarginReserve(order.getAssetsSymbol())) + ", free $" + rf.priceToString(balance.getFree()) + ")";
+						}
 					}
 				} else {
 					details += " + PENDING     committed $" + rf.priceToString(order.getTotalOrderAmount()) + currency;
 				}
 			} else {
 				if (order.isFinalized()) {
-					details += " - " + printFillDetails(order, trade, rf) + "." + (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) == 0 ? "" : " P/L $" + rf.priceToString(trade.actualProfitLoss()) + " [" + trade.formattedProfitLossPct() + "].");
-					details += " Holdings $" + rf.priceToString(trader.holdings()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
+					details += " - " + printFillDetails(order, trade, rf) + "." + (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) == 0 ? ""
+							: " P/L $" + rf.priceToString(trade.actualProfitLoss()) + " [" + trade.formattedProfitLossPct() + ", " + trade.actualProfitLossInReferenceCurrency() + refCurrency + "].");
+					details += " Holdings $" + rf.priceToString(trader.holdings()) + refCurrency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
 				} else {
 					details += " - PENDING     worth $" + rf.priceToString(order.getTotalOrderAmount()) + currency;
 
