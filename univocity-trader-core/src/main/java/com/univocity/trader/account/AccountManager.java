@@ -267,6 +267,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		if (tradeSide == SHORT) {
 			out *= marginReserveFactorPct;
 			out = Math.min(out, freeAmount);
+			out = Math.min(out, maxAmountPerTrade);
 		}
 
 		if (out < minimumInvestment) {

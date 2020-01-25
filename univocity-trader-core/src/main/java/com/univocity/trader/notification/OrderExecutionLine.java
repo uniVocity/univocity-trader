@@ -10,6 +10,8 @@ import java.sql.*;
 public class OrderExecutionLine {
 
 	@Parsed
+	String orderId;
+	@Parsed
 	Timestamp closeTime;
 	@Parsed
 	String clientId;
@@ -72,12 +74,15 @@ public class OrderExecutionLine {
 	@Parsed
 	String orderFillPercentage;
 
+	double fillPct;
+
 	public OrderExecutionLine(Order order, Trade trade, Client client) {
 		Trader trader = trade.trader();
 
 		SymbolPriceDetails priceDetails = trader.priceDetails();
 		SymbolPriceDetails refPriceDetails = trader.referencePriceDetails();
 
+		orderId = order.getOrderId();
 		currency = order.getFundsSymbol();
 		quantity = priceDetails.quantityToString(order.getQuantity());
 		price = order.isBuy() ? priceDetails.priceToString(order.getPrice()) : priceDetails.priceToString(trader.latestCandle().close);
@@ -111,6 +116,7 @@ public class OrderExecutionLine {
 		clientId = client.getId();
 		duration = TimeInterval.getFormattedDurationShort(order.getTimeElapsed(trade.latestCandle().closeTime));
 		orderFillPercentage = order.getFormattedFillPct();
+		fillPct = order.getFillPct();
 	}
 }
 

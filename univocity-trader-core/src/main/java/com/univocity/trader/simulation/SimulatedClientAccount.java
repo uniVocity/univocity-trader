@@ -87,8 +87,9 @@ public class SimulatedClientAccount implements ClientAccount {
 					order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL, orderDetails.getTradeSide(), orderType, orderDetails.getTime());
 				}
 			} else if (orderDetails.isShort()) {
-				if (availableFunds >= orderAmount * account.marginReserveFactorPct()) {
-					locked = account.applyMarginReserve(orderDetails.getTotalOrderAmount());
+				if (availableFunds >= orderAmount) {
+					locked = account.applyMarginReserve(orderDetails.getTotalOrderAmount()).subtract(orderDetails.getTotalOrderAmount());
+
 					account.lockAmount(fundsSymbol, locked);
 					order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL, orderDetails.getTradeSide(), orderType, orderDetails.getTime());
 				}

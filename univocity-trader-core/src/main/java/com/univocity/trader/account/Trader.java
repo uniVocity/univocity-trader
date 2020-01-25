@@ -335,7 +335,6 @@ public class Trader {
 	private boolean sellShort(Trade trade, Candle candle, Strategy strategy) {
 		double amountToSpend = prepareTrade(SHORT, candle, strategy);
 		if (amountToSpend > 0) {
-			amountToSpend /= tradingManager.marginReserveFactorPct();
 			Order order = tradingManager.sell(amountToSpend / candle.close, SHORT);
 			if (order != null) {
 				processOrder(trade, order, strategy, null);
