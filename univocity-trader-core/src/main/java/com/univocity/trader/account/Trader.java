@@ -347,15 +347,20 @@ public class Trader {
 
 
 	private boolean buy(Trade.Side tradeSide, Candle candle, Strategy strategy) {
-		double amountToSpend = prepareTrade(tradeSide, candle, strategy);
-		if (amountToSpend > 0) {
-			Order order = tradingManager.buy(amountToSpend / candle.close, LONG);
-			if (order != null) {
-				processOrder(null, order, strategy, null);
-				return true;
-			}
-			log.trace("Could not buy {} @ {}", tradingManager.getSymbol(), candle.close);
+		Order order = null;
+		if (tradeSide == LONG) {
+			double amountToSpend = prepareTrade(tradeSide, candle, strategy);
+			order = tradingManager.buy(amountToSpend / candle.close, LONG);
+		} else if (tradeSide == SHORT) {
+			double shortedQuantity = balance().getShortedAmount();
+			order = tradingManager.buy(shortedQuantity, SHORT);
 		}
+		if (order != null) {
+			processOrder(null, order, strategy, null);
+			return true;
+		}
+		log.trace("Could not buy {} @ {}", tradingManager.getSymbol(), candle.close);
+
 		return false;
 	}
 
@@ -370,9 +375,9 @@ public class Trader {
 
 	private boolean sellAssets(Trade trade, Strategy strategy, String reason) {
 		double quantity;
-		if(trade != null){
+		if (trade != null) {
 			quantity = trade.quantityInPosition().doubleValue();
-			if(quantity > tradingManager.getAssets() || quantity == 0.0 && trade.isPlaceholder){
+			if (quantity > tradingManager.getAssets() || quantity == 0.0 && trade.isPlaceholder) {
 				quantity = tradingManager.getAssets();
 			}
 		} else {
@@ -443,6 +448,26 @@ public class Trader {
 		tradingManager.notifySimulationEnd();
 	}
 
+	public void liquidateOpenPositions() {
+		for (Trade t : trades) {
+			if (!t.isFinalized()) {
+				if (t.isLong()) {
+					if (!sellAssets(t, null, "Liquidate position")) {
+						log.warn("Could not liquidate open trade: " + t);
+					} else {
+						t.liquidate();
+					}
+				} else if (t.isShort()) {
+					if (!closeShort(t, null, "Liquidate position")) {
+						log.warn("Could not liquidate open trade: " + t);
+					} else {
+						t.liquidate();
+					}
+				}
+			}
+		}
+	}
+
 	public Order submitOrder(Order.Type type, Order.Side side, Trade.Side tradeSide, double quantity) {
 		return tradingManager.getAccount().submitOrder(this, quantity, side, tradeSide, type);
 	}
@@ -492,7 +517,7 @@ public class Trader {
 			}
 		} else {
 			if (order.isLong()) {
-				if(!trade.increasePosition(order)){
+				if (!trade.increasePosition(order)) {
 					trade = new Trade(order, this, strategy);
 					trades.add(trade);
 				}
@@ -516,7 +541,7 @@ public class Trader {
 
 		if (trade != null) {
 			if (trade.isShort()) {
-				if(!trade.increasePosition(order)){
+				if (!trade.increasePosition(order)) {
 					trade = new Trade(order, this, strategy);
 					trades.add(trade);
 				}

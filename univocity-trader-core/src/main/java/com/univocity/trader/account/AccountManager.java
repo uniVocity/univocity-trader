@@ -478,7 +478,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 						if (expectedCost > maxSpend) {
 							quantity = quantity * (maxSpend / expectedCost);
 						}
-//						quantity = quantity * 0.9999;
+						quantity = quantity * 0.9999;
 						OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, tradeSide, quantity, null);
 						return executeOrder(orderPreparation);
 					}

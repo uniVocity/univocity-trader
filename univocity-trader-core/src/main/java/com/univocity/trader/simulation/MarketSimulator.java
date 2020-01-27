@@ -193,6 +193,10 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 	private void reportResults(Parameters parameters) {
 		for (AccountManager account : accounts()) {
+			account.getAllTradingManagers().forEach(t -> t.getTrader().liquidateOpenPositions());
+		}
+
+		for (AccountManager account : accounts()) {
 			String id = account.getClient().getId();
 			System.out.print("-------");
 			if (parameters != null && parameters != Parameters.NULL) {

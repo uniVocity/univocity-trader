@@ -4,6 +4,7 @@ import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.simulation.orderfill.*;
 import com.univocity.trader.strategy.*;
 import org.slf4j.*;
 
@@ -486,7 +487,7 @@ public class Trade implements Comparable<Trade> {
 
 		synchronized (this) {
 			double qtyInPosition = removeCancelledAndSumQuantities(position).doubleValue();
-			if(qtyInPosition == 0.0){
+			if (qtyInPosition == 0.0) {
 				return false;
 			}
 			double qtyInExit = removeCancelledAndSumQuantities(exitOrders).doubleValue();
@@ -672,5 +673,15 @@ public class Trade implements Comparable<Trade> {
 			throw new IllegalStateException("Illegal quantity of " + symbol() + " held in " + getSide() + " trade. Position: " + pos + ", Exit: " + exit);
 		}
 		return out;
+	}
+
+	public void liquidate() {
+		ImmediateFillEmulator immediateFill = new ImmediateFillEmulator();
+		for (Order order : exitOrders()) {
+			if (!order.isFinalized()) {
+				immediateFill.fillOrder((DefaultOrder) order, latestCandle());
+				trader.tradingManager.notifyOrderFinalized(order, this);
+			}
+		}
 	}
 }
