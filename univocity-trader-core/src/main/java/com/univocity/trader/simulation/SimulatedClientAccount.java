@@ -52,27 +52,27 @@ public class SimulatedClientAccount implements ClientAccount {
 		String fundsSymbol = orderDetails.getFundsSymbol();
 		String assetsSymbol = orderDetails.getAssetsSymbol();
 		Order.Type orderType = orderDetails.getType();
-		double unitPrice = orderDetails.getPrice().doubleValue();
-		final double orderAmount = orderDetails.getTotalOrderAmount().doubleValue();
+		BigDecimal unitPrice = orderDetails.getPrice();
+		final BigDecimal orderAmount = orderDetails.getTotalOrderAmount();
 
-		double availableFunds = account.getAmount(fundsSymbol);
-		double availableAssets = account.getAmount(assetsSymbol);
+		BigDecimal availableFunds = account.getPreciseAmount(fundsSymbol);
+		BigDecimal availableAssets = account.getPreciseAmount(assetsSymbol);
 		if (orderDetails.isShort()) {
 			if (orderDetails.isBuy()) {
-				availableFunds += account.getMarginReserve(fundsSymbol, assetsSymbol).doubleValue();
+				availableFunds = availableFunds.add(account.getMarginReserve(fundsSymbol, assetsSymbol));
 			} else if (orderDetails.isSell()) {
-				availableAssets = account.getShortedAmount(assetsSymbol);
+				availableAssets = account.getPreciseShortedAmount(assetsSymbol);
 			}
 		}
 
 
-		double quantity = orderDetails.getQuantity().doubleValue();
-		double fees = orderAmount - getTradingFees().takeFee(orderAmount, orderType, orderDetails.getSide());
+		BigDecimal quantity = orderDetails.getQuantity();
+		double fees = orderAmount.doubleValue() - getTradingFees().takeFee(orderAmount.doubleValue(), orderType, orderDetails.getSide());
 
 		BigDecimal locked = BigDecimal.ZERO;
 
 		Order order = null;
-		if (orderDetails.isBuy() && availableFunds - fees >= orderAmount - 0.000000001) {
+		if (orderDetails.isBuy() && availableFunds.doubleValue() - fees >= orderAmount.doubleValue() - 0.000000001) {
 			if (orderDetails.isLong()) {
 				locked = orderDetails.getTotalOrderAmount();
 				account.lockAmount(fundsSymbol, locked);
@@ -81,13 +81,13 @@ public class SimulatedClientAccount implements ClientAccount {
 
 		} else if (orderDetails.isSell()) {
 			if (orderDetails.isLong()) {
-				if (availableAssets >= quantity) {
+				if (availableAssets.compareTo(quantity) >= 0) {
 					locked = orderDetails.getQuantity();
 					account.lockAmount(assetsSymbol, locked);
 					order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL, orderDetails.getTradeSide(), orderType, orderDetails.getTime());
 				}
 			} else if (orderDetails.isShort()) {
-				if (availableFunds >= orderAmount) {
+				if (availableFunds.compareTo(orderAmount) >= 0) {
 					locked = account.applyMarginReserve(orderDetails.getTotalOrderAmount()).subtract(orderDetails.getTotalOrderAmount());
 
 					account.lockAmount(fundsSymbol, locked);
@@ -104,10 +104,10 @@ public class SimulatedClientAccount implements ClientAccount {
 		return order;
 	}
 
-	protected DefaultOrder createOrder(String assetsSymbol, String fundSymbol, double quantity, double price, Order.Side orderSide, Trade.Side tradeSide, Order.Type orderType, long closeTime) {
+	protected DefaultOrder createOrder(String assetsSymbol, String fundSymbol, BigDecimal quantity, BigDecimal price, Order.Side orderSide, Trade.Side tradeSide, Order.Type orderType, long closeTime) {
 		DefaultOrder out = new DefaultOrder(assetsSymbol, fundSymbol, orderSide, tradeSide, closeTime);
-		out.setPrice(BigDecimal.valueOf(price));
-		out.setQuantity(BigDecimal.valueOf(quantity));
+		out.setPrice(price);
+		out.setQuantity(quantity);
 		out.setType(orderType);
 		out.setStatus(Order.Status.NEW);
 		out.setExecutedQuantity(BigDecimal.ZERO);

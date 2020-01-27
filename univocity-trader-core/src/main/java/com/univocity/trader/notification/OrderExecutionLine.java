@@ -16,15 +16,15 @@ public class OrderExecutionLine {
 	@Parsed
 	String clientId;
 	@Parsed
-	String symbol;
+	String assetSymbol;
 	@Parsed
 	String operation;
 	@Parsed
 	String exitReason;
 	@Parsed
-	int ticks;
+	Integer ticks;
 	@Parsed
-	String currency;
+	String fundSymbol;
 	@Parsed
 	String minPrice;
 	@Parsed
@@ -75,51 +75,113 @@ public class OrderExecutionLine {
 	String orderFillPercentage;
 
 	double fillPct;
+	boolean isShort;
+	boolean isBuy;
 
-	public OrderExecutionLine(Order order, Trade trade, Client client) {
-		Trader trader = trade.trader();
-
+	public OrderExecutionLine(Order order, Trade trade, Trader trader, Client client) {
 		SymbolPriceDetails priceDetails = trader.priceDetails();
 		SymbolPriceDetails refPriceDetails = trader.referencePriceDetails();
 
-		orderId = order.getOrderId();
-		currency = order.getFundsSymbol();
-		quantity = priceDetails.quantityToString(order.getQuantity());
-		price = order.isBuy() ? priceDetails.priceToString(order.getPrice()) : priceDetails.priceToString(trader.latestCandle().close);
-		closeTime = trader.latestCandle().closeTimestamp();
-		symbol = trader.assetSymbol();
+		clientId = client.getId();
 		referenceCurrency = trader.referenceCurrencySymbol();
-		status = order.getStatus();
-		operation = order.sideDescription();
-		orderType = order.getType();
-		executedQuantity = priceDetails.quantityToString(order.getExecutedQuantity());
-		valueTransacted = priceDetails.priceToString(order.getTotalTraded());
-		orderAmount = priceDetails.priceToString(order.getTotalOrderAmount());
-		priceChangePct = trade.formattedPriceChangePct();
-		Balance balance = trader.balanceOf(currency);
-		freeBalance = priceDetails.priceToString(balance.getFree());
-		shortedQuantity = priceDetails.quantityToString(trader.balance().getShortedAmount());
-		marginReserve = priceDetails.priceToString(balance.getMarginReserve(order.getAssetsSymbol()));
 
 		freeBalanceReferenceCurrency = refPriceDetails.priceToString(trader.balance().getFree());
-		profitLoss = priceDetails.priceToString(trade.actualProfitLoss());
-		profitLossPct = trade.formattedProfitLossPct();
-		profitLossReferenceCurrency = refPriceDetails.priceToString(trade.actualProfitLossInReferenceCurrency());
-		estimatedProfitLossPct = trade.formattedEstimateProfitLossPercentage(order);
 		holdings = refPriceDetails.priceToString(trader.holdings());
-		minChangePct = trade.formattedMinChangePct();
-		maxChangePct = trade.formattedMaxChangePct();
-		minPrice = priceDetails.priceToString(trade.minPrice());
-		maxPrice = priceDetails.priceToString(trade.maxPrice());
-		ticks = trade.ticks();
-		exitReason = trade.exitReason();
-		clientId = client.getId();
-		duration = TimeInterval.getFormattedDurationShort(order.getTimeElapsed(trade.latestCandle().closeTime));
-		orderFillPercentage = order.getFormattedFillPct();
-		fillPct = order.getFillPct();
+
+		if (order != null) {
+			price = priceDetails.priceToString(trader.latestCandle().close);
+			fundSymbol = trader.fundSymbol();
+			closeTime = trader.latestCandle().closeTimestamp();
+			assetSymbol = trader.assetSymbol();
+
+			Balance balance = trader.balanceOf(fundSymbol);
+			shortedQuantity = priceDetails.quantityToString(trader.balance(assetSymbol).getShortedAmount());
+
+			SymbolPriceDetails amountDetails = fundSymbol.equals(referenceCurrency) ? refPriceDetails : priceDetails;
+
+			freeBalance = amountDetails.priceToString(balance.getFree());
+			marginReserve = amountDetails.priceToString(balance.getMarginReserve(trader.assetSymbol()));
+			valueTransacted = amountDetails.priceToString(order.getTotalTraded());
+			price = order.isBuy() ? amountDetails.priceToString(order.getPrice()) : price;
+
+			orderId = order.getOrderId();
+			quantity = priceDetails.quantityToString(order.getQuantity());
+			status = order.getStatus();
+			operation = order.sideDescription();
+			isShort = order.isShort();
+			isBuy = order.isBuy();
+			orderType = order.getType();
+			executedQuantity = priceDetails.quantityToString(order.getExecutedQuantity());
+			fillPct = order.getFillPct();
+			orderFillPercentage = order.getFormattedFillPct();
+
+			if (orderType == Order.Type.MARKET && fillPct == 0.0) {
+				orderAmount = amountDetails.priceToString(order.getQuantity().doubleValue() * trader.lastClosingPrice());
+			} else {
+				orderAmount = amountDetails.priceToString(order.getTotalOrderAmount());
+			}
+
+		} else {
+			operation = "END";
+		}
+		if (trade != null) {
+			priceChangePct = trade.formattedPriceChangePct();
+			if(trade.isFinalized()) {
+				profitLoss = priceDetails.priceToString(trade.actualProfitLoss());
+				profitLossPct = trade.formattedProfitLossPct();
+				profitLossReferenceCurrency = refPriceDetails.priceToString(trade.actualProfitLossInReferenceCurrency());
+			}
+			minChangePct = trade.formattedMinChangePct();
+			maxChangePct = trade.formattedMaxChangePct();
+			minPrice = priceDetails.priceToString(trade.minPrice());
+			maxPrice = priceDetails.priceToString(trade.maxPrice());
+			ticks = trade.ticks();
+			exitReason = trade.exitReason();
+
+			if (order != null) {
+				estimatedProfitLossPct = trade.formattedEstimateProfitLossPercentage(order);
+				duration = TimeInterval.getFormattedDurationShort(order.getTimeElapsed(trade.latestCandle().closeTime));
+			}
+		}
+	}
+
+	public String printMinChange() {
+		return isShort ? maxChangePct : minChangePct;
+	}
+
+	public String printMaxChange() {
+		return isShort ? minChangePct : maxChangePct;
+	}
+
+	public String printMaxPriceAndChange() {
+		return concat(maxPrice, printMaxChange());
+	}
+
+	public String printMinPriceAndChange() {
+		return concat(maxPrice, printMinChange());
+	}
+
+	public String printLastPriceAndChange() {
+		return concat(price, priceChangePct);
+	}
+
+	public String printProfitLossAndChange() {
+		return concat(profitLoss, profitLossPct);
+	}
+
+	public String printReferenceCurrencyProfitLossAndChange() {
+		return referenceCurrency + " " + concat(profitLossReferenceCurrency, profitLossPct);
+	}
+
+	public String printHoldingsAndReferenceCurrency() {
+		return holdings + " " + referenceCurrency;
+	}
+
+	public String printOrderAmountAndCurrency() {
+		return orderAmount + " " + fundSymbol;
+	}
+
+	private String concat(String amount, String percentage) {
+		return amount + " (" + percentage + ')';
 	}
 }
-
-
-
-

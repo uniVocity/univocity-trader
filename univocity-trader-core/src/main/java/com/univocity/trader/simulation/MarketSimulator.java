@@ -81,7 +81,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 				AccountManager accountManager = accountsTradingSymbol.get(i);
 				SimulatedExchange exchange = new SimulatedExchange(accountManager);
 				exchange.setSymbolInformation(this.symbolInformation);
-				SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange);
+				SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol());
 
 				TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, accountManager, assetSymbol, fundSymbol, parameters);
 
@@ -232,6 +232,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		final Instant start = simulation.backfillFrom().toInstant(ZoneOffset.UTC);
 		final Instant end = simulation.backfillTo().toInstant(ZoneOffset.UTC);
 		CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository);
+		backfill.resumeBackfill(configuration.simulation().resumeBackfill());
 		for (String symbol : symbols) {
 			backfill.fillHistoryGaps(exchange, symbol, start, end, configuration.tickInterval());
 		}

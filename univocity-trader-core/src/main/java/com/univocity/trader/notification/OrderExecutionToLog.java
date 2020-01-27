@@ -1,8 +1,6 @@
 package com.univocity.trader.notification;
 
-import com.univocity.trader.*;
 import com.univocity.trader.account.*;
-import com.univocity.trader.indicators.base.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
@@ -24,16 +22,16 @@ public class OrderExecutionToLog implements OrderListener {
 		logDetails(order, trade, client);
 	}
 
-	private String printFillDetails(Order order, Trade trade, SymbolPriceDetails f) {
-		String details = StringUtils.rightPad(order.getStatus().name(), 12);
-		String time = " after " + TimeInterval.getFormattedDuration(order.getTimeElapsed(trade.latestCandle().closeTime));
-		if (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) == 0) {
+	private String printFillDetails(OrderExecutionLine o) {
+		String details = StringUtils.rightPad(o.status.name(), 12);
+		String time = " duration: " + o.duration;
+		if (o.fillPct == 0.0) {
 			details += "0.00% filled" + time;
 		} else {
-			if (order.getStatus() != Order.Status.FILLED && order.getRemainingQuantity().compareTo(BigDecimal.ZERO) > 0) {
-				details += order.getFormattedFillPct() + " filled, ";
+			if (o.fillPct != 100.0) {
+				details += o.orderFillPercentage + " filled, ";
 			}
-			details += (order.isBuy() ? "spent" : "sold") + " $" + f.priceToString(order.getTotalTraded()) + " " + order.getFundsSymbol();
+			details += (o.isBuy ? "spent" : "sold") + " $" + o.valueTransacted + " " + o.fundSymbol;
 			details += time;
 		}
 		return details;
@@ -41,49 +39,51 @@ public class OrderExecutionToLog implements OrderListener {
 
 	private void logDetails(Order order, Trade trade, Client client) {
 		if (log.isDebugEnabled()) {
-			Trader trader = trade.trader();
-			SymbolPriceDetails f = trader.priceDetails();
-			SymbolPriceDetails rf = trader.referencePriceDetails();
-			String currency = " " + order.getFundsSymbol();
-			String refCurrency = " " + trader.referenceCurrencySymbol();
-			String type = StringUtils.rightPad(order.sideDescription(), 5);
 
-			String quantity = f.quantityToString(order.getQuantity());
+			OrderExecutionLine o = new OrderExecutionLine(order, trade, trade.trader(), client);
+			String type = StringUtils.rightPad(o.operation, 5);
+
+			String quantity = o.quantity;
 			if (maxQuantityLength < quantity.length()) {
 				maxQuantityLength = quantity.length();
 			}
 			quantity = StringUtils.leftPad(quantity, maxQuantityLength);
 
-			String price = order.isBuy() ? f.priceToString(order.getPrice()) : f.priceToString(trader.latestCandle().close);
+			String price = o.price;
 			if (maxPriceLength < price.length()) {
 				maxPriceLength = price.length();
 			}
 			price = StringUtils.rightPad(price, maxPriceLength);
 
-			String details = trader.latestCandle().getFormattedCloseTime("yy-MM-dd HH:mm") + " ";
-			details += StringUtils.rightPad(trader.assetSymbol(), 8) + " " + type + " " + quantity + " @ $" + price;
+			String details = StringUtils.rightPad(o.closeTime.toString(), 25) + " " + StringUtils.rightPad(o.assetSymbol, 8) + " " + type + " " + quantity + " @ $" + price;
 //			details += "[" + order.getOrderId() + "]";
 			if (order.isLongBuy() || order.isShortSell()) {
 				if (order.isFinalized()) {
-					details += " + " + printFillDetails(order, trade, rf) + ".";
+					details += " + " + printFillDetails(o) + ".";
 					if (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) != 0) {
 						if (order.isLongBuy()) {
-							details += " Worth $" + rf.priceToString(order.getExecutedQuantity().doubleValue() * trader.lastClosingPrice()) + currency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
+							details += " Worth $" + o.price + " " + o.fundSymbol + " (free $" + o.freeBalance + " " + o.fundSymbol;
+							if (!o.fundSymbol.equals(o.referenceCurrency)) {
+								details += ", $" + o.freeBalanceReferenceCurrency + " " + o.referenceCurrency;
+							}
+							details += ")";
 						} else if (order.isShortSell()) {
-							Balance balance = trader.balanceOf(currency);
-							details += " Shorting total $" + rf.priceToString(trader.balance().getShorted()) + " " + order.getAssetsSymbol() + " (" + currency.trim() + " margin reserve: $" + rf.priceToString(balance.getMarginReserve(order.getAssetsSymbol())) + ", free $" + rf.priceToString(balance.getFree()) + ")";
+							details += " Shorting total " + o.assetSymbol + " " + o.shortedQuantity + " (" + o.fundSymbol + " margin reserve: $" + o.marginReserve + ", free $" + o.freeBalance + ")";
 						}
 					}
 				} else {
-					details += " + PENDING     committed $" + rf.priceToString(order.getTotalOrderAmount()) + currency;
+					details += " + PENDING     worth $" + o.printOrderAmountAndCurrency();
 				}
 			} else {
 				if (order.isFinalized()) {
-					details += " - " + printFillDetails(order, trade, rf) + "." + (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) == 0 ? ""
-							: " P/L $" + rf.priceToString(trade.actualProfitLoss()) + " [" + trade.formattedProfitLossPct() + ", " + trade.actualProfitLossInReferenceCurrency() + refCurrency + "].");
-					details += " Holdings $" + rf.priceToString(trader.holdings()) + refCurrency + " (free $" + rf.priceToString(trader.balance().getFree()) + ")";
+					details += " - " + printFillDetails(o) + ".";
+					if (o.fillPct > 0.0) {
+						details += " P/L " + o.printReferenceCurrencyProfitLossAndChange();
+					}
+
+					details += " Holdings $" + o.printHoldingsAndReferenceCurrency() + " (free $" + o.freeBalanceReferenceCurrency + ")";
 				} else {
-					details += " - PENDING     worth $" + rf.priceToString(order.getTotalOrderAmount()) + currency;
+					details += " - PENDING     worth $" + o.printOrderAmountAndCurrency();
 
 					String pl = trade.formattedEstimateProfitLossPercentage(order);
 					if (!pl.startsWith("-")) {
@@ -92,7 +92,7 @@ public class OrderExecutionToLog implements OrderListener {
 
 					details += ". Expected P/L " + pl;
 
-					details += " | " + trade.ticks() + " ticks [min " + trade.formattedMinPriceAndPercentage() + ", max $" + trade.formattedMaxPriceAndPercentage() + ")]";
+					details += " | " + trade.ticks() + " ticks [min " + o.printMinPriceAndChange() + ", max $" + o.printMaxPriceAndChange() + ")]";
 					details += " " + trade.exitReason();
 				}
 			}

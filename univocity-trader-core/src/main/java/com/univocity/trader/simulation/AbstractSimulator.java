@@ -44,6 +44,12 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 
 	public final SymbolInformation symbolInformation(String symbol) {
 		SymbolInformation info = new SymbolInformation(symbol);
+		var allPairs = populateAllPairs();
+		var allReferenceCurrencies = populateAllReferenceCurrencies();
+		if (!allPairs.containsKey(symbol) && !allReferenceCurrencies.contains(symbol)) {
+			throw new IllegalArgumentException("Unknown symbol '" + symbol + "'. Available symbols are: " + allPairs.keySet() + " and reference currencies: " + allReferenceCurrencies);
+		}
+
 		symbolInformation.put(symbol, info);
 		return info;
 	}
@@ -92,14 +98,31 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 //		return configuration.account(accountId);
 //	}
 
+	public Map<String, String[]> allPairs() {
+		return populateAllPairs();
+	}
+
 	protected Map<String, String[]> getAllPairs() {
 		if (allPairs == null) {
-			allPairs = new TreeMap<>();
-			for (AccountManager account : accounts()) {
-				allPairs.putAll(account.configuration().symbolPairs());
-			}
+			allPairs = populateAllPairs();
 		}
 		return allPairs;
+	}
+
+	private Map<String, String[]> populateAllPairs() {
+		TreeMap<String, String[]> out = new TreeMap<>();
+		for (AccountManager account : accounts()) {
+			out.putAll(account.configuration().symbolPairs());
+		}
+		return out;
+	}
+
+	private Set<String> populateAllReferenceCurrencies() {
+		TreeSet<String> out = new TreeSet<>();
+		for (AccountManager account : accounts()) {
+			out.add(account.getReferenceCurrencySymbol());
+		}
+		return out;
 	}
 
 	protected Collection<String[]> getTradePairs() {

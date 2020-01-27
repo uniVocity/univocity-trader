@@ -42,7 +42,7 @@ public class ExchangeClient<T> implements Client {
 		if (accountManager.configuration().symbolPairs().isEmpty()) {
 			throw new IllegalStateException("No trade symbols defined for client " + accountManager.configuration().id());
 		}
-		final SymbolPriceDetails priceDetails = new SymbolPriceDetails(exchange); //loads price information from exchange
+		final SymbolPriceDetails priceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol()); //loads price information from exchange
 
 		Set<TradingManager> all = new HashSet<>();
 

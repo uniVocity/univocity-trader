@@ -369,7 +369,18 @@ public class Trader {
 	}
 
 	private boolean sellAssets(Trade trade, Strategy strategy, String reason) {
-		Order order = tradingManager.sell(tradingManager.getAssets(), trade.getSide());
+		double quantity;
+		if(trade != null){
+			quantity = trade.quantityInPosition().doubleValue();
+			if(quantity > tradingManager.getAssets() || quantity == 0.0 && trade.isPlaceholder){
+				quantity = tradingManager.getAssets();
+			}
+		} else {
+			quantity = tradingManager.getAssets();
+		}
+
+
+		Order order = tradingManager.sell(quantity, trade.getSide());
 		if (order != null) {
 			processOrder(trade, order, strategy, reason);
 			return true;
@@ -447,6 +458,10 @@ public class Trader {
 				} else if (order.isSell()) {
 					trade = processSellOrder(trade, order, strategy, reason);
 				}
+
+				if (trade != null && trade.isPlaceholder) {
+					trades.add(trade);
+				}
 			} finally {
 				tradingManager.updateBalances();
 			}
@@ -460,7 +475,7 @@ public class Trader {
 	private Trade processBuyOrder(Order order, Strategy strategy, String reason) {
 		Trade trade = null;
 		for (Trade t : trades) {
-			if (!t.tradeFinalized() && t.getSide() == order.getTradeSide()) {
+			if (!t.isFinalized() && t.getSide() == order.getTradeSide()) {
 				trade = t;
 				break;
 			}
@@ -473,12 +488,14 @@ public class Trader {
 			} else if (order.isShort()) {
 				trade = Trade.createPlaceholder(this, order.getTradeSide());
 				trade.decreasePosition(order, "Exit short position");
-				trades.add(trade);
 				log.warn("Received a short-covering buy order without an open trade: " + order);
 			}
 		} else {
 			if (order.isLong()) {
-				trade.increasePosition(order);
+				if(!trade.increasePosition(order)){
+					trade = new Trade(order, this, strategy);
+					trades.add(trade);
+				}
 			} else if (order.isShort()) {
 				trade.decreasePosition(order, reason);
 			}
@@ -490,7 +507,7 @@ public class Trader {
 	private Trade processSellOrder(Trade trade, Order order, Strategy strategy, String reason) {
 		if (trade == null) {
 			for (Trade t : trades) {
-				if (!t.tradeFinalized() && t.canExit(strategy)) {
+				if (!t.isFinalized() && t.canExit(strategy)) {
 					trade = t;
 					break;
 				}
@@ -499,7 +516,10 @@ public class Trader {
 
 		if (trade != null) {
 			if (trade.isShort()) {
-				trade.increasePosition(order);
+				if(!trade.increasePosition(order)){
+					trade = new Trade(order, this, strategy);
+					trades.add(trade);
+				}
 			} else {
 				trade.decreasePosition(order, reason);
 			}
@@ -510,7 +530,6 @@ public class Trader {
 			} else {
 				trade = Trade.createPlaceholder(this, order.getTradeSide());
 				trade.decreasePosition(order, "Exit long position");
-				trades.add(trade);
 				//could be manual
 				log.warn("Received a sell order without an open trade: " + order);
 			}
@@ -540,7 +559,7 @@ public class Trader {
 			}
 
 			for (Trade trade : trades) {
-				if (!trade.tradeFinalized() && trade.allowTradeSwitch(exitSymbol, candle, candleTicker)) {
+				if (!trade.isFinalized() && trade.allowTradeSwitch(exitSymbol, candle, candleTicker)) {
 					if (exit(trade, trade.latestCandle(), strategy, "exit to buy " + exitSymbol)) {
 						return true;
 					}
@@ -633,7 +652,7 @@ public class Trader {
 		Trade trade = tradeOf(order);
 		if (trade != null) {
 			trade.orderFinalized(order);
-			if (trade.tradeFinalized()) {
+			if (trade.isFinalized()) {
 				trades.remove(trade);
 				pastTrades.add(trade);
 			}

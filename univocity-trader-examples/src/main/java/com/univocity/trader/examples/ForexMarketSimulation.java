@@ -9,7 +9,6 @@ import com.univocity.trader.notification.*;
 import java.time.*;
 
 import static com.univocity.trader.exchange.interactivebrokers.SecurityType.*;
-import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -47,10 +46,11 @@ public class ForexMarketSimulation {
 		simulation.initialFunds(1000.0)
 				.tradingFees(SimpleTradingFees.percentage(0.0)) // NO FEE WARNING!!
 				.fillOrdersOnPriceMatch()
+				.resumeBackfill(false)
 				.simulateTo(LocalDateTime.now());
 
 		simulator.symbolInformation("GBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
-		simulator.symbolInformation("EUR").priceDecimalPlaces(5).quantityDecimalPlaces(2);
+		simulator.symbolInformation("EURGBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 
 		//Interval of 1ms = REAL TIME TICKS
 		simulator.configure().tickInterval(TimeInterval.millis(1));
@@ -58,20 +58,6 @@ public class ForexMarketSimulation {
 //		execute simulation
 //		simulator.run();
 
-		simulation.backfillTo(LocalDateTime.now());
-		simulation.backfillMonths(6);
-
-		while (true) {
-			try {
-				simulator.backfillHistory("EURGBP");
-				System.out.println(">>>>>>>>>> DISCONNECTED <<<<<<<<<<<<");
-
-				Thread.sleep(minutes(1).ms);
-			} catch (InterruptedException ex) {
-				Thread.currentThread().interrupt();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+		simulator.backfillHistory("EURGBP");
 	}
 }

@@ -11,6 +11,8 @@ import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static com.univocity.trader.account.Balance.*;
+
 /**
  * A {@code Trade} holds one or more {@link Order} placed in the {@link Exchange} through
  * a {@link Trader}. Once a position is opened, this {@code Trade} object will start capturing the following
@@ -410,7 +412,7 @@ public class Trade implements Comparable<Trade> {
 				updateAveragePrice(position.values());
 			}
 		} else if (exitOrders.containsKey(order.getOrderId())) {
-			if (tradeFinalized()) {
+			if (isFinalized()) {
 				updateAveragePrice(exitOrders.values());
 				double totalSold = this.totalSpent;
 				double soldUnits = this.totalUnits;
@@ -449,25 +451,25 @@ public class Trade implements Comparable<Trade> {
 		}
 	}
 
-	private double removeCancelledAndSumQuantities(Map<String, Order> orders) {
-		double total = 0.0;
+	private BigDecimal removeCancelledAndSumQuantities(Map<String, Order> orders) {
+		BigDecimal total = BigDecimal.ZERO;
 
 		if (!orders.isEmpty()) {
 			var it = orders.entrySet().iterator();
 			while (it.hasNext()) {
 				Order order = it.next().getValue();
-				if (order.isCancelled() && order.getExecutedQuantity().equals(BigDecimal.ZERO)) {
+				if (order.isCancelled() && order.getExecutedQuantity().compareTo(BigDecimal.ZERO) == 0) {
 					it.remove();
 				} else {
-					total += order.getExecutedQuantity().doubleValue();
+					total = total.add(order.getExecutedQuantity());
 				}
 			}
 		}
 
-		return total;
+		return total.round(ROUND_MC);
 	}
 
-	public boolean tradeFinalized() {
+	public boolean isFinalized() {
 		if (isPlaceholder) {
 			return true;
 		}
@@ -482,15 +484,23 @@ public class Trade implements Comparable<Trade> {
 			return false;
 		}
 
-		double qtyInPosition = removeCancelledAndSumQuantities(position);
-		double qtyInExit = removeCancelledAndSumQuantities(exitOrders);
+		synchronized (this) {
+			double qtyInPosition = removeCancelledAndSumQuantities(position).doubleValue();
+			if(qtyInPosition == 0.0){
+				return false;
+			}
+			double qtyInExit = removeCancelledAndSumQuantities(exitOrders).doubleValue();
 
-		if ((qtyInPosition - qtyInExit) * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() / 5.0) {
-			finalizedQuantity = qtyInPosition;
-			return true;
+			double exitPct = qtyInExit * 100.0 / qtyInPosition;
+
+			if ((qtyInPosition - qtyInExit) * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() || exitPct > 98.0) {
+				double fractionRemaining = qtyInPosition - qtyInExit;
+				finalizedQuantity = qtyInPosition - fractionRemaining;
+				return true;
+			}
+
+			return false;
 		}
-
-		return false;
 	}
 
 	public Strategy openingStrategy() {
@@ -546,12 +556,18 @@ public class Trade implements Comparable<Trade> {
 		return true;
 	}
 
-	public void increasePosition(Order order) {
-		this.position.put(order.getOrderId(), order);
-		notifyOrderSubmission(order);
+	public synchronized boolean increasePosition(Order order) {
+		removeCancelledAndSumQuantities(exitOrders);
+
+		if (exitOrders.isEmpty()) {
+			this.position.put(order.getOrderId(), order);
+			notifyOrderSubmission(order);
+			return true;
+		}
+		return false;
 	}
 
-	public void decreasePosition(Order order, String exitReason) {
+	public synchronized void decreasePosition(Order order, String exitReason) {
 		if (this.exitReason == null) {
 			this.exitReason = exitReason;
 		}
@@ -628,7 +644,7 @@ public class Trade implements Comparable<Trade> {
 
 	public double quantity() {
 		if (finalizedQuantity < 0) {
-			return removeCancelledAndSumQuantities(position);
+			return removeCancelledAndSumQuantities(position).doubleValue();
 		} else {
 			return finalizedQuantity;
 		}
@@ -642,5 +658,19 @@ public class Trade implements Comparable<Trade> {
 	public String formattedMaxPriceAndPercentage() {
 		SymbolPriceDetails f = trader.priceDetails();
 		return '$' + f.priceToString(maxPrice()) + " (" + (isLong() ? formattedMaxChangePct() : formattedMinChangePct()) + ')';
+	}
+
+	public String toString() {
+		return position.toString() + exitOrders.toString();
+	}
+
+	public BigDecimal quantityInPosition() {
+		BigDecimal pos = removeCancelledAndSumQuantities(position);
+		BigDecimal exit = removeCancelledAndSumQuantities(exitOrders);
+		BigDecimal out = pos.subtract(exit);
+		if (out.compareTo(BigDecimal.ZERO) < 0) {
+			throw new IllegalStateException("Illegal quantity of " + symbol() + " held in " + getSide() + " trade. Position: " + pos + ", Exit: " + exit);
+		}
+		return out;
 	}
 }

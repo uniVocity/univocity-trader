@@ -18,9 +18,18 @@ public class CandleHistoryBackfill {
 
 	private static final Logger log = LoggerFactory.getLogger(CandleRepository.class);
 	private final CandleRepository candleRepository;
+	private boolean resumeBackfill = false;
 
 	public CandleHistoryBackfill(CandleRepository candleRepository) {
 		this.candleRepository = candleRepository;
+	}
+
+	public boolean resumeBackfill() {
+		return resumeBackfill;
+	}
+
+	public void resumeBackfill(boolean resumeBackfill) {
+		this.resumeBackfill = resumeBackfill;
 	}
 
 	public <T> void fillHistory(Exchange<T, ?> exchange, String symbol, Instant from, Instant to, TimeInterval minGap) {
@@ -74,10 +83,12 @@ public class CandleHistoryBackfill {
 	}
 
 	private Instant resumeIfPossible(String symbol, Instant startingTime) {
-		Instant lastClose = resume(symbol);
-		if (lastClose != null) {
-			log.info("Resuming backfill process of symbol {} from {}", symbol, getFormattedDateTimeWithYear(lastClose.toEpochMilli()));
-			return lastClose;
+		if(resumeBackfill) {
+			Instant lastClose = resume(symbol);
+			if (lastClose != null) {
+				log.info("Resuming backfill process of symbol {} from {}", symbol, getFormattedDateTimeWithYear(lastClose.toEpochMilli()));
+				return lastClose;
+			}
 		}
 		return startingTime;
 	}

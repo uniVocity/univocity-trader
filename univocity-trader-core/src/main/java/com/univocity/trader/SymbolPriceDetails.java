@@ -18,6 +18,10 @@ public class SymbolPriceDetails {
 	private final SymbolInformation info;
 
 	public SymbolPriceDetails(Exchange<?, ?> exchange) {
+		this(exchange, null);
+	}
+
+	public SymbolPriceDetails(Exchange<?, ?> exchange, String referenceCurrency) {
 		Map<String, SymbolInformation> symbols = exchange.getSymbolInformation();
 
 		this.allFormatters = new ConcurrentHashMap<>();
@@ -26,6 +30,30 @@ public class SymbolPriceDetails {
 		}
 
 		this.info = null;
+
+		if (referenceCurrency != null) {
+			populateDetailsForReferenceCurrency(referenceCurrency);
+		}
+	}
+
+	private void populateDetailsForReferenceCurrency(String referenceSymbol) {
+		Set<String> existing = allFormatters.keySet();
+		for (String symbol : existing) {
+			if (!symbol.startsWith(referenceSymbol) && symbol.endsWith(referenceSymbol)) {
+				SymbolPriceDetails details = allFormatters.get(symbol);
+				SymbolInformation info = details.info;
+
+				String asset = symbol.substring(0, symbol.length() - referenceSymbol.length());
+				String inverseSymbol = referenceSymbol + asset;
+				SymbolInformation inverseInfo = new SymbolInformation(inverseSymbol);
+
+				inverseInfo.priceDecimalPlaces(info.quantityDecimalPlaces());
+				inverseInfo.quantityDecimalPlaces(info.priceDecimalPlaces());
+
+				SymbolPriceDetails inverseDetails = new SymbolPriceDetails(info, allFormatters);
+				allFormatters.put(inverseSymbol, inverseDetails);
+			}
+		}
 	}
 
 	private SymbolPriceDetails(SymbolInformation info, Map<String, SymbolPriceDetails> allFormatters) {
@@ -117,7 +145,7 @@ public class SymbolPriceDetails {
 		return updateScale(getPriceDecimals(info), price);
 	}
 
-	public int pipSize(){
+	public int pipSize() {
 		return getOrDefault(info, SymbolInformation::priceDecimalPlaces, 0);
 	}
 }

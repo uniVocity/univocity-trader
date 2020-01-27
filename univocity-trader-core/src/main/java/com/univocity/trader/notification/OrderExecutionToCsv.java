@@ -7,16 +7,17 @@ import org.slf4j.*;
 import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.stream.*;
 
 public class OrderExecutionToCsv implements OrderListener {
 
 	private static final Logger log = LoggerFactory.getLogger(OrderExecutionToCsv.class);
 
-	private final File outputDir;
-	private final String fileName;
+	private File outputDir;
+	private Supplier<String> fileNameSupplier;
 	private boolean omitZeroTrades = true;
-	private boolean omitNew = true;
+	private boolean omitOrderOpening = true;
 
 	private List<OrderExecutionLine> lines = new ArrayList<>();
 
@@ -30,7 +31,7 @@ public class OrderExecutionToCsv implements OrderListener {
 
 	public OrderExecutionToCsv(File outputDir, String fileName) {
 		this.outputDir = outputDir;
-		this.fileName = fileName;
+		this.fileNameSupplier = () -> fileName + "_" + System.currentTimeMillis();
 	}
 
 	@Override
@@ -45,7 +46,7 @@ public class OrderExecutionToCsv implements OrderListener {
 
 
 	private void logDetails(Order order, Trade trade, Client client) {
-		lines.add(new OrderExecutionLine(order, trade, client));
+		lines.add(new OrderExecutionLine(order, trade, trade.trader(), client));
 	}
 
 	private List<OrderExecutionLine> filterLines() {
@@ -55,21 +56,21 @@ public class OrderExecutionToCsv implements OrderListener {
 		}
 
 		return lines.stream()
-				.filter(l -> (omitNew && l.status != Order.Status.NEW))
+				.filter(l -> (omitOrderOpening && l.status != Order.Status.NEW))
 				.filter(l -> !toRemove.contains(l.orderId))
 				.collect(Collectors.toList());
 	}
 
 	@Override
 	public void simulationEnded(Trader trader, Client client) {
-		File out = new File(outputDir.getAbsolutePath() + "/" + fileName + "_" + System.currentTimeMillis() + ".csv");
+		File out = new File(outputDir.getAbsolutePath() + "/" + fileNameSupplier.get() + ".csv");
 
 		CsvRoutines routines = new CsvRoutines(Csv.writeExcel());
 		routines.getWriterSettings().setHeaderWritingEnabled(true);
 
 		String[] headers = new String[]{
 				"closeTime", "clientId", "operation",
-				"quantity", "symbol", "price", "currency", "orderAmount",
+				"quantity", "assetSymbol", "price", "fundSymbol", "orderAmount",
 				"orderType", "status", "duration",
 				"orderFillPercentage", "executedQuantity", "valueTransacted",
 				"estimatedProfitLossPct", "exitReason", "ticks",
@@ -79,7 +80,50 @@ public class OrderExecutionToCsv implements OrderListener {
 				"referenceCurrency", "profitLossReferenceCurrency", "holdings", "freeBalanceReferenceCurrency",
 		};
 
-		routines.writeAll(filterLines(), OrderExecutionLine.class, out, Charset.forName("windows-1252"), headers);
-		log.info("Written simulation statistics to {}", out.getAbsolutePath());
+		List<OrderExecutionLine> lines = filterLines();
+		if (!lines.isEmpty()) {
+			lines.add(new OrderExecutionLine(null, null, trader, client));
+
+			routines.writeAll(lines, OrderExecutionLine.class, out, Charset.forName("windows-1252"), headers);
+			log.info("Written simulation statistics to {}", out.getAbsolutePath());
+
+			this.lines.clear();
+		}
+	}
+
+	public File outputDir() {
+		return outputDir;
+	}
+
+	public OrderExecutionToCsv outputDir(File outputDir) {
+		this.outputDir = outputDir;
+		return this;
+	}
+
+	public OrderExecutionToCsv fileName(String fileName) {
+		return this.fileName(() -> fileName);
+	}
+
+	public OrderExecutionToCsv fileName(Supplier<String> fileName) {
+		this.fileNameSupplier = fileName;
+		return this;
+	}
+
+	public boolean omitZeroTrades() {
+		return omitZeroTrades;
+	}
+
+	public OrderExecutionToCsv omitZeroTrades(boolean omitZeroTrades) {
+		this.omitZeroTrades = omitZeroTrades;
+		return this;
+	}
+
+	public boolean omitOrderOpening() {
+		return omitOrderOpening;
+	}
+
+	public OrderExecutionToCsv omitOrderOpening(boolean omitOrderOpening) {
+		this.omitOrderOpening = omitOrderOpening;
+		return this;
 	}
 }

@@ -24,7 +24,7 @@ public class MarketSimulation {
 		//you can test with one or more accounts at the same time
 		Account account = simulator.configure().account();
 
-//		account.enableShorting(); //NOTE: Binance doesn't support shorting. Enable this or testing only.
+		account.enableShorting(); //NOTE: Binance doesn't support shorting. Enable this or testing only.
 
 		account
 				.referenceCurrency("USDT") //Balances will be calculated using the reference currency.
@@ -43,6 +43,7 @@ public class MarketSimulation {
 
 		account.listeners()
 				.add(new OrderExecutionToLog())
+				.add(new OrderExecutionToCsv().fileName("simulation"))
 				.add((symbol) -> new SimpleStrategyStatistics(symbol))
 		;
 

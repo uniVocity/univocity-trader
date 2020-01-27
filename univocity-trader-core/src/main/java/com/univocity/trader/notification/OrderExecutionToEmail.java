@@ -65,7 +65,7 @@ public class OrderExecutionToEmail implements OrderListener {
 		printTotalBalances(balances, new HashSet<>(), out, total, this.tradingManager);
 		out.append("\n\t* ").append(f.priceToString(tradingManager.getCash())).append(' ').append(tradingManager.getFundSymbol());
 		double holdings = total.get() + balances.getOrDefault(referenceCurrencySymbol, ZERO).getTotal().doubleValue();
-		out.append("\n\nApproximate holdings ~$").append(f.switchToSymbol(tradingManager.getAssetSymbol() + referenceCurrencySymbol).priceToString(holdings)).append(" ").append(referenceCurrencySymbol);
+		out.append("\n\nApproximate holdings ~$").append(f.switchToSymbol(referenceCurrencySymbol).priceToString(holdings)).append(" ").append(referenceCurrencySymbol);
 		return out.toString();
 	}
 

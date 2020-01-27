@@ -37,9 +37,6 @@ public class TradingManager {
 		if (exchange == null) {
 			throw new IllegalArgumentException("Exchange implementation cannot be null");
 		}
-		if (priceDetails == null) {
-			priceDetails = new SymbolPriceDetails(exchange);
-		}
 		if (account == null) {
 			throw new IllegalArgumentException("Account manager cannot be null");
 		}
@@ -49,6 +46,10 @@ public class TradingManager {
 		if (StringUtils.isBlank(fundSymbol)) {
 			throw new IllegalArgumentException("Currency cannot be blank (examples: 'USD', 'EUR', 'USDT', 'ETH')");
 		}
+		if (priceDetails == null) {
+			priceDetails = new SymbolPriceDetails(exchange, account.getReferenceCurrencySymbol());
+		}
+
 		this.exchange = exchange;
 		this.client = account.getClient();
 		this.assetSymbol = assetSymbol;
@@ -63,6 +64,7 @@ public class TradingManager {
 
 		this.priceDetails = priceDetails.switchToSymbol(symbol);
 		this.referencePriceDetails = priceDetails.switchToSymbol(getReferenceCurrencySymbol());
+
 	}
 
 	public SymbolPriceDetails getPriceDetails() {
@@ -279,8 +281,8 @@ public class TradingManager {
 		notifyOrderSubmitted(order, trade, trader.notifications);
 	}
 
-	private Trade getTradeForOrder(Trade trade, Order order){
-		if(trade != null){
+	private Trade getTradeForOrder(Trade trade, Order order) {
+		if (trade != null) {
 			return trade;
 		}
 		return Trade.createPlaceholder(getTrader(), order.getTradeSide());

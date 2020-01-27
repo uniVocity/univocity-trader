@@ -87,8 +87,23 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return balances.getOrDefault(symbol, Balance.ZERO).getFreeAmount();
 	}
 
+	/**
+	 * Returns the amount held in the account for the given symbol.
+	 *
+	 * @param symbol the symbol whose amount will be returned
+	 *
+	 * @return the amount held for the given symbol.
+	 */
+	public BigDecimal getPreciseAmount(String symbol) {
+		return balances.getOrDefault(symbol, Balance.ZERO).getFree();
+	}
+
 	public double getShortedAmount(String symbol) {
 		return balances.getOrDefault(symbol, Balance.ZERO).getShortedAmount();
+	}
+
+	public BigDecimal getPreciseShortedAmount(String symbol) {
+		return balances.getOrDefault(symbol, Balance.ZERO).getShorted();
 	}
 
 	public Balance getBalance(String symbol) {
@@ -208,7 +223,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		for (String[] pair : getTradedPairs()) {
 			if (assetSymbol.equals(pair[0])) {
 				trader = getTraderOf(pair[0] + pair[1]);
-				if(trader != null){
+				if (trader != null) {
 					return trader;
 				}
 			}
@@ -221,7 +236,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		TradingManager tradingManager = getTradingManagerOf(assetSymbol + fundSymbol);
 		if (tradingManager == null) {
 			Trader trader = getTraderOf(assetSymbol + configuration.referenceCurrency());
-			if(trader == null){
+			if (trader == null) {
 				trader = findTrader(assetSymbol, fundSymbol);
 			}
 			if (trader != null) {
@@ -303,9 +318,9 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 				double marginWithoutReserve = e.getValue().getMarginReserve(shorted).doubleValue() / marginReserveFactorPct;
 				double shortedQuantity = balances.get(shorted).getShortedAmount();
 				double originalShortedPrice = marginWithoutReserve / shortedQuantity;
-				double totalInvestetOnShort = shortedQuantity * originalShortedPrice;
+				double totalInvestmentOnShort = shortedQuantity * originalShortedPrice;
 				double totalAtCurrentPrice = multiplyWithLatestPrice(shortedQuantity, shorted, symbol, allPrices);
-				double shortProfitLoss = totalInvestetOnShort - totalAtCurrentPrice;
+				double shortProfitLoss = totalInvestmentOnShort - totalAtCurrentPrice;
 
 				total += shortProfitLoss;
 				total += (reserve - marginWithoutReserve);
@@ -463,7 +478,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 						if (expectedCost > maxSpend) {
 							quantity = quantity * (maxSpend / expectedCost);
 						}
-						quantity = quantity * 0.9999;
+//						quantity = quantity * 0.9999;
 						OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, tradeSide, quantity, null);
 						return executeOrder(orderPreparation);
 					}
@@ -523,6 +538,15 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		long time = tradingManager.getLatestCandle().closeTime;
 		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side, tradeSide, time, resubmissionFrom);
 		orderPreparation.setPrice(priceDetails.priceToBigDecimal(tradingManager.getLatestPrice()));
+
+		if (tradeSide == LONG) {
+			if (orderPreparation.isSell()) {
+				BigDecimal availableAssets = getPreciseAmount(orderPreparation.getAssetsSymbol());
+				if (availableAssets.doubleValue() < quantity) {
+					quantity = availableAssets.doubleValue();
+				}
+			}
+		}
 
 		orderPreparation.setQuantity(priceDetails.adjustQuantityScale(quantity));
 

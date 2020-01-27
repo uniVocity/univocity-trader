@@ -50,7 +50,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	private ChronoUnit backfillUnit = ChronoUnit.MONTHS;
 	private LocalDateTime backfillFrom = null;
 	private LocalDateTime backfillTo = null;
-
+	private boolean resumeBackfill = false;
 
 	private Map<String, Double> initialFunds = new ConcurrentHashMap<>();
 	private final List<Parameters> parameters = new ArrayList<>();
@@ -146,6 +146,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 
 		backfillFrom(parseDateTime(properties, "simulation.history.backfill.from"));
 		backfillTo(parseDateTime(properties, "simulation.history.backfill.to"));
+		resumeBackfill(properties.getBoolean("simulation.history.backfill.resume", false));
 
 		parseInitialFunds(properties);
 
@@ -213,7 +214,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	}
 
 	public LocalDateTime backfillTo() {
-		if(backfillTo != null){
+		if (backfillTo != null) {
 			return backfillTo;
 		}
 		return LocalDateTime.now();
@@ -224,7 +225,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	}
 
 	public LocalDateTime backfillFrom() {
-		if(backfillFrom != null){
+		if (backfillFrom != null) {
 			return backfillFrom;
 		}
 		return backfillTo().minus(backfillLength, backfillUnit);
@@ -429,6 +430,15 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 			throw new IllegalArgumentException("Order fill emulator cannot be null");
 		}
 		this.orderFillEmulator = orderFillEmulator;
+		return this;
+	}
+
+	public boolean resumeBackfill() {
+		return resumeBackfill;
+	}
+
+	public Simulation resumeBackfill(boolean resumeBackfill) {
+		this.resumeBackfill = resumeBackfill;
 		return this;
 	}
 }

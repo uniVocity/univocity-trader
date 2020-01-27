@@ -11,6 +11,7 @@ import java.util.concurrent.*;
 
 public class CandleRepository {
 	private static final Logger log = LoggerFactory.getLogger(CandleRepository.class);
+	private String databaseName;
 	private static final String INSERT = "INSERT INTO candle (symbol,open_time,close_time,open,high,low,close,volume) VALUES (?,?,?,?,?,?,?,?)";
 	private static final RowMapper<Candle> CANDLE_MAPPER = (rs, rowNum) -> {
 		Candle out = new Candle(
@@ -161,8 +162,28 @@ public class CandleRepository {
 		return toEnumeration(symbol, query, from, to, readingProcess, out, ended);
 	}
 
+	private boolean isDatabaseMySQL() {
+		if (databaseName == null) {
+			synchronized (this) {
+				try {
+					databaseName = db().execute((ConnectionCallback<String>) connection -> connection.getMetaData().getDatabaseProductName());
+				} catch (Exception e) {
+					log.warn("Unable to determine database name", e);
+				}
+				if (databaseName == null) {
+					databaseName = "";
+				}
+				databaseName = databaseName.trim().toLowerCase();
+			}
+		}
+		return databaseName.contains("mysql") || databaseName.contains("maria");
+	}
+
 	private ResultSet executeQuery(PreparedStatement s) throws SQLException {
-		s.setFetchSize(Integer.MIN_VALUE);
+		if (isDatabaseMySQL()) {
+			//ensures MySQL's JDBC driver won't run out of memory if querying a large number of candles
+			s.setFetchSize(Integer.MIN_VALUE);
+		}
 		return s.executeQuery();
 	}
 
