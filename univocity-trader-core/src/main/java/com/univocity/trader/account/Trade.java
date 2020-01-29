@@ -469,7 +469,7 @@ public class Trade implements Comparable<Trade> {
 			}
 		}
 
-		return total.round(ROUND_MC);
+		return round(total);
 	}
 
 	public boolean isFinalized() {

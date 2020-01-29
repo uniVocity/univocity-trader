@@ -16,7 +16,7 @@ public class Balance implements Cloneable {
 	private double freeAmount = -1.0;
 	private double shortedAmount = -1.0;
 
-	public static final MathContext ROUND_MC = new MathContext(8, RoundingMode.FLOOR);
+	public static final MathContext ROUND_MC = new MathContext(8, RoundingMode.HALF_EVEN);
 
 	public Balance(String symbol) {
 		this.symbol = symbol;
@@ -81,7 +81,7 @@ public class Balance implements Cloneable {
 
 	public void setMarginReserve(String assetSymbol, BigDecimal marginReserve) {
 		marginReserve = round(marginReserve == null ? BigDecimal.ZERO : marginReserve);
-		if(marginReserve.compareTo(BigDecimal.ZERO) <= 0){
+		if (marginReserve.compareTo(BigDecimal.ZERO) <= 0) {
 			this.marginReserves.remove(assetSymbol);
 		} else {
 			this.marginReserves.put(assetSymbol, marginReserve);
@@ -104,7 +104,7 @@ public class Balance implements Cloneable {
 	}
 
 	public static final BigDecimal round(BigDecimal bd) {
-		return bd.round(ROUND_MC);
+		return bd.setScale(ROUND_MC.getPrecision(), ROUND_MC.getRoundingMode());
 	}
 
 	public static final String roundStr(BigDecimal bd) {

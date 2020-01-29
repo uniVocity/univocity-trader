@@ -196,23 +196,33 @@ public class Trader {
 		boolean isLong = isLong(strategy);
 
 		boolean sold = false;
+		boolean noLongs = true;
+		boolean noShorts = true;
 
 		for (Trade trade : trades) {
 			if (stoppedOut.contains(trade)) {
+				if(trade.isShort()){
+					noShorts = false;
+				}
+				if(trade.isLong()){
+					noLongs = false;
+				}
 				continue;
 			}
 			if (isShort && trade.isShort()) {
+				noShorts = false;
 				sold |= sellShort(trade, candle, strategy);
 			} else if (isLong && trade.isLong()) {
+				noLongs = false;
 				sold |= exit(trade, candle, strategy, "Sell signal");
 			}
 		}
 
 		if (!sold) {
-			if (isShort) {
+			if (isShort && noShorts) {
 				sellShort(null, candle, strategy);
 			}
-			if (isLong) {
+			if (isLong && noLongs) {
 				boolean hasLongPosition = tradingManager.hasPosition(candle, false, true, false);
 				if (hasLongPosition) {
 					// Sell without having a trade open. Might happen after starting up

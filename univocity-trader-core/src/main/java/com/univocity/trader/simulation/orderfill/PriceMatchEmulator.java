@@ -31,8 +31,8 @@ public class PriceMatchEmulator implements OrderFillEmulator {
 	@Override
 	public void fillOrder(DefaultOrder order, Candle candle) {
 		if (order.getType() == LIMIT) {
-			if ((order.getSide() == BUY && order.getPrice().compareTo(BigDecimal.valueOf(candle.low).round(ROUND_MC)) >= 0)
-					|| (order.getSide() == SELL && order.getPrice().compareTo(BigDecimal.valueOf(candle.high).round(ROUND_MC)) <= 0)) {
+			if ((order.getSide() == BUY && order.getPrice().compareTo(round(BigDecimal.valueOf(candle.low))) >= 0)
+					|| (order.getSide() == SELL && order.getPrice().compareTo(round(BigDecimal.valueOf(candle.high))) <= 0)) {
 				order.setStatus(Order.Status.FILLED);
 				order.setExecutedQuantity(order.getQuantity());
 			}
