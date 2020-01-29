@@ -72,13 +72,15 @@ public class Trade implements Comparable<Trade> {
 	private final Trader trader;
 	private Side side;
 	final boolean isPlaceholder;
+	private final long id;
 
-	Trade(Order openingOrder, Trader trader, Strategy openingStrategy) {
-		this(trader, openingOrder.isSell() ? Side.SHORT : Side.LONG, openingStrategy, trader.monitors(), false);
+	Trade(long id, Order openingOrder, Trader trader, Strategy openingStrategy) {
+		this(id, trader, openingOrder.isSell() ? Side.SHORT : Side.LONG, openingStrategy, trader.monitors(), false);
 		increasePosition(openingOrder);
 	}
 
-	private Trade(Trader trader, Trade.Side side, Strategy openingStrategy, StrategyMonitor[] monitors, boolean isPlaceholder) {
+	private Trade(long id, Trader trader, Trade.Side side, Strategy openingStrategy, StrategyMonitor[] monitors, boolean isPlaceholder) {
+		this.id = id;
 		this.trader = trader;
 		this.firstCandle = trader.latestCandle();
 		this.openingStrategy = openingStrategy;
@@ -89,8 +91,8 @@ public class Trade implements Comparable<Trade> {
 		this.isPlaceholder = isPlaceholder;
 	}
 
-	static Trade createPlaceholder(Trader trader, Trade.Side side) {
-		return new Trade(trader, side, null, new StrategyMonitor[0], true);
+	static Trade createPlaceholder(long id, Trader trader, Trade.Side side) {
+		return new Trade(id, trader, side, null, new StrategyMonitor[0], true);
 	}
 
 	public boolean isShort() {
@@ -636,7 +638,20 @@ public class Trade implements Comparable<Trade> {
 
 	@Override
 	public int compareTo(Trade o) {
-		return Long.compare(this.firstCandle.openTime, o.firstCandle.openTime);
+		return Long.compare(this.id, o.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return Long.hashCode(id);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Trade)) {
+			return false;
+		}
+		return id == ((Trade) obj).id;
 	}
 
 	public String symbol() {
@@ -683,5 +698,9 @@ public class Trade implements Comparable<Trade> {
 				trader.tradingManager.notifyOrderFinalized(order, this);
 			}
 		}
+	}
+
+	public long id() {
+		return id;
 	}
 }

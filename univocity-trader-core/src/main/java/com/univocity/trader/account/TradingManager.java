@@ -285,7 +285,7 @@ public class TradingManager {
 		if (trade != null) {
 			return trade;
 		}
-		return Trade.createPlaceholder(getTrader(), order.getTradeSide());
+		return Trade.createPlaceholder(-1, getTrader(), order.getTradeSide());
 	}
 
 	private void notifyOrderSubmitted(Order order, Trade trade, OrderListener[] notifications) {

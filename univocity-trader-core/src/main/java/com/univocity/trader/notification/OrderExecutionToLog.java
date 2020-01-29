@@ -96,6 +96,9 @@ public class OrderExecutionToLog implements OrderListener {
 					details += " " + trade.exitReason();
 				}
 			}
+
+			details = "[" + trade.id() + "]" + details;
+
 			if (StringUtils.isNotBlank(client.getId())) {
 				log.debug(client.getId() + ": " + details);
 			} else {

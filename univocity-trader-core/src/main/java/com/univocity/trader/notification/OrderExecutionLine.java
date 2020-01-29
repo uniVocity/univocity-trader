@@ -10,6 +10,8 @@ import java.sql.*;
 public class OrderExecutionLine {
 
 	@Parsed
+	long tradeId;
+	@Parsed
 	String orderId;
 	@Parsed
 	Timestamp closeTime;
@@ -125,6 +127,7 @@ public class OrderExecutionLine {
 			operation = "END";
 		}
 		if (trade != null) {
+			tradeId = trade.id();
 			priceChangePct = trade.formattedPriceChangePct();
 			if(trade.isFinalized()) {
 				profitLoss = priceDetails.priceToString(trade.actualProfitLoss());

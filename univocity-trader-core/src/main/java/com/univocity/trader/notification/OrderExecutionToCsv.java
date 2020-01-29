@@ -69,7 +69,7 @@ public class OrderExecutionToCsv implements OrderListener {
 		routines.getWriterSettings().setHeaderWritingEnabled(true);
 
 		String[] headers = new String[]{
-				"closeTime", "clientId", "operation",
+				"closeTime", "clientId", "tradeId", "operation",
 				"quantity", "assetSymbol", "price", "fundSymbol", "orderAmount",
 				"orderType", "status", "duration",
 				"orderFillPercentage", "executedQuantity", "valueTransacted",

@@ -13,6 +13,7 @@ import org.slf4j.*;
 import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 import static com.univocity.trader.account.Trade.Side.*;
 import static com.univocity.trader.indicators.Signal.*;
@@ -39,12 +40,13 @@ public class Trader {
 
 	private StrategyMonitor[] monitors;
 
-	private final Set<Trade> trades = ConcurrentHashMap.newKeySet();
-	private final Set<Trade> pastTrades = ConcurrentHashMap.newKeySet();
+	private final Set<Trade> trades = new ConcurrentSkipListSet<>();
+	private final Set<Trade> pastTrades = new ConcurrentSkipListSet<>();
 	final boolean allowMixedStrategies;
 	final OrderListener[] notifications;
 	private int pipSize;
 	private final List<Trade> stoppedOut = new ArrayList<>();
+	private AtomicLong id = new AtomicLong(1);
 
 	/**
 	 * Creates a new trader for a given symbol. For internal use only.
@@ -215,7 +217,7 @@ public class Trader {
 				if (hasLongPosition) {
 					// Sell without having a trade open. Might happen after starting up
 					// with assets in the account. Will generate a warning in the log.
-					Trade trade = Trade.createPlaceholder(this, LONG);
+					Trade trade = Trade.createPlaceholder(-1, this, LONG);
 					sellAssets(trade, strategy, "Sell signal");
 				}
 			}
@@ -508,17 +510,17 @@ public class Trader {
 
 		if (trade == null) {
 			if (order.isLong()) {
-				trade = new Trade(order, this, strategy);
+				trade = new Trade(id.incrementAndGet(), order, this, strategy);
 				trades.add(trade);
 			} else if (order.isShort()) {
-				trade = Trade.createPlaceholder(this, order.getTradeSide());
+				trade = Trade.createPlaceholder(-1, this, order.getTradeSide());
 				trade.decreasePosition(order, "Exit short position");
 				log.warn("Received a short-covering buy order without an open trade: " + order);
 			}
 		} else {
 			if (order.isLong()) {
 				if (!trade.increasePosition(order)) {
-					trade = new Trade(order, this, strategy);
+					trade = new Trade(id.incrementAndGet(), order, this, strategy);
 					trades.add(trade);
 				}
 			} else if (order.isShort()) {
@@ -542,7 +544,7 @@ public class Trader {
 		if (trade != null) {
 			if (trade.isShort()) {
 				if (!trade.increasePosition(order)) {
-					trade = new Trade(order, this, strategy);
+					trade = new Trade(id.incrementAndGet(), order, this, strategy);
 					trades.add(trade);
 				}
 			} else {
@@ -550,10 +552,10 @@ public class Trader {
 			}
 		} else {
 			if (order.isShort()) {
-				trade = new Trade(order, this, strategy);
+				trade = new Trade(id.incrementAndGet(), order, this, strategy);
 				trades.add(trade);
 			} else {
-				trade = Trade.createPlaceholder(this, order.getTradeSide());
+				trade = Trade.createPlaceholder(-1, this, order.getTradeSide());
 				trade.decreasePosition(order, "Exit long position");
 				//could be manual
 				log.warn("Received a sell order without an open trade: " + order);
@@ -720,7 +722,7 @@ public class Trader {
 	}
 
 	public Set<Trade> trades() {
-		return new TreeSet(trades);
+		return new TreeSet<>(trades);
 	}
 
 	public int pipSize() {
