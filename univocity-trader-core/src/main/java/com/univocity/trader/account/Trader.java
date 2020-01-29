@@ -135,6 +135,8 @@ public class Trader {
 	public void trade(Candle candle, Signal signal, Strategy strategy) {
 		latestCandle = candle;
 
+		removeFinalizedTrades();
+
 		boolean hasPosition = tradingManager.hasPosition(candle, false, true, true);
 
 		if (hasPosition) {
@@ -201,10 +203,10 @@ public class Trader {
 
 		for (Trade trade : trades) {
 			if (stoppedOut.contains(trade)) {
-				if(trade.isShort()){
+				if (trade.isShort()) {
 					noShorts = false;
 				}
-				if(trade.isLong()){
+				if (trade.isLong()) {
 					noLongs = false;
 				}
 				continue;
@@ -496,7 +498,7 @@ public class Trader {
 					trade = processSellOrder(trade, order, strategy, reason);
 				}
 
-				if (trade != null && trade.isPlaceholder) {
+				if (trade != null) {
 					trades.add(trade);
 				}
 			} finally {
@@ -689,9 +691,14 @@ public class Trader {
 		Trade trade = tradeOf(order);
 		if (trade != null) {
 			trade.orderFinalized(order);
+		}
+	}
+
+	void removeFinalizedTrades() {
+		for (Trade trade : trades) {
 			if (trade.isFinalized()) {
-				trades.remove(trade);
 				pastTrades.add(trade);
+				trades.remove(trade);
 			}
 		}
 	}

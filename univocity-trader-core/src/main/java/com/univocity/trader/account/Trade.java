@@ -73,6 +73,7 @@ public class Trade implements Comparable<Trade> {
 	private Side side;
 	final boolean isPlaceholder;
 	private final long id;
+	private boolean finalized;
 
 	Trade(long id, Order openingOrder, Trader trader, Strategy openingStrategy) {
 		this(id, trader, openingOrder.isSell() ? Side.SHORT : Side.LONG, openingStrategy, trader.monitors(), false);
@@ -82,13 +83,17 @@ public class Trade implements Comparable<Trade> {
 	private Trade(long id, Trader trader, Trade.Side side, Strategy openingStrategy, StrategyMonitor[] monitors, boolean isPlaceholder) {
 		this.id = id;
 		this.trader = trader;
-		this.firstCandle = trader.latestCandle();
-		this.openingStrategy = openingStrategy;
 		this.monitors = monitors;
-
-		this.max = this.min = firstCandle.close;
+		this.openingStrategy = openingStrategy;
 		this.side = side;
 		this.isPlaceholder = isPlaceholder;
+		initTrade();
+	}
+
+	private void initTrade(){
+		this.firstCandle = trader.latestCandle();
+		this.max = this.min = firstCandle.close;
+		finalized = false;
 	}
 
 	static Trade createPlaceholder(long id, Trader trader, Trade.Side side) {
@@ -473,6 +478,13 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public boolean isFinalized() {
+		if(finalized){
+			return true;
+		}
+		return finalized = checkIfFinalized();
+	}
+
+	private boolean checkIfFinalized(){
 		if (isPlaceholder) {
 			return true;
 		}
@@ -560,6 +572,13 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public synchronized boolean increasePosition(Order order) {
+		if(finalized){
+			if(position.isEmpty()){
+				initTrade();
+			} else {
+				throw new IllegalStateException("Trying to increase position of finalized trade");
+			}
+		}
 		removeCancelledAndSumQuantities(exitOrders);
 
 		if (exitOrders.isEmpty()) {
@@ -571,6 +590,9 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public synchronized void decreasePosition(Order order, String exitReason) {
+		if(!isPlaceholder && finalized){
+			throw new IllegalStateException("Trying to decrease position of finalized trade");
+		}
 		if (this.exitReason == null) {
 			this.exitReason = exitReason;
 		}
