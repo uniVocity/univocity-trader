@@ -1,6 +1,7 @@
 package com.univocity.trader.account;
 
 import java.math.*;
+import java.util.*;
 
 import static com.univocity.trader.account.Balance.*;
 
@@ -10,9 +11,15 @@ public class DefaultOrder extends OrderRequest implements Order {
 	private BigDecimal executedQuantity;
 	private Order.Status status;
 	private BigDecimal feesPaid = BigDecimal.ZERO;
+	private List<Order> attachments;
 
 	public DefaultOrder(String assetSymbol, String fundSymbol, Order.Side side, Trade.Side tradeSide, long time) {
+		this(assetSymbol, fundSymbol, side, tradeSide, time, null);
+	}
+
+	public DefaultOrder(String assetSymbol, String fundSymbol, Order.Side side, Trade.Side tradeSide, long time, List<Order> attachments) {
 		super(assetSymbol, fundSymbol, side, tradeSide, time, null);
+		this.attachments = attachments;
 	}
 
 	public DefaultOrder(Order order) {
@@ -21,6 +28,7 @@ public class DefaultOrder extends OrderRequest implements Order {
 		this.setType(order.getType());
 		this.setQuantity(order.getQuantity());
 		this.setPrice(order.getPrice());
+		this.attachments = order.getAttachments();
 	}
 
 	@Override
@@ -81,5 +89,9 @@ public class DefaultOrder extends OrderRequest implements Order {
 	@Override
 	public String toString() {
 		return print(0);
+	}
+
+	public List<Order> getAttachments() {
+		return attachments == null ? null : Collections.unmodifiableList(attachments);
 	}
 }

@@ -3,6 +3,7 @@ package com.univocity.trader.account;
 import com.univocity.trader.indicators.base.*;
 
 import java.math.*;
+import java.util.*;
 
 import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Status.*;
@@ -47,6 +48,10 @@ public interface Order {
 	Status getStatus();
 
 	void cancel();
+
+	default List<Order> getAttachments(){
+		return Collections.emptyList();
+	}
 
 	default boolean isCancelled() {
 		return getStatus() == Status.CANCELLED;

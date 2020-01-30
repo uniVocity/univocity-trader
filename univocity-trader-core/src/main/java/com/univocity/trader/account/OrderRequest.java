@@ -3,8 +3,10 @@ package com.univocity.trader.account;
 import org.apache.commons.lang3.*;
 
 import java.math.*;
+import java.util.*;
 
 import static com.univocity.trader.account.Balance.*;
+import static com.univocity.trader.account.Order.Side.*;
 
 public class OrderRequest {
 
@@ -19,6 +21,8 @@ public class OrderRequest {
 	private BigDecimal price = BigDecimal.ZERO;
 	private BigDecimal quantity = BigDecimal.ZERO;
 	private Order.Type type = Order.Type.LIMIT;
+
+	private List<OrderRequest> attachments = new ArrayList<>();
 
 	public OrderRequest(String assetsSymbol, String fundsSymbol, Order.Side side, Trade.Side tradeSide, long time, Order resubmittedFrom) {
 		this.resubmittedFrom = resubmittedFrom;
@@ -130,6 +134,29 @@ public class OrderRequest {
 	}
 
 	public final boolean isSell() {
-		return side == Order.Side.SELL;
+		return side == SELL;
+	}
+
+	public final List<OrderRequest> getRequestAttachments() {
+		return attachments == null ? null : Collections.unmodifiableList(attachments);
+	}
+
+	public OrderRequest attach(Order.Type type, double change) {
+		if (attachments == null) {
+			throw new IllegalArgumentException("Can only attach orders to the parent order");
+		}
+		for (OrderRequest attachment : attachments) {
+			if (attachment.side == side && type == attachment.type) {
+				return attachment;
+			}
+		}
+
+		OrderRequest attachment = new OrderRequest(assetsSymbol, fundsSymbol, side == BUY ? SELL : BUY, this.tradeSide, this.time, null);
+		attachment.attachments = null;
+
+		this.attachments.add(attachment);
+		attachment.setQuantity(this.quantity);
+		attachment.setPrice(this.price.multiply(BigDecimal.valueOf(1.0 + (change / 100.0))));
+		return attachment;
 	}
 }
