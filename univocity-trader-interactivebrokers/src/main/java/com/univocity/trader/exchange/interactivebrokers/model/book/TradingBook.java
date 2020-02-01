@@ -18,7 +18,8 @@ public class TradingBook {
 		this.id = id;
 	}
 
-	public void updateBook(int tickerId, int position, String marketMaker, int operation, int side, double price, int size) {
+	public void updateBook(int tickerId, int position, String marketMaker, int operation, int side, double price,
+			int size) {
 		BookEntries book = side == BID ? bids : asks;
 		if (operation == INSERT || operation == UPDATE) {
 			book.add(position, marketMaker, price, size);
@@ -39,5 +40,3 @@ public class TradingBook {
 		client.cancelMktDepth(id, isSmartDepth);
 	}
 }
-
-

@@ -6,7 +6,8 @@ import org.slf4j.*;
 import java.lang.reflect.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class ReflectiveInstanceProvider<T> implements InstanceProvider<T> {
 
@@ -20,12 +21,13 @@ public class ReflectiveInstanceProvider<T> implements InstanceProvider<T> {
 	private Constructor symbolAndParams;
 	private Constructor paramsAndSymbol;
 
-
 	public ReflectiveInstanceProvider(Class<T> type) {
 		this.type = type;
 
 		for (Constructor<?> constructor : type.getDeclaredConstructors()) {
-			if ((!Modifier.isPublic(constructor.getModifiers()) || !Modifier.isPublic(constructor.getDeclaringClass().getModifiers())) && !constructor.isAccessible()) {
+			if ((!Modifier.isPublic(constructor.getModifiers())
+					|| !Modifier.isPublic(constructor.getDeclaringClass().getModifiers()))
+					&& !constructor.isAccessible()) {
 				continue;
 			}
 			Class<?>[] args = constructor.getParameterTypes();

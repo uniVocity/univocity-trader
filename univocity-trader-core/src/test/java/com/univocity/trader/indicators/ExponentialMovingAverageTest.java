@@ -1,12 +1,10 @@
 package com.univocity.trader.indicators;
 
-
 import org.junit.*;
 
 import static com.univocity.trader.candles.CandleHelper.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static junit.framework.TestCase.*;
-
 
 public class ExponentialMovingAverageTest {
 
@@ -26,7 +24,6 @@ public class ExponentialMovingAverageTest {
 		assertEquals(63.6948, update(ma, 10, 63.37), 0.001);
 		assertEquals(63.2648, update(ma, 11, 61.33), 0.001);
 		assertEquals(62.9457, update(ma, 12, 61.51), 0.001);
-
 
 		ma = new ExponentialMovingAverage(3, minutes(2));
 		ma.recalculateEveryTick(true);

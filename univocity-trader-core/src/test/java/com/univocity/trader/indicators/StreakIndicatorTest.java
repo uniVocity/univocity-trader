@@ -1,17 +1,12 @@
 package com.univocity.trader.indicators;
 
-
-
 import org.junit.*;
-
 
 import static com.univocity.trader.candles.CandleHelper.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static junit.framework.TestCase.*;
 
-
 public class StreakIndicatorTest {
-
 
 	@Test
 	public void isUsable() {
@@ -40,8 +35,6 @@ public class StreakIndicatorTest {
 
 		b.accumulate(newCandle(8, 19.40));
 		assertEquals(1, b.getValue(), 0.001);
-
-
 
 	}
 

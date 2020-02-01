@@ -5,7 +5,8 @@ import com.univocity.trader.iqfeed.api.domain.candles.*;
 import com.univocity.trader.simulation.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public final class IQFeed implements EntryPoint {
 

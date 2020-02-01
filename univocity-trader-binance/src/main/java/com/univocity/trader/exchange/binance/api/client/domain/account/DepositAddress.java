@@ -52,11 +52,7 @@ public class DepositAddress {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("address", address)
-				.append("success", success)
-				.append("addressTag", addressTag)
-				.append("asset", asset)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("address", address)
+				.append("success", success).append("addressTag", addressTag).append("asset", asset).toString();
 	}
 }

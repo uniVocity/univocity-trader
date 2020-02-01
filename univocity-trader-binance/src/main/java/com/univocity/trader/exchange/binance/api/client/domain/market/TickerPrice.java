@@ -42,9 +42,7 @@ public class TickerPrice {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("symbol", symbol)
-				.append("price", price)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("symbol", symbol)
+				.append("price", price).toString();
 	}
 }

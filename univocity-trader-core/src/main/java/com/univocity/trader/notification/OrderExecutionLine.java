@@ -118,7 +118,8 @@ public class OrderExecutionLine {
 			orderFillPercentage = order.getFormattedFillPct();
 
 			if (orderType == Order.Type.MARKET && fillPct == 0.0) {
-				orderAmount = amountDetails.priceToString(order.getQuantity().doubleValue() * trader.lastClosingPrice());
+				orderAmount = amountDetails
+						.priceToString(order.getQuantity().doubleValue() * trader.lastClosingPrice());
 			} else {
 				orderAmount = amountDetails.priceToString(order.getTotalOrderAmount());
 			}
@@ -129,10 +130,11 @@ public class OrderExecutionLine {
 		if (trade != null) {
 			tradeId = trade.id();
 			priceChangePct = trade.formattedPriceChangePct();
-			if(trade.isFinalized()) {
+			if (trade.isFinalized()) {
 				profitLoss = priceDetails.priceToString(trade.actualProfitLoss());
 				profitLossPct = trade.formattedProfitLossPct();
-				profitLossReferenceCurrency = refPriceDetails.priceToString(trade.actualProfitLossInReferenceCurrency());
+				profitLossReferenceCurrency = refPriceDetails
+						.priceToString(trade.actualProfitLossInReferenceCurrency());
 			}
 			minChangePct = trade.formattedMinChangePct();
 			maxChangePct = trade.formattedMaxChangePct();

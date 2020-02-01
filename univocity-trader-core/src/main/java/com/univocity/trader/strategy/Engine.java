@@ -12,7 +12,8 @@ import java.util.*;
 import static com.univocity.trader.utils.NewInstances.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class Engine {
 
@@ -35,7 +36,8 @@ public class Engine {
 		this.trader = new Trader(tradingManager, parameters, allInstances);
 
 		NewInstances<Strategy> strategies = tradingManager.getAccount().configuration().strategies();
-		this.strategies = getInstances(tradingManager.getSymbol(), parameters, strategies, "Strategy", true, allInstances);
+		this.strategies = getInstances(tradingManager.getSymbol(), parameters, strategies, "Strategy", true,
+				allInstances);
 
 		Set<IndicatorGroup> groups = new LinkedHashSet<>();
 		Set<Strategy> plainStrategies = new LinkedHashSet<>();
@@ -66,16 +68,16 @@ public class Engine {
 			indicatorGroups[i].accumulate(candle);
 		}
 
-		if (initializing) { //ignore any signals and just all strategies to populate their internal state
+		if (initializing) { // ignore any signals and just all strategies to populate their internal state
 			for (int i = 0; i < plainStrategies.length; i++) {
 				plainStrategies[i].getSignal(candle);
 			}
 			return;
 		}
 
-		//for simulations only - tries to fill open orders using the latest candle information loaded from history.
+		// for simulations only - tries to fill open orders using the latest candle
+		// information loaded from history.
 		tradingManager.updateOpenOrders(trader.symbol(), candle);
-
 
 		for (int i = 0; i < strategies.length; i++) {
 			Strategy strategy = strategies[i];
@@ -83,7 +85,8 @@ public class Engine {
 			try {
 				trader.trade(candle, signal, strategy);
 			} catch (Exception e) {
-				log.error("Error processing " + signal + " " + trader.symbol() + " generated using candle (" + candle + ") from " + strategy, e);
+				log.error("Error processing " + signal + " " + trader.symbol() + " generated using candle (" + candle
+						+ ") from " + strategy, e);
 			}
 		}
 	}

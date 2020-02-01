@@ -56,10 +56,7 @@ public class CancelOrderRequest extends OrderRequest {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("orderId", orderId)
-				.append("origClientOrderId", origClientOrderId)
-				.append("newClientOrderId", newClientOrderId)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("orderId", orderId)
+				.append("origClientOrderId", origClientOrderId).append("newClientOrderId", newClientOrderId).toString();
 	}
 }

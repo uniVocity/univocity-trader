@@ -1,12 +1,10 @@
 package com.univocity.trader.indicators;
 
-
 import org.junit.*;
 
 import static com.univocity.trader.candles.CandleHelper.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static org.junit.Assert.*;
-
 
 public class HighestValueIndicatorTest {
 

@@ -1,6 +1,5 @@
 package com.univocity.trader.chart.charts.controls;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.annotation.Label;
 import com.univocity.trader.chart.annotation.*;
@@ -22,7 +21,6 @@ public abstract class AbstractFilledBarChartController<C extends BasicChart<?>> 
 	@Label("Positive selection fill color")
 	@ColorBound()
 	private Color upSelectionFillColor = Color.GRAY;
-
 
 	@Label("Negative fill color")
 	@ColorBound()

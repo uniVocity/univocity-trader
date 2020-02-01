@@ -5,7 +5,8 @@ import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class AverageTrueRange extends ModifiedMovingAverage {
 
@@ -23,6 +24,6 @@ public class AverageTrueRange extends ModifiedMovingAverage {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{tr};
+		return new Indicator[] { tr };
 	}
 }

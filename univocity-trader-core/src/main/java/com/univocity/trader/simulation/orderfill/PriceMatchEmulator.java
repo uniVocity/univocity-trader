@@ -12,19 +12,22 @@ import static com.univocity.trader.account.Order.Type.*;
 /**
  * A price matching {@link OrderFillEmulator}.
  *
- * If the {@link Order.Type} is {@code LIMIT}, fills the order when its price is within the high/low of a future candle
+ * If the {@link Order.Type} is {@code LIMIT}, fills the order when its price is
+ * within the high/low of a future candle
  *
- * If the {@link Order.Type} is {@code MARKET}, fills the order using the average price of the next candle.
- * The average price depends on the {@link Order.Side}:
+ * If the {@link Order.Type} is {@code MARKET}, fills the order using the
+ * average price of the next candle. The average price depends on the
+ * {@link Order.Side}:
  *
  * <ul>
- *     <li>{@code BUY}: average = (open + close + high / 3)</li>
- *     <li>{@code SELL}: average = (open + close + low / 3)</li>
+ * <li>{@code BUY}: average = (open + close + high / 3)</li>
+ * <li>{@code SELL}: average = (open + close + low / 3)</li>
  * </ul>
  *
  * Orders will be always 100% filled once a matching candle is found.
  *
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class PriceMatchEmulator implements OrderFillEmulator {
 
@@ -32,7 +35,8 @@ public class PriceMatchEmulator implements OrderFillEmulator {
 	public void fillOrder(DefaultOrder order, Candle candle) {
 		if (order.getType() == LIMIT) {
 			if ((order.getSide() == BUY && order.getPrice().compareTo(round(BigDecimal.valueOf(candle.low))) >= 0)
-					|| (order.getSide() == SELL && order.getPrice().compareTo(round(BigDecimal.valueOf(candle.high))) <= 0)) {
+					|| (order.getSide() == SELL
+							&& order.getPrice().compareTo(round(BigDecimal.valueOf(candle.high))) <= 0)) {
 				order.setStatus(Order.Status.FILLED);
 				order.setExecutedQuantity(order.getQuantity());
 			}

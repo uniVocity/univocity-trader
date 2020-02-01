@@ -61,7 +61,8 @@ public class TrivialStrategy extends IndicatorStrategy {
 			final double deltaL = delta(candle.low, ma1day.getValue());
 			if (deltaH > buygoal) {
 				if (candle.high < ma1day.getValue()) {
-					// log.debug("market is below average by {}%", String.format("%.3f", delta * 100));
+					// log.debug("market is below average by {}%", String.format("%.3f", delta *
+					// 100));
 					/*
 					 * market is below average by delta% and increasing
 					 */
@@ -70,7 +71,8 @@ public class TrivialStrategy extends IndicatorStrategy {
 			}
 			if (deltaL > sellgoal) {
 				if (candle.low > ma1day.getValue()) {
-					// log.debug("market is above average by {}%", String.format("%.3f", delta * 100));
+					// log.debug("market is above average by {}%", String.format("%.3f", delta *
+					// 100));
 					/*
 					 * market is above average by delta% and decreasing
 					 */

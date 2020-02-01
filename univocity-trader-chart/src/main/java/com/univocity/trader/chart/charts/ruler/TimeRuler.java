@@ -1,6 +1,5 @@
 package com.univocity.trader.chart.charts.ruler;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 
@@ -8,7 +7,6 @@ import java.awt.*;
 import java.time.*;
 
 import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
-
 
 public class TimeRuler extends Ruler<TimeRulerController> {
 
@@ -21,7 +19,6 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 		getController().setProfile(DEFAULT);
 		drawGrid(g, width);
 	}
-
 
 	private void drawGrid(Graphics2D g, int width) {
 		if (chart.candleHistory.isEmpty()) {
@@ -36,7 +33,7 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 		for (int i = 0; i <= increments; i++) {
 			int x = (int) Math.round(i * columnWidth);
 
-			if(chart.canvas.isOverDisabledSectionAtRight(chart.getRequiredWidth(), x)){
+			if (chart.canvas.isOverDisabledSectionAtRight(chart.getRequiredWidth(), x)) {
 				break;
 			}
 
@@ -44,7 +41,6 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 				g.setColor(getGridColor());
 				g.drawLine(x, 0, x, chart.getHeight());
 			}
-
 
 			Candle candle = chart.getCandleAtCoordinate(x);
 			if (candle == null) {
@@ -97,7 +93,8 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 		g.setColor(getController().getBackgroundColor());
 
 		int position = getTextPosition(location.x, stringWidth, true);
-		drawStringInBox(position, chart.getHeight() - getFontHeight() - chart.canvas.getScrollHeight(), stringWidth, text, g, 1, getBackgroundColor());
+		drawStringInBox(position, chart.getHeight() - getFontHeight() - chart.canvas.getScrollHeight(), stringWidth,
+				text, g, 1, getBackgroundColor());
 	}
 
 	private int getTextPosition(int x, int stringWidth, boolean centralize) {

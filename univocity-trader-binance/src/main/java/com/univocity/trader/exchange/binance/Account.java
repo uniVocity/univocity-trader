@@ -4,7 +4,8 @@ import com.univocity.trader.config.*;
 import org.apache.commons.lang3.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class Account extends AccountConfiguration<Account> {
 

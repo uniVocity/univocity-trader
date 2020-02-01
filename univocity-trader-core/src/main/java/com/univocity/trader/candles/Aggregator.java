@@ -30,7 +30,7 @@ public class Aggregator {
 		if (time.ms > 0) {
 			if (!allInstances.containsKey(time.ms)) {
 				allInstances.put(time.ms, this);
-			} //else forget this instance, won't be used.
+			} // else forget this instance, won't be used.
 		}
 	}
 

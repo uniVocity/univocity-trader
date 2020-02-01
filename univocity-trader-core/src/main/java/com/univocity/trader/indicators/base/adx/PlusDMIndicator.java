@@ -4,7 +4,8 @@ import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class PlusDMIndicator extends AbstractDMIndicator {
 
@@ -19,6 +20,6 @@ public class PlusDMIndicator extends AbstractDMIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

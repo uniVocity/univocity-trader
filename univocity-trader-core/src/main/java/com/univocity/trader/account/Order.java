@@ -49,7 +49,7 @@ public interface Order {
 
 	void cancel();
 
-	default List<Order> getAttachments(){
+	default List<Order> getAttachments() {
 		return Collections.emptyList();
 	}
 
@@ -116,29 +116,18 @@ public interface Order {
 	default String print(long latestClose) {
 		StringBuilder description = new StringBuilder();
 
-		description
-				.append(getStatus()).append(' ')
-				.append(getType()).append(' ');
-
+		description.append(getStatus()).append(' ').append(getType()).append(' ');
 
 		if (isShort()) {
 			description.append(getTradeSide()).append(' ');
 		}
 
-		description
-				.append(getSide()).append(' ')
-				.append(roundStr(getQuantity())).append(' ')
-				.append(getAssetsSymbol());
+		description.append(getSide()).append(' ').append(roundStr(getQuantity())).append(' ').append(getAssetsSymbol());
 
 		if (getType() == Type.LIMIT) {
-			description
-					.append(" @ ")
-					.append(roundStr(getPrice())).append(' ');
+			description.append(" @ ").append(roundStr(getPrice())).append(' ');
 
-			description
-					.append(" (Total: ")
-					.append(roundStr(getTotalOrderAmount()))
-					.append(')');
+			description.append(" (Total: ").append(roundStr(getTotalOrderAmount())).append(')');
 
 			description.append(' ').append(getFundsSymbol());
 
@@ -147,28 +136,19 @@ public interface Order {
 		}
 
 		if (getType() == Type.MARKET) {
-			description
-					.append(" @ ")
-					.append(roundStr(getPrice())).append(' ')
-					.append(getFundsSymbol());
+			description.append(" @ ").append(roundStr(getPrice())).append(' ').append(getFundsSymbol());
 		}
 
-		if (getStatus() == Status.PARTIALLY_FILLED || isFinalized() && getExecutedQuantity().compareTo(BigDecimal.ZERO) > 0) {
+		if (getStatus() == Status.PARTIALLY_FILLED
+				|| isFinalized() && getExecutedQuantity().compareTo(BigDecimal.ZERO) > 0) {
 
-			description
-					.append(" - filled: ")
-					.append(roundStr(getExecutedQuantity()));
+			description.append(" - filled: ").append(roundStr(getExecutedQuantity()));
 
-			description
-					.append(", worth ~")
-					.append(roundStr(getTotalTraded())).append(' ')
-					.append(getFundsSymbol());
+			description.append(", worth ~").append(roundStr(getTotalTraded())).append(' ').append(getFundsSymbol());
 		}
 
 		if (latestClose > 0) {
-			description
-					.append(". Open for ")
-					.append(TimeInterval.getFormattedDuration(getTimeElapsed(latestClose)));
+			description.append(". Open for ").append(TimeInterval.getFormattedDuration(getTimeElapsed(latestClose)));
 		}
 
 		description.append('.');
@@ -177,7 +157,7 @@ public interface Order {
 
 	default String getFormattedFillPct() {
 		String out = CHANGE_FORMAT.get().format(getFillPct() / 100.0);
-		//adjust display of mostly filled order so it's less confusing.
+		// adjust display of mostly filled order so it's less confusing.
 		if (getStatus() != FILLED && out.equals("100.00%")) {
 			return "99.99%";
 		}
@@ -200,19 +180,14 @@ public interface Order {
 	}
 
 	enum Side {
-		BUY,
-		SELL
+		BUY, SELL
 	}
 
 	enum Type {
-		LIMIT,
-		MARKET
+		LIMIT, MARKET
 	}
 
 	enum Status {
-		NEW,
-		PARTIALLY_FILLED,
-		FILLED,
-		CANCELLED
+		NEW, PARTIALLY_FILLED, FILLED, CANCELLED
 	}
 }

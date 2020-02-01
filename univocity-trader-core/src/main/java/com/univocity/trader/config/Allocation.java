@@ -1,6 +1,6 @@
 package com.univocity.trader.config;
 
-public class Allocation implements Cloneable{
+public class Allocation implements Cloneable {
 
 	public static final double EFFECTIVELY_ZERO = 0.0000001;
 
@@ -63,13 +63,13 @@ public class Allocation implements Cloneable{
 		return this;
 	}
 
-	private static double adjustPercentage(double percentage){
+	private static double adjustPercentage(double percentage) {
 		percentage = Math.max(percentage, 0.0);
 		percentage = Math.min(percentage, 100.0);
 		return percentage;
 	}
 
-	private static double adjustAmount(double maximumAmount){
+	private static double adjustAmount(double maximumAmount) {
 		return Math.max(maximumAmount, 0.0);
 	}
 
@@ -77,7 +77,7 @@ public class Allocation implements Cloneable{
 	public Allocation clone() {
 		try {
 			return (Allocation) super.clone();
-		} catch (CloneNotSupportedException e){
+		} catch (CloneNotSupportedException e) {
 			throw new IllegalStateException(e);
 		}
 	}

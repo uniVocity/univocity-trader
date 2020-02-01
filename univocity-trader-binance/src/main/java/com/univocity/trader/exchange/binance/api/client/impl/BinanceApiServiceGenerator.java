@@ -15,28 +15,26 @@ import java.io.*;
 import java.lang.annotation.*;
 
 /**
- * Generates a Binance API implementation based on @see {@link BinanceApiService}.
+ * Generates a Binance API implementation based on @see
+ * {@link BinanceApiService}.
  */
 public class BinanceApiServiceGenerator {
 
 	private static final Converter.Factory converterFactory = JacksonConverterFactory.create();
 
 	@SuppressWarnings("unchecked")
-	private static final Converter<ResponseBody, BinanceApiError> errorBodyConverter =
-			(Converter<ResponseBody, BinanceApiError>) converterFactory.responseBodyConverter(
-					BinanceApiError.class, new Annotation[0], null);
+	private static final Converter<ResponseBody, BinanceApiError> errorBodyConverter = (Converter<ResponseBody, BinanceApiError>) converterFactory
+			.responseBodyConverter(BinanceApiError.class, new Annotation[0], null);
 
 	public static <S> S createService(Class<S> serviceClass, AsyncHttpClient httpClient) {
 		return createService(serviceClass, httpClient, null, null);
 	}
 
 	public static <S> S createService(Class<S> serviceClass, AsyncHttpClient httpClient, String apiKey, String secret) {
-		AsyncHttpClientCallFactory.AsyncHttpClientCallFactoryBuilder callFactoryBuilder =
-				AsyncHttpClientCallFactory.builder().httpClient(httpClient);
-		Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
-				.baseUrl(BinanceApiConstants.API_BASE_URL)
-				.addConverterFactory(converterFactory)
-				.validateEagerly(true);
+		AsyncHttpClientCallFactory.AsyncHttpClientCallFactoryBuilder callFactoryBuilder = AsyncHttpClientCallFactory
+				.builder().httpClient(httpClient);
+		Retrofit.Builder retrofitBuilder = new Retrofit.Builder().baseUrl(BinanceApiConstants.API_BASE_URL)
+				.addConverterFactory(converterFactory).validateEagerly(true);
 		BinanceCallCustomizer.customize(apiKey, secret, callFactoryBuilder);
 		Retrofit retrofit = retrofitBuilder.callFactory(callFactoryBuilder.build()).build();
 		return retrofit.create(serviceClass);

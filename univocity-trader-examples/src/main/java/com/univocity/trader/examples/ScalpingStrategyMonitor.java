@@ -31,7 +31,7 @@ public class ScalpingStrategyMonitor extends StrategyMonitor {
 
 		int pipSize = trader.pipSize();
 
-		//75 pips either way, exit.
+		// 75 pips either way, exit.
 		double priceMovement = 75.0 / Math.pow(10, pipSize);
 
 		double difference = Math.abs(averagePricePaid - currentTickerPrice);
@@ -39,11 +39,11 @@ public class ScalpingStrategyMonitor extends StrategyMonitor {
 			Candle candle = fifteenSecondAggregate.getLastFullCandle();
 
 			if (averagePricePaid > currentTickerPrice) {
-				if (candle.open > candle.close) { //15 second candle closing lower than open, get out.
+				if (candle.open > candle.close) { // 15 second candle closing lower than open, get out.
 					return "stop loss";
 				}
 			} else {
-				if (candle.open > candle.close) { //15 second candle closing lower than open, get out.
+				if (candle.open > candle.close) { // 15 second candle closing lower than open, get out.
 					return "take profit";
 				}
 			}

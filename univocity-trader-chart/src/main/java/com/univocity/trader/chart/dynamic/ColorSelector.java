@@ -19,8 +19,10 @@ public class ColorSelector extends JLabel {
 
 		addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent evt) {
-				//Color selectedColor = JColorChooser.showDialog(parent == null ? ColorSelector.this : parent, colorChooserTitle, getSelectedColor());
-				Color selectedColor = WindowUtils.displayJColorChooser(ColorSelector.this, colorChooserTitle, getSelectedColor());
+				// Color selectedColor = JColorChooser.showDialog(parent == null ?
+				// ColorSelector.this : parent, colorChooserTitle, getSelectedColor());
+				Color selectedColor = WindowUtils.displayJColorChooser(ColorSelector.this, colorChooserTitle,
+						getSelectedColor());
 				Color oldValue = getSelectedColor();
 				if (selectedColor != null && selectedColor != oldValue) {
 					setBackground(selectedColor);

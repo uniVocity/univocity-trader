@@ -7,7 +7,8 @@ import com.univocity.trader.strategy.*;
 import java.util.function.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class MovingAverage extends MultiValueIndicator {
 
@@ -34,6 +35,6 @@ public class MovingAverage extends MultiValueIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

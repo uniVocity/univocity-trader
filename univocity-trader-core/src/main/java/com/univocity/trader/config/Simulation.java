@@ -17,27 +17,19 @@ import java.util.function.*;
 import static com.univocity.trader.config.Utils.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class Simulation implements ConfigurationGroup, Cloneable {
 
 	private static DateTimeFormatter newFormatter(String pattern) {
-		return new DateTimeFormatterBuilder()
-				.appendPattern(pattern)
-				.parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
-				.parseDefaulting(ChronoField.DAY_OF_MONTH, 1)
-				.parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
-				.parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
-				.toFormatter();
+		return new DateTimeFormatterBuilder().appendPattern(pattern).parseDefaulting(ChronoField.MONTH_OF_YEAR, 1)
+				.parseDefaulting(ChronoField.DAY_OF_MONTH, 1).parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
+				.parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0).toFormatter();
 	}
 
-	private static final DateTimeFormatter[] formatters = new DateTimeFormatter[]{
-			newFormatter("yyyy-MM-dd HH:mm"),
-			newFormatter("yyyy-MM-dd"),
-			newFormatter("yyyy-MM"),
-			newFormatter("yyyy"),
-	};
-
+	private static final DateTimeFormatter[] formatters = new DateTimeFormatter[] { newFormatter("yyyy-MM-dd HH:mm"),
+			newFormatter("yyyy-MM-dd"), newFormatter("yyyy-MM"), newFormatter("yyyy"), };
 
 	private LocalDateTime simulationStart;
 	private LocalDateTime simulationEnd;
@@ -113,7 +105,6 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return this;
 	}
 
-
 	public Simulation simulateFrom(Calendar date) {
 		this.simulationStart = date == null ? null : LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
 		return this;
@@ -177,16 +168,17 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 
 	private ChronoUnit getBackfillUnitFromLetter(char ch) {
 		switch (ch) {
-			case 'Y':
-				return ChronoUnit.YEARS;
-			case 'M':
-				return ChronoUnit.MONTHS;
-			case 'W':
-				return ChronoUnit.WEEKS;
-			case 'D':
-				return ChronoUnit.DAYS;
+		case 'Y':
+			return ChronoUnit.YEARS;
+		case 'M':
+			return ChronoUnit.MONTHS;
+		case 'W':
+			return ChronoUnit.WEEKS;
+		case 'D':
+			return ChronoUnit.DAYS;
 		}
-		throw new IllegalConfigurationException("Invalid backfill length unit '" + ch + "'. Expected one of: Y, M, W, D");
+		throw new IllegalConfigurationException(
+				"Invalid backfill length unit '" + ch + "'. Expected one of: Y, M, W, D");
 	}
 
 	public Simulation backfillDays(int lengthInDays) {
@@ -249,7 +241,9 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 			try {
 				return Double.valueOf(amount);
 			} catch (NumberFormatException ex) {
-				throw new IllegalConfigurationException("Invalid initial funds amount '" + amount + "' defined in property 'simulation.initial.funds'", ex);
+				throw new IllegalConfigurationException(
+						"Invalid initial funds amount '" + amount + "' defined in property 'simulation.initial.funds'",
+						ex);
 			}
 		};
 		parseGroupSetting(properties, "simulation.initial.funds", f, this::initialAmounts);
@@ -264,12 +258,13 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 			try {
 				return LocalDateTime.parse(s, formatter);
 			} catch (Exception e) {
-				//ignore
+				// ignore
 			}
 		}
 
 		String property = propertyName == null ? "" : " of property '" + propertyName + "'";
-		throw new IllegalConfigurationException("Unrecognized date format in value '" + s + "'" + property + ". Supported formats are: yyyy-MM-dd HH:mm, yyyy-MM-dd, yyyy-MM and yyyy");
+		throw new IllegalConfigurationException("Unrecognized date format in value '" + s + "'" + property
+				+ ". Supported formats are: yyyy-MM-dd HH:mm, yyyy-MM-dd, yyyy-MM and yyyy");
 	}
 
 	private LocalDateTime parseDateTime(PropertyBasedConfiguration properties, String propertyName) {
@@ -309,7 +304,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 
 	private void initialAmounts(double initialAmount, String... symbols) {
 		if (symbols.length == 0) {
-			//default to reference currency.
+			// default to reference currency.
 			initialFunds(initialAmount);
 		} else {
 			for (String symbol : symbols) {
@@ -344,7 +339,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	}
 
 	private void loadParameters(File parametersFile, Class<? extends Parameters> typeOfParameters) {
-		//TODO: load with univocity-parsers
+		// TODO: load with univocity-parsers
 	}
 
 	public List<Parameters> parameters() {
@@ -377,7 +372,6 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return this;
 	}
 
-
 	public final Simulation tradingFeeAmount(double amountPerTrade) {
 		this.tradingFees = SimpleTradingFees.amount(amountPerTrade);
 		return this;
@@ -405,7 +399,8 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 
 			return Utils.findClassAndInstantiate(TradingFees.class, fees);
 		} catch (Exception ex) {
-			throw new IllegalConfigurationException("Error processing trading fees '" + fees + "' defined in property '" + property + "'", ex);
+			throw new IllegalConfigurationException(
+					"Error processing trading fees '" + fees + "' defined in property '" + property + "'", ex);
 		}
 	}
 

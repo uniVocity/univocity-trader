@@ -6,13 +6,19 @@ import java.time.*;
 import java.time.format.*;
 
 public class Candle implements Comparable<Candle>, Cloneable {
-	private static final ThreadLocal<DateTimeFormatter> DATE_FORMAT = ThreadLocal.withInitial(() -> DateTimeFormatter.ofPattern("MMM dd HH:mm"));
-	private static final ThreadLocal<DateTimeFormatter> DATE_YEAR_FORMAT = ThreadLocal.withInitial(() -> DateTimeFormatter.ofPattern("yyyy MMM dd HH:mm"));
+	private static final ThreadLocal<DateTimeFormatter> DATE_FORMAT = ThreadLocal
+			.withInitial(() -> DateTimeFormatter.ofPattern("MMM dd HH:mm"));
+	private static final ThreadLocal<DateTimeFormatter> DATE_YEAR_FORMAT = ThreadLocal
+			.withInitial(() -> DateTimeFormatter.ofPattern("yyyy MMM dd HH:mm"));
 
-	public static final ThreadLocal<DecimalFormat> MONEY_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00"));
-	public static final ThreadLocal<DecimalFormat> PRICE_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00000000"));
-	public static final ThreadLocal<DecimalFormat> CHANGE_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00%"));
-	public static final ThreadLocal<DecimalFormat> VOLUME_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,###"));
+	public static final ThreadLocal<DecimalFormat> MONEY_FORMAT = ThreadLocal
+			.withInitial(() -> new DecimalFormat("#,##0.00"));
+	public static final ThreadLocal<DecimalFormat> PRICE_FORMAT = ThreadLocal
+			.withInitial(() -> new DecimalFormat("#,##0.00000000"));
+	public static final ThreadLocal<DecimalFormat> CHANGE_FORMAT = ThreadLocal
+			.withInitial(() -> new DecimalFormat("#,##0.00%"));
+	public static final ThreadLocal<DecimalFormat> VOLUME_FORMAT = ThreadLocal
+			.withInitial(() -> new DecimalFormat("#,###"));
 
 	public long openTime;
 	public long closeTime;
@@ -27,7 +33,8 @@ public class Candle implements Comparable<Candle>, Cloneable {
 		this(openTime, closeTime, open, high, low, close, volume, false);
 	}
 
-	private Candle(long openTime, long closeTime, double open, double high, double low, double close, double volume, boolean merged) {
+	private Candle(long openTime, long closeTime, double open, double high, double low, double close, double volume,
+			boolean merged) {
 		this.openTime = openTime;
 		this.closeTime = closeTime;
 		this.open = open;
@@ -77,7 +84,9 @@ public class Candle implements Comparable<Candle>, Cloneable {
 
 	@Override
 	public String toString() {
-		return getFormattedCloseTime(ZoneId.systemDefault()) + " | O(" + formatPrice(open) + "), C(" + formatPrice(close) + "),  H(" + formatPrice(high) + "), L(" + formatPrice(low) + "), V(" + formatVolume(volume) + ")";
+		return getFormattedCloseTime(ZoneId.systemDefault()) + " | O(" + formatPrice(open) + "), C("
+				+ formatPrice(close) + "),  H(" + formatPrice(high) + "), L(" + formatPrice(low) + "), V("
+				+ formatVolume(volume) + ")";
 	}
 
 	public static String formatPrice(double v) {
@@ -110,16 +119,9 @@ public class Candle implements Comparable<Candle>, Cloneable {
 			return this;
 		}
 
-		return new Candle(
-				/* openTime  */ this.openTime,
-				/* closeTime */ o.closeTime,
-				/* open      */ this.open,
-				/* high      */ Math.max(this.high, o.high),
-				/* low       */ Math.min(this.low, o.low),
-				/* close     */ o.close,
-				/* volume    */this.volume + o.volume,
-				/* merged?   */ true
-		);
+		return new Candle(/* openTime */ this.openTime, /* closeTime */ o.closeTime, /* open */ this.open,
+				/* high */ Math.max(this.high, o.high), /* low */ Math.min(this.low, o.low), /* close */ o.close,
+				/* volume */this.volume + o.volume, /* merged? */ true);
 	}
 
 	@Override
@@ -136,7 +138,6 @@ public class Candle implements Comparable<Candle>, Cloneable {
 		}
 		return this.closeTime < o.closeTime ? -1 : 1;
 	}
-
 
 	public boolean isClosePositive() {
 		return close > open;
@@ -161,7 +162,6 @@ public class Candle implements Comparable<Candle>, Cloneable {
 	public LocalDateTime localOpenDateTime() {
 		return Instant.ofEpochMilli(openTime).atZone(ZoneId.systemDefault()).toLocalDateTime();
 	}
-
 
 	public boolean isTick() {
 		return openTime == closeTime && open == close && close == high && high == low;

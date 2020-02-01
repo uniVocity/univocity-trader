@@ -1,6 +1,5 @@
 package com.univocity.trader.indicators;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -22,7 +21,7 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{sma5, sma34};
+		return new Indicator[] { sma5, sma34 };
 	}
 
 	public AwesomeOscillator(TimeInterval interval) {
@@ -68,31 +67,31 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 			return NEUTRAL;
 		}
 
-		//Zero line cross (upwards)
+		// Zero line cross (upwards)
 		if (((a < 0.0 || b <= 0.0) && c > 0) || (a < 0.0 && (b >= 0.0 && c > 0))) {
 			type = "zero line x";
 			return clearPeak(BUY);
 		}
-		//Zero line cross (downwards)
+		// Zero line cross (downwards)
 		if (((a > 0.0 || b >= 0.0) && c < 0) || (a > 0.0 && (b <= 0.0 && c < 0))) {
 			type = "zero line x";
 			return clearPeak(SELL);
 		}
 
-		//Saucer
-		if (z > 0 && a > 0 && b > 0 && c > 0) { //bullish saucer
+		// Saucer
+		if (z > 0 && a > 0 && b > 0 && c > 0) { // bullish saucer
 			if (a < z && b < a && c > b) {
 				type = "saucer";
 				return BUY;
 			}
-		} else if (z < 0 && a < 0 && b < 0 && c < 0) { //bearish saucer
+		} else if (z < 0 && a < 0 && b < 0 && c < 0) { // bearish saucer
 			if (a > z && b > a && c < b) {
 				type = "saucer";
 				return SELL;
 			}
 		}
 
-		//Twin peaks (bullish or bearish)
+		// Twin peaks (bullish or bearish)
 		if ((a > b && b < c) || (a < b && b > c)) {
 			if (peak == 0.0 || trough == 0) {
 				return clearPeak(NEUTRAL);
@@ -116,10 +115,10 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 
 			if (trough > 10) {
 				Signal out = NEUTRAL;
-				if (peak < 0 && b < 0) { //going up
+				if (peak < 0 && b < 0) { // going up
 					type = "twin peaks";
 					out = BUY;
-				} else if (peak > 0 && b > 0) {  //going down
+				} else if (peak > 0 && b > 0) { // going down
 					type = "twin peaks";
 					out = SELL;
 				}

@@ -1,39 +1,27 @@
 package com.univocity.trader.indicators;
 
-
 import org.junit.*;
 
 import static com.univocity.trader.candles.CandleHelper.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static junit.framework.TestCase.*;
 
-
 public class AwesomeOscillatorTest {
 
+	private static final double[][] values1 = new double[][] { { 16, 8 }, { 12, 6 }, { 18, 14 }, { 10, 6 }, { 8, 4 }, };
+	private static final double[][] values2 = new double[][] { { 16, 10 }, { 13, 8 }, // 16, 8
 
-	private static final double[][] values1 = new double[][]{
-			{16, 8},
-			{12, 6},
-			{18, 14},
-			{10, 6},
-			{8, 4},
-	};
-	private static final double[][] values2 = new double[][]{
-			{16, 10},
-			{13, 8}, //16, 8
+			{ 11, 8 }, // 12, 6
+			{ 12, 6 },
 
-			{11, 8}, //12, 6
-			{12, 6},
+			{ 18, 15 }, // 18, 14
+			{ 16, 14 },
 
-			{18, 15}, //18, 14
-			{16, 14},
+			{ 6, 6 }, // 10, 6
+			{ 10, 9 },
 
-			{6, 6}, //10, 6
-			{10, 9},
-
-			{5, 4}, //8, 4
-			{8, 6},
-	};
+			{ 5, 4 }, // 8, 4
+			{ 8, 6 }, };
 
 	@Test
 	public void calculateWithSma2AndSma3() {

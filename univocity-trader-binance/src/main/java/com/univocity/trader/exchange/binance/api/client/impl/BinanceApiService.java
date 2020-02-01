@@ -41,15 +41,16 @@ public interface BinanceApiService {
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_APIKEY_HEADER)
 	@GET("/api/v1/historicalTrades")
-	Call<List<TradeHistoryItem>> getHistoricalTrades(@Query("symbol") String symbol, @Query("limit") Integer limit, @Query("fromId") Long fromId);
+	Call<List<TradeHistoryItem>> getHistoricalTrades(@Query("symbol") String symbol, @Query("limit") Integer limit,
+			@Query("fromId") Long fromId);
 
 	@GET("/api/v1/aggTrades")
-	Call<List<AggTrade>> getAggTrades(@Query("symbol") String symbol, @Query("fromId") String fromId, @Query("limit") Integer limit,
-									  @Query("startTime") Long startTime, @Query("endTime") Long endTime);
+	Call<List<AggTrade>> getAggTrades(@Query("symbol") String symbol, @Query("fromId") String fromId,
+			@Query("limit") Integer limit, @Query("startTime") Long startTime, @Query("endTime") Long endTime);
 
 	@GET("/api/v1/klines")
-	Call<List<Candlestick>> getCandlestickBars(@Query("symbol") String symbol, @Query("interval") String interval, @Query("limit") Integer limit,
-											   @Query("startTime") Long startTime, @Query("endTime") Long endTime);
+	Call<List<Candlestick>> getCandlestickBars(@Query("symbol") String symbol, @Query("interval") String interval,
+			@Query("limit") Integer limit, @Query("startTime") Long startTime, @Query("endTime") Long endTime);
 
 	@GET("/api/v1/ticker/24hr")
 	Call<TickerStatistics> get24HrPriceStatistics(@Query("symbol") String symbol);
@@ -70,40 +71,43 @@ public interface BinanceApiService {
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@POST("/api/v3/order")
-	Call<NewOrderResponse> newOrder(@Query("symbol") String symbol, @Query("side") OrderSide side, @Query("type") OrderType type,
-									@Query("timeInForce") TimeInForce timeInForce, @Query("quantity") String quantity, @Query("price") String price,
-									@Query("newClientOrderId") String newClientOrderId, @Query("stopPrice") String stopPrice,
-									@Query("icebergQty") String icebergQty, @Query("newOrderRespType") NewOrderResponseType newOrderRespType,
-									@Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
+	Call<NewOrderResponse> newOrder(@Query("symbol") String symbol, @Query("side") OrderSide side,
+			@Query("type") OrderType type, @Query("timeInForce") TimeInForce timeInForce,
+			@Query("quantity") String quantity, @Query("price") String price,
+			@Query("newClientOrderId") String newClientOrderId, @Query("stopPrice") String stopPrice,
+			@Query("icebergQty") String icebergQty, @Query("newOrderRespType") NewOrderResponseType newOrderRespType,
+			@Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@POST("/api/v3/order/test")
-	Call<Void> newOrderTest(@Query("symbol") String symbol, @Query("side") OrderSide side, @Query("type") OrderType type,
-							@Query("timeInForce") TimeInForce timeInForce, @Query("quantity") String quantity, @Query("price") String price,
-							@Query("newClientOrderId") String newClientOrderId, @Query("stopPrice") String stopPrice,
-							@Query("icebergQty") String icebergQty, @Query("newOrderRespType") NewOrderResponseType newOrderRespType,
-							@Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
+	Call<Void> newOrderTest(@Query("symbol") String symbol, @Query("side") OrderSide side,
+			@Query("type") OrderType type, @Query("timeInForce") TimeInForce timeInForce,
+			@Query("quantity") String quantity, @Query("price") String price,
+			@Query("newClientOrderId") String newClientOrderId, @Query("stopPrice") String stopPrice,
+			@Query("icebergQty") String icebergQty, @Query("newOrderRespType") NewOrderResponseType newOrderRespType,
+			@Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@GET("/api/v3/order")
 	Call<Order> getOrderStatus(@Query("symbol") String symbol, @Query("orderId") Long orderId,
-							   @Query("origClientOrderId") String origClientOrderId, @Query("recvWindow") Long recvWindow,
-							   @Query("timestamp") Long timestamp);
+			@Query("origClientOrderId") String origClientOrderId, @Query("recvWindow") Long recvWindow,
+			@Query("timestamp") Long timestamp);
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@DELETE("/api/v3/order")
 	Call<CancelOrderResponse> cancelOrder(@Query("symbol") String symbol, @Query("orderId") Long orderId,
-										  @Query("origClientOrderId") String origClientOrderId, @Query("newClientOrderId") String newClientOrderId,
-										  @Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
+			@Query("origClientOrderId") String origClientOrderId, @Query("newClientOrderId") String newClientOrderId,
+			@Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@GET("/api/v3/openOrders")
-	Call<List<Order>> getOpenOrders(@Query("symbol") String symbol, @Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
+	Call<List<Order>> getOpenOrders(@Query("symbol") String symbol, @Query("recvWindow") Long recvWindow,
+			@Query("timestamp") Long timestamp);
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@GET("/api/v3/allOrders")
 	Call<List<Order>> getAllOrders(@Query("symbol") String symbol, @Query("orderId") Long orderId,
-								   @Query("limit") Integer limit, @Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
+			@Query("limit") Integer limit, @Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@GET("/api/v3/account")
@@ -111,26 +115,29 @@ public interface BinanceApiService {
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@GET("/api/v3/myTrades")
-	Call<List<Trade>> getMyTrades(@Query("symbol") String symbol, @Query("limit") Integer limit, @Query("fromId") Long fromId,
-								  @Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
+	Call<List<Trade>> getMyTrades(@Query("symbol") String symbol, @Query("limit") Integer limit,
+			@Query("fromId") Long fromId, @Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@POST("/wapi/v3/withdraw.html")
-	Call<WithdrawResult> withdraw(@Query("asset") String asset, @Query("address") String address, @Query("amount") String amount, @Query("name") String name, @Query("addressTag") String addressTag,
-								  @Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
-
+	Call<WithdrawResult> withdraw(@Query("asset") String asset, @Query("address") String address,
+			@Query("amount") String amount, @Query("name") String name, @Query("addressTag") String addressTag,
+			@Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@GET("/wapi/v3/depositHistory.html")
-	Call<DepositHistory> getDepositHistory(@Query("asset") String asset, @Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
+	Call<DepositHistory> getDepositHistory(@Query("asset") String asset, @Query("recvWindow") Long recvWindow,
+			@Query("timestamp") Long timestamp);
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@GET("/wapi/v3/withdrawHistory.html")
-	Call<WithdrawHistory> getWithdrawHistory(@Query("asset") String asset, @Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
+	Call<WithdrawHistory> getWithdrawHistory(@Query("asset") String asset, @Query("recvWindow") Long recvWindow,
+			@Query("timestamp") Long timestamp);
 
 	@Headers(BinanceApiConstants.ENDPOINT_SECURITY_TYPE_SIGNED_HEADER)
 	@GET("/wapi/v3/depositAddress.html")
-	Call<DepositAddress> getDepositAddress(@Query("asset") String asset, @Query("recvWindow") Long recvWindow, @Query("timestamp") Long timestamp);
+	Call<DepositAddress> getDepositAddress(@Query("asset") String asset, @Query("recvWindow") Long recvWindow,
+			@Query("timestamp") Long timestamp);
 
 	// User stream endpoints
 

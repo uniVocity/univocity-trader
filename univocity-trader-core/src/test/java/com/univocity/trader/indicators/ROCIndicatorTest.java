@@ -1,8 +1,6 @@
 package com.univocity.trader.indicators;
 
-
 import org.junit.*;
-
 
 import static com.univocity.trader.candles.CandleHelper.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
@@ -10,13 +8,9 @@ import static org.junit.Assert.*;
 
 public class ROCIndicatorTest {
 
-	double[] closePrices = new double[]{
-			11045.27, 11167.32, 11008.61, 11151.83,
-			10926.77, 10868.12, 10520.32, 10380.43,
-			10785.14, 10748.26, 10896.91, 10782.95,
-			10620.16, 10625.83, 10510.95, 10444.37,
-			10068.01, 10193.39, 10066.57, 10043.75};
-
+	double[] closePrices = new double[] { 11045.27, 11167.32, 11008.61, 11151.83, 10926.77, 10868.12, 10520.32,
+			10380.43, 10785.14, 10748.26, 10896.91, 10782.95, 10620.16, 10625.83, 10510.95, 10444.37, 10068.01,
+			10193.39, 10066.57, 10043.75 };
 
 	private double accumulateAndGet(RateOfChange roc, int i) {
 		roc.accumulate(newCandle(i, closePrices[i]));

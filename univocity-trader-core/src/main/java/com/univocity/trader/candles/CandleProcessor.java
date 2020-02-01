@@ -40,7 +40,8 @@ public class CandleProcessor<T> {
 			}
 			synchronized (consumer) {
 				PreciseCandle tick = exchange.generatePreciseCandle(realTimeTick);
-				if (!candleRepository.addToHistory(consumer.getSymbol(), tick, initializing)) {  //already processed, skip.
+				if (!candleRepository.addToHistory(consumer.getSymbol(), tick, initializing)) { // already processed,
+																								// skip.
 					return;
 				}
 				Candle candle = exchange.generateCandle(realTimeTick);
@@ -52,6 +53,4 @@ public class CandleProcessor<T> {
 		}
 	}
 
-
 }
-

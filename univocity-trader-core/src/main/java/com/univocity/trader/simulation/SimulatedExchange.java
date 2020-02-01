@@ -25,7 +25,8 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 	}
 
 	@Override
-	public IncomingCandles<Candle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
+	public IncomingCandles<Candle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime,
+			long endTime) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -69,7 +70,8 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 		}
 		double price = trader.lastClosingPrice();
 		if (price == 0.0 && trader.latestCandle() == null) {
-			// case for simulations only, where we try to switch from one asset to another without selling then buying, to avoid paying fees twice.
+			// case for simulations only, where we try to switch from one asset to another
+			// without selling then buying, to avoid paying fees twice.
 			Trader assetTrader = account.getTraderOf(assetSymbol + account.getReferenceCurrencySymbol());
 			if (assetTrader != null) {
 				Trader fundsTrader = account.getTraderOf(fundSymbol + account.getReferenceCurrencySymbol());
@@ -103,7 +105,6 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 //	public boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
 //		return mainTradeSymbols.contains(currentAssetSymbol) || mainTradeSymbols.contains(targetAssetSymbol);
 //	}
-
 
 	@Override
 	public ClientAccount connectToAccount(SimulatedClientConfiguration clientConfiguration) {

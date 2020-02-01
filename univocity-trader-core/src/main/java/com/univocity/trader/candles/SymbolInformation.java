@@ -4,8 +4,11 @@ import java.math.*;
 
 public class SymbolInformation {
 
-	public static double DEFAULT_MINIMUM_ASSETS_PER_ORDER_AMOUNT = 0.000001;// not zero to prevent trades that would use pennies.
-	public static BigDecimal DEFAULT_MINIMUM_ASSETS_PER_ORDER = BigDecimal.valueOf(0.000001);// not zero to prevent trades that would use pennies.
+	public static double DEFAULT_MINIMUM_ASSETS_PER_ORDER_AMOUNT = 0.000001;// not zero to prevent trades that would use
+																			// pennies.
+	public static BigDecimal DEFAULT_MINIMUM_ASSETS_PER_ORDER = BigDecimal.valueOf(0.000001);// not zero to prevent
+																								// trades that would use
+																								// pennies.
 
 	private final String symbol;
 	private int priceDecimalPlaces = 2;
@@ -62,12 +65,8 @@ public class SymbolInformation {
 
 	@Override
 	public String toString() {
-		return "{" +
-				"symbol='" + symbol + '\'' +
-				", priceDecimalPlaces=" + priceDecimalPlaces +
-				", quantityDecimalPlaces=" + quantityDecimalPlaces +
-				", minimumAssetsPerOrder=" + minimumAssetsPerOrder +
-				", minimumAssetsPerOrderAmount=" + minimumAssetsPerOrderAmount +
-				'}';
+		return "{" + "symbol='" + symbol + '\'' + ", priceDecimalPlaces=" + priceDecimalPlaces
+				+ ", quantityDecimalPlaces=" + quantityDecimalPlaces + ", minimumAssetsPerOrder="
+				+ minimumAssetsPerOrder + ", minimumAssetsPerOrderAmount=" + minimumAssetsPerOrderAmount + '}';
 	}
 }

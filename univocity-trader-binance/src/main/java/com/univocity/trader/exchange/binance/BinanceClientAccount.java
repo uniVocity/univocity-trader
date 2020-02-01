@@ -67,27 +67,28 @@ class BinanceClientAccount implements ClientAccount {
 		String symbol = orderDetails.getSymbol();
 		String price = orderDetails.getPrice().toPlainString();
 		switch (orderDetails.getSide()) {
-			case BUY:
-				switch (orderDetails.getType()) {
-					case LIMIT:
-						return execute(orderDetails, q -> limitBuy(symbol, GTC, q, price));
-					case MARKET:
-						return execute(orderDetails, q -> marketBuy(symbol, q));
-				}
-			case SELL:
-				switch (orderDetails.getType()) {
-					case LIMIT:
-						return execute(orderDetails, q -> limitSell(symbol, GTC, q, price));
-					case MARKET:
-						return execute(orderDetails, q -> marketSell(symbol, q));
-				}
+		case BUY:
+			switch (orderDetails.getType()) {
+			case LIMIT:
+				return execute(orderDetails, q -> limitBuy(symbol, GTC, q, price));
+			case MARKET:
+				return execute(orderDetails, q -> marketBuy(symbol, q));
+			}
+		case SELL:
+			switch (orderDetails.getType()) {
+			case LIMIT:
+				return execute(orderDetails, q -> limitSell(symbol, GTC, q, price));
+			case MARKET:
+				return execute(orderDetails, q -> marketSell(symbol, q));
+			}
 		}
 		return null;
 	}
 
 	@Override
 	public OrderBook getOrderBook(String symbol, int depth) {
-		com.univocity.trader.exchange.binance.api.client.domain.market.OrderBook book = client.getOrderBook(symbol, depth == 0 ? 5 : depth);
+		com.univocity.trader.exchange.binance.api.client.domain.market.OrderBook book = client.getOrderBook(symbol,
+				depth == 0 ? 5 : depth);
 
 		OrderBook out = new OrderBook(this, symbol, depth);
 		for (OrderBookEntry bid : book.getBids()) {
@@ -116,7 +117,8 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	private Order translate(OrderRequest preparation, OrderDetails response) {
-		DefaultOrder out = new DefaultOrder(preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), Trade.Side.LONG, response.getTime());
+		DefaultOrder out = new DefaultOrder(preparation.getAssetsSymbol(), preparation.getFundsSymbol(),
+				translate(response.getSide()), Trade.Side.LONG, response.getTime());
 
 		out.setPrice(new BigDecimal(response.getPrice()));
 		out.setQuantity(new BigDecimal(response.getOrigQty()));
@@ -129,38 +131,38 @@ class BinanceClientAccount implements ClientAccount {
 
 	private Order.Side translate(OrderSide side) {
 		switch (side) {
-			case BUY:
-				return Order.Side.BUY;
-			case SELL:
-				return SELL;
+		case BUY:
+			return Order.Side.BUY;
+		case SELL:
+			return SELL;
 		}
 		throw new IllegalStateException("Can't translate " + side + " to Order.Side");
 	}
 
 	private Order.Status translate(OrderStatus status) {
 		switch (status) {
-			case EXPIRED:
-			case CANCELED:
-			case PENDING_CANCEL:
-			case REJECTED:
-				return Order.Status.CANCELLED;
+		case EXPIRED:
+		case CANCELED:
+		case PENDING_CANCEL:
+		case REJECTED:
+			return Order.Status.CANCELLED;
 
-			case NEW:
-				return Order.Status.NEW;
-			case FILLED:
-				return FILLED;
-			case PARTIALLY_FILLED:
-				return Order.Status.PARTIALLY_FILLED;
+		case NEW:
+			return Order.Status.NEW;
+		case FILLED:
+			return FILLED;
+		case PARTIALLY_FILLED:
+			return Order.Status.PARTIALLY_FILLED;
 		}
 		throw new IllegalStateException("Can't translate " + status + " to Order.Status");
 	}
 
 	private Order.Type translate(OrderType type) {
 		switch (type) {
-			case LIMIT:
-				return Order.Type.LIMIT;
-			case MARKET:
-				return Order.Type.MARKET;
+		case LIMIT:
+			return Order.Type.LIMIT;
+		case MARKET:
+			return Order.Type.MARKET;
 		}
 		throw new IllegalStateException("Can't translate " + type + " to Order.Type");
 	}
@@ -172,7 +174,8 @@ class BinanceClientAccount implements ClientAccount {
 		}
 
 		SymbolPriceDetails f = getPriceDetails().switchToSymbol(orderPreparation.getSymbol());
-		if (orderPreparation.getTotalOrderAmount().compareTo(f.getMinimumOrderAmount(orderPreparation.getPrice())) > 0) {
+		if (orderPreparation.getTotalOrderAmount()
+				.compareTo(f.getMinimumOrderAmount(orderPreparation.getPrice())) > 0) {
 			NewOrder order = null;
 			try {
 				BigDecimal qty = f.adjustQuantityScale(orderPreparation.getQuantity());
@@ -193,8 +196,10 @@ class BinanceClientAccount implements ClientAccount {
 		return translate(order, client.getOrderStatus(request));
 	}
 
-	private Order translate(Order original, com.univocity.trader.exchange.binance.api.client.domain.account.Order order) {
-		DefaultOrder out = new DefaultOrder(original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), Trade.Side.LONG, order.getTime());
+	private Order translate(Order original,
+			com.univocity.trader.exchange.binance.api.client.domain.account.Order order) {
+		DefaultOrder out = new DefaultOrder(original.getAssetsSymbol(), original.getFundsSymbol(),
+				translate(order.getSide()), Trade.Side.LONG, order.getTime());
 		out.setStatus(translate(order.getStatus()));
 		out.setExecutedQuantity(new BigDecimal(order.getExecutedQty()));
 		out.setPrice(new BigDecimal(order.getPrice()));
@@ -206,7 +211,8 @@ class BinanceClientAccount implements ClientAccount {
 
 	@Override
 	public void cancel(Order order) {
-		CancelOrderResponse response = client.cancelOrder(new CancelOrderRequest(order.getSymbol(), Long.valueOf(order.getOrderId())));
+		CancelOrderResponse response = client
+				.cancelOrder(new CancelOrderRequest(order.getSymbol(), Long.valueOf(order.getOrderId())));
 		log.info("Cancelled order {}. Response: {}", order, response);
 	}
 }

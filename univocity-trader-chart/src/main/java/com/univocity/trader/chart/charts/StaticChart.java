@@ -30,7 +30,8 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 	private BufferedImage image;
 	private long lastPaint;
-	private boolean firstRun = true; //repaint on first run to use correct font sizes (first run computes them, second uses them to lay out things correctly).
+	private boolean firstRun = true; // repaint on first run to use correct font sizes (first run computes them,
+										// second uses them to lay out things correctly).
 
 	public final ChartCanvas canvas;
 
@@ -67,7 +68,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 			(g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		}
 	}
-
 
 	private void paintImage() {
 		if (System.currentTimeMillis() - lastPaint <= 10 && !canvas.isScrollingView() && image != null) {
@@ -106,11 +106,11 @@ public abstract class StaticChart<C extends BasicChartController> {
 		lastPaint = System.currentTimeMillis();
 	}
 
-	public int getBoundaryLeft(){
+	public int getBoundaryLeft() {
 		return canvas.getBoundaryLeft();
 	}
 
-	public int getBoundaryRight(){
+	public int getBoundaryRight() {
 		return canvas.getBoundaryRight();
 	}
 
@@ -121,7 +121,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 			canvas.insets.left = Math.max(painter.insets().left, canvas.insets.left);
 		}
 	}
-
 
 	private void dataUpdated() {
 		maximum = 0;
@@ -167,13 +166,14 @@ public abstract class StaticChart<C extends BasicChartController> {
 		}
 	}
 
-	public int getRequiredWidth(){
+	public int getRequiredWidth() {
 		return canvas.getRequiredWidth();
 	}
 
 	private void updateIncrements() {
 		if (!candleHistory.isEmpty()) {
-			horizontalIncrement = (((double) Math.max(getWidth(), getRequiredWidth()) - (canvas.getInsetsWidth())) / (double) candleHistory.size());
+			horizontalIncrement = (((double) Math.max(getWidth(), getRequiredWidth()) - (canvas.getInsetsWidth()))
+					/ (double) candleHistory.size());
 		}
 	}
 
@@ -250,11 +250,11 @@ public abstract class StaticChart<C extends BasicChartController> {
 		}
 	}
 
-	public final void invokeRepaint(){
+	public final void invokeRepaint() {
 		canvas.invokeRepaint();
 	}
 
-	public final int getWidth(){
+	public final int getWidth() {
 		return canvas.getWidth();
 	}
 
@@ -347,7 +347,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		this.height = height;
 	}
 
-	public int getBarWidth(){
+	public int getBarWidth() {
 		return canvas.getBarWidth();
 	}
 }

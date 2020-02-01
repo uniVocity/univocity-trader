@@ -11,7 +11,8 @@ import com.univocity.trader.strategy.*;
 
 public class ProfitabilityStrategyMonitor extends StrategyMonitor {
 	/*
-	 * 1% ensures that we don't make losing sales, and lets the strategy class determine to sell or not
+	 * 1% ensures that we don't make losing sales, and lets the strategy class
+	 * determine to sell or not
 	 */
 	private static final double MINIMUM_PROFIT = 0.01;
 	private static final Logger log = LoggerFactory.getLogger(ProfitabilityStrategyMonitor.class);
@@ -30,7 +31,8 @@ public class ProfitabilityStrategyMonitor extends StrategyMonitor {
 		double quantity = this.trader.assetQuantity();
 		double price = trade.averagePrice();
 		double purchaseValue = price * quantity;
-		double sellValue = tradingFees.takeFee(trader.latestCandle().low * quantity, Order.Type.MARKET, Order.Side.SELL);
+		double sellValue = tradingFees.takeFee(trader.latestCandle().low * quantity, Order.Type.MARKET,
+				Order.Side.SELL);
 		double diffpct = (sellValue - purchaseValue) / purchaseValue;
 		if (diffpct < MINIMUM_PROFIT) {
 			/*

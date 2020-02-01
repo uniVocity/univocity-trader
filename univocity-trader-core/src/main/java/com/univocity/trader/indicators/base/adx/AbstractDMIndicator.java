@@ -26,5 +26,4 @@ public abstract class AbstractDMIndicator extends SingleValueCalculationIndicato
 
 	protected abstract double calculate(double upMove, double downMove);
 
-
 }

@@ -11,7 +11,6 @@ import org.slf4j.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-
 class IB implements Exchange<Candle, Account> {
 
 	private static final Logger log = LoggerFactory.getLogger(IB.class);
@@ -29,14 +28,15 @@ class IB implements Exchange<Candle, Account> {
 		api = new InteractiveBrokersApi(ip, port, clientID, optionalCapabilities, this::reconnectApi);
 	}
 
-	private void reconnectApi(){
+	private void reconnectApi() {
 		api = (InteractiveBrokersApi) InteractiveBrokersApi.reconnect(api);
 	}
 
 	private void validateContracts() {
 		if (tradedContracts == null || tradedContracts.isEmpty()) {
-			throw new IllegalConfigurationException("No account configuration provided with one or more contracts to trade with. " +
-					"Use `configure().account().tradeWith(...)` to define the contracts");
+			throw new IllegalConfigurationException(
+					"No account configuration provided with one or more contracts to trade with. "
+							+ "Use `configure().account().tradeWith(...)` to define the contracts");
 		}
 	}
 
@@ -81,7 +81,7 @@ class IB implements Exchange<Candle, Account> {
 	@Override
 	public synchronized void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candle> consumer) {
 		validateContracts();
-		//TODO
+		// TODO
 	}
 
 	@Override
@@ -103,7 +103,8 @@ class IB implements Exchange<Candle, Account> {
 
 			List<Integer> requests = new ArrayList<>();
 			for (Map.Entry<String, Contract> e : tradedContracts.entrySet()) {
-				requests.add(this.api.searchForContract(e.getValue(), (details) -> symbolInformation.put(e.getKey(), details)));
+				requests.add(this.api.searchForContract(e.getValue(),
+						(details) -> symbolInformation.put(e.getKey(), details)));
 			}
 			this.api.waitForResponses(requests);
 		}

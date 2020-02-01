@@ -1,7 +1,8 @@
 package com.univocity.trader.exchange.binance.api.client;
 
 /**
- * BinanceApiCallback is a functional interface used together with the BinanceApiAsyncClient to provide a non-blocking REST client.
+ * BinanceApiCallback is a functional interface used together with the
+ * BinanceApiAsyncClient to provide a non-blocking REST client.
  *
  * @param <T> the return type from the callback
  */
@@ -23,7 +24,7 @@ public interface BinanceApiCallback<T> {
 	default void onFailure(Throwable cause) {
 	}
 
-	default void onClose(){
+	default void onClose() {
 
 	}
 }

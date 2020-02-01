@@ -5,7 +5,8 @@ import org.slf4j.*;
 import java.util.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public final class ConfigurationManager<C extends Configuration<C, ?>> {
 	private static final Logger log = LoggerFactory.getLogger(ConfigurationManager.class);
@@ -23,7 +24,7 @@ public final class ConfigurationManager<C extends Configuration<C, ?>> {
 	protected ConfigurationManager(C root, String defaultConfigurationFile) {
 		this.root = root;
 		CONFIGURATION_FILE = defaultConfigurationFile;
-		configurationFiles = new String[]{CONFIGURATION_FILE, "config/" + defaultConfigurationFile};
+		configurationFiles = new String[] { CONFIGURATION_FILE, "config/" + defaultConfigurationFile };
 	}
 
 	private C initialize(boolean loadFromFile) {
@@ -37,7 +38,8 @@ public final class ConfigurationManager<C extends Configuration<C, ?>> {
 
 	public final C getRoot() {
 		if (root == null) {
-			throw new IllegalStateException("Configuration not defined. Use 'configure()', 'load(file)' or 'loadFromCommandLine()' to define your configuration");
+			throw new IllegalStateException(
+					"Configuration not defined. Use 'configure()', 'load(file)' or 'loadFromCommandLine()' to define your configuration");
 		}
 		return root;
 	}
@@ -68,7 +70,8 @@ public final class ConfigurationManager<C extends Configuration<C, ?>> {
 			if (t instanceof IllegalConfigurationException) {
 				throw (IllegalConfigurationException) t;
 			} else {
-				throw new IllegalConfigurationException("Unable to load configuration from " + Arrays.toString(configurationFiles), t);
+				throw new IllegalConfigurationException(
+						"Unable to load configuration from " + Arrays.toString(configurationFiles), t);
 			}
 		}
 	}

@@ -53,7 +53,6 @@ public class ChartCanvas extends JPanel {
 
 		Graphics2D g = (Graphics2D) g1d;
 
-
 		for (StaticChart<?> chart : charts) {
 			this.requiredWidth = Math.max(chart.calculateRequiredWidth(), requiredWidth);
 			this.barWidth = Math.max(chart.calculateBarWidth(), barWidth);
@@ -87,11 +86,10 @@ public class ChartCanvas extends JPanel {
 	}
 
 	public void enableScrolling() {
-		if(scrollBar == null) {
+		if (scrollBar == null) {
 			scrollBar = new ScrollBar(this);
 		}
 	}
-
 
 	public final boolean isDraggingScroll() {
 		return isScrollingView() && scrollBar.isDraggingScroll();
@@ -121,7 +119,6 @@ public class ChartCanvas extends JPanel {
 		return getWidth();
 	}
 
-
 	public int getBoundaryLeft() {
 		if (scrollBar != null && scrollBar.isScrollingView()) {
 			return scrollBar.getBoundaryLeft();
@@ -141,10 +138,11 @@ public class ChartCanvas extends JPanel {
 	}
 
 	public boolean inDisabledSection(Point point) {
-		return point.y < getHeight() - scrollBar.getHeight() && (isOverDisabledSectionAtRight(getWidth(), point.x) || point.x < insets.left + getBarWidth());
+		return point.y < getHeight() - scrollBar.getHeight()
+				&& (isOverDisabledSectionAtRight(getWidth(), point.x) || point.x < insets.left + getBarWidth());
 	}
 
-	public int getBarWidth(){
+	public int getBarWidth() {
 		return barWidth;
 	}
 

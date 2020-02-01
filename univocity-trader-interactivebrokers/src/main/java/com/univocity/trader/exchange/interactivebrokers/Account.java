@@ -7,10 +7,11 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * InteractiveBrokers doesn't require an account login. We simply connect to their Trader Workstation
- * which must be running locally.
+ * InteractiveBrokers doesn't require an account login. We simply connect to
+ * their Trader Workstation which must be running locally.
  *
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class Account extends AccountConfiguration<Account> {
 
@@ -31,16 +32,17 @@ public class Account extends AccountConfiguration<Account> {
 	}
 
 	public Contract tradeWith(SecurityType securityType, String symbol, String currency) {
-		return tradeWith(securityType, symbol, currency, tradeTypes.getOrDefault(symbol + currency, securityType.defaultTradeType()));
+		return tradeWith(securityType, symbol, currency,
+				tradeTypes.getOrDefault(symbol + currency, securityType.defaultTradeType()));
 	}
 
 	public Contract tradeWith(SecurityType securityType, String symbol, String currency, TradeType tradeType) {
 		String pair = symbol + currency;
-		if(tradeTypes.containsKey(pair)){
+		if (tradeTypes.containsKey(pair)) {
 			tradeTypes.get(pair);
 		}
 
-		tradeWithPair(new String[]{symbol, currency});
+		tradeWithPair(new String[] { symbol, currency });
 		Contract contract = tradedContracts.get(pair);
 		if (contract == null) {
 			contract = new Contract();

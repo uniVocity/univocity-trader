@@ -216,25 +216,13 @@ public class Order implements OrderDetails {
 		this.cummulativeQuoteQty = cummulativeQuoteQty;
 	}
 
-
-
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("symbol", symbol)
-				.append("orderId", orderId)
-				.append("clientOrderId", clientOrderId)
-				.append("price", price)
-				.append("origQty", origQty)
-				.append("executedQty", executedQty)
-				.append("status", status)
-				.append("timeInForce", timeInForce)
-				.append("type", type)
-				.append("side", side)
-				.append("stopPrice", stopPrice)
-				.append("icebergQty", icebergQty)
-				.append("time", time)
-				.append("cummulativeQuoteQty", cummulativeQuoteQty)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("symbol", symbol)
+				.append("orderId", orderId).append("clientOrderId", clientOrderId).append("price", price)
+				.append("origQty", origQty).append("executedQty", executedQty).append("status", status)
+				.append("timeInForce", timeInForce).append("type", type).append("side", side)
+				.append("stopPrice", stopPrice).append("icebergQty", icebergQty).append("time", time)
+				.append("cummulativeQuoteQty", cummulativeQuoteQty).toString();
 	}
 }

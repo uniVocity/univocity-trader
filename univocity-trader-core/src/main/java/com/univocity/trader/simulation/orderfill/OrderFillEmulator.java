@@ -5,10 +5,12 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.simulation.*;
 
 /**
- * Controls how an {@link Order} should be filled
- * in {@link SimulatedClientAccount#updateOpenOrders(String, Candle)} when running a simulation.
+ * Controls how an {@link Order} should be filled in
+ * {@link SimulatedClientAccount#updateOpenOrders(String, Candle)} when running
+ * a simulation.
  *
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public interface OrderFillEmulator {
 

@@ -7,12 +7,12 @@ import com.univocity.trader.strategy.*;
 import java.util.function.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class ExponentialMovingAverage extends SingleValueCalculationIndicator {
 
 	private double alpha;
-
 
 	public ExponentialMovingAverage(int length, TimeInterval interval) {
 		this(length, interval, c -> c.close);
@@ -33,16 +33,14 @@ public class ExponentialMovingAverage extends SingleValueCalculationIndicator {
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
-		if(getAccumulationCount() == 0){
+		if (getAccumulationCount() == 0) {
 			return value;
 		}
 		return previousValue + alpha * (value - previousValue);
 	}
 
-
-
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

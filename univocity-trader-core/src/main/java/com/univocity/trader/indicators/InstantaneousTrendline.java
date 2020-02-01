@@ -1,6 +1,5 @@
 package com.univocity.trader.indicators;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -50,7 +49,6 @@ public class InstantaneousTrendline extends SingleValueIndicator {
 		return 0;
 	}
 
-
 	@Override
 	protected boolean process(Candle candle, double value, boolean updating) {
 		if (updating) {
@@ -81,18 +79,22 @@ public class InstantaneousTrendline extends SingleValueIndicator {
 		if (useHilbertTransform) {
 			value1.accumulate(price.getRecentValue(1) - price.getRecentValue(7), updating);
 			value2.accumulate(value1.getRecentValue(4), updating);
-			value3.accumulate(.75 * (value1.getRecentValue(1) - value1.getRecentValue(7)) + .25 * (value1.getRecentValue(3) - value1.getRecentValue(5)), updating);
+			value3.accumulate(.75 * (value1.getRecentValue(1) - value1.getRecentValue(7))
+					+ .25 * (value1.getRecentValue(3) - value1.getRecentValue(5)), updating);
 			inPhase.accumulate(.33 * value2.getRecentValue(1) + .67 * inPhase.getRecentValue(2), updating);
 			quadrature.accumulate(.2 * value3.getRecentValue(1) + .8 * quadrature.getRecentValue(2), updating);
 		} else {
 			value3.accumulate(price.getRecentValue(1) - price.getRecentValue(8), updating); // Detrend Price
-			inPhase.accumulate(1.25 * (value3.getRecentValue(5) - I_MULT * value3.getRecentValue(3)) + I_MULT * inPhase.getRecentValue(4), updating);
-			quadrature.accumulate(value3.getRecentValue(3) - Q_MULT * value3.getRecentValue(1) + Q_MULT * quadrature.getRecentValue(3), updating);
+			inPhase.accumulate(1.25 * (value3.getRecentValue(5) - I_MULT * value3.getRecentValue(3))
+					+ I_MULT * inPhase.getRecentValue(4), updating);
+			quadrature.accumulate(value3.getRecentValue(3) - Q_MULT * value3.getRecentValue(1)
+					+ Q_MULT * quadrature.getRecentValue(3), updating);
 		}
 
 		// Use ArcTangent to compute the current phase
 		if (Math.abs(inPhase.getRecentValue(1) + inPhase.getRecentValue(2)) > 0) {
-			double a = Math.abs((quadrature.getRecentValue(1) + quadrature.getRecentValue(2) / (inPhase.getRecentValue(1) + inPhase.getRecentValue(2))));
+			double a = Math.abs((quadrature.getRecentValue(1)
+					+ quadrature.getRecentValue(2) / (inPhase.getRecentValue(1) + inPhase.getRecentValue(2))));
 			phase.accumulate(Math.atan(a), updating);
 		}
 
@@ -107,7 +109,8 @@ public class InstantaneousTrendline extends SingleValueIndicator {
 			phase.accumulate(360 - phase.getRecentValue(1), updating);
 		}
 
-		// Compute a differential phase, resolve phase wraparound, and limit delta phase errors
+		// Compute a differential phase, resolve phase wraparound, and limit delta phase
+		// errors
 		deltaPhase.accumulate(phase.getRecentValue(2) - phase.getRecentValue(1), updating);
 
 		if (phase.getRecentValue(2) < 90 && phase.getRecentValue(1) > 270) {
@@ -129,7 +132,6 @@ public class InstantaneousTrendline extends SingleValueIndicator {
 			}
 		}
 
-
 		// Resolve Instantaneous Period errors and smooth
 		if (instPeriod.getRecentValue(1) == 0) {
 			instPeriod.accumulate(instPeriod.getRecentValue(2), updating);
@@ -146,7 +148,8 @@ public class InstantaneousTrendline extends SingleValueIndicator {
 			trendline = trendline / (period + 2);
 		}
 
-		value11.accumulate(.33 * (price.getRecentValue(1) + .5 * (price.getRecentValue(1) - price.getRecentValue(4))) + .67 * value11.getRecentValue(2), updating);
+		value11.accumulate(.33 * (price.getRecentValue(1) + .5 * (price.getRecentValue(1) - price.getRecentValue(4)))
+				+ .67 * value11.getRecentValue(2), updating);
 
 		this.trendLine = trendline;
 		this.zl = value11.getRecentValue(1);

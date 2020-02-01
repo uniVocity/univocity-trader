@@ -16,23 +16,23 @@ public class WindowUtils {
 		}
 		return screens[displayIndex];
 	}
-	
-	public static boolean isOnSameScreen(Component c1, Component c2){
+
+	public static boolean isOnSameScreen(Component c1, Component c2) {
 		Point p1 = c1.getLocationOnScreen();
 		p1.x += c1.getWidth() / 2;
 		p1.y += c1.getHeight() / 2;
-		
+
 		Point p2 = c2.getLocationOnScreen();
 		p2.x += c2.getWidth() / 2;
 		p2.y += c2.getHeight() / 2;
-		
+
 		Rectangle[] screens = DisplayObserver.getInstance().getScreenSizes();
-		for(Rectangle screen : screens){
-			if(screen.contains(p1) && screen.contains(p2)){
+		for (Rectangle screen : screens) {
+			if (screen.contains(p1) && screen.contains(p2)) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -51,7 +51,7 @@ public class WindowUtils {
 		return new Rectangle(x, y, width, height);
 	}
 
-	public static Rectangle getWindowBoundsOnFirstScreen(int windowCount, int rows, int cols, Insets insets) {		
+	public static Rectangle getWindowBoundsOnFirstScreen(int windowCount, int rows, int cols, Insets insets) {
 		if ((windowCount - 1) / (rows * cols) <= 0) {
 			return getWindowBounds(windowCount, rows, cols, insets);
 		} else {
@@ -75,12 +75,14 @@ public class WindowUtils {
 		return bounds;
 	}
 
-	public static int displayJOptionPane(Component parent, Object message, String title, int messageType, int optionType) {
+	public static int displayJOptionPane(Component parent, Object message, String title, int messageType,
+			int optionType) {
 		return displayJOptionPane(parent, message, title, messageType, optionType, null);
 	}
 
 	public static boolean displayConfirmation(Component parent, Object message, String title) {
-		return displayJOptionPane(parent, message, title, JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+		return displayJOptionPane(parent, message, title, JOptionPane.QUESTION_MESSAGE,
+				JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
 	}
 
 	public static boolean displayConfirmation(Component parent, Object message) {
@@ -103,7 +105,8 @@ public class WindowUtils {
 		displayJOptionPane(parent, message, title, JOptionPane.ERROR_MESSAGE, JOptionPane.DEFAULT_OPTION);
 	}
 
-	public static int displayJOptionPane(Component parent, Object message, String title, int messageType, int optionType, Icon icon) {
+	public static int displayJOptionPane(Component parent, Object message, String title, int messageType,
+			int optionType, Icon icon) {
 		final JDialog dialog = new JDialog();
 		dialog.setTitle(title);
 		dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);

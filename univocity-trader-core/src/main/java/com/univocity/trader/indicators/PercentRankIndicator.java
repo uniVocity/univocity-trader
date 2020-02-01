@@ -53,6 +53,6 @@ public class PercentRankIndicator extends SingleValueIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{roc};
+		return new Indicator[] { roc };
 	}
 }

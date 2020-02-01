@@ -123,11 +123,13 @@ public class Account {
 	}
 
 	public Map<String, AssetBalance> getFreeBalances() {
-		return new TreeMap<>(balances.stream().filter(b -> b.getFreeAmount() > 0).collect(Collectors.toMap(AssetBalance::getAsset, b -> b)));
+		return new TreeMap<>(balances.stream().filter(b -> b.getFreeAmount() > 0)
+				.collect(Collectors.toMap(AssetBalance::getAsset, b -> b)));
 	}
 
 	public Map<String, AssetBalance> getLockedBalances() {
-		return new TreeMap<>(balances.stream().filter(b -> b.getLockedAmount() > 0).collect(Collectors.toMap(AssetBalance::getAsset, b -> b)));
+		return new TreeMap<>(balances.stream().filter(b -> b.getLockedAmount() > 0)
+				.collect(Collectors.toMap(AssetBalance::getAsset, b -> b)));
 	}
 
 	public double getTotalBalance(String asset) {
@@ -152,7 +154,8 @@ public class Account {
 	 *
 	 * @param symbol asset symbol to obtain the balances from
 	 *
-	 * @return an asset balance for the given symbol which can be 0 in case the symbol has no balance in the account
+	 * @return an asset balance for the given symbol which can be 0 in case the
+	 *         symbol has no balance in the account
 	 */
 	public AssetBalance getAssetBalance(String symbol) {
 		for (AssetBalance assetBalance : balances) {
@@ -170,16 +173,10 @@ public class Account {
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("makerCommission", makerCommission)
-				.append("takerCommission", takerCommission)
-				.append("buyerCommission", buyerCommission)
-				.append("sellerCommission", sellerCommission)
-				.append("canTrade", canTrade)
-				.append("canWithdraw", canWithdraw)
-				.append("canDeposit", canDeposit)
-				.append("updateTime", updateTime)
-				.append("balances", balances)
-				.toString();
+				.append("makerCommission", makerCommission).append("takerCommission", takerCommission)
+				.append("buyerCommission", buyerCommission).append("sellerCommission", sellerCommission)
+				.append("canTrade", canTrade).append("canWithdraw", canWithdraw).append("canDeposit", canDeposit)
+				.append("updateTime", updateTime).append("balances", balances).toString();
 	}
 
 	public double getFreeBalance(String asset) {

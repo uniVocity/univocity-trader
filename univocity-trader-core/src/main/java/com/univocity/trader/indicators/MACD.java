@@ -6,22 +6,22 @@ import com.univocity.trader.strategy.*;
 
 import java.util.function.*;
 
-
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class MACD extends SingleValueIndicator {
 
 	private final SingleValueIndicator emaShort;
 	private final SingleValueIndicator emaLong;
 
-	private final SingleValueIndicator signalLine; //from macdLine
+	private final SingleValueIndicator signalLine; // from macdLine
 
 	private String params;
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{emaShort, emaLong, signalLine};
+		return new Indicator[] { emaShort, emaLong, signalLine };
 	}
 
 	public MACD(TimeInterval interval) {
@@ -32,7 +32,8 @@ public class MACD extends SingleValueIndicator {
 		this(shortCount, longCount, macdCount, interval, c -> c.close);
 	}
 
-	public MACD(int shortCount, int longCount, int macdCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	public MACD(int shortCount, int longCount, int macdCount, TimeInterval interval,
+			ToDoubleFunction<Candle> valueGetter) {
 		super(interval, null);
 		emaShort = getShortAverageIndicator(shortCount, interval, valueGetter);
 		emaLong = getLongAverageIndicator(longCount, interval, valueGetter);
@@ -40,15 +41,18 @@ public class MACD extends SingleValueIndicator {
 		this.params = shortCount + "," + longCount + "," + macdCount + ",";
 	}
 
-	protected SingleValueIndicator getAverageIndicator(int count, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	protected SingleValueIndicator getAverageIndicator(int count, TimeInterval interval,
+			ToDoubleFunction<Candle> valueGetter) {
 		return new ExponentialMovingAverage(count, interval, valueGetter);
 	}
 
-	protected SingleValueIndicator getShortAverageIndicator(int shortCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	protected SingleValueIndicator getShortAverageIndicator(int shortCount, TimeInterval interval,
+			ToDoubleFunction<Candle> valueGetter) {
 		return getAverageIndicator(shortCount, interval, valueGetter);
 	}
 
-	protected SingleValueIndicator getLongAverageIndicator(int longCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	protected SingleValueIndicator getLongAverageIndicator(int longCount, TimeInterval interval,
+			ToDoubleFunction<Candle> valueGetter) {
 		return getAverageIndicator(longCount, interval, valueGetter);
 	}
 

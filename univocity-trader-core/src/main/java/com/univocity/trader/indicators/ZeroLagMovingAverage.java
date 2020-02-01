@@ -41,12 +41,12 @@ public class ZeroLagMovingAverage extends SingleValueCalculationIndicator {
 		if (getAccumulationCount() == 0) {
 			return value;
 		}
-		double priceLag = tmp.getRecentValue((int)Math.min(lag, getAccumulationCount()));
+		double priceLag = tmp.getRecentValue((int) Math.min(lag, getAccumulationCount()));
 		return (k * ((2 * value) - priceLag)) + ((1 - k) * previousValue);
 	}
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

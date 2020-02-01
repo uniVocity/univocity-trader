@@ -6,7 +6,8 @@ import java.util.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
-public abstract class Configuration<C extends Configuration<C, T>, T extends AccountConfiguration<T>> implements ConfigurationGroup {
+public abstract class Configuration<C extends Configuration<C, T>, T extends AccountConfiguration<T>>
+		implements ConfigurationGroup {
 
 	private final List<ConfigurationGroup> configurationGroups = new ArrayList<>();
 	private final ConfigurationManager<C> manager;
@@ -21,16 +22,16 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		this("univocity-trader.properties");
 	}
 
-	final void loadConfigurationGroups(){
+	final void loadConfigurationGroups() {
 		this.addConfigurationGroups(configurationGroups);
 	}
 
-	final List<ConfigurationGroup> getConfigurationGroups(){
+	final List<ConfigurationGroup> getConfigurationGroups() {
 		return configurationGroups;
 	}
 
 	protected Configuration(String defaultConfigurationFile) {
-		manager = new ConfigurationManager<C>((C)this, defaultConfigurationFile);
+		manager = new ConfigurationManager<C>((C) this, defaultConfigurationFile);
 	}
 
 	public C configure() {
@@ -58,7 +59,7 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		}
 	}
 
-	protected ConfigurationGroup[] getAdditionalConfigurationGroups(){
+	protected ConfigurationGroup[] getAdditionalConfigurationGroups() {
 		return new ConfigurationGroup[0];
 	}
 
@@ -82,7 +83,7 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		return accountList.account(accountId);
 	}
 
-	public List<T> accounts(){
+	public List<T> accounts() {
 		return accountList.accounts();
 	}
 
@@ -91,8 +92,8 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	}
 
 	public C tickInterval(TimeInterval tickInterval) {
-		 this.tickInterval = tickInterval;
-		 return (C)this;
+		this.tickInterval = tickInterval;
+		return (C) this;
 	}
 
 	@Override

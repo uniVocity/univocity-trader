@@ -5,7 +5,8 @@ import com.univocity.trader.iqfeed.api.constant.*;
 import org.apache.commons.lang3.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class Account extends AccountConfiguration<Account> {
 
@@ -20,7 +21,7 @@ public class Account extends AccountConfiguration<Account> {
 	public Account(String id) {
 		super(id);
 
-		//TODO: list more 100% required property names here.
+		// TODO: list more 100% required property names here.
 		addRequiredPropertyNames("iq.login");
 	}
 
@@ -28,13 +29,12 @@ public class Account extends AccountConfiguration<Account> {
 	protected void readExchangeAccountProperties(String accountId, PropertyBasedConfiguration properties) {
 		this.iqPortalPath = properties.getOptionalProperty(accountId + ".iq.portal.path");
 		this.host = properties.getOptionalProperty(accountId + "iq.host");
-		this.port = properties.getInteger(accountId + "iq.port", 0); //TODO: provide a sane default instead of 0
+		this.port = properties.getInteger(accountId + "iq.port", 0); // TODO: provide a sane default instead of 0
 		this.product = properties.getOptionalProperty(accountId + "iq.product");
 		this.version = properties.getOptionalProperty(accountId + "iq.version");
 		this.login = properties.getOptionalProperty(accountId + "iq.login");
 		this.pass = properties.getOptionalProperty(accountId + "iq.pass");
 	}
-
 
 	public String iqPortalPath() {
 		return iqPortalPath;

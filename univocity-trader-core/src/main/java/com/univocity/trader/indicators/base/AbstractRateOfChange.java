@@ -24,7 +24,7 @@ public abstract class AbstractRateOfChange extends SingleValueIndicator {
 		}
 
 		double oldValue = values.getRecentValue(values.size());
-		if(oldValue == 0.0){
+		if (oldValue == 0.0) {
 			return false;
 		}
 		this.value = ((value - oldValue) / oldValue) * 100.0;
@@ -36,6 +36,5 @@ public abstract class AbstractRateOfChange extends SingleValueIndicator {
 	public double getValue() {
 		return value;
 	}
-
 
 }

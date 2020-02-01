@@ -37,4 +37,3 @@ public class IQFeedApiException extends RuntimeException {
 		return super.getMessage();
 	}
 }
-

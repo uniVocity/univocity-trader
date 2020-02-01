@@ -3,9 +3,11 @@ package com.univocity.trader.config;
 import java.util.*;
 
 /**
- * An override over {@link java.util.Properties} to return properties in the order they are defined in the file.
+ * An override over {@link java.util.Properties} to return properties in the
+ * order they are defined in the file.
  *
- * @author Univocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author Univocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class OrderedProperties extends Properties {
 
@@ -37,6 +39,5 @@ public class OrderedProperties extends Properties {
 		propertySequence.remove(key);
 		return super.remove(key);
 	}
-
 
 }

@@ -7,7 +7,7 @@ import static junit.framework.TestCase.*;
 public class CircularListTest {
 
 	@Test
-	public void testCircularity(){
+	public void testCircularity() {
 		CircularList l = new CircularList(3);
 
 		l.update(0.5);

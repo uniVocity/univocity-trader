@@ -1,6 +1,5 @@
 package com.univocity.trader.chart.charts;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
@@ -58,11 +57,11 @@ public class LineChart extends BasicChart<LineChartController> {
 		drawCircle(getMarkerColor(), location, g);
 	}
 
-	private int getMarkerWidth(){
+	private int getMarkerWidth() {
 		return getController().getMarkerWidth();
 	}
 
-	private Color getMarkerColor(){
+	private Color getMarkerColor() {
 		return getController().getMarkerColor();
 	}
 
@@ -70,7 +69,7 @@ public class LineChart extends BasicChart<LineChartController> {
 		return getController().getLineColor();
 	}
 
-	private void drawCircle(Color color, Point location, Graphics2D g){
+	private void drawCircle(Color color, Point location, Graphics2D g) {
 		g.setColor(color);
 		int markerWidth = getMarkerWidth();
 		g.fillOval(location.x - markerWidth / 2, location.y - markerWidth / 2, markerWidth, markerWidth);

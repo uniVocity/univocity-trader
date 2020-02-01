@@ -40,7 +40,7 @@ public class KeltnerChannel extends SingleValueCalculationIndicator {
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
 		atr.accumulate(candle);
-		if(updating) {
+		if (updating) {
 			middle.update(value);
 		} else {
 			middle.accumulate(value);
@@ -66,6 +66,6 @@ public class KeltnerChannel extends SingleValueCalculationIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{atr, middle};
+		return new Indicator[] { atr, middle };
 	}
 }

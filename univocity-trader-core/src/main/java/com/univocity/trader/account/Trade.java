@@ -15,31 +15,40 @@ import java.util.concurrent.*;
 import static com.univocity.trader.account.Balance.*;
 
 /**
- * A {@code Trade} holds one or more {@link Order} placed in the {@link Exchange} through
- * a {@link Trader}. Once a position is opened, this {@code Trade} object will start capturing the following
- * information:
+ * A {@code Trade} holds one or more {@link Order} placed in the
+ * {@link Exchange} through a {@link Trader}. Once a position is opened, this
+ * {@code Trade} object will start capturing the following information:
  * <ul>
- * <li>the number of ticks received since the first trade was created via {@link #ticks()}</li>
- * <li>the average price paid for the instrument traded by this {@code Trader} via {@link #averagePrice()}</li>
- * <li>the time elapsed since the first trade executed via {@link #tradeDuration()};</li>
- * <li>the current change % in price since this trade opened via {@link #priceChangePct()}</li>
- * <li>the maximum positive change % this trade had via {@link #maxChange()}</li>
- * <li>the maximum price reached since the trade opened via {@link #maxPrice()}</li>
- * <li>the minimum change % (negative or zero) this trade had via {@link #minChange()}</li>
- * <li>the minimum price reached since the trade opened via {@link #minPrice()}</li>
- * <li>the latest closing price of the instrument traded via {@link #lastClosingPrice()}</li>
- * <li>the minimum positive change % required to break even after fees, via {@link #breakEvenChange()}</li>
+ * <li>the number of ticks received since the first trade was created via
+ * {@link #ticks()}</li>
+ * <li>the average price paid for the instrument traded by this {@code Trader}
+ * via {@link #averagePrice()}</li>
+ * <li>the time elapsed since the first trade executed via
+ * {@link #tradeDuration()};</li>
+ * <li>the current change % in price since this trade opened via
+ * {@link #priceChangePct()}</li>
+ * <li>the maximum positive change % this trade had via
+ * {@link #maxChange()}</li>
+ * <li>the maximum price reached since the trade opened via
+ * {@link #maxPrice()}</li>
+ * <li>the minimum change % (negative or zero) this trade had via
+ * {@link #minChange()}</li>
+ * <li>the minimum price reached since the trade opened via
+ * {@link #minPrice()}</li>
+ * <li>the latest closing price of the instrument traded via
+ * {@link #lastClosingPrice()}</li>
+ * <li>the minimum positive change % required to break even after fees, via
+ * {@link #breakEvenChange()}</li>
  * </ul>
- * These statistics take into account one {@link Order} or more which represent the current
- * position being held.
+ * These statistics take into account one {@link Order} or more which represent
+ * the current position being held.
  */
 public class Trade implements Comparable<Trade> {
 
 	private static final Logger log = LoggerFactory.getLogger(Trade.class);
 
 	public enum Side {
-		LONG,
-		SHORT
+		LONG, SHORT
 	}
 
 	private String exitReason;
@@ -48,7 +57,7 @@ public class Trade implements Comparable<Trade> {
 	private final Map<String, Order> exitOrders = new ConcurrentHashMap<>();
 	private final Map<String, Order> pastOrders = new ConcurrentHashMap<>();
 
-	//these two are used internally only to calculate
+	// these two are used internally only to calculate
 	// average prices with fees taken into account.
 	private double totalSpent;
 	private double totalUnits;
@@ -80,7 +89,8 @@ public class Trade implements Comparable<Trade> {
 		increasePosition(openingOrder);
 	}
 
-	private Trade(long id, Trader trader, Trade.Side side, Strategy openingStrategy, StrategyMonitor[] monitors, boolean isPlaceholder) {
+	private Trade(long id, Trader trader, Trade.Side side, Strategy openingStrategy, StrategyMonitor[] monitors,
+			boolean isPlaceholder) {
 		this.id = id;
 		this.trader = trader;
 		this.monitors = monitors;
@@ -90,7 +100,7 @@ public class Trade implements Comparable<Trade> {
 		initTrade();
 	}
 
-	private void initTrade(){
+	private void initTrade() {
 		this.firstCandle = trader.latestCandle();
 		this.max = this.min = firstCandle.close;
 		finalized = false;
@@ -167,9 +177,9 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	/**
-	 * Returns a description detailing why the latest trade was closed. Typically populated from
-	 * {@link StrategyMonitor#handleStop(Trade, Signal, Strategy)} when a trade is stopped without a {@code SELL}
-	 * signal.
+	 * Returns a description detailing why the latest trade was closed. Typically
+	 * populated from {@link StrategyMonitor#handleStop(Trade, Signal, Strategy)}
+	 * when a trade is stopped without a {@code SELL} signal.
 	 *
 	 * @return the reason for exiting the latest trade.
 	 */
@@ -178,9 +188,11 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	/**
-	 * Returns the maximum closing price reached for the current position since the first trade was made.
+	 * Returns the maximum closing price reached for the current position since the
+	 * first trade was made.
 	 *
-	 * @return the maximum closing price recorded for the traded symbol since opening latest the position.
+	 * @return the maximum closing price recorded for the traded symbol since
+	 *         opening latest the position.
 	 */
 	public double maxPrice() {
 		if (traded()) {
@@ -190,9 +202,11 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	/**
-	 * Returns the minimum closing price reached for the current position since the first trade was made.
+	 * Returns the minimum closing price reached for the current position since the
+	 * first trade was made.
 	 *
-	 * @return the minimum closing price recorded for the traded symbol since opening latest the position.
+	 * @return the minimum closing price recorded for the traded symbol since
+	 *         opening latest the position.
 	 */
 	public double minPrice() {
 		if (traded()) {
@@ -202,25 +216,30 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	/**
-	 * Returns the formatted most negative change percentage reached during the current (or latest) trade.
+	 * Returns the formatted most negative change percentage reached during the
+	 * current (or latest) trade.
 	 *
-	 * @return the maximum change percentage for the trade symbol, formatted as {@code #,##0.00%}
+	 * @return the maximum change percentage for the trade symbol, formatted as
+	 *         {@code #,##0.00%}
 	 */
 	public String formattedMaxChangePct() {
 		return formattedPct(maxChange());
 	}
 
 	/**
-	 * Returns the formatted most negative change percentage reached during the current (or latest) trade.
+	 * Returns the formatted most negative change percentage reached during the
+	 * current (or latest) trade.
 	 *
-	 * @return the maximum change percentage for the trade symbol, formatted as {@code #,##0.00%}
+	 * @return the maximum change percentage for the trade symbol, formatted as
+	 *         {@code #,##0.00%}
 	 */
 	public String formattedMinChangePct() {
 		return formattedPct(minChange());
 	}
 
 	/**
-	 * Returns the formatted current price change percentage of the current (or latest) trade.
+	 * Returns the formatted current price change percentage of the current (or
+	 * latest) trade.
 	 *
 	 * @return the current change percentage, formatted as {@code #,##0.00%}
 	 */
@@ -229,7 +248,8 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	/**
-	 * Returns the formatted current price change percentage of the {@link #averagePrice()} relative to a given amount.
+	 * Returns the formatted current price change percentage of the
+	 * {@link #averagePrice()} relative to a given amount.
 	 *
 	 * @param paid the actual amount spent on an {@link Order}
 	 *
@@ -284,14 +304,16 @@ public class Trade implements Comparable<Trade> {
 	/**
 	 * Returns the current price change percentage of the current (or latest) trade
 	 *
-	 * @return the current change percentage, where 100% change is returned as {@code 100.0}
+	 * @return the current change percentage, where 100% change is returned as
+	 *         {@code 100.0}
 	 */
 	public double priceChangePct() {
 		return averagePrice() > 0.0 ? change : 0.0;
 	}
 
 	/**
-	 * Returns the number of ticks processed since the latest {@link Order} of the current position was submitted.
+	 * Returns the number of ticks processed since the latest {@link Order} of the
+	 * current position was submitted.
 	 *
 	 * @return the count of ticks registered so far for the trade.
 	 */
@@ -308,7 +330,7 @@ public class Trade implements Comparable<Trade> {
 		}
 		change = maxChange = minChange = 0.0;
 
-		//calculate average price
+		// calculate average price
 		totalSpent = 0.0;
 		totalUnits = 0.0;
 		for (Order order : orders) {
@@ -320,8 +342,10 @@ public class Trade implements Comparable<Trade> {
 			averagePrice = 0.0;
 		} else {
 			averagePrice = totalSpent / totalUnits;
-			change = isLong() ? positivePriceChangePct(averagePrice, trader.lastClosingPrice()) : -positivePriceChangePct(averagePrice, trader.lastClosingPrice());
-			maxChange = isLong() ? positivePriceChangePct(averagePrice, maxPrice()) : -positivePriceChangePct(averagePrice, minPrice());
+			change = isLong() ? positivePriceChangePct(averagePrice, trader.lastClosingPrice())
+					: -positivePriceChangePct(averagePrice, trader.lastClosingPrice());
+			maxChange = isLong() ? positivePriceChangePct(averagePrice, maxPrice())
+					: -positivePriceChangePct(averagePrice, minPrice());
 			minChange = isLong() ? positivePriceChangePct(averagePrice, minPrice()) : priceChangePct(maxPrice());
 		}
 	}
@@ -329,7 +353,8 @@ public class Trade implements Comparable<Trade> {
 	/**
 	 * Returns the average price paid based on every {@link Order} opened.
 	 *
-	 * @return the average unit amount paid based on each individual {@link Order} in the current position.
+	 * @return the average unit amount paid based on each individual {@link Order}
+	 *         in the current position.
 	 */
 	public double averagePrice() {
 		if (averagePrice <= 0.0) {
@@ -387,7 +412,8 @@ public class Trade implements Comparable<Trade> {
 //			}
 //		}
 
-		throw new IllegalStateException("Unable to convert profit/loss of " + actualProfitLoss + " " + trader.fundSymbol() + " to " + currency);
+		throw new IllegalStateException(
+				"Unable to convert profit/loss of " + actualProfitLoss + " " + trader.fundSymbol() + " to " + currency);
 	}
 
 	public double actualProfitLossPct() {
@@ -478,13 +504,13 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public boolean isFinalized() {
-		if(finalized){
+		if (finalized) {
 			return true;
 		}
 		return finalized = checkIfFinalized();
 	}
 
-	private boolean checkIfFinalized(){
+	private boolean checkIfFinalized() {
 		if (isPlaceholder) {
 			return true;
 		}
@@ -508,7 +534,8 @@ public class Trade implements Comparable<Trade> {
 
 			double exitPct = qtyInExit * 100.0 / qtyInPosition;
 
-			if ((qtyInPosition - qtyInExit) * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() || exitPct > 98.0) {
+			if ((qtyInPosition - qtyInExit) * lastClosingPrice() < trader.tradingManager
+					.minimumInvestmentAmountPerTrade() || exitPct > 98.0) {
 				double fractionRemaining = qtyInPosition - qtyInExit;
 				finalizedQuantity = qtyInPosition - fractionRemaining;
 				return true;
@@ -527,7 +554,8 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	/**
-	 * Returns the formatted current price change percentage of the current (or latest) trade.
+	 * Returns the formatted current price change percentage of the current (or
+	 * latest) trade.
 	 *
 	 * @return the current change percentage, formatted as {@code #,##0.00%}
 	 */
@@ -536,7 +564,8 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public double estimateProfitLossPercentage(Order order) {
-		return priceChangePct() - 100.0 * ((trader.tradingFees().feesOnOrder(order)) / order.getTotalOrderAmount().doubleValue());
+		return priceChangePct()
+				- 100.0 * ((trader.tradingFees().feesOnOrder(order)) / order.getTotalOrderAmount().doubleValue());
 	}
 
 	public boolean tryingToExit() {
@@ -557,11 +586,13 @@ public class Trade implements Comparable<Trade> {
 		if (isPlaceholder) {
 			return false;
 		}
-		if ((this.side == Side.SHORT && !trader.isShort(strategy)) || (this.side == Side.LONG && !trader.isLong(strategy))) {
+		if ((this.side == Side.SHORT && !trader.isShort(strategy))
+				|| (this.side == Side.LONG && !trader.isLong(strategy))) {
 			return false;
 		}
 
-		if (this.openingStrategy == null || strategy == null || trader.allowMixedStrategies || this.openingStrategy == strategy) {
+		if (this.openingStrategy == null || strategy == null || trader.allowMixedStrategies
+				|| this.openingStrategy == strategy) {
 			for (int i = 0; i < monitors.length; i++) {
 				if (!monitors[i].allowExit(this)) {
 					return false;
@@ -572,8 +603,8 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public synchronized boolean increasePosition(Order order) {
-		if(finalized){
-			if(position.isEmpty()){
+		if (finalized) {
+			if (position.isEmpty()) {
 				initTrade();
 			} else {
 				throw new IllegalStateException("Trying to increase position of finalized trade");
@@ -590,7 +621,7 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public synchronized void decreasePosition(Order order, String exitReason) {
-		if(!isPlaceholder && finalized){
+		if (!isPlaceholder && finalized) {
 			throw new IllegalStateException("Trying to decrease position of finalized trade");
 		}
 		if (this.exitReason == null) {
@@ -625,8 +656,9 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	/**
-	 * Returns all {@link StrategyMonitor} instances built in the constructor of this class, which will be used by
-	 * an {@link Engine} that processes candles for the symbol traded by this {@code Trader}
+	 * Returns all {@link StrategyMonitor} instances built in the constructor of
+	 * this class, which will be used by an {@link Engine} that processes candles
+	 * for the symbol traded by this {@code Trader}
 	 *
 	 * @return all strategy monitors used by this {@code Trader}.
 	 */
@@ -690,12 +722,14 @@ public class Trade implements Comparable<Trade> {
 
 	public String formattedMinPriceAndPercentage() {
 		SymbolPriceDetails f = trader.priceDetails();
-		return '$' + f.priceToString(minPrice()) + " (" + (isLong() ? formattedMinChangePct() : formattedMaxChangePct()) + ')';
+		return '$' + f.priceToString(minPrice()) + " (" + (isLong() ? formattedMinChangePct() : formattedMaxChangePct())
+				+ ')';
 	}
 
 	public String formattedMaxPriceAndPercentage() {
 		SymbolPriceDetails f = trader.priceDetails();
-		return '$' + f.priceToString(maxPrice()) + " (" + (isLong() ? formattedMaxChangePct() : formattedMinChangePct()) + ')';
+		return '$' + f.priceToString(maxPrice()) + " (" + (isLong() ? formattedMaxChangePct() : formattedMinChangePct())
+				+ ')';
 	}
 
 	public String toString() {
@@ -707,7 +741,8 @@ public class Trade implements Comparable<Trade> {
 		BigDecimal exit = removeCancelledAndSumQuantities(exitOrders);
 		BigDecimal out = pos.subtract(exit);
 		if (out.compareTo(BigDecimal.ZERO) < 0) {
-			throw new IllegalStateException("Illegal quantity of " + symbol() + " held in " + getSide() + " trade. Position: " + pos + ", Exit: " + exit);
+			throw new IllegalStateException("Illegal quantity of " + symbol() + " held in " + getSide()
+					+ " trade. Position: " + pos + ", Exit: " + exit);
 		}
 		return out;
 	}

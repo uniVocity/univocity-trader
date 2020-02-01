@@ -38,6 +38,6 @@ public class StochasticOscillatorK extends SingleValueIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{lows, highs};
+		return new Indicator[] { lows, highs };
 	}
 }

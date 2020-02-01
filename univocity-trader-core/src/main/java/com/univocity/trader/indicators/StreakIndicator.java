@@ -25,18 +25,18 @@ public class StreakIndicator extends SingleValueCalculationIndicator {
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
-		if(getAccumulationCount() == 0){
+		if (getAccumulationCount() == 0) {
 			streak = 0;
 		} else {
 			if (value == previousValue) {
 				streak = 0;
 			} else if (value < previousValue) {
-				if(streak > 0){
+				if (streak > 0) {
 					streak = 0;
 				}
 				streak--;
 			} else if (value > previousValue) {
-				if(streak < 0){
+				if (streak < 0) {
 					streak = 0;
 				}
 				streak++;
@@ -47,6 +47,6 @@ public class StreakIndicator extends SingleValueCalculationIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

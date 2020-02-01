@@ -8,7 +8,8 @@ import com.univocity.trader.notification.*;
 import java.time.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class MarketHistoryLoader {
 	public static void main(String... args) {

@@ -36,6 +36,6 @@ public class ChandelierExitLong extends SingleValueCalculationIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{high, atr};
+		return new Indicator[] { high, atr };
 	}
 }

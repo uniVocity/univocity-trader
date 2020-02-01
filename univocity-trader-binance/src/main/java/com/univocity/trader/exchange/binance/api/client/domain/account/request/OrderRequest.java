@@ -46,10 +46,7 @@ public class OrderRequest {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("symbol", symbol)
-				.append("recvWindow", recvWindow)
-				.append("timestamp", timestamp)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("symbol", symbol)
+				.append("recvWindow", recvWindow).append("timestamp", timestamp).toString();
 	}
 }

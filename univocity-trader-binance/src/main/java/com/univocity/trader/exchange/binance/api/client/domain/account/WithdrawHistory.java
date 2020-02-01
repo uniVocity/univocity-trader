@@ -37,8 +37,6 @@ public class WithdrawHistory {
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("withdrawList", withdrawList)
-				.append("success", success)
-				.toString();
+				.append("withdrawList", withdrawList).append("success", success).toString();
 	}
 }

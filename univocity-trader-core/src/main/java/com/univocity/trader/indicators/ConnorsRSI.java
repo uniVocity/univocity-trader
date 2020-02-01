@@ -13,9 +13,9 @@ public class ConnorsRSI extends SingleValueIndicator {
 
 	private double value;
 
-		@Override
+	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{rsi, streakRsi, streak, rank};
+		return new Indicator[] { rsi, streakRsi, streak, rank };
 	}
 
 	public ConnorsRSI(TimeInterval interval) {
@@ -42,7 +42,7 @@ public class ConnorsRSI extends SingleValueIndicator {
 			streak.accumulate(c);
 			rank.accumulate(c);
 
-			//FIXME: what a frigging ugly hack.
+			// FIXME: what a frigging ugly hack.
 			c = new Candle(c.openTime, c.closeTime, c.open, c.high, c.low, streak.getValue(), c.volume);
 			streakRsi.accumulate(c);
 			this.value = (rsi.getValue() + streakRsi.getValue() + rank.getValue()) / 3.0;

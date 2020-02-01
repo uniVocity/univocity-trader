@@ -44,7 +44,6 @@ public class OrderExecutionToCsv implements OrderListener {
 		logDetails(order, trade, client);
 	}
 
-
 	private void logDetails(Order order, Trade trade, Client client) {
 		lines.add(new OrderExecutionLine(order, trade, trade.trader(), client));
 	}
@@ -55,10 +54,8 @@ public class OrderExecutionToCsv implements OrderListener {
 			lines.forEach(l -> toRemove.add(l.fillPct == 0.0 && l.status != Order.Status.NEW ? l.orderId : ""));
 		}
 
-		return lines.stream()
-				.filter(l -> (omitOrderOpening && l.status != Order.Status.NEW))
-				.filter(l -> !toRemove.contains(l.orderId))
-				.collect(Collectors.toList());
+		return lines.stream().filter(l -> (omitOrderOpening && l.status != Order.Status.NEW))
+				.filter(l -> !toRemove.contains(l.orderId)).collect(Collectors.toList());
 	}
 
 	@Override
@@ -68,17 +65,12 @@ public class OrderExecutionToCsv implements OrderListener {
 		CsvRoutines routines = new CsvRoutines(Csv.writeExcel());
 		routines.getWriterSettings().setHeaderWritingEnabled(true);
 
-		String[] headers = new String[]{
-				"closeTime", "clientId", "tradeId", "operation",
-				"quantity", "assetSymbol", "price", "fundSymbol", "orderAmount",
-				"orderType", "status", "duration",
-				"orderFillPercentage", "executedQuantity", "valueTransacted",
-				"estimatedProfitLossPct", "exitReason", "ticks",
-				"profitLossPct", "profitLoss", "freeBalance",
-				"priceChangePct", "minPrice", "minChangePct", "maxChangePct", "maxPrice",
-				"shortedQuantity", "marginReserve",
-				"referenceCurrency", "profitLossReferenceCurrency", "holdings", "freeBalanceReferenceCurrency",
-		};
+		String[] headers = new String[] { "closeTime", "clientId", "tradeId", "operation", "quantity", "assetSymbol",
+				"price", "fundSymbol", "orderAmount", "orderType", "status", "duration", "orderFillPercentage",
+				"executedQuantity", "valueTransacted", "estimatedProfitLossPct", "exitReason", "ticks", "profitLossPct",
+				"profitLoss", "freeBalance", "priceChangePct", "minPrice", "minChangePct", "maxChangePct", "maxPrice",
+				"shortedQuantity", "marginReserve", "referenceCurrency", "profitLossReferenceCurrency", "holdings",
+				"freeBalanceReferenceCurrency", };
 
 		List<OrderExecutionLine> lines = filterLines();
 		if (!lines.isEmpty()) {

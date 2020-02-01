@@ -7,7 +7,8 @@ import java.lang.reflect.*;
 import java.util.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 class ReflectionHelper {
 
@@ -85,6 +86,7 @@ class ReflectionHelper {
 		}
 		return new Class[] { primitiveOrWrapper };
 	}
+
 	public static boolean isPrimitiveOrWrapper(Class<?> clazz) {
 		return clazz.isPrimitive() || primitiveWrappers.contains(clazz);
 	}
@@ -92,7 +94,7 @@ class ReflectionHelper {
 	public static Class<?> getWrapperType(Class<?> clazz) {
 		Class<?> out = getPrimitiveOrWrapper(clazz, primitives, wrappers);
 		if (out == null) {
-			throw new IllegalArgumentException("Not a primitive type: "+ clazz);
+			throw new IllegalArgumentException("Not a primitive type: " + clazz);
 		}
 		return out;
 	}
@@ -111,7 +113,7 @@ class ReflectionHelper {
 			out = getPrimitiveOrWrapper(clazz, primitives, wrappers);
 		}
 		if (out == null) {
-			throw new IllegalArgumentException("Not a primitive or wrapper type: "+ clazz);
+			throw new IllegalArgumentException("Not a primitive or wrapper type: " + clazz);
 		}
 		return out;
 	}
@@ -125,9 +127,11 @@ class ReflectionHelper {
 		return null;
 	}
 
-	private static final Class<?>[] wrappers = new Class[]{Boolean.class, Byte.class, Character.class, Short.class, Integer.class, Long.class, Float.class, Double.class};
+	private static final Class<?>[] wrappers = new Class[] { Boolean.class, Byte.class, Character.class, Short.class,
+			Integer.class, Long.class, Float.class, Double.class };
 
-	private static final Class<?>[] primitives = new Class[]{boolean.class, byte.class, char.class, short.class, int.class, long.class, float.class, double.class};
+	private static final Class<?>[] primitives = new Class[] { boolean.class, byte.class, char.class, short.class,
+			int.class, long.class, float.class, double.class };
 
 	private static final Set<?> primitiveWrappers = new HashSet(Arrays.asList(wrappers));
 

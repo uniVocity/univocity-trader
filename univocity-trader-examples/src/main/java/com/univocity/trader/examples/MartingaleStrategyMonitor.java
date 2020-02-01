@@ -26,7 +26,7 @@ public class MartingaleStrategyMonitor extends StrategyMonitor {
 
 	@Override
 	public boolean discardBuy(Strategy strategy) {
-		//don't buy via strategy if more than 100 bucks invested.
+		// don't buy via strategy if more than 100 bucks invested.
 		if (trader.assetQuantity() * trader.lastClosingPrice() > 100.0) {
 			return true;
 		}
@@ -56,7 +56,7 @@ public class MartingaleStrategyMonitor extends StrategyMonitor {
 			return;
 		}
 
-		//for every 2% lost, double position.
+		// for every 2% lost, double position.
 		if (change < doublePercentage) {
 			doublePercentage = change - 2.0;
 
@@ -72,7 +72,8 @@ public class MartingaleStrategyMonitor extends StrategyMonitor {
 			Order order = trader.submitOrder(Order.Type.LIMIT, Order.Side.BUY, Trade.Side.LONG, quantity);
 			if (order != null && !order.isCancelled()) {
 				lastBuy = trader.latestCandle().closeTime;
-				log.info(">>> Lost {} in {}, doubling position with {}", trade.formattedPriceChangePct(), trader.symbol(), order);
+				log.info(">>> Lost {} in {}, doubling position with {}", trade.formattedPriceChangePct(),
+						trader.symbol(), order);
 			}
 		}
 	}
@@ -80,10 +81,11 @@ public class MartingaleStrategyMonitor extends StrategyMonitor {
 	@Override
 	public boolean allowExit(Trade trade) {
 		if (trade.priceChangePct() > 2.0) {
-			doublePercentage = -2.0; //reset
+			doublePercentage = -2.0; // reset
 			return true;
 		} else if (!trade.stopped()) {
-			log.info("Preventing sell of {} under 2% profit. Current price: {} ({})", trade.symbol(), trade.lastClosingPrice(), trade.formattedPriceChangePct());
+			log.info("Preventing sell of {} under 2% profit. Current price: {} ({})", trade.symbol(),
+					trade.lastClosingPrice(), trade.formattedPriceChangePct());
 			return false;
 		} else {
 			return true;

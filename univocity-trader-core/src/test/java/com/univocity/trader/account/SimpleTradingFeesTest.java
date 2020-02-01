@@ -8,7 +8,7 @@ import static org.junit.Assert.*;
 public class SimpleTradingFeesTest {
 
 	@Test
-	public void testBreakEvenCalculation(){
+	public void testBreakEvenCalculation() {
 		TradingFees fees = SimpleTradingFees.percentage(1.0);
 
 		double amount = fees.getBreakEvenAmount(100);

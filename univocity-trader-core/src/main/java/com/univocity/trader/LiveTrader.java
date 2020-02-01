@@ -18,9 +18,11 @@ import java.util.concurrent.atomic.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends AccountConfiguration<A>> implements Closeable {
+public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends AccountConfiguration<A>>
+		implements Closeable {
 
 	private static final Logger log = LoggerFactory.getLogger(LiveTrader.class);
 
@@ -51,13 +53,14 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 						clients.forEach(ExchangeClient::updateBalances);
 					}
 
-					int[] count = new int[]{0};
+					int[] count = new int[] { 0 };
 
 					symbols.forEach((symbol, lastUpdate) -> {
 						if (lastUpdate == null || (now - lastUpdate) > tickInterval.ms) {
 							count[0]++;
 							try {
-								log.info("Polling next candle for {} as we didn't get an update since {}", symbol, lastUpdate == null ? "N/A" : Candle.getFormattedDateTimeWithYear(lastUpdate));
+								log.info("Polling next candle for {} as we didn't get an update since {}", symbol,
+										lastUpdate == null ? "N/A" : Candle.getFormattedDateTimeWithYear(lastUpdate));
 								T tick = exchange.getLatestTick(symbol, tickInterval);
 								if (tick != null) {
 									symbols.put(symbol, now);
@@ -73,7 +76,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 						}
 					});
 
-					if (count[0] == symbols.size()) { //all symbols being polled.
+					if (count[0] == symbols.size()) { // all symbols being polled.
 						log.info("Websocket seems to be offline, trying to start it up");
 						retryRunWebsocket();
 					}
@@ -84,7 +87,8 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 				}
 
 			}
-			//List<Candle> Candles = client.getCandlestickBars("NEOETH", CandlestickInterval.ONE_MINUTE, 1, null, null);
+			// List<Candle> Candles = client.getCandlestickBars("NEOETH",
+			// CandlestickInterval.ONE_MINUTE, 1, null, null);
 		}
 	}
 
@@ -148,20 +152,23 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository);
 
 		this.allClientPairs = tmp.toString().toLowerCase();
-		//fill history with last 30 days of data
+		// fill history with last 30 days of data
 		for (String symbol : allPairs.keySet()) {
 			backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
 		}
 
-		//quick update for the last 30 minutes in case the previous step takes too long and we miss a few ticks
+		// quick update for the last 30 minutes in case the previous step takes too long
+		// and we miss a few ticks
 		for (String symbol : allPairs.keySet()) {
 			backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
 			symbols.put(symbol, System.currentTimeMillis());
 		}
 
-		//loads last 30 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
+		// loads last 30 day history of every symbol to initialize indicators (such as
+		// moving averages et al) in a useful state
 		for (String symbol : allPairs.keySet()) {
-			Enumeration<Candle> it = candleRepository.iterate(symbol, Instant.now().minus(30, ChronoUnit.DAYS), Instant.now(), false);
+			Enumeration<Candle> it = candleRepository.iterate(symbol, Instant.now().minus(30, ChronoUnit.DAYS),
+					Instant.now(), false);
 			while (it.hasMoreElements()) {
 				Candle candle = it.nextElement();
 				if (candle != null) {
@@ -170,7 +177,8 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 			}
 		}
 
-		//loads the very latest ticks and process them before we can finally connect to the live stream and trade for real.
+		// loads the very latest ticks and process them before we can finally connect to
+		// the live stream and trade for real.
 		for (String symbol : allPairs.keySet()) {
 			IncomingCandles<T> candles = exchange.getLatestTicks(symbol, tickInterval);
 			for (T candle : candles) {
@@ -185,7 +193,6 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		initialize();
 		runLiveStream();
 	}
-
 
 	private void runLiveStream() {
 		new Thread(() -> {

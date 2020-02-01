@@ -42,9 +42,7 @@ public class OrderStatusRequest extends OrderRequest {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("orderId", orderId)
-				.append("origClientOrderId", origClientOrderId)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("orderId", orderId)
+				.append("origClientOrderId", origClientOrderId).toString();
 	}
 }

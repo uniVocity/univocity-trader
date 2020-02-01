@@ -1,12 +1,10 @@
 package com.univocity.trader.indicators;
 
-
 import org.junit.*;
 
 import static com.univocity.trader.candles.CandleHelper.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static junit.framework.TestCase.*;
-
 
 public class MovingAverageTest {
 
@@ -43,9 +41,9 @@ public class MovingAverageTest {
 		ma = new MovingAverage(2, minutes(2));
 		ma.recalculateEveryTick(true);
 
-		assertEquals(1.0, accumulate(ma, 3, 1.0), 0.001); //update
-		assertEquals(1.5, accumulate(ma, 3, 1.5), 0.001); //update again, same instant
-		assertEquals(1.5, accumulate(ma, 2, 2.0), 0.001); //noop, previous instant
+		assertEquals(1.0, accumulate(ma, 3, 1.0), 0.001); // update
+		assertEquals(1.5, accumulate(ma, 3, 1.5), 0.001); // update again, same instant
+		assertEquals(1.5, accumulate(ma, 2, 2.0), 0.001); // noop, previous instant
 		assertEquals(9.0, accumulate(ma, 4, 9.0), 0.001);
 
 		// 2 min
@@ -63,7 +61,6 @@ public class MovingAverageTest {
 
 		assertEquals(5.0, update(ma, 7, 5.0), 0.001);
 		assertEquals(3.0, update(ma, 8, 1.0), 0.001);
-
 
 		// 3 min
 		ma = new MovingAverage(2, minutes(3));

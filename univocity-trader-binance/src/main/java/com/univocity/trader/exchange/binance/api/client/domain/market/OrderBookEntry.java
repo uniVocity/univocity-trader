@@ -38,9 +38,7 @@ public class OrderBookEntry {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("price", price)
-				.append("qty", qty)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("price", price)
+				.append("qty", qty).toString();
 	}
 }

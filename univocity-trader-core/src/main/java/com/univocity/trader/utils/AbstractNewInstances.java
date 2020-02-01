@@ -6,7 +6,8 @@ import org.apache.commons.lang3.*;
 import java.util.*;
 import java.util.function.*;
 
-public abstract class AbstractNewInstances<T, S extends AbstractNewInstances<T, S>> implements InstancesProvider<T>, Cloneable {
+public abstract class AbstractNewInstances<T, S extends AbstractNewInstances<T, S>>
+		implements InstancesProvider<T>, Cloneable {
 
 	private final T[] empty;
 	List<InstanceProvider<T>> providers = new ArrayList<>();
@@ -47,14 +48,18 @@ public abstract class AbstractNewInstances<T, S extends AbstractNewInstances<T, 
 		return out;
 	}
 
-	public static <T> T[] getInstances(String symbol, Parameters params, InstancesProvider<T> provider, String description, boolean mandatory, Set<Object> allInstances) {
+	public static <T> T[] getInstances(String symbol, Parameters params, InstancesProvider<T> provider,
+			String description, boolean mandatory, Set<Object> allInstances) {
 		T[] instancesToUse = provider.create(symbol, params);
 		if (ArrayUtils.isEmpty(instancesToUse) && mandatory) {
-			throw new IllegalStateException("Can't execute market simulation. No " + description + " provided for symbol " + symbol);
+			throw new IllegalStateException(
+					"Can't execute market simulation. No " + description + " provided for symbol " + symbol);
 		}
 		for (T instance : instancesToUse) {
 			if (allInstances.contains(instance)) {
-				throw new IllegalStateException("Can't execute market simulation. " + description + " instance provided for symbol " + symbol + " is already in use. Make sure to build a *new* " + description + " object for each symbol.");
+				throw new IllegalStateException("Can't execute market simulation. " + description
+						+ " instance provided for symbol " + symbol + " is already in use. Make sure to build a *new* "
+						+ description + " object for each symbol.");
 			} else {
 				allInstances.add(instance);
 			}

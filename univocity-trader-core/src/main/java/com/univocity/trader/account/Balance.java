@@ -94,13 +94,8 @@ public class Balance implements Cloneable {
 
 	@Override
 	public String toString() {
-		return "{" +
-				"'" + symbol + '\'' +
-				", free=" + getFree() +
-				", locked=" + getLocked() +
-				", shorted=" + getShorted() +
-				", margin reserves=" + marginReserves +
-				'}';
+		return "{" + "'" + symbol + '\'' + ", free=" + getFree() + ", locked=" + getLocked() + ", shorted="
+				+ getShorted() + ", margin reserves=" + marginReserves + '}';
 	}
 
 	public static final BigDecimal round(BigDecimal bd) {

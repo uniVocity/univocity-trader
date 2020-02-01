@@ -25,7 +25,8 @@ public class SimpleTradingFees implements TradingFees {
 		return new SimpleTradingFees(0.0, maker, 0.0, taker);
 	}
 
-	protected SimpleTradingFees(double makerFeeAmount, double makerFeePercentage, double takerFeeAmount, double takerFeePercentage) {
+	protected SimpleTradingFees(double makerFeeAmount, double makerFeePercentage, double takerFeeAmount,
+			double takerFeePercentage) {
 		this.makerFeeAmount = makerFeeAmount;
 		this.makerFeePercentage = makerFeePercentage;
 		this.takerFeeAmount = takerFeeAmount;
@@ -35,10 +36,10 @@ public class SimpleTradingFees implements TradingFees {
 	@Override
 	public double takeFee(double amount, Order.Type orderType, Order.Side orderSide) {
 		switch (orderType) {
-			case MARKET:
-				return negativeToZero(takeFee(amount - takerFeeAmount, takerFeePercentage));
-			case LIMIT:
-				return negativeToZero(takeFee(amount - makerFeeAmount, makerFeePercentage));
+		case MARKET:
+			return negativeToZero(takeFee(amount - takerFeeAmount, takerFeePercentage));
+		case LIMIT:
+			return negativeToZero(takeFee(amount - makerFeeAmount, makerFeePercentage));
 		}
 		throw new IllegalStateException("Unsupported Order.Type: " + orderType);
 	}
@@ -56,11 +57,7 @@ public class SimpleTradingFees implements TradingFees {
 
 	@Override
 	public String toString() {
-		return "SimpleTradingFees{" +
-				"makerFeeAmount=" + makerFeeAmount +
-				", makerFeePercentage=" + makerFeePercentage +
-				", takerFeeAmount=" + takerFeeAmount +
-				", takerFeePercentage=" + takerFeePercentage +
-				'}';
+		return "SimpleTradingFees{" + "makerFeeAmount=" + makerFeeAmount + ", makerFeePercentage=" + makerFeePercentage
+				+ ", takerFeeAmount=" + takerFeeAmount + ", takerFeePercentage=" + takerFeePercentage + '}';
 	}
 }

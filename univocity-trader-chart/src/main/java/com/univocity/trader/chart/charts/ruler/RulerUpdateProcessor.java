@@ -13,7 +13,8 @@ public class RulerUpdateProcessor implements UpdateProcessor {
 	@Override
 	public void execute() {
 		if (controller != null) {
-			controller.getRuler().chart.invokeRepaint();;
+			controller.getRuler().chart.invokeRepaint();
+			;
 		}
 	}
 }

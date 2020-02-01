@@ -46,6 +46,6 @@ public class StochasticRSI extends SingleValueIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{rsi, minRsi, maxRsi};
+		return new Indicator[] { rsi, minRsi, maxRsi };
 	}
 }

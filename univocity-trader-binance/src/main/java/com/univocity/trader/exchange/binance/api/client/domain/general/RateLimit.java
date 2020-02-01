@@ -43,9 +43,6 @@ public class RateLimit {
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("rateLimitType", rateLimitType)
-				.append("interval", interval)
-				.append("limit", limit)
-				.toString();
+				.append("rateLimitType", rateLimitType).append("interval", interval).append("limit", limit).toString();
 	}
 }

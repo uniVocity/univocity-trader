@@ -65,9 +65,9 @@ public class SimulatedClientAccount implements ClientAccount {
 			}
 		}
 
-
 		BigDecimal quantity = orderDetails.getQuantity();
-		double fees = orderAmount.doubleValue() - getTradingFees().takeFee(orderAmount.doubleValue(), orderType, orderDetails.getSide());
+		double fees = orderAmount.doubleValue()
+				- getTradingFees().takeFee(orderAmount.doubleValue(), orderType, orderDetails.getSide());
 
 		BigDecimal locked = BigDecimal.ZERO;
 
@@ -77,21 +77,25 @@ public class SimulatedClientAccount implements ClientAccount {
 				locked = orderDetails.getTotalOrderAmount();
 				account.lockAmount(fundsSymbol, locked);
 			}
-			order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, BUY, orderDetails.getTradeSide(), orderType, orderDetails.getTime());
+			order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, BUY, orderDetails.getTradeSide(),
+					orderType, orderDetails.getTime());
 
 		} else if (orderDetails.isSell()) {
 			if (orderDetails.isLong()) {
 				if (availableAssets.compareTo(quantity) >= 0) {
 					locked = orderDetails.getQuantity();
 					account.lockAmount(assetsSymbol, locked);
-					order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL, orderDetails.getTradeSide(), orderType, orderDetails.getTime());
+					order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL,
+							orderDetails.getTradeSide(), orderType, orderDetails.getTime());
 				}
 			} else if (orderDetails.isShort()) {
 				if (availableFunds.compareTo(orderAmount) >= 0) {
-					locked = account.applyMarginReserve(orderDetails.getTotalOrderAmount()).subtract(orderDetails.getTotalOrderAmount());
+					locked = account.applyMarginReserve(orderDetails.getTotalOrderAmount())
+							.subtract(orderDetails.getTotalOrderAmount());
 
 					account.lockAmount(fundsSymbol, locked);
-					order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL, orderDetails.getTradeSide(), orderType, orderDetails.getTime());
+					order = createOrder(assetsSymbol, fundsSymbol, quantity, unitPrice, SELL,
+							orderDetails.getTradeSide(), orderType, orderDetails.getTime());
 				}
 			}
 
@@ -104,7 +108,8 @@ public class SimulatedClientAccount implements ClientAccount {
 		return order;
 	}
 
-	protected DefaultOrder createOrder(String assetsSymbol, String fundSymbol, BigDecimal quantity, BigDecimal price, Order.Side orderSide, Trade.Side tradeSide, Order.Type orderType, long closeTime) {
+	protected DefaultOrder createOrder(String assetsSymbol, String fundSymbol, BigDecimal quantity, BigDecimal price,
+			Order.Side orderSide, Trade.Side tradeSide, Order.Type orderType, long closeTime) {
 		DefaultOrder out = new DefaultOrder(assetsSymbol, fundSymbol, orderSide, tradeSide, closeTime);
 		out.setPrice(price);
 		out.setQuantity(quantity);
@@ -237,5 +242,3 @@ public class SimulatedClientAccount implements ClientAccount {
 		return marginReservePercentage;
 	}
 }
-
-

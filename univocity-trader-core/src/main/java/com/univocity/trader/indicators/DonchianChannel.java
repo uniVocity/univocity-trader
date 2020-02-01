@@ -1,6 +1,5 @@
 package com.univocity.trader.indicators;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -40,7 +39,7 @@ public class DonchianChannel extends SingleValueCalculationIndicator {
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
-		if(updating) {
+		if (updating) {
 			upperBand.update(candle.high);
 			lowerBand.update(candle.low);
 		} else {
@@ -54,7 +53,7 @@ public class DonchianChannel extends SingleValueCalculationIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{upperBand, lowerBand};
+		return new Indicator[] { upperBand, lowerBand };
 	}
 
 	public double getUpperBand() {
@@ -69,4 +68,3 @@ public class DonchianChannel extends SingleValueCalculationIndicator {
 		return super.getValue();
 	}
 }
-

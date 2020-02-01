@@ -16,7 +16,8 @@ public class PreciseCandle {
 
 	}
 
-	public PreciseCandle(long openTime, long closeTime, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, BigDecimal volume) {
+	public PreciseCandle(long openTime, long closeTime, BigDecimal open, BigDecimal high, BigDecimal low,
+			BigDecimal close, BigDecimal volume) {
 		this.openTime = openTime;
 		this.closeTime = closeTime;
 		this.open = open;
@@ -38,14 +39,7 @@ public class PreciseCandle {
 
 	@Override
 	public String toString() {
-		return "{" +
-				"openTime=" + openTime +
-				", closeTime=" + closeTime +
-				", open=" + open +
-				", high=" + high +
-				", low=" + low +
-				", close=" + close +
-				", volume=" + volume +
-				'}';
+		return "{" + "openTime=" + openTime + ", closeTime=" + closeTime + ", open=" + open + ", high=" + high
+				+ ", low=" + low + ", close=" + close + ", volume=" + volume + '}';
 	}
 }

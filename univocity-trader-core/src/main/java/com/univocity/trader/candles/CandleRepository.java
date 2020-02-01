@@ -14,14 +14,8 @@ public class CandleRepository {
 	private String databaseName;
 	private static final String INSERT = "INSERT INTO candle (symbol,open_time,close_time,open,high,low,close,volume) VALUES (?,?,?,?,?,?,?,?)";
 	private static final RowMapper<Candle> CANDLE_MAPPER = (rs, rowNum) -> {
-		Candle out = new Candle(
-				rs.getLong(1),
-				rs.getLong(2),
-				rs.getDouble(3),
-				rs.getDouble(4),
-				rs.getDouble(5),
-				rs.getDouble(6),
-				rs.getDouble(7));
+		Candle out = new Candle(rs.getLong(1), rs.getLong(2), rs.getDouble(3), rs.getDouble(4), rs.getDouble(5),
+				rs.getDouble(6), rs.getDouble(7));
 		return out;
 	};
 
@@ -38,10 +32,12 @@ public class CandleRepository {
 	}
 
 	private String buildCandleQuery(String symbol) {
-		return "SELECT open_time, close_time, open, high, low, close, volume FROM candle WHERE symbol = '" + symbol + "'";
+		return "SELECT open_time, close_time, open, high, low, close, volume FROM candle WHERE symbol = '" + symbol
+				+ "'";
 	}
 
-	private PreparedStatement prepareInsert(PreparedStatement ps, String symbol, PreciseCandle tick) throws SQLException {
+	private PreparedStatement prepareInsert(PreparedStatement ps, String symbol, PreciseCandle tick)
+			throws SQLException {
 		ps.setObject(1, symbol);
 		ps.setObject(2, tick.openTime);
 		ps.setObject(3, tick.closeTime);
@@ -60,7 +56,7 @@ public class CandleRepository {
 		try {
 			long[] times = recentCandles.get(symbol);
 			if (times != null && times[0] == tick.openTime && times[1] == tick.closeTime) {
-				return false; //duplicate, skip
+				return false; // duplicate, skip
 			} else {
 				if (times == null) {
 					times = new long[2];
@@ -70,7 +66,8 @@ public class CandleRepository {
 				times[1] = tick.closeTime;
 			}
 
-			if (db().execute(INSERT, (PreparedStatementCallback<Integer>) ps -> prepareInsert(ps, symbol, tick).executeUpdate()) == 0) {
+			if (db().execute(INSERT,
+					(PreparedStatementCallback<Integer>) ps -> prepareInsert(ps, symbol, tick).executeUpdate()) == 0) {
 				log.warn("Could not persist " + symbol + " Tick: " + tick);
 				return false;
 			}
@@ -87,12 +84,14 @@ public class CandleRepository {
 		return true;
 	}
 
-	protected Enumeration<Candle> cacheAndReturnResults(String symbol, String query, Instant from, Instant to, Collection<Candle> out) {
+	protected Enumeration<Candle> cacheAndReturnResults(String symbol, String query, Instant from, Instant to,
+			Collection<Candle> out) {
 		cachedResults.put(symbol, out);
 		return Collections.enumeration(out);
 	}
 
-	private Enumeration<Candle> toEnumeration(String symbol, String query, Instant from, Instant to, Runnable readingProcess, Collection<Candle> out, boolean[] ended) {
+	private Enumeration<Candle> toEnumeration(String symbol, String query, Instant from, Instant to,
+			Runnable readingProcess, Collection<Candle> out, boolean[] ended) {
 		if (!(out instanceof BlockingQueue)) {
 			readingProcess.run();
 			return cacheAndReturnResults(symbol, query, from, to, out);
@@ -133,8 +132,9 @@ public class CandleRepository {
 		ended[0] = true;
 	}
 
-	protected Enumeration<Candle> executeQuery(String symbol, String query, Instant from, Instant to, Collection<Candle> out) {
-		boolean[] ended = new boolean[]{false};
+	protected Enumeration<Candle> executeQuery(String symbol, String query, Instant from, Instant to,
+			Collection<Candle> out) {
+		boolean[] ended = new boolean[] { false };
 
 		final long start = System.currentTimeMillis();
 		Runnable readingProcess = () -> {
@@ -143,8 +143,8 @@ public class CandleRepository {
 			int count = 0;
 
 			try (Connection c = db().getDataSource().getConnection();
-				 final PreparedStatement s = c.prepareStatement(query);
-				 ResultSet rs = executeQuery(s)) {
+					final PreparedStatement s = c.prepareStatement(query);
+					ResultSet rs = executeQuery(s)) {
 
 				while (rs.next()) {
 					Candle candle = CANDLE_MAPPER.mapRow(rs, 0);
@@ -154,7 +154,8 @@ public class CandleRepository {
 			} catch (SQLException e) {
 				log.error("Error reading " + symbol + " Candle from db().", e);
 			} finally {
-				log.trace("Read all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
+				log.trace("Read all {} candles of {} in {} seconds", count, symbol,
+						(System.currentTimeMillis() - start) / 1000.0);
 				ended(symbol, ended);
 			}
 		};
@@ -166,7 +167,8 @@ public class CandleRepository {
 		if (databaseName == null) {
 			synchronized (this) {
 				try {
-					databaseName = db().execute((ConnectionCallback<String>) connection -> connection.getMetaData().getDatabaseProductName());
+					databaseName = db().execute((ConnectionCallback<String>) connection -> connection.getMetaData()
+							.getDatabaseProductName());
 				} catch (Exception e) {
 					log.warn("Unable to determine database name", e);
 				}
@@ -181,7 +183,8 @@ public class CandleRepository {
 
 	private ResultSet executeQuery(PreparedStatement s) throws SQLException {
 		if (isDatabaseMySQL()) {
-			//ensures MySQL's JDBC driver won't run out of memory if querying a large number of candles
+			// ensures MySQL's JDBC driver won't run out of memory if querying a large
+			// number of candles
 			s.setFetchSize(Integer.MIN_VALUE);
 		}
 		return s.executeQuery();
@@ -218,7 +221,8 @@ public class CandleRepository {
 	}
 
 	public String narrowQueryToTimeInterval(String query, Instant from, Instant to) {
-		return narrowQueryToTimeInterval(query, from == null ? null : from.toEpochMilli(), to == null ? null : to.toEpochMilli());
+		return narrowQueryToTimeInterval(query, from == null ? null : from.toEpochMilli(),
+				to == null ? null : to.toEpochMilli());
 	}
 
 	protected Enumeration<Candle> getCachedResults(String symbol, String query, Instant from, Instant to) {

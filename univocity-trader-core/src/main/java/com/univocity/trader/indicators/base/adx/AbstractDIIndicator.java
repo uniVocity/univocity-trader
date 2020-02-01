@@ -6,7 +6,8 @@ import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public abstract class AbstractDIIndicator extends SingleValueIndicator {
 
@@ -50,6 +51,6 @@ public abstract class AbstractDIIndicator extends SingleValueIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{atr, dm, avg};
+		return new Indicator[] { atr, dm, avg };
 	}
 }

@@ -8,7 +8,8 @@ import java.util.*;
 import java.util.function.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class MarketHistory {
 
@@ -45,7 +46,8 @@ public class MarketHistory {
 			consumer.accept(candle);
 			count++;
 		}
-		log.trace("Processed all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
+		log.trace("Processed all {} candles of {} in {} seconds", count, symbol,
+				(System.currentTimeMillis() - start) / 1000.0);
 	}
 
 	public Candle last() {

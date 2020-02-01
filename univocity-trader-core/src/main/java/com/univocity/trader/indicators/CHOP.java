@@ -6,7 +6,8 @@ import com.univocity.trader.strategy.*;
 import com.univocity.trader.utils.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class CHOP extends SingleValueCalculationIndicator {
 
@@ -22,7 +23,7 @@ public class CHOP extends SingleValueCalculationIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{atrIndicator, hvi, lvi};
+		return new Indicator[] { atrIndicator, hvi, lvi };
 	}
 
 	public CHOP(TimeInterval interval) {
@@ -33,7 +34,8 @@ public class CHOP extends SingleValueCalculationIndicator {
 		this(length, 100, interval);
 	}
 
-	public CHOP(int length, int scaleTo, TimeInterval interval) { //@param scaleTo maximum value to scale this oscillator, usually '1' or '100'
+	public CHOP(int length, int scaleTo, TimeInterval interval) { // @param scaleTo maximum value to scale this
+																	// oscillator, usually '1' or '100'
 		super(interval);
 		this.atrIndicator = new AverageTrueRange(1, interval); // ATR(1) = Average True Range (Period of 1)
 		this.atrIndicators = new CircularList(length);
@@ -55,7 +57,7 @@ public class CHOP extends SingleValueCalculationIndicator {
 			atrIndicators.add(this.atrIndicator.getValue());
 		}
 
-		if(getAccumulationCount() == 0){
+		if (getAccumulationCount() == 0) {
 			return 0.0;
 		}
 

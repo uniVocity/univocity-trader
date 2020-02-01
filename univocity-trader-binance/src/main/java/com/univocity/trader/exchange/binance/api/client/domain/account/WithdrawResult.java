@@ -50,12 +50,8 @@ public class WithdrawResult {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-				.append("msg", msg)
-				.append("success", success)
-				.append("id", id)
-				.toString();
+		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).append("msg", msg).append("success", success)
+				.append("id", id).toString();
 	}
-
 
 }

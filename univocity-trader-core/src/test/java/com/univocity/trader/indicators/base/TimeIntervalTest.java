@@ -14,7 +14,8 @@ public class TimeIntervalTest {
 		assertEquals("2 minutes", TimeInterval.getFormattedDuration(2000 * 60));
 		assertEquals("2 hours", TimeInterval.getFormattedDuration(2000 * 60 * 60));
 		assertEquals("2 hours and 2 minutes", TimeInterval.getFormattedDuration(2000 * 60 * 60 + 2000 * 60));
-		assertEquals("2 hours and 2 minutes", TimeInterval.getFormattedDuration(2000 * 60 * 60 + 2000 * 60 + 2000)); //ignore seconds
+		assertEquals("2 hours and 2 minutes", TimeInterval.getFormattedDuration(2000 * 60 * 60 + 2000 * 60 + 2000)); // ignore
+																														// seconds
 	}
 
 	@Test

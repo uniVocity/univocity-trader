@@ -24,7 +24,8 @@ public class OrderRequest {
 
 	private List<OrderRequest> attachments = new ArrayList<>();
 
-	public OrderRequest(String assetsSymbol, String fundsSymbol, Order.Side side, Trade.Side tradeSide, long time, Order resubmittedFrom) {
+	public OrderRequest(String assetsSymbol, String fundsSymbol, Order.Side side, Trade.Side tradeSide, long time,
+			Order resubmittedFrom) {
 		this.resubmittedFrom = resubmittedFrom;
 		this.time = time;
 		if (StringUtils.isBlank(assetsSymbol)) {
@@ -96,13 +97,8 @@ public class OrderRequest {
 
 	@Override
 	public String toString() {
-		return "OrderPreparation{" +
-				"symbol='" + getSymbol() + '\'' +
-				", side=" + side +
-				", price=" + price +
-				", quantity=" + quantity +
-				", type=" + type +
-				'}';
+		return "OrderPreparation{" + "symbol='" + getSymbol() + '\'' + ", side=" + side + ", price=" + price
+				+ ", quantity=" + quantity + ", type=" + type + '}';
 	}
 
 	public boolean isCancelled() {
@@ -151,7 +147,8 @@ public class OrderRequest {
 			}
 		}
 
-		OrderRequest attachment = new OrderRequest(assetsSymbol, fundsSymbol, side == BUY ? SELL : BUY, this.tradeSide, this.time, null);
+		OrderRequest attachment = new OrderRequest(assetsSymbol, fundsSymbol, side == BUY ? SELL : BUY, this.tradeSide,
+				this.time, null);
 		attachment.attachments = null;
 
 		this.attachments.add(attachment);

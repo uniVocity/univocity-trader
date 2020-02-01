@@ -3,9 +3,10 @@ package com.univocity.trader.iqfeed.api.domain.candles;
 // TODO: extend standard Candle class?
 public class IQFeedCandle {
 
-	public IQFeedCandle(Double open, Double high, Double low, Double close, Double volume, Long opentime, Long closeTime,
-						Double openInterest, Double last, Double lastSize, Double periodVolume, Double totalVolume, Double numTrades, Double bid,
-						Double ask, String basis, String marketCenter, String conditions, String aggressor, String dayCode, String ID) {
+	public IQFeedCandle(Double open, Double high, Double low, Double close, Double volume, Long opentime,
+			Long closeTime, Double openInterest, Double last, Double lastSize, Double periodVolume, Double totalVolume,
+			Double numTrades, Double bid, Double ask, String basis, String marketCenter, String conditions,
+			String aggressor, String dayCode, String ID) {
 
 		this.openTime = opentime;
 		this.closeTime = closeTime;
@@ -357,10 +358,11 @@ public class IQFeedCandle {
 		}
 
 		public IQFeedCandle build() {
-			IQFeedCandle iQFeedCandle = new IQFeedCandle(open, high, low, close, volume, openTime, closeTime, openInterest, last, lastSize, periodVolume, totalVolume, numTrades, bid, ask, basis, marketCenter, conditions, aggressor, dayCode, ID);
+			IQFeedCandle iQFeedCandle = new IQFeedCandle(open, high, low, close, volume, openTime, closeTime,
+					openInterest, last, lastSize, periodVolume, totalVolume, numTrades, bid, ask, basis, marketCenter,
+					conditions, aggressor, dayCode, ID);
 			iQFeedCandle.setOpenTime(openTime);
 			return iQFeedCandle;
 		}
 	}
 }
-

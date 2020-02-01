@@ -1,6 +1,5 @@
 package com.univocity.trader.indicators;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -74,6 +73,6 @@ public class TTMTrend extends SingleValueIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{avg};
+		return new Indicator[] { avg };
 	}
 }

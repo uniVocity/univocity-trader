@@ -36,7 +36,8 @@ public class AggregatedTicksIndicator implements Indicator {
 	public final boolean accumulate(Candle candle) {
 		if (aggregator == null) {
 			try {
-				throw new IllegalStateException(getClass().getSimpleName() + " not properly initialized. Ensure nested indicators are returned in method `protected Indicator[] children()`");
+				throw new IllegalStateException(getClass().getSimpleName()
+						+ " not properly initialized. Ensure nested indicators are returned in method `protected Indicator[] children()`");
 			} catch (IllegalStateException e) {
 				StackTraceElement[] s = Thread.currentThread().getStackTrace();
 				for (StackTraceElement ste : s) {
@@ -76,7 +77,7 @@ public class AggregatedTicksIndicator implements Indicator {
 	}
 
 	public final Candle getLastFullCandle() {
-		if(lastFullCandle == null){
+		if (lastFullCandle == null) {
 			return aggregator.getPartial();
 		}
 		return lastFullCandle;

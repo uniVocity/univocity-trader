@@ -23,7 +23,8 @@ public class KAMA extends SingleValueCalculationIndicator {
 		this(10, 2, 30, interval, valueGetter);
 	}
 
-	public KAMA(int barCountEffectiveRatio, int barCountFast, int barCountSlow, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	public KAMA(int barCountEffectiveRatio, int barCountFast, int barCountSlow, TimeInterval interval,
+			ToDoubleFunction<Candle> valueGetter) {
 		super(interval, valueGetter);
 
 		fastest = 2.0 / (barCountFast + 1.0);
@@ -38,7 +39,8 @@ public class KAMA extends SingleValueCalculationIndicator {
 		// Change = ABS(Close - Close (10 periods ago))
 		double change = Math.abs(value - values.first());
 
-		// Volatility = Sum10(ABS(Close - Prior Close)), i.e. the sum of the absolute value of the last ten price changes (Close - Prior Close).
+		// Volatility = Sum10(ABS(Close - Prior Close)), i.e. the sum of the absolute
+		// value of the last ten price changes (Close - Prior Close).
 		volatility.accumulate(Math.abs(value - values.last()), updating);
 		values.accumulate(value, updating);
 
@@ -52,7 +54,7 @@ public class KAMA extends SingleValueCalculationIndicator {
 		// Smoothing Constant (SC) SC = [ER x (fastest SC - slowest SC) + slowest SC]2
 		double sc = Math.pow(er * (fastest - slowest) + slowest, 2.0);
 
-		//KAMA Current KAMA = Prior KAMA + SC x (Price - Prior KAMA)
+		// KAMA Current KAMA = Prior KAMA + SC x (Price - Prior KAMA)
 		return previousValue + (sc * (value - previousValue));
 	}
 
@@ -61,4 +63,3 @@ public class KAMA extends SingleValueCalculationIndicator {
 		return new Indicator[0];
 	}
 }
-

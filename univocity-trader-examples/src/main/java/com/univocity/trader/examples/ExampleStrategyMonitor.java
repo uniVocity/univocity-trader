@@ -42,7 +42,7 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
 	public String handleStop(Trade trade, Signal signal, Strategy strategy) {
 		final double currentReturns = trade.priceChangePct();
 		final double bestReturns = trade.maxChange();
-		if(trade.isLong()) {
+		if (trade.isLong()) {
 			if ((currentReturns - bestReturns) < -2.0) {
 				if (currentReturns < 0.0) {
 					waitForUptrend = true;
@@ -50,7 +50,7 @@ public class ExampleStrategyMonitor extends StrategyMonitor {
 				}
 				return "exit long with some profit";
 			}
-		} else if(trade.isShort()){
+		} else if (trade.isShort()) {
 			if ((currentReturns - bestReturns) < -2.0) {
 				if (currentReturns < 0.0) {
 					waitForDowntrend = true;

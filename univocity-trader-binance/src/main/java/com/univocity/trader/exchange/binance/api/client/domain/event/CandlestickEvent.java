@@ -7,7 +7,8 @@ import com.fasterxml.jackson.databind.annotation.*;
 import org.apache.commons.lang3.builder.*;
 
 /**
- * An interval candlestick for a symbol providing informations on price that can be used to produce candlestick charts.
+ * An interval candlestick for a symbol providing informations on price that can
+ * be used to produce candlestick charts.
  */
 @JsonDeserialize(using = CandlestickEventDeserializer.class)
 @JsonSerialize(using = CandlestickEventSerializer.class)
@@ -86,25 +87,14 @@ public class CandlestickEvent extends Candlestick {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("eventType", eventType)
-				.append("eventTime", eventTime)
-				.append("symbol", symbol)
-				.append("openTime", openTime)
-				.append("open", open)
-				.append("high", high)
-				.append("low", low)
-				.append("close", close)
-				.append("volume", volume)
-				.append("closeTime", closeTime)
-				.append("intervalId", intervalId)
-				.append("firstTradeId", firstTradeId)
-				.append("lastTradeId", lastTradeId)
-				.append("quoteAssetVolume", quoteAssetVolume)
-				.append("numberOfTrades", numberOfTrades)
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("eventType", eventType)
+				.append("eventTime", eventTime).append("symbol", symbol).append("openTime", openTime)
+				.append("open", open).append("high", high).append("low", low).append("close", close)
+				.append("volume", volume).append("closeTime", closeTime).append("intervalId", intervalId)
+				.append("firstTradeId", firstTradeId).append("lastTradeId", lastTradeId)
+				.append("quoteAssetVolume", quoteAssetVolume).append("numberOfTrades", numberOfTrades)
 				.append("takerBuyBaseAssetVolume", takerBuyBaseAssetVolume)
-				.append("takerBuyQuoteAssetVolume", takerBuyQuoteAssetVolume)
-				.append("isBarFinal", isBarFinal)
+				.append("takerBuyQuoteAssetVolume", takerBuyQuoteAssetVolume).append("isBarFinal", isBarFinal)
 				.toString();
 	}
 }

@@ -9,16 +9,16 @@ import java.util.*;
 
 public class IQFeedHistoricalRequest {
 
-	// TODO: refactor,  add validation
+	// TODO: refactor, add validation
 
 	// request strings for IQFeed interface
 	// In general: timeframes are specified in the following format: CCYYMMDD HHmmSS
-	// see here http://www.iqfeed.net/dev/api/docs/HistoricalviaTCPIP.cfm for more information
+	// see here http://www.iqfeed.net/dev/api/docs/HistoricalviaTCPIP.cfm for more
+	// information
 	// tick / max pts
 	// required
 	public String symbol;
 	public String dataPeriod;
-
 
 	// optional
 	public Long intervalMillis;
@@ -50,7 +50,6 @@ public class IQFeedHistoricalRequest {
 		return formatter.format(instant).toString();
 	}
 
-
 	public IQFeedHistoricalRequest(IQFeedHistoricalRequestBuilder builder) {
 		symbol = builder.symbol;
 		dataPeriod = builder.tickSize;
@@ -78,36 +77,36 @@ public class IQFeedHistoricalRequest {
 
 	public String buildHeader(String prefix) {
 		switch (TimeInterval.getUnitStr(intervalType.unit)) {
-			// TODO: convert strings to enums
-			case "tick":
-			case "ms":
-				dataQualifier = "T";
-				break;
-			case "minute":
-			case "min":
-			case "m":
-				dataQualifier = "I";
-				this.interval = "60";
-				this.intervalMillis = 60000L;
-				break;
-			case "d":
-			case "day":
-				dataQualifier = "D";
-				this.intervalMillis = Long.valueOf(24 * 60 * 60 * 1000);
-				break;
-			case "interval":
-				dataQualifier = "I";
-				break;
-			case "week":
-			case "w":
-			case "wk":
-				dataQualifier = "W";
-				this.intervalMillis = Long.valueOf(24 * 60 * 60 * 7 * 1000);
-				break;
-			case "mo":
-			case "month":
-				dataQualifier = "M";
-				break;
+		// TODO: convert strings to enums
+		case "tick":
+		case "ms":
+			dataQualifier = "T";
+			break;
+		case "minute":
+		case "min":
+		case "m":
+			dataQualifier = "I";
+			this.interval = "60";
+			this.intervalMillis = 60000L;
+			break;
+		case "d":
+		case "day":
+			dataQualifier = "D";
+			this.intervalMillis = Long.valueOf(24 * 60 * 60 * 1000);
+			break;
+		case "interval":
+			dataQualifier = "I";
+			break;
+		case "week":
+		case "w":
+		case "wk":
+			dataQualifier = "W";
+			this.intervalMillis = Long.valueOf(24 * 60 * 60 * 7 * 1000);
+			break;
+		case "mo":
+		case "month":
+			dataQualifier = "M";
+			break;
 		}
 
 		if (maxDataPts != null) {
@@ -136,9 +135,9 @@ public class IQFeedHistoricalRequest {
 		String endDateTimeString = formatMillis(endDateTime);
 
 		// arguments for historical requests follow the priority shown below
-		List<String> argsOrder = Arrays.asList(symbol, interval, maxDays, maxWeeks, maxMonths, beginDateTimeString, beginDate,
-				endDateTimeString, endDate, maxDataPts, beginFilterTime, endFilterTime, dataDirection, requestID, dataPtsPerSend, includePartialData,
-				svtIntervalType, labelAtBeginning);
+		List<String> argsOrder = Arrays.asList(symbol, interval, maxDays, maxWeeks, maxMonths, beginDateTimeString,
+				beginDate, endDateTimeString, endDate, maxDataPts, beginFilterTime, endFilterTime, dataDirection,
+				requestID, dataPtsPerSend, includePartialData, svtIntervalType, labelAtBeginning);
 
 		for (String arg : argsOrder) {
 			// TODO: convert to Objects.equals

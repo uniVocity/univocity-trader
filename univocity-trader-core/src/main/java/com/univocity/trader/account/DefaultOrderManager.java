@@ -32,22 +32,17 @@ public class DefaultOrderManager implements OrderManager {
 			double ask = book.getAverageAskAmount(availableQuantity);
 			double bid = book.getAverageBidAmount(availableQuantity);
 
-			//aims price at central price point of the spread.
+			// aims price at central price point of the spread.
 			if (order.getSide() == Order.Side.BUY) {
 				order.setPrice(BigDecimal.valueOf(bid + (spread / 2.0)));
 			} else {
 				order.setPrice(BigDecimal.valueOf(ask - (spread / 2.0)));
 			}
 
-			log.debug("{} - spread of {}: Ask {}, Bid {}. Closed at {}. Going to {} at ${}.",
-					order.getSymbol(),
-					priceDetails.priceToString(spread),
-					priceDetails.priceToString(ask),
-					priceDetails.priceToString(bid),
-					priceDetails.priceToString(originalPrice),
-					order.getSide(),
-					priceDetails.priceToString(order.getPrice())
-			);
+			log.debug("{} - spread of {}: Ask {}, Bid {}. Closed at {}. Going to {} at ${}.", order.getSymbol(),
+					priceDetails.priceToString(spread), priceDetails.priceToString(ask),
+					priceDetails.priceToString(bid), priceDetails.priceToString(originalPrice), order.getSide(),
+					priceDetails.priceToString(order.getPrice()));
 		}
 	}
 

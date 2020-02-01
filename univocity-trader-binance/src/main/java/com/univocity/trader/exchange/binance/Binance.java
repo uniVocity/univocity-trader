@@ -5,7 +5,8 @@ import com.univocity.trader.exchange.binance.api.client.domain.market.*;
 import com.univocity.trader.simulation.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public final class Binance implements EntryPoint {
 

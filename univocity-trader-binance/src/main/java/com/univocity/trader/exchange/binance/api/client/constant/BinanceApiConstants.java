@@ -45,9 +45,9 @@ public class BinanceApiConstants {
 	public static final long DEFAULT_RECEIVING_WINDOW = 60_000L;
 
 	/**
-	 * Default ToStringStyle used by toString methods.
-	 * Override this to change the output format of the overridden toString methods.
-	 * - Example ToStringStyle.JSON_STYLE
+	 * Default ToStringStyle used by toString methods. Override this to change the
+	 * output format of the overridden toString methods. - Example
+	 * ToStringStyle.JSON_STYLE
 	 */
 	public static ToStringStyle TO_STRING_BUILDER_STYLE = ToStringStyle.SHORT_PREFIX_STYLE;
 }

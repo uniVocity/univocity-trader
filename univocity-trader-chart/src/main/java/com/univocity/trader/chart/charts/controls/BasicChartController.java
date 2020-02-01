@@ -1,6 +1,5 @@
 package com.univocity.trader.chart.charts.controls;
 
-
 import com.univocity.trader.chart.annotation.Label;
 import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.charts.*;
@@ -48,7 +47,6 @@ public class BasicChartController implements Controller {
 	@Label("Line stroke")
 	@SpinnerBound(maximum = 10)
 	private int stroke = 1;
-
 
 	private JPanel controlPanel;
 
@@ -184,4 +182,3 @@ public class BasicChartController implements Controller {
 	}
 
 }
-

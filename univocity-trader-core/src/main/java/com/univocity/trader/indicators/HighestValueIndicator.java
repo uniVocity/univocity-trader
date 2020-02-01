@@ -7,7 +7,8 @@ import com.univocity.trader.strategy.*;
 import java.util.function.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class HighestValueIndicator extends ValueSelectionIndicator {
 
@@ -25,10 +26,8 @@ public class HighestValueIndicator extends ValueSelectionIndicator {
 		return -9999999999999999999.9;
 	}
 
-
-
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

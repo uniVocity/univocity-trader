@@ -27,7 +27,7 @@ public class SmtpMailSender {
 		this.config = config;
 	}
 
-	public String getSenderAddress(){
+	public String getSenderAddress() {
 		return config.smtpSender();
 	}
 

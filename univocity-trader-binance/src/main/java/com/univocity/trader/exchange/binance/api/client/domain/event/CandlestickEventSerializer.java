@@ -6,14 +6,16 @@ import com.fasterxml.jackson.databind.*;
 import java.io.*;
 
 /**
- * Custom serializer for a candlestick stream event, since the structure of the candlestick json differ from the one in the REST API.
+ * Custom serializer for a candlestick stream event, since the structure of the
+ * candlestick json differ from the one in the REST API.
  *
  * @see CandlestickEvent
  */
 public class CandlestickEventSerializer extends JsonSerializer<CandlestickEvent> {
 
 	@Override
-	public void serialize(CandlestickEvent candlestickEvent, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+	public void serialize(CandlestickEvent candlestickEvent, JsonGenerator gen, SerializerProvider serializers)
+			throws IOException {
 		gen.writeStartObject();
 
 		// Write header

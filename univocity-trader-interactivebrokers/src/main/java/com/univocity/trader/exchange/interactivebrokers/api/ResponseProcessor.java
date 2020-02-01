@@ -10,10 +10,11 @@ import org.slf4j.*;
 import java.util.*;
 
 /**
- * {@link EWrapper} implementation of methods that are being currently used or have some logic in them
- * that is not simply logging.
+ * {@link EWrapper} implementation of methods that are being currently used or
+ * have some logic in them that is not simply logging.
  *
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class ResponseProcessor extends IgnoredResponseProcessor {
 
@@ -37,11 +38,13 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	}
 
 	private static Candle translateHistoricalTick(HistoricalTick tick) {
-		return new Candle(tick.time() * 1000L, tick.time() * 1000L, tick.price(), tick.price(), tick.price(), tick.price(), tick.size());
+		return new Candle(tick.time() * 1000L, tick.time() * 1000L, tick.price(), tick.price(), tick.price(),
+				tick.price(), tick.size());
 	}
 
 	private static Candle translateHistoricalTickLast(HistoricalTickLast tick) {
-		return new Candle(tick.time(), tick.time(), tick.price(), tick.price(), tick.price(), tick.price(), tick.size());
+		return new Candle(tick.time(), tick.time(), tick.price(), tick.price(), tick.price(), tick.price(),
+				tick.size());
 	}
 
 	private static Candle translateHistoricalTickBidAsk(HistoricalTickBidAsk tick) {
@@ -62,7 +65,8 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	}
 
 	@Override
-	public final void updateMktDepthL2(int tickerId, int position, String marketMaker, int operation, int side, double price, int size, boolean isSmartDepth) {
+	public final void updateMktDepthL2(int tickerId, int position, String marketMaker, int operation, int side,
+			double price, int size, boolean isSmartDepth) {
 		TradingBook book;
 
 		if (isSmartDepth) {
@@ -79,16 +83,15 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	@Override
 	public final void historicalTicks(int reqId, List<HistoricalTick> ticks, boolean last) {
-		requestHandler.handleResponse(reqId, last, ticks,
-				ResponseProcessor::translateHistoricalTick,
+		requestHandler.handleResponse(reqId, last, ticks, ResponseProcessor::translateHistoricalTick,
 				(t) -> EWrapperMsgGenerator.historicalTick(reqId, t.time(), t.price(), t.size()));
 	}
 
 	@Override
 	public final void historicalTicksLast(int reqId, List<HistoricalTickLast> ticks, boolean done) {
-		requestHandler.handleResponse(reqId, done, ticks,
-				ResponseProcessor::translateHistoricalTickLast,
-				(tick) -> EWrapperMsgGenerator.historicalTickLast(reqId, tick.time(), tick.tickAttribLast(), tick.price(), tick.size(), tick.exchange(), tick.specialConditions()));
+		requestHandler.handleResponse(reqId, done, ticks, ResponseProcessor::translateHistoricalTickLast,
+				(tick) -> EWrapperMsgGenerator.historicalTickLast(reqId, tick.time(), tick.tickAttribLast(),
+						tick.price(), tick.size(), tick.exchange(), tick.specialConditions()));
 	}
 
 	@Override
@@ -100,8 +103,8 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	}
 
 	public final void historicalData(int reqId, Bar bar) {
-		requestHandler.handleResponse(reqId, translate(bar),
-				() -> EWrapperMsgGenerator.historicalData(reqId, bar.time(), bar.open(), bar.high(), bar.low(), bar.close(), bar.volume(), bar.count(), bar.wap()));
+		requestHandler.handleResponse(reqId, translate(bar), () -> EWrapperMsgGenerator.historicalData(reqId,
+				bar.time(), bar.open(), bar.high(), bar.low(), bar.close(), bar.volume(), bar.count(), bar.wap()));
 	}
 
 	public final void historicalDataEnd(int reqId, String startDate, String endDate) {
@@ -110,7 +113,8 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	}
 
 	@Override
-	public final void historicalNews(int requestId, String time, String providerCode, String articleId, String headline) {
+	public final void historicalNews(int requestId, String time, String providerCode, String articleId,
+			String headline) {
 		log.info(EWrapperMsgGenerator.historicalNews(requestId, time, providerCode, articleId, headline));
 	}
 
@@ -129,8 +133,8 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 		log.info(EWrapperMsgGenerator.histogramData(reqId, items));
 	}
 
-
-	public final void realtimeBar(int reqId, long time, double open, double high, double low, double close, long volume, double wap, int count) {
+	public final void realtimeBar(int reqId, long time, double open, double high, double low, double close, long volume,
+			double wap, int count) {
 		requestHandler.handleResponse(reqId, new Candle(time, time, open, high, low, close, volume),
 				() -> EWrapperMsgGenerator.realtimeBar(reqId, time, open, high, low, close, volume, wap, count));
 	}
@@ -141,9 +145,11 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 		}
 	}
 
-	public final void orderStatus(int orderId, String status, double filled, double remaining, double avgFillPrice, int permId, int parentId, double lastFillPrice, int clientId, String whyHeld, double mktCapPrice) {
+	public final void orderStatus(int orderId, String status, double filled, double remaining, double avgFillPrice,
+			int permId, int parentId, double lastFillPrice, int clientId, String whyHeld, double mktCapPrice) {
 		// received order status
-		log.info(EWrapperMsgGenerator.orderStatus(orderId, status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice));
+		log.info(EWrapperMsgGenerator.orderStatus(orderId, status, filled, remaining, avgFillPrice, permId, parentId,
+				lastFillPrice, clientId, whyHeld, mktCapPrice));
 
 		// make sure id for next order is at least orderId+1
 		requestHandler.setNextOrderId(orderId + 1);
@@ -190,7 +196,9 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 		accountBalance.updateAccountValue(key, value, currency, accountName);
 	}
 
-	public final void updatePortfolio(Contract contract, double position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
-		accountBalance.updatePortfolio(contract, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName);
+	public final void updatePortfolio(Contract contract, double position, double marketPrice, double marketValue,
+			double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
+		accountBalance.updatePortfolio(contract, position, marketPrice, marketValue, averageCost, unrealizedPNL,
+				realizedPNL, accountName);
 	}
 }

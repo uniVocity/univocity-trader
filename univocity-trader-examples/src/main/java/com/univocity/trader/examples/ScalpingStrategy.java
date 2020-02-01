@@ -23,11 +23,11 @@ public class ScalpingStrategy extends IndicatorStrategy {
 
 	@Override
 	public Signal getSignal(Candle candle) {
-		if (candle.close < boll5m.getLowerBand()) { //close price of the candle is under the lower band.
+		if (candle.close < boll5m.getLowerBand()) { // close price of the candle is under the lower band.
 			return Signal.BUY;
 		}
 
-		if (candle.close > boll5m.getUpperBand()) { //close of the candle is above the upper band
+		if (candle.close > boll5m.getUpperBand()) { // close of the candle is above the upper band
 			return Signal.SELL;
 		}
 		return Signal.NEUTRAL;

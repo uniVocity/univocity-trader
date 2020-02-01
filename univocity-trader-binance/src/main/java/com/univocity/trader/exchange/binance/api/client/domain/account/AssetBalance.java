@@ -55,11 +55,8 @@ public class AssetBalance {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("asset", asset)
-				.append("free", free)
-				.append("locked", locked)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("asset", asset)
+				.append("free", free).append("locked", locked).toString();
 	}
 
 	public double getFreeAmount() {
@@ -84,7 +81,6 @@ public class AssetBalance {
 		}
 		return asset.getFreeAmount();
 	}
-
 
 	public static double getLockedAmount(AssetBalance asset) {
 		if (asset == null) {

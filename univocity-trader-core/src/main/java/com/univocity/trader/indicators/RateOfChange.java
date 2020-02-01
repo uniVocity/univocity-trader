@@ -11,6 +11,6 @@ public class RateOfChange extends AbstractRateOfChange {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

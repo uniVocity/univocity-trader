@@ -14,7 +14,6 @@ public class IQFeedApiClientFactory {
 	private boolean savelogin;
 	private AsyncHttpClient client;
 
-
 	private IQFeedApiClientFactory(AsyncHttpClient client) {
 		this.client = client;
 	}

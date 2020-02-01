@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.*;
 import java.io.*;
 
 /**
- * Custom deserializer for a candlestick stream event, since the structure of the candlestick json differ from the one in the REST API.
+ * Custom deserializer for a candlestick stream event, since the structure of
+ * the candlestick json differ from the one in the REST API.
  *
  * @see CandlestickEvent
  */

@@ -1,6 +1,5 @@
 package com.univocity.trader.chart.charts.scrolling;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.*;
@@ -160,7 +159,8 @@ public class TimeIntervalSelector extends ChartCanvas {
 		super.paintComponent(g1d);
 		Graphics2D g = (Graphics2D) g1d;
 
-		if (dataUpdated || background == null || background.getHeight() != this.getHeight() || background.getWidth() != this.getWidth()) {
+		if (dataUpdated || background == null || background.getHeight() != this.getHeight()
+				|| background.getWidth() != this.getWidth()) {
 			background = new BufferedImage(this.getWidth(), this.getHeight(), BufferedImage.TYPE_INT_RGB);
 			Graphics2D backgroundGraphics = (Graphics2D) background.getGraphics();
 			backgroundGraphics.setColor(Color.WHITE);
@@ -224,7 +224,7 @@ public class TimeIntervalSelector extends ChartCanvas {
 			endHandle.candle = last;
 		}
 
-		//looking at most recent history, update view
+		// looking at most recent history, update view
 		if (endHandle.candle == chart.candleHistory.getLast() && endHandle.candle != last) {
 			endHandle.candle = last;
 			Candle firstCandleInRange = candleHistory.get(candleHistory.size() - 1 - candlesInRange);

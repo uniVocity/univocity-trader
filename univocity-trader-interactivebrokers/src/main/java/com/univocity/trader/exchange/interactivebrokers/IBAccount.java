@@ -6,7 +6,6 @@ import org.slf4j.*;
 
 import java.util.*;
 
-
 class IBAccount implements ClientAccount {
 
 	private static final Logger log = LoggerFactory.getLogger(IBAccount.class);

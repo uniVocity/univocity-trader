@@ -1,7 +1,5 @@
 package com.univocity.trader.indicators;
 
-
-
 import com.univocity.trader.candles.*;
 import org.junit.*;
 
@@ -11,14 +9,15 @@ import static org.junit.Assert.*;
 
 public class InstantaneousTrendlineTest {
 	private Candle newCandle(int i, int time) {
-		double[] prices = new double[]{i + 1, i + 1.5, i + 0.5};
+		double[] prices = new double[] { i + 1, i + 1.5, i + 0.5 };
 		return CandleHelper.newCandle(time, prices[0], prices[0], prices[1], prices[2]);
 	}
 
 	private String accumulateTestTrend(InstantaneousTrendline trend, int i, int time) {
 		Candle c = newCandle(i, time);
 		trend.accumulate(c);
-		String out = i + "]\t" + c.close + "\t" + c.high + "\t" + c.low+ "\t" + trend.getTrendLine() + "\t" + trend.getZl();
+		String out = i + "]\t" + c.close + "\t" + c.high + "\t" + c.low + "\t" + trend.getTrendLine() + "\t"
+				+ trend.getZl();
 		// System.out.println(out);
 		return out;
 	}

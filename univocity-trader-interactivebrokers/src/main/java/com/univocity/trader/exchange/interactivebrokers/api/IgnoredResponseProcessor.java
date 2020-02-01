@@ -6,9 +6,11 @@ import org.slf4j.*;
 import java.util.*;
 
 /**
- *  {@link EWrapper} implementation of methods that are simply logged and are currently not used/ignored.
+ * {@link EWrapper} implementation of methods that are simply logged and are
+ * currently not used/ignored.
  *
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 abstract class IgnoredResponseProcessor implements EWrapper {
 
@@ -17,9 +19,8 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 	@Override
 	public final void marketRule(int marketRuleId, PriceIncrement[] priceIncrements) {
 		log.info(EWrapperMsgGenerator.marketRule(marketRuleId, priceIncrements));
-		//TODO: populate symbol information here
+		// TODO: populate symbol information here
 	}
-
 
 	@Override
 	public final void historicalDataUpdate(int reqId, Bar bar) {
@@ -36,25 +37,29 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 		log.info(EWrapperMsgGenerator.rerouteMktDepthReq(reqId, conId, exchange));
 	}
 
-
 	@Override
 	public final void pnl(int reqId, double dailyPnL, double unrealizedPnL, double realizedPnL) {
 		log.info(EWrapperMsgGenerator.pnl(reqId, dailyPnL, unrealizedPnL, realizedPnL));
 	}
 
 	@Override
-	public final void pnlSingle(int reqId, int pos, double dailyPnL, double unrealizedPnL, double realizedPnL, double value) {
+	public final void pnlSingle(int reqId, int pos, double dailyPnL, double unrealizedPnL, double realizedPnL,
+			double value) {
 		log.info(EWrapperMsgGenerator.pnlSingle(reqId, pos, dailyPnL, unrealizedPnL, realizedPnL, value));
 	}
 
 	@Override
-	public final void tickByTickAllLast(int reqId, int tickType, long time, double price, int size, TickAttribLast tickAttribLast, String exchange, String specialConditions) {
-		log.info(EWrapperMsgGenerator.tickByTickAllLast(reqId, tickType, time, price, size, tickAttribLast, exchange, specialConditions));
+	public final void tickByTickAllLast(int reqId, int tickType, long time, double price, int size,
+			TickAttribLast tickAttribLast, String exchange, String specialConditions) {
+		log.info(EWrapperMsgGenerator.tickByTickAllLast(reqId, tickType, time, price, size, tickAttribLast, exchange,
+				specialConditions));
 	}
 
 	@Override
-	public final void tickByTickBidAsk(int reqId, long time, double bidPrice, double askPrice, int bidSize, int askSize, TickAttribBidAsk tickAttribBidAsk) {
-		log.info(EWrapperMsgGenerator.tickByTickBidAsk(reqId, time, bidPrice, askPrice, bidSize, askSize, tickAttribBidAsk));
+	public final void tickByTickBidAsk(int reqId, long time, double bidPrice, double askPrice, int bidSize, int askSize,
+			TickAttribBidAsk tickAttribBidAsk) {
+		log.info(EWrapperMsgGenerator.tickByTickBidAsk(reqId, time, bidPrice, askPrice, bidSize, askSize,
+				tickAttribBidAsk));
 	}
 
 	@Override
@@ -88,8 +93,10 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 	}
 
 	@Override
-	public final void securityDefinitionOptionalParameter(int reqId, String exchange, int underlyingConId, String tradingClass, String multiplier, Set<String> expirations, Set<Double> strikes) {
-		log.info(EWrapperMsgGenerator.securityDefinitionOptionalParameter(reqId, exchange, underlyingConId, tradingClass, multiplier, expirations, strikes));
+	public final void securityDefinitionOptionalParameter(int reqId, String exchange, int underlyingConId,
+			String tradingClass, String multiplier, Set<String> expirations, Set<Double> strikes) {
+		log.info(EWrapperMsgGenerator.securityDefinitionOptionalParameter(reqId, exchange, underlyingConId,
+				tradingClass, multiplier, expirations, strikes));
 	}
 
 	@Override
@@ -117,7 +124,8 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 	}
 
 	@Override
-	public final void tickNews(int tickerId, long timeStamp, String providerCode, String articleId, String headline, String extraData) {
+	public final void tickNews(int tickerId, long timeStamp, String providerCode, String articleId, String headline,
+			String extraData) {
 		log.info(EWrapperMsgGenerator.tickNews(tickerId, timeStamp, providerCode, articleId, headline, extraData));
 	}
 
@@ -175,7 +183,8 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 		log.info(EWrapperMsgGenerator.accountSummaryEnd(reqId));
 	}
 
-	public final void positionMulti(int reqId, String account, String modelCode, Contract contract, double pos, double avgCost) {
+	public final void positionMulti(int reqId, String account, String modelCode, Contract contract, double pos,
+			double avgCost) {
 		log.info(EWrapperMsgGenerator.positionMulti(reqId, account, modelCode, contract, pos, avgCost));
 	}
 
@@ -183,7 +192,8 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 		log.info(EWrapperMsgGenerator.positionMultiEnd(reqId));
 	}
 
-	public final void accountUpdateMulti(int reqId, String account, String modelCode, String key, String value, String currency) {
+	public final void accountUpdateMulti(int reqId, String account, String modelCode, String key, String value,
+			String currency) {
 		log.info(EWrapperMsgGenerator.accountUpdateMulti(reqId, account, modelCode, key, value, currency));
 	}
 
@@ -223,14 +233,15 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 		log.info("Group updated (request ID: {}): {}}", reqId, contractInfo);
 	}
 
-
 	public final void tickPrice(int tickerId, int field, double price, TickAttrib attribs) {
 		log.info(EWrapperMsgGenerator.tickPrice(tickerId, field, price, attribs));
 	}
 
-	public final void tickOptionComputation(int tickerId, int field, double impliedVol, double delta, double optPrice, double pvDividend, double gamma, double vega, double theta, double undPrice) {
+	public final void tickOptionComputation(int tickerId, int field, double impliedVol, double delta, double optPrice,
+			double pvDividend, double gamma, double vega, double theta, double undPrice) {
 		// received computation tick
-		log.info(EWrapperMsgGenerator.tickOptionComputation(tickerId, field, impliedVol, delta, optPrice, pvDividend, gamma, vega, theta, undPrice));
+		log.info(EWrapperMsgGenerator.tickOptionComputation(tickerId, field, impliedVol, delta, optPrice, pvDividend,
+				gamma, vega, theta, undPrice));
 	}
 
 	public final void tickSize(int tickerId, int field, int size) {
@@ -252,9 +263,12 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 		log.info(EWrapperMsgGenerator.tickSnapshotEnd(tickerId));
 	}
 
-	public final void tickEFP(int tickerId, int tickType, double basisPoints, String formattedBasisPoints, double impliedFuture, int holdDays, String futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate) {
+	public final void tickEFP(int tickerId, int tickType, double basisPoints, String formattedBasisPoints,
+			double impliedFuture, int holdDays, String futureLastTradeDate, double dividendImpact,
+			double dividendsToLastTradeDate) {
 		// received EFP tick
-		log.info(EWrapperMsgGenerator.tickEFP(tickerId, tickType, basisPoints, formattedBasisPoints, impliedFuture, holdDays, futureLastTradeDate, dividendImpact, dividendsToLastTradeDate));
+		log.info(EWrapperMsgGenerator.tickEFP(tickerId, tickType, basisPoints, formattedBasisPoints, impliedFuture,
+				holdDays, futureLastTradeDate, dividendImpact, dividendsToLastTradeDate));
 	}
 
 	public final void openOrder(int orderId, Contract contract, Order order, OrderState orderState) {
@@ -267,8 +281,10 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 		log.info(EWrapperMsgGenerator.openOrderEnd());
 	}
 
-	public final void scannerData(int reqId, int rank, ContractDetails contractDetails, String distance, String benchmark, String projection, String legsStr) {
-		log.info(EWrapperMsgGenerator.scannerData(reqId, rank, contractDetails, distance,benchmark, projection, legsStr));
+	public final void scannerData(int reqId, int rank, ContractDetails contractDetails, String distance,
+			String benchmark, String projection, String legsStr) {
+		log.info(EWrapperMsgGenerator.scannerData(reqId, rank, contractDetails, distance, benchmark, projection,
+				legsStr));
 	}
 
 	public final void scannerDataEnd(int reqId) {

@@ -1,13 +1,10 @@
 package com.univocity.trader.indicators;
 
-
-
 import com.univocity.trader.candles.*;
 import org.junit.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static org.junit.Assert.*;
-
 
 public class DonchianChannelTest {
 

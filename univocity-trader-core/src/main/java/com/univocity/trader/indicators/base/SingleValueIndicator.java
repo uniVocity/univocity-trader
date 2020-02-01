@@ -8,7 +8,6 @@ import java.util.function.*;
 
 public abstract class SingleValueIndicator extends AggregatedTicksIndicator {
 
-
 	private ToDoubleFunction<Candle> valueGetter;
 	private Signal signal = null;
 
@@ -38,7 +37,7 @@ public abstract class SingleValueIndicator extends AggregatedTicksIndicator {
 
 	final boolean process(Candle candle, boolean updating) {
 		double value = extractValue(candle, updating);
-		if(process(candle, value, updating)){
+		if (process(candle, value, updating)) {
 			signal = calculateSignal(candle);
 			return true;
 		}

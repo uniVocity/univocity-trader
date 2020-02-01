@@ -10,7 +10,6 @@ public class IQFeedApiWebSocketListener<T> implements WebSocketListener {
 	private static final Logger log = LoggerFactory.getLogger(IQFeedApiWebSocketListener.class);
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
-
 	private WebSocket webSocket = null;
 	private String wsName = null;
 	private IQFeedProcessor processor;

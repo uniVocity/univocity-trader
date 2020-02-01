@@ -1,13 +1,13 @@
 package com.univocity.trader.indicators;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 
 import static com.univocity.trader.indicators.Signal.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class BollingerBand extends MovingAverage {
 
@@ -27,13 +27,12 @@ public class BollingerBand extends MovingAverage {
 
 	@Override
 	protected boolean calculateIndicatorValue(Candle candle, double value, boolean updating) {
-		boolean out = super.calculateIndicatorValue(candle,value, updating);
-		if(out){
+		boolean out = super.calculateIndicatorValue(candle, value, updating);
+		if (out) {
 			updateStandardDeviation();
 		}
 		return out;
 	}
-
 
 	private void updateStandardDeviation() {
 		double avg = getMiddleBand();

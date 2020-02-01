@@ -35,6 +35,6 @@ public class MVWAP extends SingleValueIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{sma, vwap};
+		return new Indicator[] { sma, vwap };
 	}
 }

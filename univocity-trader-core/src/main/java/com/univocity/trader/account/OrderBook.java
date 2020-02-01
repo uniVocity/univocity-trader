@@ -18,11 +18,11 @@ public class OrderBook {
 		this.account = account;
 	}
 
-	public void addBid(double price, double quantity){
+	public void addBid(double price, double quantity) {
 		bids.put(price, quantity);
 	}
 
-	public void addAsk(double price, double quantity){
+	public void addAsk(double price, double quantity) {
 		asks.put(price, quantity);
 	}
 
@@ -62,7 +62,7 @@ public class OrderBook {
 			double quantity = quantityToFill;
 			quantityToFill -= maxQuantity;
 
-			if(quantityToFill > 0){
+			if (quantityToFill > 0) {
 				quantity = maxQuantity;
 			}
 
@@ -118,7 +118,7 @@ public class OrderBook {
 		return asks;
 	}
 
-	public OrderBook update(int depth){
+	public OrderBook update(int depth) {
 		return account.getOrderBook(this.symbol, depth);
 	}
 }

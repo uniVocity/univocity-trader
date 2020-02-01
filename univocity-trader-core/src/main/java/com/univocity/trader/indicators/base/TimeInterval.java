@@ -23,16 +23,16 @@ public class TimeInterval {
 
 	public static String getUnitStr(TimeUnit unit) {
 		switch (unit) {
-			case DAYS:
-				return "d";
-			case HOURS:
-				return "h";
-			case MINUTES:
-				return "m";
-			case SECONDS:
-				return "s";
-			case MILLISECONDS:
-				return "ms";
+		case DAYS:
+			return "d";
+		case HOURS:
+			return "h";
+		case MINUTES:
+			return "m";
+		case SECONDS:
+			return "s";
+		case MILLISECONDS:
+			return "ms";
 		}
 		return "";
 	}
@@ -67,8 +67,10 @@ public class TimeInterval {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
 
 		TimeInterval that = (TimeInterval) o;
 
@@ -94,14 +96,14 @@ public class TimeInterval {
 			interval = interval.substring(0, interval.length() - 1);
 			long duration = Long.parseLong(interval);
 			switch (unit) {
-				case 'd':
-					return days(duration);
-				case 'h':
-					return hours(duration);
-				case 'm':
-					return minutes(duration);
-				case 's':
-					return seconds(duration);
+			case 'd':
+				return days(duration);
+			case 'h':
+				return hours(duration);
+			case 'm':
+				return minutes(duration);
+			case 's':
+				return seconds(duration);
 			}
 			throw new IllegalArgumentException("Unparseable interval: " + interval);
 		}
@@ -160,6 +162,6 @@ public class TimeInterval {
 
 	private static int[] getDurationComponents(long ms) {
 		Duration duration = Duration.ofMillis(ms);
-		return new int[]{duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart()};
+		return new int[] { duration.toHoursPart(), duration.toMinutesPart(), duration.toSecondsPart() };
 	}
 }

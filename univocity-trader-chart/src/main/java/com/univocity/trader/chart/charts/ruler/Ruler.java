@@ -1,6 +1,5 @@
 package com.univocity.trader.chart.charts.ruler;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
@@ -18,7 +17,7 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		chart.register(this);
 	}
 
-	private void updateFontSize(Graphics2D g){
+	private void updateFontSize(Graphics2D g) {
 		getController().updateFontSize(g);
 	}
 
@@ -61,7 +60,7 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		return getController().getFontHeight();
 	}
 
-	protected final boolean isShowingGrid(){
+	protected final boolean isShowingGrid() {
 		return getController().isShowingGrid();
 	}
 
@@ -89,11 +88,11 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		return getController().getBackgroundColor();
 	}
 
-	protected final Color getProfitBackground(){
+	protected final Color getProfitBackground() {
 		return getController().getProfitBackground();
 	}
 
-	protected final Color getLossBackground(){
+	protected final Color getLossBackground() {
 		return getController().getLossBackground();
 	}
 

@@ -11,7 +11,7 @@ public class OrderBookTest {
 	public OrderBook getBook() {
 		OrderBook out = new OrderBook(null, null, 10);
 
-		//note: the order here doesn't matter, the values are sorted correctly
+		// note: the order here doesn't matter, the values are sorted correctly
 		out.addAsk(4.217, 647.454);
 		out.addAsk(4.216, 404.754);
 		out.addAsk(4.215, 133.366);
@@ -41,7 +41,7 @@ public class OrderBookTest {
 		assertEquals(4.209, price, 0.0001);
 
 		price = book.getAverageAskAmount(2);
-		assertEquals(/*4.209649375024865*/(4.209 * 149.821 + 4.210 * 277.476) / (149.821 + 277.476), price, 0.0001);
+		assertEquals(/* 4.209649375024865 */(4.209 * 149.821 + 4.210 * 277.476) / (149.821 + 277.476), price, 0.0001);
 	}
 
 	@Test
@@ -52,7 +52,7 @@ public class OrderBookTest {
 		assertEquals(4.203, price, 0.0001);
 
 		price = book.getAverageBidAmount(2);
-		assertEquals(/*4.202228950737403*/(4.203 * 357.676 + 4.202 * 1204.564) / (357.676 + 1204.564), price, 0.0001);
+		assertEquals(/* 4.202228950737403 */(4.203 * 357.676 + 4.202 * 1204.564) / (357.676 + 1204.564), price, 0.0001);
 	}
 
 	@Test
@@ -63,9 +63,8 @@ public class OrderBookTest {
 		assertEquals(0.006, spread, 0.0001);
 
 		spread = book.getSpread(2);
-		assertEquals(/*0.007420424287461813*/ 4.209649375024865 - 4.202228950737403, spread, 0.0001);
+		assertEquals(/* 0.007420424287461813 */ 4.209649375024865 - 4.202228950737403, spread, 0.0001);
 	}
-
 
 	@Test
 	public void testAverageAskAmountQuantityBased() {
@@ -75,7 +74,8 @@ public class OrderBookTest {
 		assertEquals(4.209, price, 0.0001);
 
 		price = book.getAverageAskAmount(500.0);
-		assertEquals(/*4.209845764*/(4.209 * 149.821 + 4.210 * 277.476 + 4.211 * (500 - (149.821 + 277.476))) / 500.0, price, 0.0001);
+		assertEquals(/* 4.209845764 */(4.209 * 149.821 + 4.210 * 277.476 + 4.211 * (500 - (149.821 + 277.476))) / 500.0,
+				price, 0.0001);
 	}
 
 	@Test
@@ -86,12 +86,8 @@ public class OrderBookTest {
 		assertEquals(4.203, price, 0.0001);
 
 		price = book.getAverageBidAmount(2000.0);
-		assertEquals(/*4.2016726129999995*/(0
-				+ 4.203 * 357.676
-				+ 4.202 * 1204.564
-				+ 4.201 * 150.415
-				+ 4.199 * (2000 - (357.676 + 1204.564 + 150.415))
-		) / 2000.0, price, 0.0001);
+		assertEquals(/* 4.2016726129999995 */(0 + 4.203 * 357.676 + 4.202 * 1204.564 + 4.201 * 150.415
+				+ 4.199 * (2000 - (357.676 + 1204.564 + 150.415))) / 2000.0, price, 0.0001);
 	}
 
 	@Test
@@ -106,4 +102,3 @@ public class OrderBookTest {
 	}
 
 }
-

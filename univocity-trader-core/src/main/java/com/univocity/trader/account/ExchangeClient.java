@@ -40,9 +40,11 @@ public class ExchangeClient<T> implements Client {
 
 	public void initialize(CandleRepository candleRepository, Exchange<T, ?> exchange, SmtpMailSender mailSender) {
 		if (accountManager.configuration().symbolPairs().isEmpty()) {
-			throw new IllegalStateException("No trade symbols defined for client " + accountManager.configuration().id());
+			throw new IllegalStateException(
+					"No trade symbols defined for client " + accountManager.configuration().id());
 		}
-		final SymbolPriceDetails priceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol()); //loads price information from exchange
+		final SymbolPriceDetails priceDetails = new SymbolPriceDetails(exchange,
+				accountManager.getReferenceCurrencySymbol()); // loads price information from exchange
 
 		Set<TradingManager> all = new HashSet<>();
 
@@ -55,7 +57,8 @@ public class ExchangeClient<T> implements Client {
 			String assetSymbol = e.getValue()[0];
 			String fundSymbol = e.getValue()[1];
 
-			TradingManager tradingManager = new TradingManager(exchange, priceDetails, accountManager, assetSymbol, fundSymbol, Parameters.NULL);
+			TradingManager tradingManager = new TradingManager(exchange, priceDetails, accountManager, assetSymbol,
+					fundSymbol, Parameters.NULL);
 			if (root == null) {
 				root = tradingManager;
 			}

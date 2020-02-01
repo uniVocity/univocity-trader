@@ -55,20 +55,24 @@ public class OrderExecutionToLog implements OrderListener {
 			}
 			price = StringUtils.rightPad(price, maxPriceLength);
 
-			String details = StringUtils.rightPad(o.closeTime.toString(), 25) + " " + StringUtils.rightPad(o.assetSymbol, 8) + " " + type + " " + quantity + " @ $" + price;
+			String details = StringUtils.rightPad(o.closeTime.toString(), 25) + " "
+					+ StringUtils.rightPad(o.assetSymbol, 8) + " " + type + " " + quantity + " @ $" + price;
 //			details += "[" + order.getOrderId() + "]";
 			if (order.isLongBuy() || order.isShortSell()) {
 				if (order.isFinalized()) {
 					details += " + " + printFillDetails(o) + ".";
 					if (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) != 0) {
 						if (order.isLongBuy()) {
-							details += " Worth $" + o.price + " " + o.fundSymbol + " (free $" + o.freeBalance + " " + o.fundSymbol;
+							details += " Worth $" + o.price + " " + o.fundSymbol + " (free $" + o.freeBalance + " "
+									+ o.fundSymbol;
 							if (!o.fundSymbol.equals(o.referenceCurrency)) {
 								details += ", $" + o.freeBalanceReferenceCurrency + " " + o.referenceCurrency;
 							}
 							details += ")";
 						} else if (order.isShortSell()) {
-							details += " Shorting total " + o.assetSymbol + " " + o.shortedQuantity + " (" + o.fundSymbol + " margin reserve: $" + o.marginReserve + ", free $" + o.freeBalance + ")";
+							details += " Shorting total " + o.assetSymbol + " " + o.shortedQuantity + " ("
+									+ o.fundSymbol + " margin reserve: $" + o.marginReserve + ", free $" + o.freeBalance
+									+ ")";
 						}
 					}
 				} else {
@@ -81,7 +85,8 @@ public class OrderExecutionToLog implements OrderListener {
 						details += " P/L " + o.printReferenceCurrencyProfitLossAndChange();
 					}
 
-					details += " Holdings $" + o.printHoldingsAndReferenceCurrency() + " (free $" + o.freeBalanceReferenceCurrency + ")";
+					details += " Holdings $" + o.printHoldingsAndReferenceCurrency() + " (free $"
+							+ o.freeBalanceReferenceCurrency + ")";
 				} else {
 					details += " - PENDING     worth $" + o.printOrderAmountAndCurrency();
 
@@ -92,7 +97,8 @@ public class OrderExecutionToLog implements OrderListener {
 
 					details += ". Expected P/L " + pl;
 
-					details += " | " + trade.ticks() + " ticks [min " + o.printMinPriceAndChange() + ", max $" + o.printMaxPriceAndChange() + ")]";
+					details += " | " + trade.ticks() + " ticks [min " + o.printMinPriceAndChange() + ", max $"
+							+ o.printMaxPriceAndChange() + ")]";
 					details += " " + trade.exitReason();
 				}
 			}

@@ -33,7 +33,8 @@ public class TradingManager {
 	private final SymbolPriceDetails priceDetails;
 	private final SymbolPriceDetails referencePriceDetails;
 
-	public TradingManager(Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, String assetSymbol, String fundSymbol, Parameters params) {
+	public TradingManager(Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account,
+			String assetSymbol, String fundSymbol, Parameters params) {
 		if (exchange == null) {
 			throw new IllegalArgumentException("Exchange implementation cannot be null");
 		}
@@ -41,7 +42,8 @@ public class TradingManager {
 			throw new IllegalArgumentException("Account manager cannot be null");
 		}
 		if (StringUtils.isBlank(assetSymbol)) {
-			throw new IllegalArgumentException("Symbol of instrument to buy cannot be blank (examples: 'MSFT', 'BTC', 'EUR')");
+			throw new IllegalArgumentException(
+					"Symbol of instrument to buy cannot be blank (examples: 'MSFT', 'BTC', 'EUR')");
 		}
 		if (StringUtils.isBlank(fundSymbol)) {
 			throw new IllegalArgumentException("Currency cannot be blank (examples: 'USD', 'EUR', 'USDT', 'ETH')");
@@ -203,7 +205,8 @@ public class TradingManager {
 	public boolean exitExistingPositions(String exitSymbol, Candle c, Strategy strategy) {
 		boolean exited = false;
 		for (TradingManager action : tradingAccount.getAllTradingManagers()) {
-			if (action != this && action.hasPosition(c, false, true, true) && action.trader.switchTo(exitSymbol, c, action.symbol, strategy)) {
+			if (action != this && action.hasPosition(c, false, true, true)
+					&& action.trader.switchTo(exitSymbol, c, action.symbol, strategy)) {
 				exited = true;
 				break;
 			}

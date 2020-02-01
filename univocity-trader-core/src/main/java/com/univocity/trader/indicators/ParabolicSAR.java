@@ -12,7 +12,6 @@ public class ParabolicSAR extends SingleValueIndicator {
 	private final double accelerationIncrement;
 	private final double accelerationStart;
 
-
 	private boolean currentTrend; // true if uptrend, false otherwise
 	private long startTrendIndex = 0; // index of start bar of the current trend
 	private CircularList minPriceIndicator;
@@ -26,7 +25,6 @@ public class ParabolicSAR extends SingleValueIndicator {
 	private CircularList sarValues = new CircularList(5000);
 	private CircularList priceValues = new CircularList(5000);
 	private int ticksOnTrend;
-
 
 	/**
 	 * Constructor with default parameters
@@ -121,7 +119,7 @@ public class ParabolicSAR extends SingleValueIndicator {
 				currentExtremePoint = candle.low; // put point on max
 				minMaxExtremePoint = currentExtremePoint;
 			} else { // up trend is going on
-				currentExtremePoint = maxPriceIndicator.getMax((int)(getAccumulationCount() - startTrendIndex));
+				currentExtremePoint = maxPriceIndicator.getMax((int) (getAccumulationCount() - startTrendIndex));
 				if (currentExtremePoint > minMaxExtremePoint) {
 					accelerationFactor = incrementAcceleration(accelerationFactor);
 					minMaxExtremePoint = currentExtremePoint;
@@ -139,7 +137,7 @@ public class ParabolicSAR extends SingleValueIndicator {
 				currentExtremePoint = candle.high;
 				minMaxExtremePoint = currentExtremePoint;
 			} else { // down trend io going on
-				currentExtremePoint = minPriceIndicator.getMin((int)(getAccumulationCount() - startTrendIndex));
+				currentExtremePoint = minPriceIndicator.getMin((int) (getAccumulationCount() - startTrendIndex));
 				if (currentExtremePoint < minMaxExtremePoint) {
 					accelerationFactor = incrementAcceleration(accelerationFactor);
 					minMaxExtremePoint = currentExtremePoint;
@@ -191,6 +189,6 @@ public class ParabolicSAR extends SingleValueIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

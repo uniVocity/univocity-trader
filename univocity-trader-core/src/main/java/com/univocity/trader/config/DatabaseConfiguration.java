@@ -73,14 +73,14 @@ public class DatabaseConfiguration implements ConfigurationGroup {
 	}
 
 	public DataSource dataSource() {
-		if(dataSource == null){
+		if (dataSource == null) {
 			return defaultDataSource();
 		}
 		return dataSource.get();
 	}
 
 	private DataSource getDataSource() {
-		if(dataSource == null){
+		if (dataSource == null) {
 			return defaultDataSource();
 		}
 		return dataSource.get();
@@ -105,8 +105,8 @@ public class DatabaseConfiguration implements ConfigurationGroup {
 
 	private DataSource defaultDataSource() {
 		if (!isConfigured()) {
-			jdbcDriver("com.mysql.jdbc.Driver")
-					.jdbcUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull&useSSL=false")
+			jdbcDriver("com.mysql.jdbc.Driver").jdbcUrl(
+					"jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull&useSSL=false")
 					.user("root");
 		}
 

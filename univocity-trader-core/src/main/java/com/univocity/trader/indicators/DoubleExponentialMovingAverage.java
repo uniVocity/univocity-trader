@@ -7,7 +7,8 @@ import com.univocity.trader.strategy.*;
 import java.util.function.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class DoubleExponentialMovingAverage extends ExponentialMovingAverage {
 
@@ -42,6 +43,6 @@ public class DoubleExponentialMovingAverage extends ExponentialMovingAverage {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{ema};
+		return new Indicator[] { ema };
 	}
 }

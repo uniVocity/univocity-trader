@@ -27,8 +27,8 @@ public class NewOrderResponse implements OrderDetails {
 	private Long orderId;
 
 	/**
-	 * This will be either a generated one, or the newClientOrderId parameter
-	 * which was passed when creating the new order.
+	 * This will be either a generated one, or the newClientOrderId parameter which
+	 * was passed when creating the new order.
 	 */
 	private String clientOrderId;
 
@@ -178,22 +178,12 @@ public class NewOrderResponse implements OrderDetails {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("symbol", symbol)
-				.append("orderId", orderId)
-				.append("clientOrderId", clientOrderId)
-				.append("transactTime", transactTime)
-				.append("price", price)
-				.append("origQty", origQty)
-				.append("executedQty", executedQty)
-				.append("status", status)
-				.append("timeInForce", timeInForce)
-				.append("type", type)
-				.append("side", side)
-				.append("fills", Optional.ofNullable(fills).orElse(Collections.emptyList())
-						.stream()
-						.map(Object::toString)
-						.collect(Collectors.joining(", ")))
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("symbol", symbol)
+				.append("orderId", orderId).append("clientOrderId", clientOrderId).append("transactTime", transactTime)
+				.append("price", price).append("origQty", origQty).append("executedQty", executedQty)
+				.append("status", status).append("timeInForce", timeInForce).append("type", type).append("side", side)
+				.append("fills", Optional.ofNullable(fills).orElse(Collections.emptyList()).stream()
+						.map(Object::toString).collect(Collectors.joining(", ")))
 				.toString();
 	}
 

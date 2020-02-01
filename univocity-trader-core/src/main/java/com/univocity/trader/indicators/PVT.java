@@ -34,10 +34,8 @@ public class PVT extends SingleValueCalculationIndicator {
 		return out;
 	}
 
-
-
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

@@ -3,7 +3,8 @@ package com.univocity.trader.chart.charts.scrolling;
 import java.awt.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 class ScrollHandle extends Draggable {
 	static final int MIN_WIDTH = 20;
@@ -23,7 +24,8 @@ class ScrollHandle extends Draggable {
 	}
 
 	public boolean isCursorOver(Point p, Component c) {
-		return p.x >= getPosition() && p.x <= getPosition() + width && p.y <= c.getHeight() && p.y >= c.getHeight() - scrollBar.height;
+		return p.x >= getPosition() && p.x <= getPosition() + width && p.y <= c.getHeight()
+				&& p.y >= c.getHeight() - scrollBar.height;
 	}
 
 	public boolean pinnedToRight() {
@@ -31,7 +33,7 @@ class ScrollHandle extends Draggable {
 	}
 
 	public void setWidth(int width) {
-		if(this.width != width) {
+		if (this.width != width) {
 			boolean pinnedToRight = pinnedToRight();
 			if (width < MIN_WIDTH) {
 				width = MIN_WIDTH;
@@ -64,9 +66,9 @@ class ScrollHandle extends Draggable {
 		g.fillRoundRect(position, c.getHeight() - scrollBar.height + 1, width, scrollBar.height - 1, 5, 5);
 		gradientStart.x = position + (width);
 		gradientEnd.x = position + width + 2;
-		g.setPaint(new GradientPaint(gradientStart, scrollBar.scrolling? glassHover : glassGray, gradientEnd, glassBlack));
+		g.setPaint(new GradientPaint(gradientStart, scrollBar.scrolling ? glassHover : glassGray, gradientEnd,
+				glassBlack));
 		g.fillRoundRect(position, c.getHeight() - scrollBar.height + 1, width, scrollBar.height - 1, 5, 5);
-
 
 		g.setColor(Color.GRAY);
 		g.drawRoundRect(position, c.getHeight() - scrollBar.height + 1, width, scrollBar.height - 2, 5, 5);

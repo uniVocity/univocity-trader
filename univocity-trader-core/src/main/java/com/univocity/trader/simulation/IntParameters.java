@@ -1,6 +1,5 @@
 package com.univocity.trader.simulation;
 
-
 import org.apache.commons.lang3.*;
 
 import java.util.*;
@@ -40,6 +39,5 @@ public class IntParameters extends Parameters {
 
 		return new IntParameters(p);
 	}
-
 
 }

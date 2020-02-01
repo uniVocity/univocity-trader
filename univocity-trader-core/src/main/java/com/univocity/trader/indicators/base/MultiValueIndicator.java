@@ -6,7 +6,8 @@ import com.univocity.trader.utils.*;
 import java.util.function.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public abstract class MultiValueIndicator extends SingleValueIndicator {
 
@@ -37,11 +38,11 @@ public abstract class MultiValueIndicator extends SingleValueIndicator {
 		return values.capacity() + (',' + super.toString());
 	}
 
-	public boolean movingUp(){
+	public boolean movingUp() {
 		return linearRegression.predict(1) > this.getValue();
 	}
 
-	public boolean movingDown(){
+	public boolean movingDown() {
 		return linearRegression.predict(1) < this.getValue();
 	}
 }

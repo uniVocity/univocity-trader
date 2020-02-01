@@ -6,7 +6,8 @@ import com.univocity.trader.indicators.base.adx.*;
 import com.univocity.trader.strategy.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class ADX extends SingleValueIndicator {
 	private final PlusDIIndicator plusDIIndicator;
@@ -15,7 +16,7 @@ public class ADX extends SingleValueIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{plusDIIndicator, minusDIIndicator, adx};
+		return new Indicator[] { plusDIIndicator, minusDIIndicator, adx };
 	}
 
 	public ADX(TimeInterval interval) {
@@ -40,7 +41,6 @@ public class ADX extends SingleValueIndicator {
 
 		double pdi = plusDIIndicator.getValue();
 		double mdi = minusDIIndicator.getValue();
-
 
 		if (pdi + mdi == 0.0) {
 			value = 0.0;

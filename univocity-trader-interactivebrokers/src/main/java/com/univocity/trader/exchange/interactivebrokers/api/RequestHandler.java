@@ -10,14 +10,16 @@ import java.util.concurrent.atomic.*;
 import java.util.function.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 class RequestHandler {
 	private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
 
-
-	private final ThreadLocal<SimpleDateFormat> dateTimeFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyyMMdd HH:mm:ss"));
-	private final ThreadLocal<SimpleDateFormat> dateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyyMMdd"));
+	private final ThreadLocal<SimpleDateFormat> dateTimeFormat = ThreadLocal
+			.withInitial(() -> new SimpleDateFormat("yyyyMMdd HH:mm:ss"));
+	private final ThreadLocal<SimpleDateFormat> dateFormat = ThreadLocal
+			.withInitial(() -> new SimpleDateFormat("yyyyMMdd"));
 
 	private final AtomicInteger requestId = new AtomicInteger(1);
 	private final AtomicInteger orderId = new AtomicInteger(1);
@@ -31,7 +33,7 @@ class RequestHandler {
 
 	Runnable reconnectProcess;
 
-	public RequestHandler(Runnable reconnectProcess){
+	public RequestHandler(Runnable reconnectProcess) {
 		this.reconnectProcess = reconnectProcess;
 	}
 
@@ -72,18 +74,19 @@ class RequestHandler {
 
 	void responseFinalizedWithError(int requestId, int messageCode, String message) {
 		if (requestId < 0) {
-			// refer to error message codes: https://interactivebrokers.github.io/tws-api/message_codes.html
+			// refer to error message codes:
+			// https://interactivebrokers.github.io/tws-api/message_codes.html
 			twsDisconnected = messageCode == 2103 || messageCode == 2105;
 			if (twsDisconnected) {
 				log.error("Server error: {} (Error code: {})", message, messageCode);
 				reconnectProcess.run();
 			} else {
 				log.error("Server message: {} (Status code: {})", message, messageCode);
-				if (messageCode == 507) { //bad message length, connection issues (still connected though).
+				if (messageCode == 507) { // bad message length, connection issues (still connected though).
 					cancelAllPendingRequests();
 					try {
 						Thread.sleep(30_000);
-					} catch (InterruptedException e){
+					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
 //					reconnectProcess.run();
@@ -112,7 +115,8 @@ class RequestHandler {
 	private void cancelAllPendingRequests() {
 		Integer[] requestIds = pendingRequests.keySet().toArray(new Integer[0]);
 		Arrays.sort(requestIds);
-		log.warn("Cancelling all pending requests due to connection issues. Request IDs: {}", Arrays.toString(requestIds));
+		log.warn("Cancelling all pending requests due to connection issues. Request IDs: {}",
+				Arrays.toString(requestIds));
 
 		for (Integer requestId : requestIds) {
 			cancelPendingRequest(requestId);
@@ -125,21 +129,24 @@ class RequestHandler {
 				(consumer) -> handleMessageResponse(consumer, responseToConsume, messageLogger));
 	}
 
-	<I, O> void handleResponse(int requestId, boolean done, Collection<I> responseToConsume, Function<I, O> objectTransformation, Function<I, String> messageLogger) {
-		handleResponse(requestId, responseToConsume,
-				(consumer) -> processCollection(done, responseToConsume, consumer, objectTransformation, messageLogger));
+	<I, O> void handleResponse(int requestId, boolean done, Collection<I> responseToConsume,
+			Function<I, O> objectTransformation, Function<I, String> messageLogger) {
+		handleResponse(requestId, responseToConsume, (consumer) -> processCollection(done, responseToConsume, consumer,
+				objectTransformation, messageLogger));
 	}
 
-	<I, O> void handleResponse(int requestId, Collection<I> responseToConsume, Function<I, O> objectTransformation, Function<I, String> messageLogger) {
-		handleResponse(requestId, responseToConsume,
-				(consumer) -> processCollection(true, responseToConsume, consumer, objectTransformation, messageLogger));
+	<I, O> void handleResponse(int requestId, Collection<I> responseToConsume, Function<I, O> objectTransformation,
+			Function<I, String> messageLogger) {
+		handleResponse(requestId, responseToConsume, (consumer) -> processCollection(true, responseToConsume, consumer,
+				objectTransformation, messageLogger));
 	}
 
 	private void handleMessageResponse(Consumer consumer, Object responseToConsume, Supplier<String> messageLogger) {
 		try {
 			consumer.accept(responseToConsume);
 		} catch (Exception e) {
-			log.error("Error processing response for request ID " + requestId + ". Received: " + messageLogger.get(), e);
+			log.error("Error processing response for request ID " + requestId + ". Received: " + messageLogger.get(),
+					e);
 		}
 	}
 
@@ -147,7 +154,8 @@ class RequestHandler {
 		try {
 			Consumer consumer = pendingRequests.get(requestId);
 			if (consumer == null) {
-				log.error("No consumer for response received for request ID {}. Response: {}", requestId, responseToConsume);
+				log.error("No consumer for response received for request ID {}. Response: {}", requestId,
+						responseToConsume);
 				return;
 			}
 
@@ -160,16 +168,18 @@ class RequestHandler {
 		}
 	}
 
-	private <I, O> void processCollection(boolean done, Collection<I> responseToConsume, Consumer consumer, Function<I, O> objectTransformation, Function<I, String> messageLogger) {
+	private <I, O> void processCollection(boolean done, Collection<I> responseToConsume, Consumer consumer,
+			Function<I, O> objectTransformation, Function<I, String> messageLogger) {
 		for (I i : responseToConsume) {
 			processElement(i, consumer, objectTransformation, messageLogger);
 		}
 		if (done) {
-			consumer.accept(null); //notifies end of list.
+			consumer.accept(null); // notifies end of list.
 		}
 	}
 
-	private <I, O> void processElement(I i, Consumer consumer, Function<I, O> objectTransformation, Function<I, String> messageLogger) {
+	private <I, O> void processElement(I i, Consumer consumer, Function<I, O> objectTransformation,
+			Function<I, String> messageLogger) {
 		try {
 			Object o = i;
 			if (objectTransformation != null) {
@@ -178,7 +188,8 @@ class RequestHandler {
 			consumer.accept(o);
 
 		} catch (Exception e) {
-			log.error("Error processing response for request ID " + requestId + ". Received: " + messageLogger.apply(i), e);
+			log.error("Error processing response for request ID " + requestId + ". Received: " + messageLogger.apply(i),
+					e);
 		}
 	}
 
@@ -225,7 +236,7 @@ class RequestHandler {
 			try {
 				return dateFormat.get().parse(date).getTime();
 			} catch (ParseException e1) {
-				//ignore and let the first one go.
+				// ignore and let the first one go.
 			}
 			log.error("Unable to parse date " + date, e);
 			return 0;
@@ -236,30 +247,31 @@ class RequestHandler {
 		return doOpenFeed(request, null);
 	}
 
-	public IBIncomingCandles openFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
+	public IBIncomingCandles openFeed(Function<Consumer<Candle>, Integer> request,
+			Consumer<Integer> cancelRequestHandler) {
 		return doOpenFeed(request, cancelRequestHandler);
 	}
 
-	private IBIncomingCandles doOpenFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
+	private IBIncomingCandles doOpenFeed(Function<Consumer<Candle>, Integer> request,
+			Consumer<Integer> cancelRequestHandler) {
 		IBIncomingCandles out = new IBIncomingCandles();
 
 		int[] reqId = new int[1];
 		reqId[0] = request.apply((candle) -> {
-					if (!out.consumerStopped()) {
-						if (candle == null) { //null candle must be sent manually after processing a fixed list of ticks.
-							closeOpenFeed(reqId[0]);
-						} else {
-							out.add(candle);
-						}
-					} else if (cancelRequestHandler != null) {
-						if (reqId[0] != 0) {
-							log.warn("Cancelling feed opened by request {}. Consumer stopped reading from it.", reqId[0]);
-							cancelRequestHandler.accept(reqId[0]);
-							reqId[0] = 0;
-						}
-					}
+			if (!out.consumerStopped()) {
+				if (candle == null) { // null candle must be sent manually after processing a fixed list of ticks.
+					closeOpenFeed(reqId[0]);
+				} else {
+					out.add(candle);
 				}
-		);
+			} else if (cancelRequestHandler != null) {
+				if (reqId[0] != 0) {
+					log.warn("Cancelling feed opened by request {}. Consumer stopped reading from it.", reqId[0]);
+					cancelRequestHandler.accept(reqId[0]);
+					reqId[0] = 0;
+				}
+			}
+		});
 		activeFeeds.put(reqId[0], out);
 		return out;
 	}

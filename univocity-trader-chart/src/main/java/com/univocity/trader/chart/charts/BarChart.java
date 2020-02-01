@@ -1,6 +1,5 @@
 package com.univocity.trader.chart.charts;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
@@ -63,9 +62,8 @@ public class BarChart extends BasicChart<BarChartController> {
 		drawSelectedBar(hovered, location, g);
 	}
 
-	private void drawSelectedBar(Candle selected, Point location, Graphics2D g){
+	private void drawSelectedBar(Candle selected, Point location, Graphics2D g) {
 		drawBar(getLineSelectionColor(selected), selected, location, g);
 	}
-
 
 }

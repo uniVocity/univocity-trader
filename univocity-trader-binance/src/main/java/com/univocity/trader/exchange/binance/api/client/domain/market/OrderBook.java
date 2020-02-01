@@ -54,9 +54,6 @@ public class OrderBook {
 	@Override
 	public String toString() {
 		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("lastUpdateId", lastUpdateId)
-				.append("bids", bids)
-				.append("asks", asks)
-				.toString();
+				.append("lastUpdateId", lastUpdateId).append("bids", bids).append("asks", asks).toString();
 	}
 }

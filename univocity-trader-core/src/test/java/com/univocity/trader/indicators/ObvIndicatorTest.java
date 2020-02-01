@@ -1,15 +1,12 @@
 package com.univocity.trader.indicators;
 
-
 import org.junit.*;
 
 import static com.univocity.trader.candles.CandleHelper.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static junit.framework.TestCase.*;
 
-
 public class ObvIndicatorTest {
-
 
 	@Test
 	public void test1Min() {
@@ -36,7 +33,9 @@ public class ObvIndicatorTest {
 		assertEquals(0, accumulate(t, newCandle(2, 10, 10.15, 10, 10, 30_000.0)), 0.001);
 
 		assertEquals(25_600.0, accumulate(t, newCandle(3, 10, 10.17, 10, 10, 25_600.0)), 0.001);
-		assertEquals(-57_600, accumulate(t, newCandle(4, 10, 10.13, 10, 10, 32_000.0)), 0.001); //sum of volumes of both candles, i.e. 25_600.0 + 32_000.0
+		assertEquals(-57_600, accumulate(t, newCandle(4, 10, 10.13, 10, 10, 32_000.0)), 0.001); // sum of volumes of
+																								// both candles, i.e.
+																								// 25_600.0 + 32_000.0
 
 		assertEquals(-80_600, accumulate(t, newCandle(5, 10, 10.11, 10, 10, 23_000.0)), 0.001);
 		assertEquals(5_400, accumulate(t, newCandle(6, 10, 10.15, 10, 10, 40_000.0)), 0.001);

@@ -32,9 +32,6 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 	// TODO: ask about maxFrameSize
 	private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 655356);
 
-
-
-
 	@Override
 	public IQFeedClientAccount connectToAccount(Account account) {
 		if (!iqPortal) {
@@ -75,47 +72,42 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 		// TODO: implement
 		ChronoUnit timeUnit = null;
 		switch (TimeInterval.getUnitStr(interval.unit)) {
-			case "d":
-				timeUnit = ChronoUnit.DAYS;
-				break;
-			case "h":
-				timeUnit = ChronoUnit.HOURS;
-				break;
-			case "m":
-				timeUnit = ChronoUnit.MINUTES;
-				break;
-			case "s":
-				timeUnit = ChronoUnit.SECONDS;
-				break;
-			case "ms":
-				timeUnit = ChronoUnit.MILLIS;
-				break;
+		case "d":
+			timeUnit = ChronoUnit.DAYS;
+			break;
+		case "h":
+			timeUnit = ChronoUnit.HOURS;
+			break;
+		case "m":
+			timeUnit = ChronoUnit.MINUTES;
+			break;
+		case "s":
+			timeUnit = ChronoUnit.SECONDS;
+			break;
+		case "ms":
+			timeUnit = ChronoUnit.MILLIS;
+			break;
 		}
 		StringBuilder requestIDBuilder = new StringBuilder("IQFeedLatestTicksRequest_" + Instant.now().toString());
 		requestIDBuilder.append("_symbol:" + symbol + "_interval:" + interval.toString());
-		IQFeedHistoricalRequest request = new IQFeedHistoricalRequestBuilder()
-				.setRequestID(requestIDBuilder.toString())
-				.setSymbol(symbol)
-				.setIntervalType(interval)
+		IQFeedHistoricalRequest request = new IQFeedHistoricalRequestBuilder().setRequestID(requestIDBuilder.toString())
+				.setSymbol(symbol).setIntervalType(interval)
 				.setBeginDateTime(Instant.now().minus(100L, timeUnit).toEpochMilli())
-				.setEndDateTime(Instant.now().toEpochMilli())
-				.build();
+				.setEndDateTime(Instant.now().toEpochMilli()).build();
 
 		List<IQFeedCandle> candles = socketClient().getHistoricalCandlestickBars(request);
 		return IncomingCandles.fromCollection(candles);
 	}
 
-	//TODO: implement
+	// TODO: implement
 	@Override
-	public IncomingCandles<IQFeedCandle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
+	public IncomingCandles<IQFeedCandle> getHistoricalTicks(String symbol, TimeInterval interval, long startTime,
+			long endTime) {
 		StringBuilder requestIDBuilder = new StringBuilder("IQFeedHistoricalRequest_" + Instant.now().toString());
-		requestIDBuilder.append("_symbol:" + symbol + "_interval:" + interval.toString() + "_start:" + startTime + "_end:" + endTime);
-		IQFeedHistoricalRequest request = new IQFeedHistoricalRequestBuilder()
-				.setRequestID(requestIDBuilder.toString())
-				.setSymbol(symbol)
-				.setIntervalType(interval)
-				.setBeginDateTime(startTime)
-				.setEndDateTime(endTime)
+		requestIDBuilder.append(
+				"_symbol:" + symbol + "_interval:" + interval.toString() + "_start:" + startTime + "_end:" + endTime);
+		IQFeedHistoricalRequest request = new IQFeedHistoricalRequestBuilder().setRequestID(requestIDBuilder.toString())
+				.setSymbol(symbol).setIntervalType(interval).setBeginDateTime(startTime).setEndDateTime(endTime)
 				.build();
 		return IncomingCandles.fromCollection(socketClient.getHistoricalCandlestickBars(request));
 	}
@@ -123,25 +115,13 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 
 	@Override
 	public Candle generateCandle(IQFeedCandle c) {
-		return new Candle(
-				c.getOpenTime(),
-				c.getCloseTime(),
-				c.getOpen(),
-				c.getHigh(),
-				c.getLow(),
-				c.getClose(),
-				c.getVolume()
-		);
+		return new Candle(c.getOpenTime(), c.getCloseTime(), c.getOpen(), c.getHigh(), c.getLow(), c.getClose(),
+				c.getVolume());
 	}
 
 	public PreciseCandle generatePreciseCandle(IQFeedCandle c) {
-		return new PreciseCandle(
-				c.getOpenTime(),
-				c.getCloseTime(),
-				BigDecimal.valueOf(c.getOpen()),
-				BigDecimal.valueOf(c.getHigh()),
-				BigDecimal.valueOf(c.getLow()),
-				BigDecimal.valueOf(c.getClose()),
+		return new PreciseCandle(c.getOpenTime(), c.getCloseTime(), BigDecimal.valueOf(c.getOpen()),
+				BigDecimal.valueOf(c.getHigh()), BigDecimal.valueOf(c.getLow()), BigDecimal.valueOf(c.getClose()),
 				BigDecimal.valueOf(c.getVolume()));
 	}
 
@@ -149,7 +129,6 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 //    public List<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime){
 //        return socketClient().getC
 //    }
-
 
 	// TODO: implement this...
 	@Override
@@ -164,7 +143,6 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 		}
 	}
 
-
 	private IQFeedApiWebSocketClient socketClient() {
 		if (socketClient == null) {
 			IQFeedApiClientFactory factory = IQFeedApiClientFactory.newInstance(asyncHttpClient);
@@ -174,4 +152,3 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 	}
 
 }
-

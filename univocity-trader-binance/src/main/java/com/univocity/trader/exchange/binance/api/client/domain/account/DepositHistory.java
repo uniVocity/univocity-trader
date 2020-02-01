@@ -47,10 +47,7 @@ public class DepositHistory {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("depositList", depositList)
-				.append("success", success)
-				.append("msg", msg)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("depositList", depositList)
+				.append("success", success).append("msg", msg).toString();
 	}
 }

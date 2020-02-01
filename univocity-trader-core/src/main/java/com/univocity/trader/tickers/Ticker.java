@@ -1,6 +1,5 @@
 package com.univocity.trader.tickers;
 
-
 import com.univocity.parsers.annotations.*;
 
 /**
@@ -12,7 +11,6 @@ public class Ticker {
 		crypto, fiat, reference, stock, option
 	}
 
-
 	@Parsed
 	private String symbol;
 
@@ -22,7 +20,8 @@ public class Ticker {
 	@Parsed
 	private String description;
 
-	//TODO: add symbol information details as well (see class com.univocity.trader.candles.SymbolInformation)
+	// TODO: add symbol information details as well (see class
+	// com.univocity.trader.candles.SymbolInformation)
 
 	private Ticker() {
 	}

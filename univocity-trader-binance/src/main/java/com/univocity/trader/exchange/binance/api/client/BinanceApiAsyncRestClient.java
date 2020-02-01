@@ -9,7 +9,8 @@ import com.univocity.trader.exchange.binance.api.client.domain.market.*;
 import java.util.*;
 
 /**
- * Binance API façade, supporting asynchronous/non-blocking access Binance's REST API.
+ * Binance API façade, supporting asynchronous/non-blocking access Binance's
+ * REST API.
  */
 public interface BinanceApiAsyncRestClient {
 
@@ -69,24 +70,29 @@ public interface BinanceApiAsyncRestClient {
 	 * @param fromId   TradeId to fetch from. Default gets most recent trades.
 	 * @param callback the callback that handles the response
 	 */
-	void getHistoricalTrades(String symbol, Integer limit, Long fromId, BinanceApiCallback<List<TradeHistoryItem>> callback);
+	void getHistoricalTrades(String symbol, Integer limit, Long fromId,
+			BinanceApiCallback<List<TradeHistoryItem>> callback);
 
 	/**
-	 * Get compressed, aggregate trades. Trades that fill at the time, from the same order, with
-	 * the same price will have the quantity aggregated.
-	 * If both <code>startTime</code> and <code>endTime</code> are sent, <code>limit</code>should not
-	 * be sent AND the distance between <code>startTime</code> and <code>endTime</code> must be less than 24 hours.
+	 * Get compressed, aggregate trades. Trades that fill at the time, from the same
+	 * order, with the same price will have the quantity aggregated. If both
+	 * <code>startTime</code> and <code>endTime</code> are sent,
+	 * <code>limit</code>should not be sent AND the distance between
+	 * <code>startTime</code> and <code>endTime</code> must be less than 24 hours.
 	 *
 	 * @param symbol    symbol to aggregate (mandatory)
 	 * @param fromId    ID to get aggregate trades from INCLUSIVE (optional)
 	 * @param limit     Default 500; max 1000 (optional)
-	 * @param startTime Timestamp in ms to get aggregate trades from INCLUSIVE (optional).
-	 * @param endTime   Timestamp in ms to get aggregate trades until INCLUSIVE (optional).
+	 * @param startTime Timestamp in ms to get aggregate trades from INCLUSIVE
+	 *                  (optional).
+	 * @param endTime   Timestamp in ms to get aggregate trades until INCLUSIVE
+	 *                  (optional).
 	 * @param callback  the callback that handles the response
 	 *
 	 * @return a list of aggregate trades for the given symbol
 	 */
-	void getAggTrades(String symbol, String fromId, Integer limit, Long startTime, Long endTime, BinanceApiCallback<List<AggTrade>> callback);
+	void getAggTrades(String symbol, String fromId, Integer limit, Long startTime, Long endTime,
+			BinanceApiCallback<List<AggTrade>> callback);
 
 	/**
 	 * Return the most recent aggregate trades for <code>symbol</code>
@@ -96,23 +102,30 @@ public interface BinanceApiAsyncRestClient {
 	void getAggTrades(String symbol, BinanceApiCallback<List<AggTrade>> callback);
 
 	/**
-	 * Kline/candlestick bars for a symbol. Klines are uniquely identified by their open time.
+	 * Kline/candlestick bars for a symbol. Klines are uniquely identified by their
+	 * open time.
 	 *
 	 * @param symbol    symbol to aggregate (mandatory)
 	 * @param interval  candlestick interval (mandatory)
 	 * @param limit     Default 500; max 1000 (optional)
-	 * @param startTime Timestamp in ms to get candlestick bars from INCLUSIVE (optional).
-	 * @param endTime   Timestamp in ms to get candlestick bars until INCLUSIVE (optional).
-	 * @param callback  the callback that handles the response containing a candlestick bar for the given symbol and interval
+	 * @param startTime Timestamp in ms to get candlestick bars from INCLUSIVE
+	 *                  (optional).
+	 * @param endTime   Timestamp in ms to get candlestick bars until INCLUSIVE
+	 *                  (optional).
+	 * @param callback  the callback that handles the response containing a
+	 *                  candlestick bar for the given symbol and interval
 	 */
-	void getCandlestickBars(String symbol, CandlestickInterval interval, Integer limit, Long startTime, Long endTime, BinanceApiCallback<List<Candlestick>> callback);
+	void getCandlestickBars(String symbol, CandlestickInterval interval, Integer limit, Long startTime, Long endTime,
+			BinanceApiCallback<List<Candlestick>> callback);
 
 	/**
-	 * Kline/candlestick bars for a symbol. Klines are uniquely identified by their open time.
+	 * Kline/candlestick bars for a symbol. Klines are uniquely identified by their
+	 * open time.
 	 *
 	 * @see #getCandlestickBars(String, CandlestickInterval, BinanceApiCallback)
 	 */
-	void getCandlestickBars(String symbol, CandlestickInterval interval, BinanceApiCallback<List<Candlestick>> callback);
+	void getCandlestickBars(String symbol, CandlestickInterval interval,
+			BinanceApiCallback<List<Candlestick>> callback);
 
 	/**
 	 * Get 24 hour price change statistics (asynchronous).
@@ -162,7 +175,8 @@ public interface BinanceApiAsyncRestClient {
 	void newOrder(NewOrder order, BinanceApiCallback<NewOrderResponse> callback);
 
 	/**
-	 * Test new order creation and signature/recvWindow long. Creates and validates a new order but does not send it into the matching engine.
+	 * Test new order creation and signature/recvWindow long. Creates and validates
+	 * a new order but does not send it into the matching engine.
 	 *
 	 * @param order    the new TEST order to submit.
 	 * @param callback the callback that handles the response
@@ -219,7 +233,8 @@ public interface BinanceApiAsyncRestClient {
 	 * @param fromId   TradeId to fetch from. Default gets most recent trades.
 	 * @param callback the callback that handles the response with a list of trades
 	 */
-	void getMyTrades(String symbol, Integer limit, Long fromId, Long recvWindow, Long timestamp, BinanceApiCallback<List<Trade>> callback);
+	void getMyTrades(String symbol, Integer limit, Long fromId, Long recvWindow, Long timestamp,
+			BinanceApiCallback<List<Trade>> callback);
 
 	/**
 	 * Get trades for a specific account and symbol.
@@ -239,8 +254,8 @@ public interface BinanceApiAsyncRestClient {
 	void getMyTrades(String symbol, BinanceApiCallback<List<Trade>> callback);
 
 	/**
-	 * Submit a withdraw request.
-	 * Enable Withdrawals option has to be active in the API settings.
+	 * Submit a withdraw request. Enable Withdrawals option has to be active in the
+	 * API settings.
 	 *
 	 * @param asset      asset symbol to withdraw
 	 * @param address    address to withdraw to
@@ -248,26 +263,30 @@ public interface BinanceApiAsyncRestClient {
 	 * @param name       description/alias of the address
 	 * @param addressTag Secondary address identifier for symbols like XRP,XMR etc.
 	 */
-	void withdraw(String asset, String address, String amount, String name, String addressTag, BinanceApiCallback<WithdrawResult> callback);
+	void withdraw(String asset, String address, String amount, String name, String addressTag,
+			BinanceApiCallback<WithdrawResult> callback);
 
 	/**
 	 * Fetch account deposit history.
 	 *
-	 * @param callback the callback that handles the response and returns the deposit history
+	 * @param callback the callback that handles the response and returns the
+	 *                 deposit history
 	 */
 	void getDepositHistory(String asset, BinanceApiCallback<DepositHistory> callback);
 
 	/**
 	 * Fetch account withdraw history.
 	 *
-	 * @param callback the callback that handles the response and returns the withdraw history
+	 * @param callback the callback that handles the response and returns the
+	 *                 withdraw history
 	 */
 	void getWithdrawHistory(String asset, BinanceApiCallback<WithdrawHistory> callback);
 
 	/**
 	 * Fetch deposit address.
 	 *
-	 * @param callback the callback that handles the response and returns the deposit address
+	 * @param callback the callback that handles the response and returns the
+	 *                 deposit address
 	 */
 	void getDepositAddress(String asset, BinanceApiCallback<DepositAddress> callback);
 
@@ -276,7 +295,8 @@ public interface BinanceApiAsyncRestClient {
 	/**
 	 * Start a new user data stream.
 	 *
-	 * @param callback the callback that handles the response which contains a listenKey
+	 * @param callback the callback that handles the response which contains a
+	 *                 listenKey
 	 */
 	void startUserDataStream(BinanceApiCallback<ListenKey> callback);
 
@@ -284,7 +304,8 @@ public interface BinanceApiAsyncRestClient {
 	 * PING a user data stream to prevent a time out.
 	 *
 	 * @param listenKey listen key that identifies a data stream
-	 * @param callback  the callback that handles the response which contains a listenKey
+	 * @param callback  the callback that handles the response which contains a
+	 *                  listenKey
 	 */
 	void keepAliveUserDataStream(String listenKey, BinanceApiCallback<Void> callback);
 
@@ -292,7 +313,8 @@ public interface BinanceApiAsyncRestClient {
 	 * Close out a new user data stream.
 	 *
 	 * @param listenKey listen key that identifies a data stream
-	 * @param callback  the callback that handles the response which contains a listenKey
+	 * @param callback  the callback that handles the response which contains a
+	 *                  listenKey
 	 */
 	void closeUserDataStream(String listenKey, BinanceApiCallback<Void> callback);
 }

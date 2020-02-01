@@ -12,7 +12,8 @@ class PortfolioEntry {
 	public final double realizedPNL;
 	public final String accountName;
 
-	PortfolioEntry(Contract contract, double position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
+	PortfolioEntry(Contract contract, double position, double marketPrice, double marketValue, double averageCost,
+			double unrealizedPNL, double realizedPNL, String accountName) {
 		this.contract = contract;
 		this.position = position;
 		this.marketPrice = marketPrice;
@@ -25,8 +26,10 @@ class PortfolioEntry {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
 		return this.contract.equals(((PortfolioEntry) o).contract);
 	}
 

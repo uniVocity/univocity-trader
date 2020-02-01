@@ -1,6 +1,5 @@
 package com.univocity.trader.indicators;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import org.apache.commons.lang3.*;
@@ -29,7 +28,8 @@ public class MACDTest {
 
 	}
 
-	public void accumulate(MACD indicator, int minute, double value, double macdLine, double macdSignal, double histogram) {
+	public void accumulate(MACD indicator, int minute, double value, double macdLine, double macdSignal,
+			double histogram) {
 		CandleHelper.accumulate(indicator, newCandle(minute, value));
 		if (indicator.getClass().equals(MACD.class)) {
 			assertEquals(macdLine, indicator.getMacdLine(), 0.00001);
@@ -38,7 +38,6 @@ public class MACDTest {
 		}
 	}
 
-
 	@Test
 	public void testDefaultMacd() {
 		run(new MACD(12, 26, 9, minutes(1)));
@@ -46,14 +45,15 @@ public class MACDTest {
 
 	@Test
 	public void testMixedMacd() {
-		run(new MACD(12, 26, 9, minutes(1)){
+		run(new MACD(12, 26, 9, minutes(1)) {
 			@Override
 			protected SingleValueIndicator getSignalAverageIndicator(int macdCount, TimeInterval interval) {
 				return new DoubleExponentialMovingAverage(macdCount, interval, null);
 			}
 
 			@Override
-			protected SingleValueIndicator getShortAverageIndicator(int shortCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+			protected SingleValueIndicator getShortAverageIndicator(int shortCount, TimeInterval interval,
+					ToDoubleFunction<Candle> valueGetter) {
 				return new MovingAverage(shortCount, interval, valueGetter);
 			}
 		});
@@ -63,7 +63,8 @@ public class MACDTest {
 	public void testSmaMacd() {
 		run(new MACD(12, 26, 9, minutes(1)) {
 			@Override
-			protected SingleValueIndicator getAverageIndicator(int count, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+			protected SingleValueIndicator getAverageIndicator(int count, TimeInterval interval,
+					ToDoubleFunction<Candle> valueGetter) {
 				return new MovingAverage(count, interval, valueGetter);
 			}
 		});
@@ -73,7 +74,8 @@ public class MACDTest {
 	public void testDemaMacd() {
 		run(new MACD(12, 26, 9, minutes(1)) {
 			@Override
-			protected SingleValueIndicator getAverageIndicator(int count, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+			protected SingleValueIndicator getAverageIndicator(int count, TimeInterval interval,
+					ToDoubleFunction<Candle> valueGetter) {
 				return new DoubleExponentialMovingAverage(count, interval, valueGetter);
 			}
 		});
@@ -83,12 +85,12 @@ public class MACDTest {
 	public void testMmaMacd() {
 		run(new MACD(12, 26, 9, minutes(1)) {
 			@Override
-			protected SingleValueIndicator getAverageIndicator(int count, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+			protected SingleValueIndicator getAverageIndicator(int count, TimeInterval interval,
+					ToDoubleFunction<Candle> valueGetter) {
 				return new ModifiedMovingAverage(count, interval, valueGetter);
 			}
 		});
 	}
-
 
 	private void run(MACD t) {
 		accumulate(t, 1, 7413.63000000, 0.0, 0.0, 0.0);

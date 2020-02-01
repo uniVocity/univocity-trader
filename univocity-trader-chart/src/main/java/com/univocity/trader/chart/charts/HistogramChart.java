@@ -1,6 +1,5 @@
 package com.univocity.trader.chart.charts;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;

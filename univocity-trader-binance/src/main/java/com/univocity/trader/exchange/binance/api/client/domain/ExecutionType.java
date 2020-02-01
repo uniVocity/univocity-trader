@@ -7,10 +7,5 @@ import com.fasterxml.jackson.annotation.*;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public enum ExecutionType {
-	NEW,
-	CANCELED,
-	REPLACED,
-	REJECTED,
-	TRADE,
-	EXPIRED
+	NEW, CANCELED, REPLACED, REJECTED, TRADE, EXPIRED
 }

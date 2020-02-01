@@ -79,7 +79,8 @@ public class PanelBuilder<T> {
 		processorType = annotation.updateProcessor();
 
 		this.type = type;
-		this.fields = getAnnotatedFields(type, CheckBoxBound.class, ColorBound.class, FontBound.class, SpinnerBound.class);
+		this.fields = getAnnotatedFields(type, CheckBoxBound.class, ColorBound.class, FontBound.class,
+				SpinnerBound.class);
 		Collections.sort(fields, FIELD_COMPARATOR);
 
 		setters = new ArrayList<Method>();
@@ -93,7 +94,8 @@ public class PanelBuilder<T> {
 		}
 	}
 
-	UpdateProcessor createProcessor() throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException {
+	UpdateProcessor createProcessor() throws IllegalArgumentException, SecurityException, InstantiationException,
+			IllegalAccessException, InvocationTargetException {
 		if (processorType != UpdateProcessor.class) {
 			updateProcessor = (UpdateProcessor) processorType.getConstructors()[0].newInstance(observedObject);
 		} else {
@@ -102,7 +104,8 @@ public class PanelBuilder<T> {
 		return updateProcessor;
 	}
 
-	public JPanel getPanel(T observedObject) throws IllegalArgumentException, IllegalAccessException, SecurityException, InstantiationException, InvocationTargetException {
+	public JPanel getPanel(T observedObject) throws IllegalArgumentException, IllegalAccessException, SecurityException,
+			InstantiationException, InvocationTargetException {
 		this.observedObject = observedObject;
 		createProcessor();
 
@@ -133,7 +136,8 @@ public class PanelBuilder<T> {
 			out.add(getField(i), c);
 		}
 
-		com.univocity.trader.chart.annotation.Border border = type.getAnnotation(com.univocity.trader.chart.annotation.Border.class);
+		com.univocity.trader.chart.annotation.Border border = type
+				.getAnnotation(com.univocity.trader.chart.annotation.Border.class);
 		if (border != null && !border.value().isEmpty()) {
 			out.setBorder(new TitledBorder(border.value()));
 		}
@@ -158,7 +162,8 @@ public class PanelBuilder<T> {
 		throw new IllegalArgumentException("Unsupported field: " + field.getName());
 	}
 
-	private JCheckBox createCheckBox(CheckBoxBound annotation, final Field field, final Method setter) throws IllegalArgumentException, IllegalAccessException {
+	private JCheckBox createCheckBox(CheckBoxBound annotation, final Field field, final Method setter)
+			throws IllegalArgumentException, IllegalAccessException {
 		final JCheckBox chk = new JCheckBox(annotation.value());
 		chk.setSelected(field.getBoolean(observedObject));
 		chk.addActionListener(new ActionListener() {
@@ -170,16 +175,17 @@ public class PanelBuilder<T> {
 		return chk;
 	}
 
-	private JSpinner createSpinner(SpinnerBound annotation, Field field, final Method setter) throws IllegalArgumentException, IllegalAccessException {
+	private JSpinner createSpinner(SpinnerBound annotation, Field field, final Method setter)
+			throws IllegalArgumentException, IllegalAccessException {
 		Integer value = field.getInt(observedObject);
 		Integer maximum = (Integer) annotation.maximum() > 0 ? annotation.maximum() : null;
 		Integer minimum = annotation.minimum();
 		Integer increment = annotation.increment();
 
-		if(value < minimum){
+		if (value < minimum) {
 			value = minimum;
 		}
-		if(value > maximum){
+		if (value > maximum) {
 			value = maximum;
 		}
 
@@ -194,7 +200,8 @@ public class PanelBuilder<T> {
 		return spinner;
 	}
 
-	private ColorSelector createColorSelector(ColorBound annotation, Field field, final Method setter) throws IllegalArgumentException, IllegalAccessException {
+	private ColorSelector createColorSelector(ColorBound annotation, Field field, final Method setter)
+			throws IllegalArgumentException, IllegalAccessException {
 		final ColorSelector selector = new ColorSelector((Color) field.get(observedObject), "Select color");
 
 		selector.addPropertyChangeListener(ColorSelector.SELECTED_COLOR_CHANGED_PROPERTY, new PropertyChangeListener() {
@@ -227,6 +234,5 @@ public class PanelBuilder<T> {
 	List<Method> getSetters() {
 		return setters;
 	}
-
 
 }

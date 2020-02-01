@@ -3,9 +3,11 @@ package com.univocity.trader;
 import com.univocity.trader.account.*;
 
 /**
- * Calculates the trading fees applied to an {@link Order}. Used for simulations/backtesting as the live {@link Exchange}
- * usually applies their fees for you. The purpose of providing a custom {@code TradingFees} implementation is to mimic
- * what would happen to your account balance when trading live. The closest to reality the fees are, the more accurate the
+ * Calculates the trading fees applied to an {@link Order}. Used for
+ * simulations/backtesting as the live {@link Exchange} usually applies their
+ * fees for you. The purpose of providing a custom {@code TradingFees}
+ * implementation is to mimic what would happen to your account balance when
+ * trading live. The closest to reality the fees are, the more accurate the
  * simulation will be.
  */
 public interface TradingFees {
@@ -47,11 +49,13 @@ public interface TradingFees {
 	}
 
 	/**
-	 * Returns the break even amount. Used to know how much the price has to move until the invested amount/quantity after fees becomes positive.
+	 * Returns the break even amount. Used to know how much the price has to move
+	 * until the invested amount/quantity after fees becomes positive.
 	 *
 	 * @param amount the original amount spent on a trade (before fees).
 	 *
-	 * @return the minimum price change (usually in currency) required to recoup the trading fee costs.
+	 * @return the minimum price change (usually in currency) required to recoup the
+	 *         trading fee costs.
 	 */
 	default double getBreakEvenAmount(double amount) {
 		double out = takeFee(amount, Order.Type.LIMIT, Order.Side.BUY);
@@ -60,11 +64,13 @@ public interface TradingFees {
 	}
 
 	/**
-	 * Returns the break even percentage. Used to know how much the price has to move until the invested amount/quantity after fees becomes positive.
+	 * Returns the break even percentage. Used to know how much the price has to
+	 * move until the invested amount/quantity after fees becomes positive.
 	 *
 	 * @param amount the original amount spent on a trade (before fees).
 	 *
-	 * @return the minimum percentage change in price required to recoup the trading fee costs, in a scale from {@code 0.0} to {@code 100.0}.
+	 * @return the minimum percentage change in price required to recoup the trading
+	 *         fee costs, in a scale from {@code 0.0} to {@code 100.0}.
 	 */
 	default double getBreakEvenChange(double amount) {
 		if (amount == 0.0) {

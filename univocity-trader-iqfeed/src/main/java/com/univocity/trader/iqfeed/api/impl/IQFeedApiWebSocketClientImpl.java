@@ -19,13 +19,14 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
 	private WebSocket webSocketClient = null;
 
 	public IQFeedApiWebSocketClientImpl(AsyncHttpClient client, IQFeedApiWebSocketListener<?> listener) {
-		if (client != null) try {
-			this.client = client;
-			listener.setProcessor(processor);
-			webSocketClient = createNewWebSocket(listener);
-		} catch (Exception e) {
-			log.error(e.getMessage());
-		}
+		if (client != null)
+			try {
+				this.client = client;
+				listener.setProcessor(processor);
+				webSocketClient = createNewWebSocket(listener);
+			} catch (Exception e) {
+				log.error(e.getMessage());
+			}
 	}
 
 	public void sendRequest(IQFeedHistoricalRequest request) {
@@ -57,7 +58,8 @@ public class IQFeedApiWebSocketClientImpl implements IQFeedApiWebSocketClient, C
 		listener.setProcessor(processor);
 		String streamingUrl = IQFeedApiConstants.HOST + ":" + IQFeedApiConstants.PORT;
 		try {
-			return client.prepareGet(streamingUrl).execute(new WebSocketUpgradeHandler.Builder().addWebSocketListener(listener).build()).get();
+			return client.prepareGet(streamingUrl)
+					.execute(new WebSocketUpgradeHandler.Builder().addWebSocketListener(listener).build()).get();
 		} catch (Exception any) {
 			log.error(String.format("Error while creating new websocket connection to %s", streamingUrl), any);
 		}

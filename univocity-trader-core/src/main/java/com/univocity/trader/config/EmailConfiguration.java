@@ -14,7 +14,8 @@ public class EmailConfiguration implements ConfigurationGroup {
 
 	@Override
 	public void readProperties(PropertyBasedConfiguration properties) {
-		boolean mailingConfigured = properties.containsAnyProperties("mail.reply.to", "mail.smtp.host", "mail.smtp.ssl", "mail.smtp.port", "mail.smtp.username", "mail.smtp.sender", "mail.smtp.password");
+		boolean mailingConfigured = properties.containsAnyProperties("mail.reply.to", "mail.smtp.host", "mail.smtp.ssl",
+				"mail.smtp.port", "mail.smtp.username", "mail.smtp.sender", "mail.smtp.password");
 		if (mailingConfigured) {
 			replyToAddress = properties.getProperty("mail.reply.to");
 			smtpHost = properties.getProperty("mail.smtp.host");
@@ -62,7 +63,6 @@ public class EmailConfiguration implements ConfigurationGroup {
 		this.smtpPort = smtpPort;
 		return this;
 	}
-
 
 	public EmailConfiguration smtpSender(String smtpSender) {
 		this.smtpSender = smtpSender;

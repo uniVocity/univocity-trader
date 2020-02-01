@@ -20,14 +20,17 @@ import static com.univocity.trader.indicators.Signal.*;
 import static com.univocity.trader.utils.NewInstances.*;
 
 /**
- * A {@code Trader} is responsible for the lifecycle of a trade (or multiple) and provides all information
- * associated with an open position.
- * It is made available to the user via a {@link StrategyMonitor} to provide information about trades opened by a {@link Strategy}.
- * Once a {@link Strategy} returns a {@link Signal}, the {@link Engine} responsible for the symbol being traded will call
- * {@link Trader#trade(Candle, Signal, Strategy)}, who will then decide whether to buy, sell or ignore the signal, mostly
- * based on its {@link #monitors()} decision.
+ * A {@code Trader} is responsible for the lifecycle of a trade (or multiple)
+ * and provides all information associated with an open position. It is made
+ * available to the user via a {@link StrategyMonitor} to provide information
+ * about trades opened by a {@link Strategy}. Once a {@link Strategy} returns a
+ * {@link Signal}, the {@link Engine} responsible for the symbol being traded
+ * will call {@link Trader#trade(Candle, Signal, Strategy)}, who will then
+ * decide whether to buy, sell or ignore the signal, mostly based on its
+ * {@link #monitors()} decision.
  *
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  * @see StrategyMonitor
  * @see Strategy
  */
@@ -51,12 +54,15 @@ public class Trader {
 	/**
 	 * Creates a new trader for a given symbol. For internal use only.
 	 *
-	 * @param tradingManager the object responsible for managing the entire trading workflow of a symbol
-	 * @param params         optional parameter set used for parameter optimization which is passed on to the
-	 *                       {@link StrategyMonitor} instances created by the given monitorProvider
-	 * @param allInstances   all known instances of {@link StrategyMonitor} that have been created so far, used
-	 *                       to validate no single {@link StrategyMonitor} instance is shared among different
-	 *                       {@code Trader} instances.
+	 * @param tradingManager the object responsible for managing the entire trading
+	 *                       workflow of a symbol
+	 * @param params         optional parameter set used for parameter optimization
+	 *                       which is passed on to the {@link StrategyMonitor}
+	 *                       instances created by the given monitorProvider
+	 * @param allInstances   all known instances of {@link StrategyMonitor} that
+	 *                       have been created so far, used to validate no single
+	 *                       {@link StrategyMonitor} instance is shared among
+	 *                       different {@code Trader} instances.
 	 */
 	public Trader(TradingManager tradingManager, Parameters params, Set<Object> allInstances) {
 		this.parameters = params;
@@ -72,7 +78,6 @@ public class Trader {
 		}
 		this.notifications = tmp.toArray(new OrderListener[0]);
 
-
 		boolean allowMixedStrategies = true;
 		for (int i = 0; i < this.monitors.length; i++) {
 			allowMixedStrategies &= this.monitors[i].allowMixedStrategies();
@@ -81,56 +86,71 @@ public class Trader {
 	}
 
 	/**
-	 * Returns the parameters used by the {@link StrategyMonitor} instances in this {@code Trader} instance. Used
-	 * mainly to report which parameters are being used in a parameter optimization process.
+	 * Returns the parameters used by the {@link StrategyMonitor} instances in this
+	 * {@code Trader} instance. Used mainly to report which parameters are being
+	 * used in a parameter optimization process.
 	 *
-	 * @return the parameters tested in the {@link StrategyMonitor} instances of this {@code Trader}.
+	 * @return the parameters tested in the {@link StrategyMonitor} instances of
+	 *         this {@code Trader}.
 	 */
 	public Parameters parameters() {
 		return parameters;
 	}
 
-
 	/**
-	 * Evaluates whether to execute a trade given a {@link Signal} emitted by a {@link Strategy} upon processing
-	 * the latest {@link Candle} received.
+	 * Evaluates whether to execute a trade given a {@link Signal} emitted by a
+	 * {@link Strategy} upon processing the latest {@link Candle} received.
 	 *
 	 * The actions taken by the trader depend on the signal received:
 	 * <ul>
 	 * <li>signal = {@code BUY} - an order will be submitted when:
 	 * <ol>
-	 * <li>there are funds available to purchase that asset (via {@link TradingManager#allocateFunds(Trade.Side)});</li>
-	 * <li>none of the associated strategy monitors (from {@link #monitors()} produce
-	 * {@link StrategyMonitor#discardBuy(Strategy)};</li>
-	 * <li>the {@link OrderRequest} processed by the {@link OrderManager} associated with the symbol is not cancelled
-	 * (i.e. {@link OrderRequest#isCancelled()})</li>
+	 * <li>there are funds available to purchase that asset (via
+	 * {@link TradingManager#allocateFunds(Trade.Side)});</li>
+	 * <li>none of the associated strategy monitors (from {@link #monitors()}
+	 * produce {@link StrategyMonitor#discardBuy(Strategy)};</li>
+	 * <li>the {@link OrderRequest} processed by the {@link OrderManager} associated
+	 * with the symbol is not cancelled (i.e.
+	 * {@link OrderRequest#isCancelled()})</li>
 	 * </ol>
 	 * </li>
-	 * <li>signal = {@code SELL}: Sells all assets held for the current symbol, closing any open orders, if:
+	 * <li>signal = {@code SELL}: Sells all assets held for the current symbol,
+	 * closing any open orders, if:
 	 * <ol>
-	 * <li>the account has assets available to sell (via {@link TradingManager#hasPosition(Candle, boolean, boolean, boolean)} )</li>
-	 * <li>none of the associated strategy monitors (from {@link #monitors()} produce {@code false} upon
-	 * invoking {@link StrategyMonitor#allowExit(Trade)};</li>
-	 * <li>the {@link OrderRequest} processed by the {@link OrderManager} associated with the symbol is not cancelled
-	 * (i.e. {@link OrderRequest#isCancelled()})</li>
+	 * <li>the account has assets available to sell (via
+	 * {@link TradingManager#hasPosition(Candle, boolean, boolean, boolean)} )</li>
+	 * <li>none of the associated strategy monitors (from {@link #monitors()}
+	 * produce {@code false} upon invoking
+	 * {@link StrategyMonitor#allowExit(Trade)};</li>
+	 * <li>the {@link OrderRequest} processed by the {@link OrderManager} associated
+	 * with the symbol is not cancelled (i.e.
+	 * {@link OrderRequest#isCancelled()})</li>
 	 * </ol>
-	 * After the {@link Order} is placed in the {@link Exchange} this {@code Trader} will
-	 * holds the trade information and updates statistics on every tick received. If one of the strategy monitors returns
-	 * {@code false} for {@link StrategyMonitor#allowMixedStrategies()}, then only signals that come from
-	 * the same {@link Strategy} that generated the latest trade will be accepted.</li>
-	 * <li>signal = {@code NEUTRAL}: Will simply update the statistics of any open trades.</li>
+	 * After the {@link Order} is placed in the {@link Exchange} this {@code Trader}
+	 * will holds the trade information and updates statistics on every tick
+	 * received. If one of the strategy monitors returns {@code false} for
+	 * {@link StrategyMonitor#allowMixedStrategies()}, then only signals that come
+	 * from the same {@link Strategy} that generated the latest trade will be
+	 * accepted.</li>
+	 * <li>signal = {@code NEUTRAL}: Will simply update the statistics of any open
+	 * trades.</li>
 	 * </ul>
-	 * When there is a trade open, regardless of the signal received, all strategy monitors (from
-	 * {@link #monitors()} will have their {@link StrategyMonitor#handleStop(Trade, Signal, Strategy)} method called
-	 * to determine whether or not to exit the trade. If any one of these calls return
-	 * an exit message, the assets will be sold, {@link Trade#stopped()} will evaluate to {@code true} and {@link Trade#exitReason()}
-	 * will return the reason for exiting the trade.
+	 * When there is a trade open, regardless of the signal received, all strategy
+	 * monitors (from {@link #monitors()} will have their
+	 * {@link StrategyMonitor#handleStop(Trade, Signal, Strategy)} method called to
+	 * determine whether or not to exit the trade. If any one of these calls return
+	 * an exit message, the assets will be sold, {@link Trade#stopped()} will
+	 * evaluate to {@code true} and {@link Trade#exitReason()} will return the
+	 * reason for exiting the trade.
 	 *
-	 * @param candle   the latest candle received for the symbol traded by this {@code Trader}
-	 * @param signal   the signal generated by the given strategy after receiving the given candle
+	 * @param candle   the latest candle received for the symbol traded by this
+	 *                 {@code Trader}
+	 * @param signal   the signal generated by the given strategy after receiving
+	 *                 the given candle
 	 * @param strategy the strategy that originated the signal
 	 *
-	 * @return a signal indicating the action taken by this {@code Trader}, i.e. {@code BUY} if it bought assets,
+	 * @return a signal indicating the action taken by this {@code Trader}, i.e.
+	 *         {@code BUY} if it bought assets,
 	 */
 	public void trade(Candle candle, Signal signal, Strategy strategy) {
 		latestCandle = candle;
@@ -174,13 +194,13 @@ public class Trader {
 			if (isShort && trade.isShort()) {
 				bought |= exit(trade, candle, strategy, "Buy signal");
 			} else if (isLong && trade.isLong()) {
-				bought |= buy(LONG, candle, strategy); //increment position on existing trade
+				bought |= buy(LONG, candle, strategy); // increment position on existing trade
 			}
 		}
 
 		if (!bought) {
 			if (isLong) {
-				buy(LONG, candle, strategy); //opens new trade. Can only go long here.
+				buy(LONG, candle, strategy); // opens new trade. Can only go long here.
 			}
 			if (isShort) {
 				boolean hasShortPosition = tradingManager.hasPosition(candle, false, false, true);
@@ -263,7 +283,9 @@ public class Trader {
 
 	private StrategyMonitor[] createStrategyMonitors(Set<Object> allInstances) {
 		NewInstances<StrategyMonitor> monitorProvider = tradingManager.getAccount().configuration().monitors();
-		StrategyMonitor[] out = monitorProvider == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters, monitorProvider, "StrategyMonitor", false, allInstances);
+		StrategyMonitor[] out = monitorProvider == null ? new StrategyMonitor[0]
+				: getInstances(tradingManager.getSymbol(), parameters, monitorProvider, "StrategyMonitor", false,
+						allInstances);
 
 		for (int i = 0; i < out.length; i++) {
 			out[i].setTrader(this);
@@ -276,7 +298,8 @@ public class Trader {
 	}
 
 	boolean isShort(Strategy strategy) {
-		return tradingManager.canShortSell() && (strategy == null || (strategy.tradeSide() == SHORT || strategy.tradeSide() == null));
+		return tradingManager.canShortSell()
+				&& (strategy == null || (strategy.tradeSide() == SHORT || strategy.tradeSide() == null));
 	}
 
 	private double prepareTrade(Trade.Side side, Candle candle, Strategy strategy) {
@@ -292,31 +315,39 @@ public class Trader {
 			for (Trade trade : trades) {
 				if (trade.tryingToExit() && ((trade.isLong() && isLong) || (trade.isShort() && isShort))) {
 					if (isLong) {
-						log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
+						log.trace("Discarding buy of {} @ {}: attempting to sell current {} units",
+								tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
 					} else {
-						log.trace("Discarding short sell of {} @ {}: attempting to buy more", tradingManager.getSymbol(), candle.close);
+						log.trace("Discarding short sell of {} @ {}: attempting to buy more",
+								tradingManager.getSymbol(), candle.close);
 					}
 					return -1.0;
 				}
 			}
 		}
 
-		if ((isLong && tradingManager.waitingForBuyOrderToFill()) || (isShort && tradingManager.waitingForSellOrderToFill())) {
+		if ((isLong && tradingManager.waitingForBuyOrderToFill())
+				|| (isShort && tradingManager.waitingForSellOrderToFill())) {
 			tradingManager.cancelStaleOrdersFor(side, this);
-			if ((isLong && tradingManager.waitingForBuyOrderToFill()) || (isShort && tradingManager.waitingForSellOrderToFill())) {
+			if ((isLong && tradingManager.waitingForBuyOrderToFill())
+					|| (isShort && tradingManager.waitingForSellOrderToFill())) {
 				if (isLong) {
-					log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
+					log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled",
+							tradingManager.getSymbol(), candle.close);
 				} else {
-					log.trace("Discarding short sell of {} @ {}: got sell order waiting to be filled", tradingManager.getSymbol(), candle.close);
+					log.trace("Discarding short sell of {} @ {}: got sell order waiting to be filled",
+							tradingManager.getSymbol(), candle.close);
 				}
 				return -1.0;
 			}
 		}
 		if ((isLong && tradingManager.isBuyLocked()) || (isShort && tradingManager.isShortSellLocked())) {
 			if (isLong) {
-				log.trace("Discarding buy of {} @ {}: purchase order already being processed", tradingManager.getSymbol(), candle.close);
+				log.trace("Discarding buy of {} @ {}: purchase order already being processed",
+						tradingManager.getSymbol(), candle.close);
 			} else {
-				log.trace("Discarding short sell of {} @ {}: sell order already being processed", tradingManager.getSymbol(), candle.close);
+				log.trace("Discarding short sell of {} @ {}: sell order already being processed",
+						tradingManager.getSymbol(), candle.close);
 			}
 			return -1.0;
 		}
@@ -334,9 +365,11 @@ public class Trader {
 					amountToSpend = tradingManager.allocateFunds(side);
 					if (amountToSpend <= minimum) {
 						if (isLong) {
-							log.trace("Discarding buy of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
+							log.trace("Discarding buy of {} @ {}: not enough funds to allocate (${})", symbol(),
+									candle.close, tradingManager.getCash());
 						} else {
-							log.trace("Discarding short selling of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
+							log.trace("Discarding short selling of {} @ {}: not enough funds to allocate (${})",
+									symbol(), candle.close, tradingManager.getCash());
 						}
 						return amountToSpend;
 					}
@@ -358,7 +391,6 @@ public class Trader {
 		}
 		return false;
 	}
-
 
 	private boolean buy(Trade.Side tradeSide, Candle candle, Strategy strategy) {
 		Order order = null;
@@ -398,7 +430,6 @@ public class Trader {
 			quantity = tradingManager.getAssets();
 		}
 
-
 		Order order = tradingManager.sell(quantity, trade.getSide());
 		if (order != null) {
 			processOrder(trade, order, strategy, reason);
@@ -412,7 +443,8 @@ public class Trader {
 		BigDecimal shortToCover = tradingManager.getBalance(assetSymbol()).getShorted();
 		if (shortToCover.compareTo(BigDecimal.ZERO) > 0) {
 			if (shortToCover.doubleValue() * trade.lastClosingPrice() > reserveFunds.doubleValue()) {
-				log.warn("Not enough funds in margin reserve to cover short of {} {} @ {} {} per unit", assetSymbol(), shortToCover, reserveFunds, fundSymbol());
+				log.warn("Not enough funds in margin reserve to cover short of {} {} @ {} {} per unit", assetSymbol(),
+						shortToCover, reserveFunds, fundSymbol());
 			}
 
 			Order order = tradingManager.buy(shortToCover.doubleValue(), SHORT);
@@ -423,7 +455,6 @@ public class Trader {
 		}
 		return false;
 	}
-
 
 	private void cancelOpenBuyOrders(Strategy strategy) {
 		for (Trade trade : trades) {
@@ -440,14 +471,14 @@ public class Trader {
 	}
 
 	/**
-	 * Returns the estimated total funds in the reference currency (given by {@link com.univocity.trader.config.AccountConfiguration#referenceCurrency()})
+	 * Returns the estimated total funds in the reference currency (given by
+	 * {@link com.univocity.trader.config.AccountConfiguration#referenceCurrency()})
 	 *
 	 * @return the estimate net worth of the account.
 	 */
 	public double holdings() {
 		return tradingManager.getTotalFundsInReferenceCurrency();
 	}
-
 
 	/**
 	 * Return the latest candle received by this {@code trader}
@@ -542,7 +573,6 @@ public class Trader {
 		return trade;
 	}
 
-
 	private Trade processSellOrder(Trade trade, Order order, Strategy strategy, String reason) {
 		if (trade == null) {
 			for (Trade t : trades) {
@@ -569,7 +599,7 @@ public class Trader {
 			} else {
 				trade = Trade.createPlaceholder(-1, this, order.getTradeSide());
 				trade.decreasePosition(order, "Exit long position");
-				//could be manual
+				// could be manual
 				log.warn("Received a sell order without an open trade: " + order);
 			}
 		}
@@ -577,19 +607,36 @@ public class Trader {
 	}
 
 	/**
-	 * Tries to exit a current trade to immediately buy into another instrument. In cases where it's supported, such as currencies and crypto, a "direct" switch will be executed to save trading fees;
-	 * i.e. if there's an open position on BTCUSDT, and the exit symbol is ETH, a single SELL order of symbol BTCETH will be executed, selling BTC to open a position in ETH. If no compatible trading
-	 * symbols exists, or the market operates just with stocks, the current position will be sold in order to make funds available for buying into the next instrument. Using the previous example, BTC
-	 * would be sold back into USDT, and another BUY order would be made using the USDT funds to buy ETH. If any call {@link StrategyMonitor#allowTradeSwitch(Trade, String, Candle, String)} evaluates to
-	 * {@code false}, the "switch" operation will be cancelled, otherwise the current open position will be closed to release funds for the trader to BUY into the exitSymbol.
+	 * Tries to exit a current trade to immediately buy into another instrument. In
+	 * cases where it's supported, such as currencies and crypto, a "direct" switch
+	 * will be executed to save trading fees; i.e. if there's an open position on
+	 * BTCUSDT, and the exit symbol is ETH, a single SELL order of symbol BTCETH
+	 * will be executed, selling BTC to open a position in ETH. If no compatible
+	 * trading symbols exists, or the market operates just with stocks, the current
+	 * position will be sold in order to make funds available for buying into the
+	 * next instrument. Using the previous example, BTC would be sold back into
+	 * USDT, and another BUY order would be made using the USDT funds to buy ETH. If
+	 * any call
+	 * {@link StrategyMonitor#allowTradeSwitch(Trade, String, Candle, String)}
+	 * evaluates to {@code false}, the "switch" operation will be cancelled,
+	 * otherwise the current open position will be closed to release funds for the
+	 * trader to BUY into the exitSymbol.
 	 *
-	 * @param exitSymbol   the new instrument to be bought into using the funds allocated by the current open order (in {@link #symbol()}.
-	 * @param candle       the latest candle of the exitSymbol that's been received from the exchange.
-	 * @param candleTicker the ticker of the received candle (not the same as {@link #symbol()}).
-	 * @param strategy     the strategy that identified an opportunity to open a position on the given exitSymbol.
+	 * @param exitSymbol   the new instrument to be bought into using the funds
+	 *                     allocated by the current open order (in
+	 *                     {@link #symbol()}.
+	 * @param candle       the latest candle of the exitSymbol that's been received
+	 *                     from the exchange.
+	 * @param candleTicker the ticker of the received candle (not the same as
+	 *                     {@link #symbol()}).
+	 * @param strategy     the strategy that identified an opportunity to open a
+	 *                     position on the given exitSymbol.
 	 *
-	 * @return a flag indicating whether an order for a direct switch was opened. If {@code true}, the trader won't try to create a BUY order for the given exitSymbol. When {@code false} the trader
-	 * will try to buy into the exitSymbol regardless of whether the current position was closed or not.
+	 * @return a flag indicating whether an order for a direct switch was opened. If
+	 *         {@code true}, the trader won't try to create a BUY order for the
+	 *         given exitSymbol. When {@code false} the trader will try to buy into
+	 *         the exitSymbol regardless of whether the current position was closed
+	 *         or not.
 	 */
 	boolean switchTo(String exitSymbol, Candle candle, String candleTicker, Strategy strategy) {
 		try {
@@ -607,14 +654,17 @@ public class Trader {
 		} catch (Exception e) {
 			log.error("Could not exit trade from " + tradingManager.assetSymbol + " to " + exitSymbol, e);
 		}
-		// could not sell directly to exit symbol. Might have sold or did not sell at all. In either case caller will try to BUY.
+		// could not sell directly to exit symbol. Might have sold or did not sell at
+		// all. In either case caller will try to BUY.
 		return false;
 	}
 
 	/**
-	 * Returns the last closing price of the symbol being traded by this {@code Trader}
+	 * Returns the last closing price of the symbol being traded by this
+	 * {@code Trader}
 	 *
-	 * @return the {@link Candle#close} of the latest candle (returned via {@link #latestCandle()}.
+	 * @return the {@link Candle#close} of the latest candle (returned via
+	 *         {@link #latestCandle()}.
 	 */
 	public double lastClosingPrice() {
 		if (latestCandle == null) {
@@ -729,8 +779,9 @@ public class Trader {
 	}
 
 	/**
-	 * Returns all {@link StrategyMonitor} instances built in the constructor of this class, which will be used by
-	 * an {@link Engine} that processes candles for the symbol traded by this {@code Trader}
+	 * Returns all {@link StrategyMonitor} instances built in the constructor of
+	 * this class, which will be used by an {@link Engine} that processes candles
+	 * for the symbol traded by this {@code Trader}
 	 *
 	 * @return all strategy monitors used by this {@code Trader}.
 	 */

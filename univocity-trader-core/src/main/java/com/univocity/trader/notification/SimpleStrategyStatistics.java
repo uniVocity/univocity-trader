@@ -29,9 +29,8 @@ public class SimpleStrategyStatistics implements OrderListener {
 	}
 
 	private void register(Map<String, List<double[]>> returns, Trade trade) {
-		returns
-				.computeIfAbsent(trader.parameters().toString(), s -> new ArrayList<>())
-				.add(new double[]{trade.actualProfitLoss(), trade.actualProfitLossPct()});
+		returns.computeIfAbsent(trader.parameters().toString(), s -> new ArrayList<>())
+				.add(new double[] { trade.actualProfitLoss(), trade.actualProfitLossPct() });
 	}
 
 	@Override
@@ -90,16 +89,19 @@ public class SimpleStrategyStatistics implements OrderListener {
 			String side;
 			if (returns == longReturns) {
 				side = "";
-				System.out.println("===[ " + (symbol == null ? "" : symbol) + " results using parameters: " + e.getKey() + " ]===");
+				System.out.println("===[ " + (symbol == null ? "" : symbol) + " results using parameters: " + e.getKey()
+						+ " ]===");
 			} else {
 				side = "short trades";
 			}
 
 			double pl = totalPositiveAmount + totalNegativeAmount;
-			System.out.println("Negative " + side + ": " + negativeCount + " trades, avg. loss: " + printAmountAndPercentage(averageLossAmount, averageLossPct));
-			System.out.println("Positive " + side + ": " + positiveCount + " trades, avg. gain: " + printAmountAndPercentage(averageGainAmount, averageGainPct));
-			System.out.println("Returns  " + side + ": " + printAmountAndPercentage(pl, (pl / initialInvestment) * 100));
-
+			System.out.println("Negative " + side + ": " + negativeCount + " trades, avg. loss: "
+					+ printAmountAndPercentage(averageLossAmount, averageLossPct));
+			System.out.println("Positive " + side + ": " + positiveCount + " trades, avg. gain: "
+					+ printAmountAndPercentage(averageGainAmount, averageGainPct));
+			System.out
+					.println("Returns  " + side + ": " + printAmountAndPercentage(pl, (pl / initialInvestment) * 100));
 
 			if (returns == shortReturns) {
 				if (symbol != null) {
@@ -127,4 +129,3 @@ public class SimpleStrategyStatistics implements OrderListener {
 		printTradeStats();
 	}
 }
-

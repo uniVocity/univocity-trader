@@ -5,7 +5,6 @@ import com.univocity.trader.chart.charts.*;
 
 public class CandleChartController extends AbstractFilledBarChartController<CandleChart> {
 
-
 	@Label("Candle width")
 	@SpinnerBound(maximum = 20, minimum = 3, increment = 2)
 	private int barWidth = 1;
@@ -14,7 +13,6 @@ public class CandleChartController extends AbstractFilledBarChartController<Cand
 		super(chart);
 		setBarWidth(6);
 	}
-
 
 	@Override
 	public int getBarWidth() {

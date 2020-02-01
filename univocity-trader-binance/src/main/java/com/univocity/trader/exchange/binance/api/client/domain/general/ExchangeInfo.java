@@ -61,18 +61,14 @@ public class ExchangeInfo {
 	 * @return symbol exchange information
 	 */
 	public SymbolInfo getSymbolInfo(String symbol) {
-		return symbols.stream().filter(symbolInfo -> symbolInfo.getSymbol().equals(symbol))
-				.findFirst()
+		return symbols.stream().filter(symbolInfo -> symbolInfo.getSymbol().equals(symbol)).findFirst()
 				.orElseThrow(() -> new BinanceApiException("Unable to obtain information for symbol " + symbol));
 	}
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("timezone", timezone)
-				.append("serverTime", serverTime)
-				.append("rateLimits", rateLimits)
-				.append("symbols", symbols)
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("timezone", timezone)
+				.append("serverTime", serverTime).append("rateLimits", rateLimits).append("symbols", symbols)
 				.toString();
 	}
 }

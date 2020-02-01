@@ -23,7 +23,6 @@ public class RSI extends SingleValueIndicator {
 		this.averageLossIndicator = new ModifiedMovingAverage(length, interval, this::calculateLoss);
 	}
 
-
 	private double calculateGain(Candle c) {
 		double current = c.close;
 		double previous = prev.close;
@@ -43,7 +42,6 @@ public class RSI extends SingleValueIndicator {
 		}
 		return 0.0;
 	}
-
 
 	@Override
 	protected boolean process(Candle candle, double v, boolean updating) {
@@ -70,7 +68,7 @@ public class RSI extends SingleValueIndicator {
 			this.value = 100.0 - (100.0 / (1.0 + relativeStrength));
 		}
 
-		if(!updating) {
+		if (!updating) {
 			prev = candle;
 		}
 		return true;
@@ -83,6 +81,6 @@ public class RSI extends SingleValueIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{averageLossIndicator, averageGainIndicator};
+		return new Indicator[] { averageLossIndicator, averageGainIndicator };
 	}
 }

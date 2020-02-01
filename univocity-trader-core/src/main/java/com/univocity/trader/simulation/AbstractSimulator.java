@@ -47,7 +47,8 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		var allPairs = populateAllPairs();
 		var allReferenceCurrencies = populateAllReferenceCurrencies();
 		if (!allPairs.containsKey(symbol) && !allReferenceCurrencies.contains(symbol)) {
-			throw new IllegalArgumentException("Unknown symbol '" + symbol + "'. Available symbols are: " + allPairs.keySet() + " and reference currencies: " + allReferenceCurrencies);
+			throw new IllegalArgumentException("Unknown symbol '" + symbol + "'. Available symbols are: "
+					+ allPairs.keySet() + " and reference currencies: " + allReferenceCurrencies);
 		}
 
 		symbolInformation.put(symbol, info);
@@ -75,7 +76,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 	protected void resetBalances() {
 		for (AccountManager account : accounts()) {
 			account.resetBalances();
-			double[] total = new double[]{0};
+			double[] total = new double[] { 0 };
 			simulation.initialAmounts().forEach((symbol, amount) -> {
 				if (symbol.equals("")) {
 					symbol = account.configuration().referenceCurrency();
@@ -145,7 +146,8 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		try {
 			executeSimulation(parameters);
 		} finally {
-			System.out.println("Total simulation time: " + TimeInterval.getFormattedDuration(System.currentTimeMillis() - start));
+			System.out.println(
+					"Total simulation time: " + TimeInterval.getFormattedDuration(System.currentTimeMillis() - start));
 		}
 	}
 

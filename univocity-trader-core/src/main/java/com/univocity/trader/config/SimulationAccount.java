@@ -6,5 +6,4 @@ public class SimulationAccount extends AccountConfiguration<SimulationAccount> {
 		super(id);
 	}
 
-
 }

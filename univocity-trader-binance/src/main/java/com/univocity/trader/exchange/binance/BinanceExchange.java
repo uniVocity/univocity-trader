@@ -32,7 +32,6 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
 	private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536);
 
-
 	@Override
 	public BinanceClientAccount connectToAccount(Account clientConfiguration) {
 		return new BinanceClientAccount(clientConfiguration.apiKey(), new String(clientConfiguration.secret()), this);
@@ -40,7 +39,8 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	@Override
 	public Candlestick getLatestTick(String symbol, TimeInterval interval) {
-		List<Candlestick> candles = restClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval), 1, null, null);
+		List<Candlestick> candles = restClient().getCandlestickBars(symbol,
+				CandlestickInterval.fromTimeInterval(interval), 1, null, null);
 		if (candles != null && candles.size() > 0) {
 			return candles.get(0);
 		}
@@ -50,41 +50,34 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	@Override
 	public IncomingCandles<Candlestick> getLatestTicks(String symbol, TimeInterval interval) {
 		try {
-			return IncomingCandles.fromCollection(restClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval)));
+			return IncomingCandles.fromCollection(
+					restClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval)));
 		} catch (Exception e) {
 			throw new IllegalStateException("Error returnning latest ticks of " + symbol, e);
 		}
 	}
 
 	@Override
-	public IncomingCandles<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
-		return IncomingCandles.fromCollection(restClient().getCandlestickBars(symbol, CandlestickInterval.fromTimeInterval(interval), 1000, startTime, endTime));
+	public IncomingCandles<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime,
+			long endTime) {
+		return IncomingCandles.fromCollection(restClient().getCandlestickBars(symbol,
+				CandlestickInterval.fromTimeInterval(interval), 1000, startTime, endTime));
 	}
 
 	@Override
 	public Candle generateCandle(Candlestick exchangeCandle) {
-		return new Candle(
-				exchangeCandle.getOpenTime(),
-				exchangeCandle.getCloseTime(),
-				Double.parseDouble(exchangeCandle.getOpen()),
-				Double.parseDouble(exchangeCandle.getHigh()),
-				Double.parseDouble(exchangeCandle.getLow()),
-				Double.parseDouble(exchangeCandle.getClose()),
-				Double.parseDouble(exchangeCandle.getVolume())
-		);
+		return new Candle(exchangeCandle.getOpenTime(), exchangeCandle.getCloseTime(),
+				Double.parseDouble(exchangeCandle.getOpen()), Double.parseDouble(exchangeCandle.getHigh()),
+				Double.parseDouble(exchangeCandle.getLow()), Double.parseDouble(exchangeCandle.getClose()),
+				Double.parseDouble(exchangeCandle.getVolume()));
 	}
 
 	@Override
 	public PreciseCandle generatePreciseCandle(Candlestick exchangeCandle) {
-		return new PreciseCandle(
-				exchangeCandle.getOpenTime(),
-				exchangeCandle.getCloseTime(),
-				new BigDecimal(exchangeCandle.getOpen()),
-				new BigDecimal(exchangeCandle.getHigh()),
-				new BigDecimal(exchangeCandle.getLow()),
-				new BigDecimal(exchangeCandle.getClose()),
-				new BigDecimal(exchangeCandle.getVolume())
-		);
+		return new PreciseCandle(exchangeCandle.getOpenTime(), exchangeCandle.getCloseTime(),
+				new BigDecimal(exchangeCandle.getOpen()), new BigDecimal(exchangeCandle.getHigh()),
+				new BigDecimal(exchangeCandle.getLow()), new BigDecimal(exchangeCandle.getClose()),
+				new BigDecimal(exchangeCandle.getVolume()));
 	}
 
 	@Override
@@ -117,7 +110,8 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	@Override
 	public Map<String, Double> getLatestPrices() {
-		return restClient().getAllPrices().stream().collect(Collectors.toMap(TickerPrice::getSymbol, TickerPrice::getPriceAmount));
+		return restClient().getAllPrices().stream()
+				.collect(Collectors.toMap(TickerPrice::getSymbol, TickerPrice::getPriceAmount));
 	}
 
 	@Override
@@ -133,15 +127,16 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	@Override
 	public Map<String, SymbolInformation> getSymbolInformation() {
 		if (symbolInformation.isEmpty()) {
-			Map<String, SymbolInfo> symbols = restClient().getExchangeInfo().getSymbols().stream().collect(Collectors.toMap(SymbolInfo::getSymbol, s -> s));
+			Map<String, SymbolInfo> symbols = restClient().getExchangeInfo().getSymbols().stream()
+					.collect(Collectors.toMap(SymbolInfo::getSymbol, s -> s));
 
 			symbols.forEach((symbol, symbolInfo) -> {
 				SymbolFilter lotSize = symbolInfo.getSymbolFilter(FilterType.LOT_SIZE);
-				String step = lotSize.getStepSize(); //comes as: 0.01000000
+				String step = lotSize.getStepSize(); // comes as: 0.01000000
 				int quantityDecimalPlaces = step.indexOf('1') - 1;
 
 				SymbolFilter tickSize = symbolInfo.getSymbolFilter(FilterType.PRICE_FILTER);
-				String tickStep = tickSize.getTickSize(); //comes as: 0.01000000
+				String tickStep = tickSize.getTickSize(); // comes as: 0.01000000
 				int priceDecimalPlaces = tickStep.indexOf('1') - 1;
 				BigDecimal stepSize = new BigDecimal(step);
 
@@ -158,7 +153,6 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 		}
 		return symbolInformation;
 	}
-
 
 	private BinanceApiWebSocketClient socketClient() {
 		if (socketClient == null) {
@@ -181,7 +175,7 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 		return 1000;
 	}
 
-	//	@Override
+	// @Override
 //	public boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
 //		return symbolInformation.containsKey(currentAssetSymbol + targetAssetSymbol);
 //	}

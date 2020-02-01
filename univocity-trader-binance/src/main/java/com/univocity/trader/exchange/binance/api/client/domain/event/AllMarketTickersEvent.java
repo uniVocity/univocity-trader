@@ -265,30 +265,19 @@ public class AllMarketTickersEvent {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("eventType", eventType)
-				.append("eventTime", eventTime)
-				.append("symbol", symbol)
-				.append("priceChange", priceChange)
-				.append("priceChangePercent", priceChangePercent)
-				.append("weightedAveragePrice", weightedAveragePrice)
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("eventType", eventType)
+				.append("eventTime", eventTime).append("symbol", symbol).append("priceChange", priceChange)
+				.append("priceChangePercent", priceChangePercent).append("weightedAveragePrice", weightedAveragePrice)
 				.append("previousDaysClosePrice", previousDaysClosePrice)
 				.append("currentDaysClosePrice", currentDaysClosePrice)
-				.append("closeTradesQuantity", closeTradesQuantity)
-				.append("bestBidPrice", bestBidPrice)
-				.append("bestBidQuantity", bestBidQuantity)
-				.append("bestAskPrice", bestAskPrice)
-				.append("bestAskQuantity", bestAskQuantity)
-				.append("openPrice", openPrice)
-				.append("highPrice", highPrice)
-				.append("lowPrice", lowPrice)
+				.append("closeTradesQuantity", closeTradesQuantity).append("bestBidPrice", bestBidPrice)
+				.append("bestBidQuantity", bestBidQuantity).append("bestAskPrice", bestAskPrice)
+				.append("bestAskQuantity", bestAskQuantity).append("openPrice", openPrice)
+				.append("highPrice", highPrice).append("lowPrice", lowPrice)
 				.append("totalTradedBaseAssetVolume", totalTradedBaseAssetVolume)
 				.append("totalTradedQuoteAssetVolume", totalTradedQuoteAssetVolume)
-				.append("statisticesOpenTime", statisticesOpenTime)
-				.append("statisticesCloseTime", statisticesCloseTime)
-				.append("firstTradeId", firstTradeId)
-				.append("lastTradeId", lastTradeId)
-				.append("totalNumberOfTrades", totalNumberOfTrades)
-				.toString();
+				.append("statisticesOpenTime", statisticesOpenTime).append("statisticesCloseTime", statisticesCloseTime)
+				.append("firstTradeId", firstTradeId).append("lastTradeId", lastTradeId)
+				.append("totalNumberOfTrades", totalNumberOfTrades).toString();
 	}
 }

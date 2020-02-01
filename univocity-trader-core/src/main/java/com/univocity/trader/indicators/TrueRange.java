@@ -5,7 +5,8 @@ import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class TrueRange extends SingleValueCalculationIndicator {
 
@@ -36,6 +37,6 @@ public class TrueRange extends SingleValueCalculationIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

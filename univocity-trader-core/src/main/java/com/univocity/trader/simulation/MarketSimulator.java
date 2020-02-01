@@ -16,9 +16,11 @@ import java.util.function.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public abstract class MarketSimulator<C extends Configuration<C, A>, A extends AccountConfiguration<A>> extends AbstractSimulator<C, A> {
+public abstract class MarketSimulator<C extends Configuration<C, A>, A extends AccountConfiguration<A>>
+		extends AbstractSimulator<C, A> {
 
 	private static final Logger log = LoggerFactory.getLogger(MarketSimulator.class);
 
@@ -30,7 +32,6 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		super(configuration);
 		this.exchangeSupplier = exchangeSupplier;
 	}
-
 
 	private void initialize() {
 		resetBalances();
@@ -65,7 +66,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			String assetSymbol = pair[0];
 			String fundSymbol = pair[1];
 
-			if(assetSymbol.equals(fundSymbol)){
+			if (assetSymbol.equals(fundSymbol)) {
 				return;
 			}
 
@@ -81,9 +82,11 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 				AccountManager accountManager = accountsTradingSymbol.get(i);
 				SimulatedExchange exchange = new SimulatedExchange(accountManager);
 				exchange.setSymbolInformation(this.symbolInformation);
-				SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol());
+				SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange,
+						accountManager.getReferenceCurrencySymbol());
 
-				TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, accountManager, assetSymbol, fundSymbol, parameters);
+				TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, accountManager,
+						assetSymbol, fundSymbol, parameters);
 
 				Engine engine = new Engine(tradingManager, parameters, allInstances);
 				engines[i] = engine;
@@ -107,9 +110,10 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			activeQueries++;
 			boolean loadAllDataFirst = simulation.cacheCandles() || activeQueries > simulation.activeQueryLimit();
 
-			futures.put(symbol, CompletableFuture.supplyAsync(
-					() -> candleRepository.iterate(symbol, start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor)
-			);
+			futures.put(symbol,
+					CompletableFuture.supplyAsync(() -> candleRepository.iterate(symbol,
+							start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst),
+							executor));
 		}
 
 		futures.forEach((symbol, candles) -> {
@@ -120,7 +124,8 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			}
 		});
 
-		//TODO: allow the original randomized candle processing to happen via configuration.
+		// TODO: allow the original randomized candle processing to happen via
+		// configuration.
 		final var sortedMarkets = new TreeMap<>(markets);
 		MarketReader[] readers = buildMarketReaderList(sortedMarkets, symbolHandlers);
 
@@ -152,7 +157,8 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 							Candle next = reader.input.nextElement();
 							if (next != null) {
 								reader.pending = next;
-								if (!resetClock && next.openTime + 1 >= clock && next.openTime <= clock + MINUTE.ms - 1) {
+								if (!resetClock && next.openTime + 1 >= clock
+										&& next.openTime <= clock + MINUTE.ms - 1) {
 									resetClock = true;
 								}
 							}
@@ -173,11 +179,13 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			}
 		}
 		if (candlesProcessed == 0) {
-			throw new IllegalStateException("No candles processed in real time trading simulation from " + start + " to " + end);
+			throw new IllegalStateException(
+					"No candles processed in real time trading simulation from " + start + " to " + end);
 		}
 	}
 
-	private MarketReader[] buildMarketReaderList(Map<String, Enumeration<Candle>> markets, Map<String, Engine[]> symbolHandlers) {
+	private MarketReader[] buildMarketReaderList(Map<String, Enumeration<Candle>> markets,
+			Map<String, Engine[]> symbolHandlers) {
 		List<MarketReader> out = new ArrayList<>();
 
 		for (Map.Entry<String, Enumeration<Candle>> e : markets.entrySet()) {
@@ -207,7 +215,8 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			}
 			System.out.println(" | -------");
 			System.out.print(account.toString());
-			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
+			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " "
+					+ account.getReferenceCurrencySymbol());
 
 			account.getAllTradingManagers().forEach(t -> t.getTrader().notifySimulationEnd());
 		}

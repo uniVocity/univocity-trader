@@ -9,55 +9,65 @@ import java.math.*;
 /**
  * An {@link OrderFillEmulator} that emulates slippage.
  *
- * Considers the {@link Candle#volume} to calculate how much of the {@link Order#getQuantity()} will be filled,
- * potentially leaving the order {@code PARTIALLY_FILLED} until another suitable candle is found.
+ * Considers the {@link Candle#volume} to calculate how much of the
+ * {@link Order#getQuantity()} will be filled, potentially leaving the order
+ * {@code PARTIALLY_FILLED} until another suitable candle is found.
  *
- * The calculation to determine how many units will be filled uses the {@link Candle#volume} and spreads it evenly
- * through the pips between {@link Candle#low} and {@link Candle#high}.
+ * The calculation to determine how many units will be filled uses the
+ * {@link Candle#volume} and spreads it evenly through the pips between
+ * {@link Candle#low} and {@link Candle#high}.
  *
- * e.g. if {@code low = $1.25}, {@code high = $1.35} and {@code volume = 400}, 40 units will be filled
- * for each $0.01 change in price (volume per pip).
+ * e.g. if {@code low = $1.25}, {@code high = $1.35} and {@code volume = 400},
+ * 40 units will be filled for each $0.01 change in price (volume per pip).
  *
- * If the {@link Order.Type} is {@code LIMIT}, and the order price is within the high/low of a future candle,
+ * If the {@link Order.Type} is {@code LIMIT}, and the order price is within the
+ * high/low of a future candle,
  * <ul>
- *     <li>{@code LIMIT BUY} orders will start from the {@link Candle#open} price, decrementing one pip towards the
- *         {@link Candle#low} and accumulating the volume per pip each time until {@link Order#getRemainingQuantity()}
- *         becomes zero or {@link Candle#low} is reached. {@link Order#getPrice()} will not be changed unless the
- *         {@link Candle#high} is less than {@link Order#getPrice()}.
- *     </li>
- *     <li>{@code LIMIT SELL} orders will start from the {@link Candle#open} price, incrementing one pip towards the
- *         {@link Candle#high} and accumulating the volume per pip each time until {@link Order#getRemainingQuantity()}
- * 	       becomes zero or {@link Candle#high} is reached. {@link Order#getPrice()} will not be changed unless the
- *         {@link Candle#low} is greater than {@link Order#getPrice()}.
- * 	     </li>
+ * <li>{@code LIMIT BUY} orders will start from the {@link Candle#open} price,
+ * decrementing one pip towards the {@link Candle#low} and accumulating the
+ * volume per pip each time until {@link Order#getRemainingQuantity()} becomes
+ * zero or {@link Candle#low} is reached. {@link Order#getPrice()} will not be
+ * changed unless the {@link Candle#high} is less than {@link Order#getPrice()}.
+ * </li>
+ * <li>{@code LIMIT SELL} orders will start from the {@link Candle#open} price,
+ * incrementing one pip towards the {@link Candle#high} and accumulating the
+ * volume per pip each time until {@link Order#getRemainingQuantity()} becomes
+ * zero or {@link Candle#high} is reached. {@link Order#getPrice()} will not be
+ * changed unless the {@link Candle#low} is greater than
+ * {@link Order#getPrice()}.</li>
  * </ul>
  *
- * If the {@link Order.Type} is {@code MARKET}, the filling process will start from the {@link Candle#open} price
- * of the next candle, and calculate the average price for the volume accumulated.
+ * If the {@link Order.Type} is {@code MARKET}, the filling process will start
+ * from the {@link Candle#open} price of the next candle, and calculate the
+ * average price for the volume accumulated.
  * <ul>
- *     <li>{@code MARKET BUY} orders will start from the open, incrementally adding one pip to the price while
- *     accumulating the volume per pip each time until {@link Order#getRemainingQuantity()} becomes zero,
- *     regardless of the available {@link Candle#volume}.
+ * <li>{@code MARKET BUY} orders will start from the open, incrementally adding
+ * one pip to the price while accumulating the volume per pip each time until
+ * {@link Order#getRemainingQuantity()} becomes zero, regardless of the
+ * available {@link Candle#volume}.
  *
- *     The {@link Order#getPrice()} will modified to be the average price after each pip increase multiplied by
- *     the total traded volume. This average price will then be adjusted using the formula:
+ * The {@link Order#getPrice()} will modified to be the average price after each
+ * pip increase multiplied by the total traded volume. This average price will
+ * then be adjusted using the formula:
  *
- *     {@code averagePrice = (averagePrice + open + ((open + close + high) / 3.0)) / 3.0}
+ * {@code averagePrice = (averagePrice + open + ((open + close + high) / 3.0)) / 3.0}
  *
- *     Finally, if {@code averagePrice > high}, {@link Order#getPrice()} will be set to {@code high}
- *     </li>
+ * Finally, if {@code averagePrice > high}, {@link Order#getPrice()} will be set
+ * to {@code high}</li>
  *
- *     <li>{@code MARKET SELL} orders will start from the open, subtracting one pip from the price while
- *     accumulating the volume per pip each time until {@link Order#getRemainingQuantity()} becomes zero,
- *     regardless of the available {@link Candle#volume}.
+ * <li>{@code MARKET SELL} orders will start from the open, subtracting one pip
+ * from the price while accumulating the volume per pip each time until
+ * {@link Order#getRemainingQuantity()} becomes zero, regardless of the
+ * available {@link Candle#volume}.
  *
- *     The {@link Order#getPrice()} will modified to be the average price after each pip decrease multiplied by
- *     the total traded volume. This average price will then be adjusted using the formula:
+ * The {@link Order#getPrice()} will modified to be the average price after each
+ * pip decrease multiplied by the total traded volume. This average price will
+ * then be adjusted using the formula:
  *
- *     {@code averagePrice = (averagePrice + open + ((open + close + low) / 3.0)) / 3.0}
+ * {@code averagePrice = (averagePrice + open + ((open + close + low) / 3.0)) / 3.0}
  *
- *     Finally, if {@code averagePrice < low}, {@link Order#getPrice()} will be set to {@code low}
- * 	   </li>
+ * Finally, if {@code averagePrice < low}, {@link Order#getPrice()} will be set
+ * to {@code low}</li>
  * </ul>
  * {@code MARKET} orders will be always 100% filled based on the next candle.
  */
@@ -82,7 +92,8 @@ public class SlippageEmulator implements OrderFillEmulator {
 		double increment = 1.0 / multiplier;
 		double totalVolume = candle.volume;
 		if (totalVolume <= 0 && candle.isTick()) {
-			throw new IllegalStateException("Cannot emulate slippage on candles without volume information. Configure simulation to use `fillOrdersOnPriceMatch()` instead of `emulateSlippage()`.");
+			throw new IllegalStateException(
+					"Cannot emulate slippage on candles without volume information. Configure simulation to use `fillOrdersOnPriceMatch()` instead of `emulateSlippage()`.");
 		}
 
 		if (totalVolume == 0 && order.isMarket()) {
@@ -97,7 +108,7 @@ public class SlippageEmulator implements OrderFillEmulator {
 		double price = order.getPrice().doubleValue();
 		double high = candle.high;
 		double low = candle.low;
-		if (order.isMarket()) { //market order, let it run until order fills
+		if (order.isMarket()) { // market order, let it run until order fills
 			price = candle.open;
 			if (buying) {
 				low = Integer.MIN_VALUE;
@@ -135,7 +146,8 @@ public class SlippageEmulator implements OrderFillEmulator {
 
 			if (order.isMarket()) {
 				double averagePrice = totalPaid / tradedVolume;
-				averagePrice = (averagePrice + candle.open + ((candle.open + candle.close + (buying ? candle.high : candle.low)) / 3.0)) / 3.0;
+				averagePrice = (averagePrice + candle.open
+						+ ((candle.open + candle.close + (buying ? candle.high : candle.low)) / 3.0)) / 3.0;
 				if (buying && averagePrice > candle.high) {
 					if (candle.volume != 0) {
 						averagePrice = candle.high;
@@ -162,7 +174,8 @@ public class SlippageEmulator implements OrderFillEmulator {
 			if (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) > 0) {
 				int scale = Math.min(order.getQuantity().scale(), order.getExecutedQuantity().scale());
 
-				if (order.getExecutedQuantity().setScale(scale, RoundingMode.CEILING).compareTo(order.getQuantity().setScale(scale, RoundingMode.FLOOR)) >= 0) {
+				if (order.getExecutedQuantity().setScale(scale, RoundingMode.CEILING)
+						.compareTo(order.getQuantity().setScale(scale, RoundingMode.FLOOR)) >= 0) {
 					order.setStatus(Order.Status.FILLED);
 				} else {
 					order.setStatus(Order.Status.PARTIALLY_FILLED);
@@ -178,7 +191,8 @@ public class SlippageEmulator implements OrderFillEmulator {
 		double currentPrice = order.getPrice().doubleValue();
 		double currentExecuted = order.getExecutedQuantity().doubleValue();
 
-		double averagePrice = ((currentPrice * currentExecuted) + (price * tradedVolume)) / (currentExecuted + tradedVolume);
+		double averagePrice = ((currentPrice * currentExecuted) + (price * tradedVolume))
+				/ (currentExecuted + tradedVolume);
 
 		order.setPrice(BigDecimal.valueOf(averagePrice));
 	}

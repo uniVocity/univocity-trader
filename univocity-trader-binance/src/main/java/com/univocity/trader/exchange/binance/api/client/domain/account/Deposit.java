@@ -77,12 +77,8 @@ public class Deposit {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("amount", amount)
-				.append("asset", asset)
-				.append("insertTime", insertTime)
-				.append("txId", txId)
-				.append("status", status)
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("amount", amount)
+				.append("asset", asset).append("insertTime", insertTime).append("txId", txId).append("status", status)
 				.toString();
 	}
 }

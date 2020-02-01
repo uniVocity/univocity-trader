@@ -21,6 +21,4 @@ public abstract class DefaultConfiguration {
 		return account;
 	}
 
-
 }
-

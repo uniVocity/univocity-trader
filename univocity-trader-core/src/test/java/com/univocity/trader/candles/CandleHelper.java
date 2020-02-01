@@ -1,6 +1,5 @@
 package com.univocity.trader.candles;
 
-
 import com.univocity.trader.strategy.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
@@ -10,7 +9,6 @@ public class CandleHelper {
 	public static Candle newCandle() {
 		return newCandle(0, 0.0);
 	}
-
 
 	public static Candle newCandle(double amount) {
 		return newCandle(0, amount);
@@ -36,7 +34,8 @@ public class CandleHelper {
 		return newTick(openTime, closeTime, open, close, high, low, 0.0);
 	}
 
-	public static Candle newTick(long openTime, long closeTime, double open, double close, double high, double low, double volume) {
+	public static Candle newTick(long openTime, long closeTime, double open, double close, double high, double low,
+			double volume) {
 		return new Candle(openTime, closeTime, open, high, low, close, volume);
 	}
 

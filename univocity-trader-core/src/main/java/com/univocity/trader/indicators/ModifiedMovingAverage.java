@@ -7,7 +7,8 @@ import com.univocity.trader.strategy.*;
 import java.util.function.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class ModifiedMovingAverage extends SingleValueCalculationIndicator {
 
@@ -24,7 +25,7 @@ public class ModifiedMovingAverage extends SingleValueCalculationIndicator {
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
-		if(getAccumulationCount() == 0){
+		if (getAccumulationCount() == 0) {
 			return value;
 		}
 		return ((value - previousValue) * multiplier) + previousValue;
@@ -32,6 +33,6 @@ public class ModifiedMovingAverage extends SingleValueCalculationIndicator {
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

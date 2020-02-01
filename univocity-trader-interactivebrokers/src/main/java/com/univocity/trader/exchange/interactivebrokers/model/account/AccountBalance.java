@@ -12,11 +12,9 @@ public class AccountBalance {
 		accountValues.add(new AccountValue(key, value, currency, accountName));
 	}
 
-	public void updatePortfolio(Contract contract, double position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
-		entries.add(new PortfolioEntry(contract, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName));
+	public void updatePortfolio(Contract contract, double position, double marketPrice, double marketValue,
+			double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
+		entries.add(new PortfolioEntry(contract, position, marketPrice, marketValue, averageCost, unrealizedPNL,
+				realizedPNL, accountName));
 	}
 }
-
-
-
-

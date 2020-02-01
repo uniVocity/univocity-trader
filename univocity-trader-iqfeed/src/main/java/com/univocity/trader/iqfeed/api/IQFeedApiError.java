@@ -10,10 +10,8 @@ public class IQFeedApiError {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, IQFeedApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("code", code)
-				.append("msg", msg)
-				.toString();
+		return new ToStringBuilder(this, IQFeedApiConstants.TO_STRING_BUILDER_STYLE).append("code", code)
+				.append("msg", msg).toString();
 	}
 
 	public String getMsg() {

@@ -1,7 +1,5 @@
 package com.univocity.trader.indicators;
 
-
-
 import com.univocity.trader.candles.*;
 import org.junit.*;
 
@@ -31,9 +29,9 @@ public class CHOPTest {
 		assertTrue(ind.getValue() > HIGH_CHOPPINESS_VALUE);
 	}
 
-
 	/**
-	 * this will assert that choppiness is low if market price is trending significantly
+	 * this will assert that choppiness is low if market price is trending
+	 * significantly
 	 */
 	@Test
 	public void testTradeable() {
@@ -52,11 +50,10 @@ public class CHOPTest {
 		}
 
 		int LOW_CHOPPINESS_VALUE = 30;
-		//should be 15.364012882860568
+		// should be 15.364012882860568
 		assertTrue(ind.getValue() <= 100.0);
 		assertTrue(ind.getValue() >= 0.0);
 		assertTrue(ind.getValue() < LOW_CHOPPINESS_VALUE);
 		assertEquals(ind.getValue(), 15.364, 0.0001);
 	}
 }
-

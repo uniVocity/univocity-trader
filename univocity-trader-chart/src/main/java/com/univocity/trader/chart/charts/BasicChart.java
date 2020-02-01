@@ -1,6 +1,5 @@
 package com.univocity.trader.chart.charts;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
@@ -50,7 +49,7 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				draggingButton = e.getButton();
-				if(isMouseDraggingChart()){
+				if (isMouseDraggingChart()) {
 					dragStart = canvas.scrollBar.drag(e, dragStart);
 				}
 				processMouseEvent(e);
@@ -83,15 +82,16 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 		});
 	}
 
-	public boolean isMouseDragging(){
-		return draggingButton != -1 && mousePosition != null && mousePosition.getY() < getHeight() - canvas.getScrollHeight();
+	public boolean isMouseDragging() {
+		return draggingButton != -1 && mousePosition != null
+				&& mousePosition.getY() < getHeight() - canvas.getScrollHeight();
 	}
 
-	public boolean isMouseDraggingChart(){
+	public boolean isMouseDraggingChart() {
 		return draggingButton == MouseEvent.BUTTON1 && isMouseDragging();
 	}
 
-	public boolean isMouseDraggingCursor(){
+	public boolean isMouseDraggingCursor() {
 		return draggingButton == MouseEvent.BUTTON3 && isMouseDragging();
 	}
 

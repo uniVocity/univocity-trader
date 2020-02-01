@@ -103,20 +103,12 @@ public class Asset {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("id", id)
-				.append("assetCode", assetCode)
-				.append("assetName", assetName)
-				.append("unit", unit)
-				.append("transactionFee", transactionFee)
-				.append("commissionRate", commissionRate)
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("id", id)
+				.append("assetCode", assetCode).append("assetName", assetName).append("unit", unit)
+				.append("transactionFee", transactionFee).append("commissionRate", commissionRate)
 				.append("freeAuditWithdrawAmount", freeAuditWithdrawAmount)
-				.append("freeUserChargeAmount", freeUserChargeAmount)
-				.append("minProductWithdraw", minProductWithdraw)
-				.append("withdrawIntegerMultiple", withdrawIntegerMultiple)
-				.append("confirmTimes", confirmTimes)
-				.append("enableWithdraw", enableWithdraw)
-				.append("isLegalMoney", isLegalMoney)
-				.toString();
+				.append("freeUserChargeAmount", freeUserChargeAmount).append("minProductWithdraw", minProductWithdraw)
+				.append("withdrawIntegerMultiple", withdrawIntegerMultiple).append("confirmTimes", confirmTimes)
+				.append("enableWithdraw", enableWithdraw).append("isLegalMoney", isLegalMoney).toString();
 	}
 }

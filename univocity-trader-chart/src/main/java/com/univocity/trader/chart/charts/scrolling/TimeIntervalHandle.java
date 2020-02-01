@@ -6,7 +6,8 @@ import com.univocity.trader.chart.charts.*;
 import java.awt.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 class TimeIntervalHandle extends Draggable {
 	private final boolean leftHandle;

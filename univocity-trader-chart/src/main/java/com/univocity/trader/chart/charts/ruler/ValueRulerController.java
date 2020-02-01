@@ -52,18 +52,18 @@ public class ValueRulerController extends RulerController<ValueRuler> {
 
 	public int getMaxStringWidth(String str, Graphics2D g) {
 		int max = super.getMaxStringWidth(str, g);
-		//FIXME: check how to get a calculated value instead of 5 
+		// FIXME: check how to get a calculated value instead of 5
 		updateTagWidth(max + 5);
 		return max;
 	}
-	
+
 	private void updateTagWidth(int stringWidth) {
 		if ((tagWidth - rightValueTagSpacing - leftValueTagSpacing) < stringWidth) {
 			tagWidth = stringWidth + rightValueTagSpacing + leftValueTagSpacing;
-			minRulerWidth = tagWidth + lineWidth;			
-		}		
+			minRulerWidth = tagWidth + lineWidth;
+		}
 	}
-	
+
 	public int getMinimumWidth() {
 		return minRulerWidth;
 	}

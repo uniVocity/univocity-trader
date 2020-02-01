@@ -24,7 +24,7 @@ public class AccountList<T extends AccountConfiguration<T>> implements Configura
 				account(accountId).readProperties(accountId, properties);
 			}
 		} else {
-			//look for an account without ID.
+			// look for an account without ID.
 			account().readProperties("", properties);
 		}
 	}
@@ -42,18 +42,23 @@ public class AccountList<T extends AccountConfiguration<T>> implements Configura
 		if (accounts.size() == 1) {
 			return accounts.values().iterator().next();
 		} else if (accounts.size() > 1) {
-			throw new IllegalArgumentException("Please provide an account ID when multiple accounts are in use. Available accounts: " + accounts.keySet());
+			throw new IllegalArgumentException(
+					"Please provide an account ID when multiple accounts are in use. Available accounts: "
+							+ accounts.keySet());
 		}
 		return account("");
 	}
 
 	public List<T> accounts() {
-		List<T> out = accounts.values().stream().filter(AccountConfiguration::isConfigured).collect(Collectors.toList());
+		List<T> out = accounts.values().stream().filter(AccountConfiguration::isConfigured)
+				.collect(Collectors.toList());
 		if (out.isEmpty()) {
 			out = accounts.values().stream().filter((a) -> !a.isConfigured()).collect(Collectors.toList());
 			if (!out.isEmpty()) {
 				T first = out.get(0);
-				throw new IllegalConfigurationException("No " + first.getClass().getName() + " account configured. Found " + out.size() + " partially configured accounts. " + first.getRequiredPropertyNames() + " not defined?");
+				throw new IllegalConfigurationException("No " + first.getClass().getName()
+						+ " account configured. Found " + out.size() + " partially configured accounts. "
+						+ first.getRequiredPropertyNames() + " not defined?");
 			}
 		}
 		return out;

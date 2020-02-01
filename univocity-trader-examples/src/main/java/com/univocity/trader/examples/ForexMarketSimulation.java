@@ -11,7 +11,8 @@ import java.time.*;
 import static com.univocity.trader.exchange.interactivebrokers.SecurityType.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class ForexMarketSimulation {
 	public static void main(String... args) {
@@ -24,35 +25,27 @@ public class ForexMarketSimulation {
 //				.user("admin")
 //				.password("qwerty");
 
-		//you can test with one or more accounts at the same time
+		// you can test with one or more accounts at the same time
 		Account account = simulator.configure().account();
 
-		account
-				.referenceCurrency("GBP") //Balances will be calculated using the reference currency.
+		account.referenceCurrency("GBP") // Balances will be calculated using the reference currency.
 				.tradeWith(FOREX, "EUR", "GBP");
 
-		account
-				.minimumInvestmentAmountPerTrade(500.0);
+		account.minimumInvestmentAmountPerTrade(500.0);
 
 		account.strategies().add(ScalpingStrategy::new);
 		account.monitors().add(ScalpingStrategyMonitor::new);
 
-		account.listeners()
-				.add(new OrderExecutionToLog())
-				.add((symbol) -> new SimpleStrategyStatistics(symbol))
-		;
+		account.listeners().add(new OrderExecutionToLog()).add((symbol) -> new SimpleStrategyStatistics(symbol));
 
 		Simulation simulation = simulator.configure().simulation();
-		simulation.initialFunds(1000.0)
-				.tradingFees(SimpleTradingFees.percentage(0.0)) // NO FEE WARNING!!
-				.fillOrdersOnPriceMatch()
-				.resumeBackfill(false)
-				.simulateTo(LocalDateTime.now());
+		simulation.initialFunds(1000.0).tradingFees(SimpleTradingFees.percentage(0.0)) // NO FEE WARNING!!
+				.fillOrdersOnPriceMatch().resumeBackfill(false).simulateTo(LocalDateTime.now());
 
 		simulator.symbolInformation("GBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 		simulator.symbolInformation("EURGBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 
-		//Interval of 1ms = REAL TIME TICKS
+		// Interval of 1ms = REAL TIME TICKS
 		simulator.configure().tickInterval(TimeInterval.millis(1));
 
 //		execute simulation

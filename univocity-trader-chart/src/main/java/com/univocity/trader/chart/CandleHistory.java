@@ -5,7 +5,8 @@ import com.univocity.trader.candles.*;
 import java.util.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class CandleHistory implements Iterable<Candle> {
 
@@ -66,7 +67,7 @@ public class CandleHistory implements Iterable<Candle> {
 		return new CandleHistoryView(this);
 	}
 
-	public Candle getFirst(){
+	public Candle getFirst() {
 		return get(0);
 	}
 

@@ -1,6 +1,6 @@
 package com.univocity.trader.config;
 
-public class SimulationConfiguration extends Configuration<SimulationConfiguration, SimulationAccount>{
+public class SimulationConfiguration extends Configuration<SimulationConfiguration, SimulationAccount> {
 
 	@Override
 	protected ConfigurationGroup[] getAdditionalConfigurationGroups() {

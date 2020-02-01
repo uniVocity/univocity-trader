@@ -17,7 +17,6 @@ public class RulerController<T> implements Controller {
 	@ColorBound()
 	private Color backgroundColor = new Color(128, 128, 128, 128);
 
-
 	@Label("Grid color")
 	@ColorBound()
 	private Color gridColor = new Color(210, 210, 210, 190);
@@ -48,15 +47,12 @@ public class RulerController<T> implements Controller {
 
 		profiles.put(DEFAULT, selectedProfile);
 
-		profiles.put(SELECTION, new DrawingProfile()
-				.setLineColor(Color.BLACK)
-				.setFont(new Font("Arial", Font.BOLD, 10))
+		profiles.put(SELECTION, new DrawingProfile().setLineColor(Color.BLACK).setFont(new Font("Arial", Font.BOLD, 10))
 				.setFontColor(Color.BLACK));
 
 		profiles.put(HIGHLIGHT, new DrawingProfile()
-				.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[]{2}, 0))
-				.setFont(new Font("Arial", Font.PLAIN, 10))
-				.setFontColor(Color.BLACK));
+				.setStroke(new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2 }, 0))
+				.setFont(new Font("Arial", Font.PLAIN, 10)).setFontColor(Color.BLACK));
 
 	}
 
@@ -90,51 +86,41 @@ public class RulerController<T> implements Controller {
 		selectedProfile.drawing(g);
 	}
 
-
 	public Font getFont() {
 		return selectedProfile.getFont();
 	}
-
 
 	public Color getFontColor() {
 		return selectedProfile.getFontColor();
 	}
 
-
 	public int getFontHeight() {
 		return selectedProfile.getFontHeight();
 	}
-
 
 	public Color getLineColor() {
 		return selectedProfile.getLineColor();
 	}
 
-
 	public Stroke getStroke() {
 		return selectedProfile.getStroke();
 	}
-
 
 	public void setFont(Font font) {
 		selectedProfile.setFont(font);
 	}
 
-
 	public void setFontColor(Color fontColor) {
 		selectedProfile.setFontColor(fontColor);
 	}
-
 
 	public void setLineColor(Color lineColor) {
 		selectedProfile.setLineColor(lineColor);
 	}
 
-
 	public void setStroke(Stroke stroke) {
 		selectedProfile.setStroke(stroke);
 	}
-
 
 	public void text(Graphics2D g) {
 		selectedProfile.text(g);
@@ -168,7 +154,6 @@ public class RulerController<T> implements Controller {
 		profiles.get(SELECTION).setLineColor(selectionFontColor);
 	}
 
-
 	public int getStringWidth(String str, Graphics2D g) {
 		return selectedProfile.getStringWidth(str, g);
 	}
@@ -188,18 +173,17 @@ public class RulerController<T> implements Controller {
 		return y - getFontHeight() / 2;
 	}
 
-	public Color getProfitBackground(){
+	public Color getProfitBackground() {
 		return selectedProfile.getProfitBackground();
 	}
 
-	public Color getLossBackground(){
+	public Color getLossBackground() {
 		return selectedProfile.getLossBackground();
 	}
 
 	public int getFontAscent(Graphics2D g) {
 		return selectedProfile.getFontAscent(g);
 	}
-
 
 	public JPanel getControlPanel() {
 		if (controlPanel == null) {

@@ -117,14 +117,8 @@ public class DepthEvent {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("eventType", eventType)
-				.append("eventTime", eventTime)
-				.append("symbol", symbol)
-				.append("firstUpdateId", firstUpdateId)
-				.append("finalUpdateId", finalUpdateId)
-				.append("bids", bids)
-				.append("asks", asks)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("eventType", eventType)
+				.append("eventTime", eventTime).append("symbol", symbol).append("firstUpdateId", firstUpdateId)
+				.append("finalUpdateId", finalUpdateId).append("bids", bids).append("asks", asks).toString();
 	}
 }

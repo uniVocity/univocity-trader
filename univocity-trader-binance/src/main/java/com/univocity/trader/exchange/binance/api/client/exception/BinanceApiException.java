@@ -58,7 +58,8 @@ public class BinanceApiException extends RuntimeException {
 	}
 
 	/**
-	 * @return the response error object from Binance API, or null if no response object was returned (e.g. server returned 500).
+	 * @return the response error object from Binance API, or null if no response
+	 *         object was returned (e.g. server returned 500).
 	 */
 	public BinanceApiError getError() {
 		return error;

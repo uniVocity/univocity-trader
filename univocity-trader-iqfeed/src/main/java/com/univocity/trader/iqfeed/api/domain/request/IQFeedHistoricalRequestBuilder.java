@@ -14,7 +14,8 @@ public final class IQFeedHistoricalRequestBuilder {
 	// TODO: add in validation for individual data types
 	// request strings for IQFeed interface
 	// In general: timeframes are specified in the following format: CCYYMMDD HHmmSS
-	// see here http://www.iqfeed.net/dev/api/docs/HistoricalviaTCPIP.cfm for more information
+	// see here http://www.iqfeed.net/dev/api/docs/HistoricalviaTCPIP.cfm for more
+	// information
 	// tick / max pts
 	// required
 	protected String symbol = "";
@@ -147,20 +148,23 @@ public final class IQFeedHistoricalRequestBuilder {
 	}
 
 	public IQFeedHistoricalRequestBuilder but() {
-		return anIQFeedHistoricalRequest().setSymbol(symbol).setDataType(tickSize).setBeginDate(beginDate).setBeginDateTime(beginDateTime).setBeginFilterTime(beginFilterTime).setDataDirection(dataDirection).setDataPtsPerSend(dataPtsPerSend).setEndDate(endDate).setEndDateTime(endDateTime).setEndFilterTime(endFilterTime).setIncludePartialData(includePartialData).setInterval(interval).setIntervalType(intervalType).setSvtIntervalType(svtIntervalType).setLabelAtBeginning(labelAtBeginning).setMaxDataPts(maxDataPts).setMaxDays(maxDays).setMaxMonths(maxMonths).setMaxWeeks(maxWeeks).setRequestID(requestID);
+		return anIQFeedHistoricalRequest().setSymbol(symbol).setDataType(tickSize).setBeginDate(beginDate)
+				.setBeginDateTime(beginDateTime).setBeginFilterTime(beginFilterTime).setDataDirection(dataDirection)
+				.setDataPtsPerSend(dataPtsPerSend).setEndDate(endDate).setEndDateTime(endDateTime)
+				.setEndFilterTime(endFilterTime).setIncludePartialData(includePartialData).setInterval(interval)
+				.setIntervalType(intervalType).setSvtIntervalType(svtIntervalType).setLabelAtBeginning(labelAtBeginning)
+				.setMaxDataPts(maxDataPts).setMaxDays(maxDays).setMaxMonths(maxMonths).setMaxWeeks(maxWeeks)
+				.setRequestID(requestID);
 	}
-
 
 	private boolean validate(IQFeedHistoricalRequest request) throws Exception {
 		// TODO: refactor to check for invalid parameter values, redundant/extra fields
-        /*
-          in general, we need the following combinations for a valid request, dependent on ticksize:
-                tick: maxDataPoints || maxDays || (BeginDateTime, EndDateTime)
-                interval: maxDataPoints || maxDays || (BeginFilterTime, EndFilterTime)
-                day: maxDays || (beginDate, endDate)
-                week: maxWeeks
-                month: maxMonth
-         */
+		/*
+		 * in general, we need the following combinations for a valid request, dependent
+		 * on ticksize: tick: maxDataPoints || maxDays || (BeginDateTime, EndDateTime)
+		 * interval: maxDataPoints || maxDays || (BeginFilterTime, EndFilterTime) day:
+		 * maxDays || (beginDate, endDate) week: maxWeeks month: maxMonth
+		 */
 		try {
 			if (!checkVal(request.symbol)) {
 				throw new InvalidParameterException("Invalid parameter for SYMBOL");
@@ -170,39 +174,39 @@ public final class IQFeedHistoricalRequestBuilder {
 			}
 			String size = request.dataPeriod.toLowerCase();
 			switch (size) {
-				case "tick":
-					if (!(checkVal(request.maxDataPts) || checkVal(request.maxDays) ||
-							(checkVal(request.beginDateTime.toString()) && checkVal(request.endDateTime.toString())))) {
-						throw new InvalidParameterException("Invalid parameters for request of tick size: tick");
-					}
-					break;
-				case "minute":
-					if (!(checkVal(request.maxDataPts) || checkVal(request.maxDays) ||
-							(checkVal(request.beginFilterTime) && checkVal(request.endFilterTime)))) {
-						throw new InvalidParameterException("Invalid parameters for request of tick size: interval");
-					}
-					break;
-				case "day":
-					if (!(checkVal(request.maxDays) || (checkVal(request.beginDate) && checkVal(request.beginDate)))) {
-						throw new InvalidParameterException("Invalid parameters for request of tick size: day");
-					}
-					break;
-				case "interval":
-					if (!checkVal(request.interval) || !(checkVal(request.maxDataPts) || checkVal(request.maxDays) ||
-							(checkVal(request.beginFilterTime) && checkVal(request.endFilterTime)))) {
-						throw new InvalidParameterException("Invalid parameters for request of tick size: interval");
-					}
-					break;
-				case "week":
-					if (!checkVal(request.maxWeeks)) {
-						throw new InvalidParameterException("Invalid parameters for request of tick size: week");
-					}
-					break;
-				case "month":
-					if (!checkVal(request.maxMonths)) {
-						throw new InvalidParameterException("Invalid parameters for request of tick size: month");
-					}
-					break;
+			case "tick":
+				if (!(checkVal(request.maxDataPts) || checkVal(request.maxDays)
+						|| (checkVal(request.beginDateTime.toString()) && checkVal(request.endDateTime.toString())))) {
+					throw new InvalidParameterException("Invalid parameters for request of tick size: tick");
+				}
+				break;
+			case "minute":
+				if (!(checkVal(request.maxDataPts) || checkVal(request.maxDays)
+						|| (checkVal(request.beginFilterTime) && checkVal(request.endFilterTime)))) {
+					throw new InvalidParameterException("Invalid parameters for request of tick size: interval");
+				}
+				break;
+			case "day":
+				if (!(checkVal(request.maxDays) || (checkVal(request.beginDate) && checkVal(request.beginDate)))) {
+					throw new InvalidParameterException("Invalid parameters for request of tick size: day");
+				}
+				break;
+			case "interval":
+				if (!checkVal(request.interval) || !(checkVal(request.maxDataPts) || checkVal(request.maxDays)
+						|| (checkVal(request.beginFilterTime) && checkVal(request.endFilterTime)))) {
+					throw new InvalidParameterException("Invalid parameters for request of tick size: interval");
+				}
+				break;
+			case "week":
+				if (!checkVal(request.maxWeeks)) {
+					throw new InvalidParameterException("Invalid parameters for request of tick size: week");
+				}
+				break;
+			case "month":
+				if (!checkVal(request.maxMonths)) {
+					throw new InvalidParameterException("Invalid parameters for request of tick size: month");
+				}
+				break;
 			}
 			return true;
 		} catch (Exception e) {

@@ -34,7 +34,8 @@ import static java.sql.Connection.*;
 /**
  * An utility class for validating inputs.
  *
- * @author Univocity Software Pty Ltd - <a href="mailto:parsers@univocity.com">parsers@univocity.com</a>
+ * @author Univocity Software Pty Ltd -
+ *         <a href="mailto:parsers@univocity.com">parsers@univocity.com</a>
  */
 public class Utils {
 
@@ -50,7 +51,6 @@ public class Utils {
 		}
 		systemLineSeparator = systemLineSeparatorString.toCharArray();
 	}
-
 
 	/**
 	 * An empty String array.
@@ -101,8 +101,8 @@ public class Utils {
 	 * @param array   the element array
 	 * @param element the element to be looked for in the array.
 	 *
-	 * @return the indexes of the given element in the array, or an empty array
-	 * if no element could be found
+	 * @return the indexes of the given element in the array, or an empty array if
+	 *         no element could be found
 	 */
 	public static int[] indexesOf(Object[] array, Object element) {
 		int[] tmp = new int[0];
@@ -130,7 +130,7 @@ public class Utils {
 	 * @param element the element to be looked for in the array.
 	 *
 	 * @return the index of the given element in the array, or -1 if the element
-	 * could not be found.
+	 *         could not be found.
 	 */
 	public static int indexOf(Object[] array, Object element) {
 		return indexOf(array, element, 0);
@@ -145,7 +145,7 @@ public class Utils {
 	 *                search
 	 *
 	 * @return the index of the given element in the array, or -1 if the element
-	 * could not be found.
+	 *         could not be found.
 	 */
 	private static int indexOf(Object[] array, Object element, int from) {
 		if (array == null) {
@@ -180,8 +180,7 @@ public class Utils {
 	}
 
 	/**
-	 * Searches for elements in a given array and returns the elements not
-	 * found.
+	 * Searches for elements in a given array and returns the elements not found.
 	 *
 	 * @param array    An array with elements
 	 * @param elements the elements to be found
@@ -193,8 +192,7 @@ public class Utils {
 	}
 
 	/**
-	 * Searches for elements in a given array and returns the elements not
-	 * found.
+	 * Searches for elements in a given array and returns the elements not found.
 	 *
 	 * @param array    An array with elements
 	 * @param elements the elements to be found
@@ -292,7 +290,8 @@ public class Utils {
 			try {
 				file.createNewFile();
 			} catch (IOException e) {
-				throw new IllegalArgumentException("Unable to create file '" + file.getAbsolutePath() + "', please ensure your application has permission to create files in that path", e);
+				throw new IllegalArgumentException("Unable to create file '" + file.getAbsolutePath()
+						+ "', please ensure your application has permission to create files in that path", e);
 			}
 		}
 
@@ -306,15 +305,14 @@ public class Utils {
 		return newWriter(os, encoding);
 	}
 
-
 	/**
-	 * Converts a list of enumerations to an array of their {@link
-	 * Enum#toString()} representation
+	 * Converts a list of enumerations to an array of their {@link Enum#toString()}
+	 * representation
 	 *
 	 * @param enums a list of enumerations to convert
 	 *
-	 * @return an array of {@code String} with the values produced by each
-	 * element's {@link Enum#toString()} method.
+	 * @return an array of {@code String} with the values produced by each element's
+	 *         {@link Enum#toString()} method.
 	 */
 
 	public static String[] toArray(List<Enum> enums) {
@@ -412,11 +410,10 @@ public class Utils {
 	}
 
 	/**
-	 * Allows rethrowing a checked exception instead of wrapping it into a
-	 * runtime exception. For internal use only
-	 * as this generally causes more trouble than it solves (your
-	 * exception-specific catch statement may not catch this
-	 * error - make sure you are catching a Throwable)
+	 * Allows rethrowing a checked exception instead of wrapping it into a runtime
+	 * exception. For internal use only as this generally causes more trouble than
+	 * it solves (your exception-specific catch statement may not catch this error -
+	 * make sure you are catching a Throwable)
 	 *
 	 * @param error the (potentially checked) exception to the thrown.
 	 */
@@ -449,8 +446,8 @@ public class Utils {
 	 * @param array the search array
 	 * @param <T>   the type of elements held in the given array.
 	 *
-	 * @return all duplicate values found in the given array, or empty array if
-	 * no duplicates, or {@code null} if the input is {@code null}.
+	 * @return all duplicate values found in the given array, or empty array if no
+	 *         duplicates, or {@code null} if the input is {@code null}.
 	 */
 	public static <T> T[] findDuplicates(T[] array) {
 		if (array == null || array.length == 0) {
@@ -476,10 +473,10 @@ public class Utils {
 	 * left side, or both.
 	 *
 	 * @param input the content to trim
-	 * @param left  flag to indicate whether spaces on the left side of the
-	 *              string should be removed.
-	 * @param right flag to indicate whether spaces on the right side of the
-	 *              string should be removed.
+	 * @param left  flag to indicate whether spaces on the left side of the string
+	 *              should be removed.
+	 * @param right flag to indicate whether spaces on the right side of the string
+	 *              should be removed.
 	 *
 	 * @return the trimmed string.
 	 */
@@ -553,17 +550,18 @@ public class Utils {
 	}
 
 	/**
-	 * Joins each collection of values in a given {@code Map} into their {@code String}
-	 * representation, with a given separator between each value.
+	 * Joins each collection of values in a given {@code Map} into their
+	 * {@code String} representation, with a given separator between each value.
 	 *
 	 * @param map       a map containing collections as its values
 	 * @param separator the separator to be used between each value
 	 * @param <K>       the type of the key used in the given map
-	 * @param <V>       the type of the collection of values associated with each key of the map
+	 * @param <V>       the type of the collection of values associated with each
+	 *                  key of the map
 	 *
 	 * @return the resulting map where each key of the given input map is associated
-	 * with the String representation of all non-null values in the collection
-	 * associated with the key.
+	 *         with the String representation of all non-null values in the
+	 *         collection associated with the key.
 	 */
 	public static final <K, V extends Iterable> Map<K, String> joinValues(Map<K, V> map, String separator) {
 		if (map == null || map.isEmpty()) {
@@ -578,14 +576,15 @@ public class Utils {
 	}
 
 	/**
-	 * Returns the {@code Map.Entry} stored in a map by searching for a given {@code String}
-	 * key case-insensitively.
+	 * Returns the {@code Map.Entry} stored in a map by searching for a given
+	 * {@code String} key case-insensitively.
 	 *
 	 * @param map the map to search
 	 * @param key the key to look for
 	 * @param <V> the type of values stored in the map
 	 *
-	 * @return the {@code Map.Entry} associated with the given key, or {@code null} if not found.
+	 * @return the {@code Map.Entry} associated with the given key, or {@code null}
+	 *         if not found.
 	 */
 	public static final <V> Map.Entry<String, V> getEntryCaseInsensitive(Map<String, V> map, String key) {
 		if (key != null) {
@@ -606,14 +605,15 @@ public class Utils {
 	}
 
 	/**
-	 * Returns the value stored in a map by searching for a given {@code String}
-	 * key case-insensitively.
+	 * Returns the value stored in a map by searching for a given {@code String} key
+	 * case-insensitively.
 	 *
 	 * @param map the map to search
 	 * @param key the key to look for
 	 * @param <V> the type of values stored in the map
 	 *
-	 * @return the value associated with the given key, or {@code null} if not found.
+	 * @return the value associated with the given key, or {@code null} if not
+	 *         found.
 	 */
 	public static final <V> V getValueCaseInsensitive(Map<String, V> map, String key) {
 		Map.Entry<String, V> e = getEntryCaseInsensitive(map, key);
@@ -624,13 +624,15 @@ public class Utils {
 	}
 
 	/**
-	 * Adds a given value into a list of values of a map, where the key should be handled case-insensitively.
+	 * Adds a given value into a list of values of a map, where the key should be
+	 * handled case-insensitively.
 	 *
 	 * @param map   the map into which the value will be added
 	 * @param key   the key to look for
 	 * @param value the value to add
-	 * @param add   a flag indicating whether the value should be added to the list of existing values, or if
-	 *              the list should be replaced by a new one containing only the given value.
+	 * @param add   a flag indicating whether the value should be added to the list
+	 *              of existing values, or if the list should be replaced by a new
+	 *              one containing only the given value.
 	 * @param <V>   the type of the values stored in the map.
 	 */
 	public static final <V> void putValueCaseInsensitive(Map<String, List<V>> map, String key, V value, boolean add) {
@@ -683,7 +685,8 @@ public class Utils {
 	}
 
 	/**
-	 * Ensures a given array argument is not null/empty and no elements are null/empty
+	 * Ensures a given array argument is not null/empty and no elements are
+	 * null/empty
 	 *
 	 * @param sequence  the array of objects
 	 * @param fieldName the description of the field
@@ -696,9 +699,11 @@ public class Utils {
 		}
 		for (T element : sequence) {
 			if (element == null) {
-				throw new IllegalArgumentException("Illegal " + fieldName + " list. Null elements are not allowed. Got " + Arrays.toString(sequence));
+				throw new IllegalArgumentException("Illegal " + fieldName + " list. Null elements are not allowed. Got "
+						+ Arrays.toString(sequence));
 			} else if (element instanceof String && element.toString().trim().isEmpty()) {
-				throw new IllegalArgumentException("Illegal " + fieldName + " list. Blank elements are not allowed. Got " + Arrays.toString(sequence));
+				throw new IllegalArgumentException("Illegal " + fieldName
+						+ " list. Blank elements are not allowed. Got " + Arrays.toString(sequence));
 			}
 		}
 	}
@@ -717,7 +722,8 @@ public class Utils {
 	}
 
 	/**
-	 * Ensures a given collection is not null/empty and doesn't contain null/empty objects or blank Strings
+	 * Ensures a given collection is not null/empty and doesn't contain null/empty
+	 * objects or blank Strings
 	 *
 	 * @param elements  the collection of objects
 	 * @param fieldName the description of the field
@@ -730,9 +736,11 @@ public class Utils {
 		}
 		for (T element : elements) {
 			if (element == null) {
-				throw new IllegalArgumentException("Illegal " + fieldName + " list. Null elements are not allowed. Got " + elements);
+				throw new IllegalArgumentException(
+						"Illegal " + fieldName + " list. Null elements are not allowed. Got " + elements);
 			} else if (element instanceof String && element.toString().trim().isEmpty()) {
-				throw new IllegalArgumentException("Illegal " + fieldName + " list. Blank elements are not allowed. Got " + elements);
+				throw new IllegalArgumentException(
+						"Illegal " + fieldName + " list. Blank elements are not allowed. Got " + elements);
 			}
 		}
 	}
@@ -763,7 +771,6 @@ public class Utils {
 		}
 	}
 
-
 	/**
 	 * Ensures a given {@link CharSequence} argument is not null/empty
 	 *
@@ -791,7 +798,8 @@ public class Utils {
 	}
 
 	/**
-	 * Ensures the elements in a given array are not null/empty/blank. The array itself can be empty but not null.
+	 * Ensures the elements in a given array are not null/empty/blank. The array
+	 * itself can be empty but not null.
 	 *
 	 * @param o         the array of elements to be validated.
 	 * @param fieldName description of the array.
@@ -811,7 +819,8 @@ public class Utils {
 	}
 
 	/**
-	 * Ensures a given {@link File} argument is not null, exists and does not point to a directory
+	 * Ensures a given {@link File} argument is not null, exists and does not point
+	 * to a directory
 	 *
 	 * @param file      a file
 	 * @param fieldName the description of the field
@@ -819,22 +828,27 @@ public class Utils {
 	public static final void validFile(File file, String fieldName) {
 		notNull(file, fieldName);
 		if (!file.exists()) {
-			throw new IllegalArgumentException("Illegal " + fieldName + ": '" + file.getAbsolutePath() + "' it does not exist.");
+			throw new IllegalArgumentException(
+					"Illegal " + fieldName + ": '" + file.getAbsolutePath() + "' it does not exist.");
 		}
 		if (file.isDirectory()) {
-			throw new IllegalArgumentException("Illegal " + fieldName + ": '" + file.getAbsolutePath() + "' it cannot be a directory.");
+			throw new IllegalArgumentException(
+					"Illegal " + fieldName + ": '" + file.getAbsolutePath() + "' it cannot be a directory.");
 		}
 	}
 
 	/**
-	 * Attempts to discover the plain name of a given file, without directories or its extension
+	 * Attempts to discover the plain name of a given file, without directories or
+	 * its extension
 	 *
 	 * @param name      a name if known. Will be returned if provided.
-	 * @param file      a file whose path will be analyzed in order to extract a name from
-	 * @param fieldName name of field associated with the file name. Used for validation messages only
+	 * @param file      a file whose path will be analyzed in order to extract a
+	 *                  name from
+	 * @param fieldName name of field associated with the file name. Used for
+	 *                  validation messages only
 	 *
-	 * @return the given name or the file name if possible. If neither can be provided,
-	 * an {@code IllegalArgumentException} will be thrown
+	 * @return the given name or the file name if possible. If neither can be
+	 *         provided, an {@code IllegalArgumentException} will be thrown
 	 */
 	public static final String guessAndValidateName(String name, File file, String fieldName) {
 		if (name != null) {
@@ -855,13 +869,13 @@ public class Utils {
 		return name;
 	}
 
-
 	/**
 	 * Tests if a given {@code String} is null/empty/blank/
 	 *
 	 * @param s the string
 	 *
-	 * @return {@code true} if the given {@code String} is null, empty or blank, otherwise returns {@code false}
+	 * @return {@code true} if the given {@code String} is null, empty or blank,
+	 *         otherwise returns {@code false}
 	 */
 	public static final boolean isBlank(String s) {
 		return s == null || s.trim().isEmpty();
@@ -872,19 +886,22 @@ public class Utils {
 	 *
 	 * @param s the string
 	 *
-	 * @return {@code true} if the given {@code String} is not null, empty or blank, otherwise returns {@code false}
+	 * @return {@code true} if the given {@code String} is not null, empty or blank,
+	 *         otherwise returns {@code false}
 	 */
 	public static final boolean isNotBlank(String s) {
 		return !isBlank(s);
 	}
 
 	/**
-	 * Replaces system properties between { and } in a given {@code String} with the property values, and returns the result.
-	 * Unknown properties won't be replaced.
+	 * Replaces system properties between { and } in a given {@code String} with the
+	 * property values, and returns the result. Unknown properties won't be
+	 * replaced.
 	 *
 	 * @param string the {@code String} with potential system properties.
 	 *
-	 * @return the resulting {@code String} with all known system properties replaced.
+	 * @return the resulting {@code String} with all known system properties
+	 *         replaced.
 	 */
 	public static final String replaceSystemProperties(String string) {
 		int offset = 0;
@@ -927,7 +944,8 @@ public class Utils {
 	 * Decodes a URL encoded value.
 	 *
 	 * @param value       the value to be decoded.
-	 * @param charsetName the charset to use for decoding the given value. If {@code null}, then UTF-8 will be used.
+	 * @param charsetName the charset to use for decoding the given value. If
+	 *                    {@code null}, then UTF-8 will be used.
 	 *
 	 * @return the decoded value.
 	 */
@@ -940,7 +958,8 @@ public class Utils {
 	 *
 	 * @param parameterName name of the parameter associated with the value
 	 * @param value         the value to be decoded.
-	 * @param charsetName   the charset to use for decoding the given value. If {@code null}, then UTF-8 will be used.
+	 * @param charsetName   the charset to use for decoding the given value. If
+	 *                      {@code null}, then UTF-8 will be used.
 	 *
 	 * @return the decoded value.
 	 */
@@ -958,7 +977,8 @@ public class Utils {
 			if (parameterName == null) {
 				throw new IllegalStateException("Error decoding value: " + value, ex);
 			} else {
-				throw new IllegalStateException("Error decoding value of parameter '" + parameterName + "'. Value: " + value, ex);
+				throw new IllegalStateException(
+						"Error decoding value of parameter '" + parameterName + "'. Value: " + value, ex);
 			}
 		}
 
@@ -980,7 +1000,8 @@ public class Utils {
 	 * Encodes a value so it can be used as part of a URL.
 	 *
 	 * @param parameterValue the value to be encoded.
-	 * @param charsetName    charset to use for encoding the given value. If {@code null}, then UTF-8 will be used.
+	 * @param charsetName    charset to use for encoding the given value. If
+	 *                       {@code null}, then UTF-8 will be used.
 	 *
 	 * @return the encoded value.
 	 */
@@ -993,7 +1014,8 @@ public class Utils {
 	 *
 	 * @param parameterName  name of the parameter associated with the value
 	 * @param parameterValue the value to be encoded.
-	 * @param charsetName    charset to use for encoding the given value. If {@code null}, then UTF-8 will be used.
+	 * @param charsetName    charset to use for encoding the given value. If
+	 *                       {@code null}, then UTF-8 will be used.
 	 *
 	 * @return the encoded value.
 	 */
@@ -1012,7 +1034,8 @@ public class Utils {
 			if (parameterName == null) {
 				throw new IllegalStateException("Error encoding value: " + parameterValue, ex);
 			} else {
-				throw new IllegalStateException("Error encoding value of parameter '" + parameterName + "'. Value: " + parameterValue, ex);
+				throw new IllegalStateException(
+						"Error encoding value of parameter '" + parameterName + "'. Value: " + parameterValue, ex);
 			}
 		}
 	}
@@ -1044,12 +1067,13 @@ public class Utils {
 
 				out = new GregorianCalendar(year, month, day);
 
-				if (out.get(Calendar.YEAR) != year || out.get(Calendar.MONTH) != month || out.get(Calendar.DAY_OF_MONTH) != day) {
+				if (out.get(Calendar.YEAR) != year || out.get(Calendar.MONTH) != month
+						|| out.get(Calendar.DAY_OF_MONTH) != day) {
 					out = null;
 				}
 			}
 		} catch (Exception e) {
-			//Not formatted correctly ignore any errors here;
+			// Not formatted correctly ignore any errors here;
 		}
 
 		if (out == null) {
@@ -1065,7 +1089,8 @@ public class Utils {
 	 * @param c1 the first collection
 	 * @param c2 the second collection.
 	 *
-	 * @return {@code true} if both collections contain the same values, {@code false} otherwise.
+	 * @return {@code true} if both collections contain the same values,
+	 *         {@code false} otherwise.
 	 */
 	public static boolean equals(Collection<Object[]> c1, Collection<Object[]> c2) {
 		if (c1 == c2) {
@@ -1095,9 +1120,12 @@ public class Utils {
 	}
 
 	/**
-	 * Assert a boolean expression, throwing an {@code IllegalStateException}
-	 * if the expression evaluates to {@code false}.
-	 * <pre class="code">assertState(id == null, "The id property must not already be initialized");</pre>
+	 * Assert a boolean expression, throwing an {@code IllegalStateException} if the
+	 * expression evaluates to {@code false}.
+	 * 
+	 * <pre class="code">
+	 * assertState(id == null, "The id property must not already be initialized");
+	 * </pre>
 	 *
 	 * @param expression a boolean expression
 	 * @param message    the exception message to use if the assertion fails
@@ -1111,14 +1139,17 @@ public class Utils {
 	}
 
 	/**
-	 * Ensures a given SQL isolation level is a valid and known JDBC value that exists int {@link java.sql.Connection}
+	 * Ensures a given SQL isolation level is a valid and known JDBC value that
+	 * exists int {@link java.sql.Connection}
 	 *
 	 * @param transactionIsolationLevel code of the transaction isolation level
 	 */
 	public static void validTransactionIsolationLevel(int transactionIsolationLevel) {
-		List<Integer> levels = Arrays.asList(TRANSACTION_NONE, TRANSACTION_READ_COMMITTED, TRANSACTION_READ_UNCOMMITTED, TRANSACTION_REPEATABLE_READ, TRANSACTION_SERIALIZABLE);
+		List<Integer> levels = Arrays.asList(TRANSACTION_NONE, TRANSACTION_READ_COMMITTED, TRANSACTION_READ_UNCOMMITTED,
+				TRANSACTION_REPEATABLE_READ, TRANSACTION_SERIALIZABLE);
 		if (!levels.contains(transactionIsolationLevel)) {
-			throw new IllegalArgumentException("Illegal transaction isolation level: " + transactionIsolationLevel + ". Accepted isolation levels are: " + levels + " (from java.sql.Connection)");
+			throw new IllegalArgumentException("Illegal transaction isolation level: " + transactionIsolationLevel
+					+ ". Accepted isolation levels are: " + levels + " (from java.sql.Connection)");
 		}
 	}
 
@@ -1127,15 +1158,17 @@ public class Utils {
 	}
 
 	/**
-	 * Displays line separators in a string by replacing all instances
-	 * of `\r` and `\n` with `[cr]` and `[lf]`.
-	 * If `\r` is followed by `\n` or vice versa, then `[crlf]` or `[lfcr]` will be printed.
+	 * Displays line separators in a string by replacing all instances of `\r` and
+	 * `\n` with `[cr]` and `[lf]`. If `\r` is followed by `\n` or vice versa, then
+	 * `[crlf]` or `[lfcr]` will be printed.
 	 *
 	 * @param str        the string to have its line separators displayed
-	 * @param addNewLine flag indicating whether the original `\r` or `\n` characters should be kept in the string.
-	 *                   if {@code true}, `\r` will be replaced by `[cr]\r` for example.
+	 * @param addNewLine flag indicating whether the original `\r` or `\n`
+	 *                   characters should be kept in the string. if {@code true},
+	 *                   `\r` will be replaced by `[cr]\r` for example.
 	 *
-	 * @return the updated string with any line separators replaced by visible character sequences.
+	 * @return the updated string with any line separators replaced by visible
+	 *         character sequences.
 	 */
 	public static String displayLineSeparators(String str, boolean addNewLine) {
 
@@ -1180,8 +1213,8 @@ public class Utils {
 	 * @param array the array to be checked
 	 * @param e     the element to be removed
 	 *
-	 * @return an updated array that does not contain the given element anywhere,
-	 * or the original array if the element has not been found.
+	 * @return an updated array that does not contain the given element anywhere, or
+	 *         the original array if the element has not been found.
 	 */
 	public static int[] removeAll(int[] array, int e) {
 		if (array == null || array.length == 0) {
@@ -1221,24 +1254,30 @@ public class Utils {
 			try {
 				c.setAccessible(true);
 			} catch (Exception e) {
-				//ignore if unable.
+				// ignore if unable.
 			}
 		}
 		return c;
 	}
 
 	/**
-	 * Finds all classes that extend from a given class or implement a given interface.
+	 * Finds all classes that extend from a given class or implement a given
+	 * interface.
 	 *
-	 * @param classesToSearch a map where the key is the parent class/interface and the set of values are the names
-	 *                        of the classes to find which extend from the given class or implement the given interface.
-	 *                        The names don't have to contain the full package and in this case the classpath will be
+	 * @param classesToSearch a map where the key is the parent class/interface and
+	 *                        the set of values are the names of the classes to find
+	 *                        which extend from the given class or implement the
+	 *                        given interface. The names don't have to contain the
+	 *                        full package and in this case the classpath will be
 	 *                        traversed to find a matching name.
 	 *
-	 * @return the search results in a map where the key is each parent class/interface given in the {@code classesToSearch} map
-	 * and the values are the a set the classes found, where each class has the name given in the original {@code classesToSearch} map.
+	 * @return the search results in a map where the key is each parent
+	 *         class/interface given in the {@code classesToSearch} map and the
+	 *         values are the a set the classes found, where each class has the name
+	 *         given in the original {@code classesToSearch} map.
 	 */
-	public static Map<Class<?>, LinkedHashSet<Class<?>>> findClasses(Map<Class<?>, LinkedHashSet<String>> classesToSearch) {
+	public static Map<Class<?>, LinkedHashSet<Class<?>>> findClasses(
+			Map<Class<?>, LinkedHashSet<String>> classesToSearch) {
 		Map<Class<?>, LinkedHashSet<Class<?>>> out = new HashMap<>();
 
 		classesToSearch.forEach((k, v) -> findClasses(scanClasses(), k, v, out));
@@ -1248,10 +1287,12 @@ public class Utils {
 	/**
 	 * Finds a class that extends from a given class or implement a given interface.
 	 *
-	 * @param parent      the parent class/interface whose subclasses/implementations will be searched
-	 * @param classToFind Name of the class to find which extends from the given class or implements the given interface.
-	 *                    The name doesn't have to contain the full package and in this case the classpath will be
-	 *                    searched to fina a matching name.
+	 * @param parent      the parent class/interface whose
+	 *                    subclasses/implementations will be searched
+	 * @param classToFind Name of the class to find which extends from the given
+	 *                    class or implements the given interface. The name doesn't
+	 *                    have to contain the full package and in this case the
+	 *                    classpath will be searched to fina a matching name.
 	 *
 	 * @return the class found
 	 *
@@ -1274,7 +1315,7 @@ public class Utils {
 					try {
 						ScanResult.closeAll();
 					} catch (Throwable t) {
-						//ignore.
+						// ignore.
 					}
 				}
 			};
@@ -1287,17 +1328,21 @@ public class Utils {
 	}
 
 	/**
-	 * Finds a class that extends from a given class or implement a given interface, and returns a new instance
-	 * of that class via its (expected default no-arg constructor
+	 * Finds a class that extends from a given class or implement a given interface,
+	 * and returns a new instance of that class via its (expected default no-arg
+	 * constructor
 	 *
-	 * @param parent      the parent class/interface whose subclasses/implementations will be searched
-	 * @param classToFind Name of the class to find which extends from the given class or implements the given interface.
-	 *                    The name doesn't have to contain the full package and in this case the classpath will be
-	 *                    searched to fina a matching name.
+	 * @param parent      the parent class/interface whose
+	 *                    subclasses/implementations will be searched
+	 * @param classToFind Name of the class to find which extends from the given
+	 *                    class or implements the given interface. The name doesn't
+	 *                    have to contain the full package and in this case the
+	 *                    classpath will be searched to fina a matching name.
 	 *
 	 * @return an instance of the class found
 	 *
-	 * @throws IllegalStateException if none or multiple classes are found, or if it's not possible to create a new instance
+	 * @throws IllegalStateException if none or multiple classes are found, or if
+	 *                               it's not possible to create a new instance
 	 */
 	public static <T> T findClassAndInstantiate(Class<T> parent, String classToFind) {
 		try {
@@ -1308,7 +1353,8 @@ public class Utils {
 		}
 	}
 
-	private static void doSearch(boolean caseInsensitive, List<Class<?>> loadedClasses, Set<String> classNames, LinkedHashSet<Class<?>> sorted) {
+	private static void doSearch(boolean caseInsensitive, List<Class<?>> loadedClasses, Set<String> classNames,
+			LinkedHashSet<Class<?>> sorted) {
 		Iterator<String> names = classNames.iterator();
 		while (names.hasNext()) {
 			String name = names.next();
@@ -1316,7 +1362,8 @@ public class Utils {
 			Iterator<Class<?>> it = loadedClasses.iterator();
 			while (it.hasNext()) {
 				Class<?> c = it.next();
-				if ((caseInsensitive && c.getName().toLowerCase().endsWith(name.toLowerCase())) || c.getName().endsWith(name)) {
+				if ((caseInsensitive && c.getName().toLowerCase().endsWith(name.toLowerCase()))
+						|| c.getName().endsWith(name)) {
 					it.remove();
 					names.remove();
 					found = true;
@@ -1331,7 +1378,8 @@ public class Utils {
 	}
 
 	private static LinkedHashSet<Class<?>> search(ScanResult scanResult, Class<?> parentType, Set<String> classNames) {
-		ClassInfoList subclasses = parentType.isInterface() ? scanResult.getClassesImplementing(parentType.getName()) : scanResult.getSubclasses(parentType.getName());
+		ClassInfoList subclasses = parentType.isInterface() ? scanResult.getClassesImplementing(parentType.getName())
+				: scanResult.getSubclasses(parentType.getName());
 
 		String[] lowerCasedNames = classNames.toArray(new String[0]);
 		for (int i = 0; i < lowerCasedNames.length; i++) {
@@ -1339,10 +1387,10 @@ public class Utils {
 		}
 
 		List<Class<?>> loadedClasses = subclasses.stream()
-				.filter(subClass -> subClass.isStandardClass() && !subClass.isAbstract() && !subClass.isAnonymousInnerClass())
+				.filter(subClass -> subClass.isStandardClass() && !subClass.isAbstract()
+						&& !subClass.isAnonymousInnerClass())
 				.filter(subClass -> StringUtils.endsWithAny(subClass.getName().toLowerCase(), lowerCasedNames))
-				.map(ClassInfo::loadClass)
-				.collect(Collectors.toList());
+				.map(ClassInfo::loadClass).collect(Collectors.toList());
 		;
 
 		LinkedHashSet<Class<?>> sorted = new LinkedHashSet<>();
@@ -1358,18 +1406,21 @@ public class Utils {
 				}
 				simpleNames.append(c.getSimpleName());
 			}
-			throw new IllegalStateException("Loaded multiple classes with the same name: " + simpleNames + ". Please provide the class package to disambiguate");
+			throw new IllegalStateException("Loaded multiple classes with the same name: " + simpleNames
+					+ ". Please provide the class package to disambiguate");
 		}
 
 		return sorted;
 	}
 
-	private static void findClasses(ScanResult scanResult, Class<?> parentType, LinkedHashSet<String> classNames, Map<Class<?>, LinkedHashSet<Class<?>>> out) {
+	private static void findClasses(ScanResult scanResult, Class<?> parentType, LinkedHashSet<String> classNames,
+			Map<Class<?>, LinkedHashSet<Class<?>>> out) {
 		out.put(parentType, search(scanResult, parentType, classNames));
 	}
 
-	static <T> void parseGroupSetting(PropertyBasedConfiguration properties, String propertyName, Function<String, T> valueTransform, BiConsumer<T, String[]> consumer) {
-		//e.g. trade.minimum.amount=[ADA;XRP]50.5, [BTC]100, 30
+	static <T> void parseGroupSetting(PropertyBasedConfiguration properties, String propertyName,
+			Function<String, T> valueTransform, BiConsumer<T, String[]> consumer) {
+		// e.g. trade.minimum.amount=[ADA;XRP]50.5, [BTC]100, 30
 		List<String> settingsPerGroup = properties.getOptionalList(propertyName);
 		for (String settingPerGroup : settingsPerGroup) {
 			String assetList = StringUtils.substringBetween(settingPerGroup, "[", "]");
@@ -1380,7 +1431,8 @@ public class Utils {
 
 				settingPerGroup = StringUtils.substringAfter(settingPerGroup, "]");
 				if (settingPerGroup.isBlank()) {
-					throw new IllegalConfigurationException("No allocation defined in property '" + propertyName + "' after asset symbols '" + assetList + "'");
+					throw new IllegalConfigurationException("No allocation defined in property '" + propertyName
+							+ "' after asset symbols '" + assetList + "'");
 				}
 			}
 			settingPerGroup = settingPerGroup.trim();
@@ -1414,5 +1466,3 @@ public class Utils {
 		return decimals;
 	}
 }
-
-

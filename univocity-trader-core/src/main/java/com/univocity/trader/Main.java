@@ -54,11 +54,16 @@ public class Main {
 		 */
 		final Options options = new Options();
 
-		options.addOption(Option.builder().argName(EXCHANGE_OPTION).longOpt(EXCHANGE_OPTION).type(String.class).hasArg().required(true).desc("exchange name").build());
-		options.addOption(Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg().required(false).desc("configuration file").build());
-		options.addOption(Option.builder().argName(BACKFILL_OPTION).longOpt(BACKFILL_OPTION).hasArg(false).required(false).desc("backfill historical data from exchange").build());
-		options.addOption(Option.builder().argName(SIMULATE_OPTION).longOpt(SIMULATE_OPTION).hasArg(false).required(false).desc("simulate").build());
-		options.addOption(Option.builder().argName(TRADE_OPTION).longOpt(TRADE_OPTION).hasArg(false).required(false).desc("trade live on exchange").build());
+		options.addOption(Option.builder().argName(EXCHANGE_OPTION).longOpt(EXCHANGE_OPTION).type(String.class).hasArg()
+				.required(true).desc("exchange name").build());
+		options.addOption(Option.builder().argName(CONFIG_OPTION).longOpt(CONFIG_OPTION).type(String.class).hasArg()
+				.required(false).desc("configuration file").build());
+		options.addOption(Option.builder().argName(BACKFILL_OPTION).longOpt(BACKFILL_OPTION).hasArg(false)
+				.required(false).desc("backfill historical data from exchange").build());
+		options.addOption(Option.builder().argName(SIMULATE_OPTION).longOpt(SIMULATE_OPTION).hasArg(false)
+				.required(false).desc("simulate").build());
+		options.addOption(Option.builder().argName(TRADE_OPTION).longOpt(TRADE_OPTION).hasArg(false).required(false)
+				.desc("trade live on exchange").build());
 		/*
 		 * parse
 		 */
@@ -102,7 +107,8 @@ public class Main {
 				}
 			}
 			if (!ran) {
-				throw new IllegalArgumentException("Please provide an action to execute: " + BACKFILL_OPTION + ", " + SIMULATE_OPTION + " or " + TRADE_OPTION);
+				throw new IllegalArgumentException("Please provide an action to execute: " + BACKFILL_OPTION + ", "
+						+ SIMULATE_OPTION + " or " + TRADE_OPTION);
 			}
 		} catch (final Exception e) {
 			System.err.println(e.getMessage());
@@ -110,8 +116,9 @@ public class Main {
 			formatter.setOptionComparator(null);
 			formatter.printHelp("posix", options);
 		} finally {
-			if (cmd.hasOption(BACKFILL_OPTION) && !cmd.hasOption(TRADE_OPTION)){
-				// exit after backfill as any HTTP client used might be configured to be kept alive and prevent the program from exiting.
+			if (cmd.hasOption(BACKFILL_OPTION) && !cmd.hasOption(TRADE_OPTION)) {
+				// exit after backfill as any HTTP client used might be configured to be kept
+				// alive and prevent the program from exiting.
 				System.exit(0);
 			}
 		}

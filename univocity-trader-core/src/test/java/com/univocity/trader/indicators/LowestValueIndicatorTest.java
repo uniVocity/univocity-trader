@@ -1,12 +1,10 @@
 package com.univocity.trader.indicators;
 
-
 import org.junit.*;
 
 import static com.univocity.trader.candles.CandleHelper.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static junit.framework.TestCase.*;
-
 
 public class LowestValueIndicatorTest {
 
@@ -47,7 +45,6 @@ public class LowestValueIndicatorTest {
 		assertEquals(1.1, accumulate(b, 10, 1.1), 0.1);
 		assertEquals(1.3, accumulate(b, 11, 1.7), 0.1);
 
-
 		b = new LowestValueIndicator(5, minutes(1), c -> c.low);
 		assertEquals(44.96, update(b, 1, 44.96), 0.1);
 		assertEquals(44.96, update(b, 1, 44.99), 0.1);
@@ -67,43 +64,43 @@ public class LowestValueIndicatorTest {
 	}
 
 	@Test
-	public void test2Minutes(){
+	public void test2Minutes() {
 		LowestValueIndicator b = new LowestValueIndicator(3, minutes(2), c -> c.low);
 
 		b.accumulate(newCandle(1, 1));
 		b.accumulate(newCandle(2, 2));
 		assertEquals(1.0, b.getValue());
-		//end candle 1
+		// end candle 1
 
 		b.accumulate(newCandle(3, 3));
 		b.accumulate(newCandle(4, 4));
 		assertEquals(1.0, b.getValue());
-		//end candle 2
+		// end candle 2
 
 		b.accumulate(newCandle(5, 3));
 		b.accumulate(newCandle(6, 4));
 		assertEquals(1.0, b.getValue());
-		//end candle 3
+		// end candle 3
 
 		b.accumulate(newCandle(7, 5));
 		b.accumulate(newCandle(8, 4));
 		assertEquals(3.0, b.getValue());
-		//end candle 4
+		// end candle 4
 
 		b.accumulate(newCandle(9, 3));
 		b.accumulate(newCandle(10, 3));
 		assertEquals(3.0, b.getValue());
-		//end candle 5
+		// end candle 5
 
 		b.accumulate(newCandle(11, 4));
 		b.accumulate(newCandle(12, 3));
 		assertEquals(3.0, b.getValue());
-		//end candle 6
+		// end candle 6
 
 		b.accumulate(newCandle(13, 2));
 		b.accumulate(newCandle(14, 1));
 		assertEquals(1.0, b.getValue());
-		//end candle 7
+		// end candle 7
 
 	}
 }

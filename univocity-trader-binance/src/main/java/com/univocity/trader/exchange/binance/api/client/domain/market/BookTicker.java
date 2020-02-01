@@ -77,12 +77,8 @@ public class BookTicker {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("symbol", symbol)
-				.append("bidPrice", bidPrice)
-				.append("bidQty", bidQty)
-				.append("askPrice", askPrice)
-				.append("askQty", askQty)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("symbol", symbol)
+				.append("bidPrice", bidPrice).append("bidQty", bidQty).append("askPrice", askPrice)
+				.append("askQty", askQty).toString();
 	}
 }

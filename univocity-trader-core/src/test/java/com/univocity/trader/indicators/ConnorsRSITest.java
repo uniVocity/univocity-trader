@@ -1,9 +1,7 @@
 package com.univocity.trader.indicators;
 
-
 import com.univocity.trader.indicators.base.*;
 import org.junit.*;
-
 
 import static com.univocity.trader.candles.CandleHelper.*;
 import static org.junit.Assert.*;
@@ -213,7 +211,8 @@ public class ConnorsRSITest {
 		assertEquals(20.546597984930987, accumulateAndGet(b, 192, 0.0381), 0.001);
 		assertEquals(59.00056196737547, accumulateAndGet(b, 193, 0.03811), 0.001);
 		assertEquals(33.978269133283234, accumulateAndGet(b, 194, 0.0381), 0.001);
-		assertEquals(85.16779679168708, accumulateAndGet(b, 195, 0.03823), 0.001); /////// ADAUSDT, 2019-SEP-26 12:48, 1-minute chart
+		assertEquals(85.16779679168708, accumulateAndGet(b, 195, 0.03823), 0.001); /////// ADAUSDT, 2019-SEP-26 12:48,
+																					/////// 1-minute chart
 		assertEquals(84.40732640917844, accumulateAndGet(b, 196, 0.03827), 0.001);
 		assertEquals(50.53844538476611, accumulateAndGet(b, 197, 0.03826), 0.001);
 		assertEquals(75.82436407645655, accumulateAndGet(b, 198, 0.03829), 0.001);
@@ -221,4 +220,3 @@ public class ConnorsRSITest {
 		assertEquals(61.52786357643115, accumulateAndGet(b, 200, 0.03826), 0.001);
 	}
 }
-

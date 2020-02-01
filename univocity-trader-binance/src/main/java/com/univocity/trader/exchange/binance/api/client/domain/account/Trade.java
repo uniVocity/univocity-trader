@@ -167,19 +167,10 @@ public class Trade {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("id", id)
-				.append("symbol", symbol)
-				.append("price", price)
-				.append("qty", qty)
-				.append("quoteQty", quoteQty)
-				.append("commission", commission)
-				.append("commissionAsset", commissionAsset)
-				.append("time", time)
-				.append("buyer", buyer)
-				.append("maker", maker)
-				.append("bestMatch", bestMatch)
-				.append("orderId", orderId)
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("id", id)
+				.append("symbol", symbol).append("price", price).append("qty", qty).append("quoteQty", quoteQty)
+				.append("commission", commission).append("commissionAsset", commissionAsset).append("time", time)
+				.append("buyer", buyer).append("maker", maker).append("bestMatch", bestMatch).append("orderId", orderId)
 				.toString();
 	}
 

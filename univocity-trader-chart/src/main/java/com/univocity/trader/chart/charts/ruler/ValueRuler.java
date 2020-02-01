@@ -1,6 +1,5 @@
 package com.univocity.trader.chart.charts.ruler;
 
-
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 
@@ -8,7 +7,6 @@ import java.awt.*;
 import java.text.*;
 
 import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
-
 
 public class ValueRuler extends Ruler<ValueRulerController> {
 
@@ -37,7 +35,6 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		gradientEnd.x = chart.getWidth();
 		gradientEnd.y = -250;
 
-
 		g.setPaint(new GradientPaint(gradientStart, glassGray, gradientEnd, glassWhite));
 		g.fillRect(start, 0, end, chart.getHeight());
 	}
@@ -60,7 +57,8 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 
 			int yy = chart.getHeight() - y;
 			text(g);
-			g.drawString(tag, chart.getBoundaryRight() - tagWidth - getRightValueTagSpacing(), yy + (getFontHeight() / 2));
+			g.drawString(tag, chart.getBoundaryRight() - tagWidth - getRightValueTagSpacing(),
+					yy + (getFontHeight() / 2));
 			y -= yIncrement;
 		}
 
@@ -104,7 +102,8 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		return (stringY + fh >= refY - fh) && (stringY - fh <= refY + fh);
 	}
 
-	private int drawPrices(Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY, boolean drawAboveRef) {
+	private int drawPrices(Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY,
+			boolean drawAboveRef) {
 		final int y = chart.getYCoordinate(value);
 		final int fontHeight = getController().getFontHeight();
 		int stringY = getController().centralizeYToFontHeight(y);
@@ -118,7 +117,8 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		if (refY >= 0 && collides(stringY, refY, fontHeight)) {
 			stringY = stringY + (drawAboveRef ? -fontHeight : fontHeight);
 		} else if (candle == null) {
-			if (collides(stringY, refY1, fontHeight) || collides(stringY, refY2, fontHeight) || collides(stringY, refY3, fontHeight)) {
+			if (collides(stringY, refY1, fontHeight) || collides(stringY, refY2, fontHeight)
+					|| collides(stringY, refY3, fontHeight)) {
 				return -1;
 			}
 		}
@@ -128,7 +128,8 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 
 		int x = chart.getBoundaryRight() - tagWidth - getController().getRightValueTagSpacing();
 		if (drawInBox) {
-			drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, candle == null ? getBackgroundColor() : candle.isGreen() ? getProfitBackground() : getLossBackground());
+			drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, candle == null ? getBackgroundColor()
+					: candle.isGreen() ? getProfitBackground() : getLossBackground());
 		} else {
 			if (drawAboveRef) {
 				setProfile(SELECTION);

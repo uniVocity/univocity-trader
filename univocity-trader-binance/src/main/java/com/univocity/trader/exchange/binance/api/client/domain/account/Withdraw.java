@@ -40,7 +40,8 @@ public class Withdraw {
 	private String id;
 
 	/**
-	 * (0:Email Sent,1:Cancelled 2:Awaiting Approval 3:Rejected 4:Processing 5:Failure 6:Completed)
+	 * (0:Email Sent,1:Cancelled 2:Awaiting Approval 3:Rejected 4:Processing
+	 * 5:Failure 6:Completed)
 	 */
 	private int status;
 
@@ -110,15 +111,9 @@ public class Withdraw {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("amount", amount)
-				.append("address", address)
-				.append("asset", asset)
-				.append("applyTime", applyTime)
-				.append("successTime", successTime)
-				.append("txId", txId)
-				.append("id", id)
-				.append("status", status)
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("amount", amount)
+				.append("address", address).append("asset", asset).append("applyTime", applyTime)
+				.append("successTime", successTime).append("txId", txId).append("id", id).append("status", status)
 				.toString();
 	}
 }

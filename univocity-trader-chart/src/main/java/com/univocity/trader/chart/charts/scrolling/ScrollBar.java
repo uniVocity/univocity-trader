@@ -7,7 +7,8 @@ import java.awt.*;
 import java.awt.event.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class ScrollBar extends MouseAdapter {
 
@@ -37,8 +38,7 @@ public class ScrollBar extends MouseAdapter {
 				p = new Point(p.x - canvas.getLocation().x, p.y - canvas.getLocation().y);
 				updateHighlight(p);
 			}
-		}
-		);
+		});
 		timer.start();
 	}
 
@@ -82,7 +82,7 @@ public class ScrollBar extends MouseAdapter {
 		}
 	}
 
-	public int drag(MouseEvent e, int dragStart){
+	public int drag(MouseEvent e, int dragStart) {
 		dragging = true;
 
 		int pixelsToMove = e.getX() - dragStart;
@@ -136,11 +136,11 @@ public class ScrollBar extends MouseAdapter {
 		}
 	}
 
-	public int getHeight(){
+	public int getHeight() {
 		return height;
 	}
 
-	public boolean isDraggingScroll(){
+	public boolean isDraggingScroll() {
 		return scrollRequired && dragging;
 	}
 }

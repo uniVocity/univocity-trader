@@ -17,13 +17,15 @@ public class DefaultOrder extends OrderRequest implements Order {
 		this(assetSymbol, fundSymbol, side, tradeSide, time, null);
 	}
 
-	public DefaultOrder(String assetSymbol, String fundSymbol, Order.Side side, Trade.Side tradeSide, long time, List<Order> attachments) {
+	public DefaultOrder(String assetSymbol, String fundSymbol, Order.Side side, Trade.Side tradeSide, long time,
+			List<Order> attachments) {
 		super(assetSymbol, fundSymbol, side, tradeSide, time, null);
 		this.attachments = attachments;
 	}
 
 	public DefaultOrder(Order order) {
-		super(order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), order.getTradeSide(), order.getTime(), null);
+		super(order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), order.getTradeSide(), order.getTime(),
+				null);
 		this.setOrderId(order.getOrderId());
 		this.setType(order.getType());
 		this.setQuantity(order.getQuantity());

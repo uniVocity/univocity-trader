@@ -8,7 +8,8 @@ import java.util.*;
 import java.util.function.*;
 
 /**
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 abstract class IBRequests {
 
@@ -20,7 +21,6 @@ abstract class IBRequests {
 
 	final RequestHandler requestHandler;
 	final ResponseProcessor responseProcessor;
-
 
 	final String ip;
 	final int port;
@@ -63,7 +63,8 @@ abstract class IBRequests {
 					if (client.isConnected()) {
 						log.info("Connected to TWS server (version {}})", client.serverVersion());
 					} else {
-						throw new IllegalStateException("Could not connect to TWS. Make sure it's running on " + (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
+						throw new IllegalStateException("Could not connect to TWS. Make sure it's running on "
+								+ (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
 					}
 				}
 			}
@@ -96,7 +97,7 @@ abstract class IBRequests {
 	}
 
 	private synchronized void connect() {
-		boolean[] ready = new boolean[]{false};
+		boolean[] ready = new boolean[] { false };
 		getReader();
 
 		new Thread(() -> {
@@ -128,7 +129,7 @@ abstract class IBRequests {
 				try {
 					signal.issueSignal();
 				} catch (Exception e) {
-					//ignore. Don't care.
+					// ignore. Don't care.
 				}
 			}
 
@@ -137,14 +138,14 @@ abstract class IBRequests {
 					reader.interrupt();
 					reader = null;
 				} catch (Exception e) {
-					//ignore. Don't care.
+					// ignore. Don't care.
 				}
 			}
 
 			try {
 				client.eDisconnect();
 			} catch (Exception e) {
-				//ignore. Don't care.
+				// ignore. Don't care.
 			}
 
 			client = null;

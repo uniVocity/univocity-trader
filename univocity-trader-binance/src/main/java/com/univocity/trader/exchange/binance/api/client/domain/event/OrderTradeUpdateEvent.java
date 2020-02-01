@@ -283,30 +283,18 @@ public class OrderTradeUpdateEvent {
 		this.tradeId = tradeId;
 	}
 
-
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("eventType", eventType)
-				.append("eventTime", eventTime)
-				.append("symbol", symbol)
-				.append("newClientOrderId", newClientOrderId)
-				.append("side", side)
-				.append("type", type)
-				.append("timeInForce", timeInForce)
-				.append("originalQuantity", originalQuantity)
-				.append("price", price)
-				.append("executionType", executionType)
-				.append("orderStatus", orderStatus)
-				.append("orderRejectReason", orderRejectReason)
-				.append("orderId", orderId)
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("eventType", eventType)
+				.append("eventTime", eventTime).append("symbol", symbol).append("newClientOrderId", newClientOrderId)
+				.append("side", side).append("type", type).append("timeInForce", timeInForce)
+				.append("originalQuantity", originalQuantity).append("price", price)
+				.append("executionType", executionType).append("orderStatus", orderStatus)
+				.append("orderRejectReason", orderRejectReason).append("orderId", orderId)
 				.append("quantityLastFilledTrade", quantityLastFilledTrade)
 				.append("accumulatedQuantity", accumulatedQuantity)
-				.append("priceOfLastFilledTrade", priceOfLastFilledTrade)
-				.append("commission", commission)
-				.append("commissionAsset", commissionAsset)
-				.append("orderTradeTime", orderTradeTime)
-				.append("tradeId", tradeId)
-				.toString();
+				.append("priceOfLastFilledTrade", priceOfLastFilledTrade).append("commission", commission)
+				.append("commissionAsset", commissionAsset).append("orderTradeTime", orderTradeTime)
+				.append("tradeId", tradeId).toString();
 	}
 }

@@ -84,11 +84,13 @@ public class SymbolPriceDetails {
 	}
 
 	public BigDecimal getMinimumOrderAmount(BigDecimal unitPrice) {
-		return getOrDefault(info, SymbolInformation::minimumAssetsPerOrder, DEFAULT_MINIMUM_ASSETS_PER_ORDER).multiply(unitPrice);
+		return getOrDefault(info, SymbolInformation::minimumAssetsPerOrder, DEFAULT_MINIMUM_ASSETS_PER_ORDER)
+				.multiply(unitPrice);
 	}
 
 	public double getMinimumOrderAmount(double unitPrice) {
-		return getOrDefault(info, SymbolInformation::minimumAssetsPerOrderAmount, DEFAULT_MINIMUM_ASSETS_PER_ORDER_AMOUNT) * unitPrice;
+		return getOrDefault(info, SymbolInformation::minimumAssetsPerOrderAmount,
+				DEFAULT_MINIMUM_ASSETS_PER_ORDER_AMOUNT) * unitPrice;
 	}
 
 	private int getQuantityDecimals(SymbolInformation info) {

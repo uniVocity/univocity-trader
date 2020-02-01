@@ -36,9 +36,7 @@ public class BinanceApiError {
 
 	@Override
 	public String toString() {
-		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
-				.append("code", code)
-				.append("msg", msg)
-				.toString();
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("code", code)
+				.append("msg", msg).toString();
 	}
 }

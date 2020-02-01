@@ -6,7 +6,6 @@ import com.univocity.trader.strategy.*;
 
 public class OBV extends SingleValueCalculationIndicator {
 
-
 	private double previous;
 
 	public OBV(TimeInterval interval) {
@@ -33,10 +32,8 @@ public class OBV extends SingleValueCalculationIndicator {
 		return obv;
 	}
 
-
-
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{};
+		return new Indicator[] {};
 	}
 }

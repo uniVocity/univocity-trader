@@ -71,13 +71,15 @@ public class CompositePanelBuilder {
 	private List<Field> getUIBoundClassContainer(Class<?> type) {
 		List<Field> container = AnnotationHelper.getAnnotatedFields(type, ControllerContainer.class);
 		if (container.size() == 0) {
-			throw new IllegalArgumentException("Type " + type.getSimpleName() + " does not contain ControllerContainer");
+			throw new IllegalArgumentException(
+					"Type " + type.getSimpleName() + " does not contain ControllerContainer");
 		}
 
 		for (Field field : container) {
 			field.setAccessible(true);
 			if (!Collection.class.isAssignableFrom(field.getType())) {
-				throw new IllegalArgumentException("Field " + type.getSimpleName() + "." + field.getName() + " should be a collection");
+				throw new IllegalArgumentException(
+						"Field " + type.getSimpleName() + "." + field.getName() + " should be a collection");
 			}
 		}
 
@@ -97,7 +99,8 @@ public class CompositePanelBuilder {
 			for (Field field : uiBoundFieldContainer) {
 				field.setAccessible(true);
 				if (!Map.class.isAssignableFrom(field.getType())) {
-					throw new IllegalArgumentException("Field " + type.getSimpleName() + "." + field.getName() + " should be a map");
+					throw new IllegalArgumentException(
+							"Field " + type.getSimpleName() + "." + field.getName() + " should be a map");
 				}
 			}
 		}
@@ -116,7 +119,8 @@ public class CompositePanelBuilder {
 			}
 			if (isSetterShared(setter, o)) {
 				sharedFieldSources.add(o);
-				log.debug("Setter " + setter.getName() + " being shared with the following objects " + sharedFieldSources);
+				log.debug("Setter " + setter.getName() + " being shared with the following objects "
+						+ sharedFieldSources);
 			} else {
 				log.debug("Setter " + setter.getName() + " not shared");
 			}
@@ -137,8 +141,10 @@ public class CompositePanelBuilder {
 			log.debug(observedObject.getClass().getSimpleName() + "is a UIBoundClass, merging its fields");
 			mergeBoundFields(observedObject);
 		} else if (observedObject.getClass().getAnnotation(CompositeUIBound.class) != null) {
-			log.debug(observedObject.getClass().getSimpleName() + " is a CompositeUIBoundClass, reading the UIBoundClassContainers...");
-			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), ControllerContainer.class);
+			log.debug(observedObject.getClass().getSimpleName()
+					+ " is a CompositeUIBoundClass, reading the UIBoundClassContainers...");
+			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(),
+					ControllerContainer.class);
 			for (Field field : fields) {
 				log.debug(observedObject.getClass().getSimpleName() + " contains container field: " + field.getName());
 				field.setAccessible(true);
@@ -164,7 +170,8 @@ public class CompositePanelBuilder {
 		}
 	}
 
-	public JPanel getPanel(Object observedObject) throws IllegalArgumentException, IllegalAccessException, SecurityException, InstantiationException, InvocationTargetException, NoSuchFieldException {
+	public JPanel getPanel(Object observedObject) throws IllegalArgumentException, IllegalAccessException,
+			SecurityException, InstantiationException, InvocationTargetException, NoSuchFieldException {
 		log.debug("Creating panel from class " + observedObject.getClass().getSimpleName());
 		boundObjects.clear();
 		createdSetters.clear();
@@ -175,11 +182,11 @@ public class CompositePanelBuilder {
 		bindFields(observedObject);
 		removeSettersNotShared();
 
-
 		return getSubPanel(observedObject, uiBoundClassContainer);
 	}
 
-	private void populateNotSharedSetters(Object observedObject) throws IllegalArgumentException, IllegalAccessException {
+	private void populateNotSharedSetters(Object observedObject)
+			throws IllegalArgumentException, IllegalAccessException {
 		if (observedObject.getClass().getAnnotation(CompositeUIBound.class) != null) {
 			log.debug("Looking for fields that should not be shared on " + observedObject.getClass().getSimpleName());
 			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), DontShare.class);
@@ -202,8 +209,10 @@ public class CompositePanelBuilder {
 		}
 	}
 
-	public JPanel getSubPanel(Object observedObject, List<Field> uiContainer) throws IllegalArgumentException, IllegalAccessException, SecurityException, InstantiationException, InvocationTargetException, NoSuchFieldException {
-		log.debug("Creating panel for "+ observedObject.getClass().getSimpleName());
+	public JPanel getSubPanel(Object observedObject, List<Field> uiContainer)
+			throws IllegalArgumentException, IllegalAccessException, SecurityException, InstantiationException,
+			InvocationTargetException, NoSuchFieldException {
+		log.debug("Creating panel for " + observedObject.getClass().getSimpleName());
 		JPanel out = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 
@@ -233,8 +242,9 @@ public class CompositePanelBuilder {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void bindFields(Object observedObject) throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException, InstantiationException, InvocationTargetException {
-		log.debug("Looking for field to bind in "+ observedObject.getClass().getName());
+	private void bindFields(Object observedObject) throws IllegalArgumentException, IllegalAccessException,
+			SecurityException, NoSuchFieldException, InstantiationException, InvocationTargetException {
+		log.debug("Looking for field to bind in " + observedObject.getClass().getName());
 
 		if (observedObject.getClass().getAnnotation(CompositeUIBound.class) != null) {
 			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), Bind.class);
@@ -265,13 +275,15 @@ public class CompositePanelBuilder {
 		}
 	}
 
-	private Map<Controller, List<String>> getMapFrom(Object observedObject, Field field) throws IllegalArgumentException, IllegalAccessException {
+	private Map<Controller, List<String>> getMapFrom(Object observedObject, Field field)
+			throws IllegalArgumentException, IllegalAccessException {
 		field.setAccessible(true);
 		Object o = field.get(observedObject);
 		return (Map<Controller, List<String>>) o;
 	}
 
-	private Set<Method> getSettersOf(Object observedObject, Field field) throws IllegalArgumentException, IllegalAccessException {
+	private Set<Method> getSettersOf(Object observedObject, Field field)
+			throws IllegalArgumentException, IllegalAccessException {
 		Set<Method> setters = new HashSet<>();
 
 		Map<Controller, List<String>> map = getMapFrom(observedObject, field);
@@ -294,8 +306,9 @@ public class CompositePanelBuilder {
 		return setters;
 	}
 
-	private JPanel buildContainedPanel(Object o) throws IllegalArgumentException, SecurityException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchFieldException {
-		log.debug("Creating panel for "+ o.getClass().getSimpleName());
+	private JPanel buildContainedPanel(Object o) throws IllegalArgumentException, SecurityException,
+			IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchFieldException {
+		log.debug("Creating panel for " + o.getClass().getSimpleName());
 		MergedProcessorPanelBuilder builder = new MergedProcessorPanelBuilder(o.getClass());
 		List<Method> setters = builder.getSetters();
 
@@ -318,16 +331,19 @@ public class CompositePanelBuilder {
 					if (notSharedSetters.containsKey(setter)) {
 						Set<Object> notShared = notSharedSetters.get(setter);
 						if (notShared.contains(o)) {
-							log.debug("UI component for setter " + setter.getName() + " should not be shared for " + o + " continuing");
+							log.debug("UI component for setter " + setter.getName() + " should not be shared for " + o
+									+ " continuing");
 							continue;
 						}
 					}
-					log.debug("UI component for setter " + setter.getName() + " already created, skipping UI component creation");
+					log.debug("UI component for setter " + setter.getName()
+							+ " already created, skipping UI component creation");
 					builder.getFields().remove(i);
 					builder.getSetters().remove(i);
 					i--;
 				} else {
-					log.debug("UI component for setter " + setter.getName() + " being created first time. Marking it as created");
+					log.debug("UI component for setter " + setter.getName()
+							+ " being created first time. Marking it as created");
 					createdSetters.add(setter);
 				}
 			}
@@ -336,11 +352,13 @@ public class CompositePanelBuilder {
 		return builder.getPanel(o);
 	}
 
-	private Set<UpdateProcessor> createMergedProcessor(Set<Object> toMerge) throws InstantiationException, IllegalAccessException, IllegalArgumentException, SecurityException, InvocationTargetException {
+	private Set<UpdateProcessor> createMergedProcessor(Set<Object> toMerge) throws InstantiationException,
+			IllegalAccessException, IllegalArgumentException, SecurityException, InvocationTargetException {
 		final HashSet<UpdateProcessor> processors = new HashSet<UpdateProcessor>();
 		for (Object o : toMerge) {
 			UIBoundClass annotation = o.getClass().getAnnotation(UIBoundClass.class);
-			UpdateProcessor processor = (UpdateProcessor) annotation.updateProcessor().getConstructors()[0].newInstance(o);
+			UpdateProcessor processor = (UpdateProcessor) annotation.updateProcessor().getConstructors()[0]
+					.newInstance(o);
 			processors.add(processor);
 		}
 		return processors;

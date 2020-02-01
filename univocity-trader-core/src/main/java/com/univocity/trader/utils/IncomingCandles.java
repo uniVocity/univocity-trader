@@ -6,22 +6,27 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * A simple enumeration that receives candles from the exchange, which might come as a stream, and adds them to an
- * internal queue. The consumer of the enumeration will block if the queue becomes empty and the exchange is still
- * producing candles. The last call to {@link #nextElement()} might produce a {@code null} if the consumer
- * was blocked waiting for more candles, and the exchange finished adding candles to this internal queue.
+ * A simple enumeration that receives candles from the exchange, which might
+ * come as a stream, and adds them to an internal queue. The consumer of the
+ * enumeration will block if the queue becomes empty and the exchange is still
+ * producing candles. The last call to {@link #nextElement()} might produce a
+ * {@code null} if the consumer was blocked waiting for more candles, and the
+ * exchange finished adding candles to this internal queue.
  *
- * The {@link #iterator()} of this class ensures no {@code null} is produced so this can be used in for loops.
+ * The {@link #iterator()} of this class ensures no {@code null} is produced so
+ * this can be used in for loops.
  *
- * If the consumer of candles returned by the exchange needs to stop processing them for some reason,
- * call {@link #stopConsuming()}.
+ * If the consumer of candles returned by the exchange needs to stop processing
+ * them for some reason, call {@link #stopConsuming()}.
  *
- * By default, after 30 seconds with an empty queue and without receiving anything since,
- * {@link #stopConsuming()} will be invoked automatically and abort the process. The {@link com.univocity.trader.Exchange}
- * implementation can check if {@link #consumerStopped()} produces {@code true} to close any open resources instead
- * of running indefinitely.
+ * By default, after 30 seconds with an empty queue and without receiving
+ * anything since, {@link #stopConsuming()} will be invoked automatically and
+ * abort the process. The {@link com.univocity.trader.Exchange} implementation
+ * can check if {@link #consumerStopped()} produces {@code true} to close any
+ * open resources instead of running indefinitely.
  *
- * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
+ * @author uniVocity Software Pty Ltd -
+ *         <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 
@@ -104,7 +109,6 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 		}
 	}
 
-
 	@Override
 	public Iterator<T> iterator() {
 		return new Iterator<>() {
@@ -121,7 +125,8 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 			@Override
 			public T next() {
 				if (next == null) {
-					throw new IllegalStateException("Can't invoke next() without checking if there are more elements with hasNext()");
+					throw new IllegalStateException(
+							"Can't invoke next() without checking if there are more elements with hasNext()");
 				}
 				T out = next;
 				next = null;

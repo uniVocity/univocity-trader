@@ -7,7 +7,5 @@ import com.fasterxml.jackson.annotation.*;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public enum RateLimitInterval {
-	SECOND,
-	MINUTE,
-	DAY
+	SECOND, MINUTE, DAY
 }

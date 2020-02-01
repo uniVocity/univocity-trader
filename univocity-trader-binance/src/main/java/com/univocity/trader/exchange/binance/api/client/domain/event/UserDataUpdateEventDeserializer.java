@@ -8,7 +8,8 @@ import com.fasterxml.jackson.databind.*;
 import java.io.*;
 
 /**
- * Custom deserializer for a User Data stream event, since the API can return two different responses in this stream.
+ * Custom deserializer for a User Data stream event, since the API can return
+ * two different responses in this stream.
  *
  * @see UserDataUpdateEvent
  */
@@ -35,11 +36,14 @@ public class UserDataUpdateEventDeserializer extends JsonDeserializer<UserDataUp
 		userDataUpdateEvent.setEventType(userDataUpdateEventType);
 		userDataUpdateEvent.setEventTime(eventTime);
 
-		if (userDataUpdateEventType == UserDataUpdateEventType.ACCOUNT_UPDATE || userDataUpdateEventType == UserDataUpdateEventType.ACCOUNT_POSITION_UPDATE) {
-			AccountUpdateEvent accountUpdateEvent = getUserDataUpdateEventDetail(json, AccountUpdateEvent.class, mapper);
+		if (userDataUpdateEventType == UserDataUpdateEventType.ACCOUNT_UPDATE
+				|| userDataUpdateEventType == UserDataUpdateEventType.ACCOUNT_POSITION_UPDATE) {
+			AccountUpdateEvent accountUpdateEvent = getUserDataUpdateEventDetail(json, AccountUpdateEvent.class,
+					mapper);
 			userDataUpdateEvent.setAccountUpdateEvent(accountUpdateEvent);
 		} else { // userDataUpdateEventType == UserDataUpdateEventType.ORDER_TRADE_UPDATE
-			OrderTradeUpdateEvent orderTradeUpdateEvent = getUserDataUpdateEventDetail(json, OrderTradeUpdateEvent.class, mapper);
+			OrderTradeUpdateEvent orderTradeUpdateEvent = getUserDataUpdateEventDetail(json,
+					OrderTradeUpdateEvent.class, mapper);
 			userDataUpdateEvent.setOrderTradeUpdateEvent(orderTradeUpdateEvent);
 		}
 
