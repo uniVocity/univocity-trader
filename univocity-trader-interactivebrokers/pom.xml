@@ -22,7 +22,7 @@
 			<artifactId>tws-api</artifactId>
 			<version>9.73.01-SNAPSHOT</version>
 			<scope>system</scope>
-			<systemPath>/opt/TwsApi.jar</systemPath>
+			<systemPath>/opt/tws-api-9.73.01-SNAPSHOT.jar</systemPath>
 		</dependency>
 
 
