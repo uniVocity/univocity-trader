@@ -1,5 +1,6 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -19,12 +20,6 @@
 		<dependency>
 			<groupId>com.univocity</groupId>
 			<artifactId>univocity-trader-binance</artifactId>
-			<version>${revision}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.univocity</groupId>
-			<artifactId>univocity-trader-iqfeed</artifactId>
 			<version>${revision}</version>
 		</dependency>
 
@@ -63,7 +58,8 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>3.2.0</version>
 				<configuration>
-					<!-- Excludes external configuration from jar. These will be moved to sit alongside the built jar -->
+					<!-- Excludes external configuration from jar. These will be moved to 
+						sit alongside the built jar -->
 					<excludes>
 						<exclude>**/*.bat</exclude>
 						<exclude>**/*.sh</exclude>
@@ -138,22 +134,23 @@
 								<!-- moves all dependencies to a "lib" folder -->
 								<copy todir="${basedir}/target/lib">
 									<fileset dir="${basedir}/">
-										<include name="*.jar"/>
+										<include name="*.jar" />
 									</fileset>
 								</copy>
 								<move todir="${basedir}/target/lib">
 									<fileset dir="${basedir}/target">
-										<include name="*.jar"/>
+										<include name="*.jar" />
 									</fileset>
 								</move>
 								<!-- Zips all scripts, config and lib folders into a package -->
-								<zip destfile="${basedir}/target/univocity-trader-examples.zip">
+								<zip
+									destfile="${basedir}/target/univocity-trader-examples.zip">
 									<mappedresources>
 										<fileset dir="${basedir}/target/">
-											<include name="*.bat"/>
-											<include name="*.sh"/>
-											<include name="config/**"/>
-											<include name="lib/**"/>
+											<include name="*.bat" />
+											<include name="*.sh" />
+											<include name="config/**" />
+											<include name="lib/**" />
 										</fileset>
 									</mappedresources>
 								</zip>
