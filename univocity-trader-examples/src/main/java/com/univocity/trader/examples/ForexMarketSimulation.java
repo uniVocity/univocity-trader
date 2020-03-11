@@ -56,8 +56,8 @@ public class ForexMarketSimulation {
 		simulator.configure().tickInterval(TimeInterval.millis(1));
 
 //		execute simulation
-//		simulator.run();
+		simulator.run();
 
-		simulator.backfillHistory("EURGBP");
+//		simulator.backfillHistory("EURGBP");
 	}
 }

@@ -117,13 +117,16 @@ public class SymbolPriceDetails {
 	}
 
 	public static String toString(int decimals, BigDecimal value) {
-		if(value == null){
+		if (value == null) {
 			return null;
 		}
 		return value.setScale(decimals, RoundingMode.FLOOR).toPlainString();
 	}
 
 	public static BigDecimal toBigDecimal(int decimals, double quantity) {
+		if (Double.isInfinite(quantity) || Double.isNaN(quantity)) {
+			return BigDecimal.ZERO;
+		}
 		BigDecimal bd = BigDecimal.valueOf(quantity);
 		bd = bd.setScale(decimals, RoundingMode.FLOOR);
 		return bd;
