@@ -52,8 +52,8 @@ public class ExchangeClient<T> implements Client {
 
 		Set<Object> allInstances = new HashSet<>();
 		for (Map.Entry<String, String[]> e : accountManager.configuration().symbolPairs().entrySet()) {
-			String assetSymbol = e.getValue()[0];
-			String fundSymbol = e.getValue()[1];
+			String assetSymbol = e.getValue()[0].intern();
+			String fundSymbol = e.getValue()[1].intern();
 
 			TradingManager tradingManager = new TradingManager(exchange, priceDetails, accountManager, assetSymbol, fundSymbol, Parameters.NULL);
 			if (root == null) {

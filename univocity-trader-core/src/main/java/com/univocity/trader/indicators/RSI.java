@@ -49,8 +49,6 @@ public class RSI extends SingleValueIndicator {
 	protected boolean process(Candle candle, double v, boolean updating) {
 		if (prev == null) {
 			prev = candle;
-			averageGainIndicator.accumulate(0.0);
-			averageLossIndicator.accumulate(0.0);
 			return false;
 		}
 

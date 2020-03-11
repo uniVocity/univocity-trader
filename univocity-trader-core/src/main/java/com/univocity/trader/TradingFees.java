@@ -29,7 +29,50 @@ public interface TradingFees {
 	 * @return the total fee amount for the given order;
 	 */
 	default double feesOnOrder(Order order) {
-		final double amount = order.getTotalOrderAmount().doubleValue();
+		final double amount = order.getTotalOrderAmount();
+		return feesOnAmount(amount, order.getType(), order.getSide());
+	}
+
+	/**
+	 * Return the trading fee amount applied to a given {@link OrderRequest}.
+	 *
+	 * @param order the order whose fees will be calculated
+	 *
+	 * @return the total fee amount for the given order;
+	 */
+	default double feesOnOrder(OrderRequest order) {
+		final double amount = order.getTotalOrderAmount();
+		return feesOnAmount(amount, order.getType(), order.getSide());
+	}
+
+
+	/**
+	 * Return the trading fee amount applied to the actual amount spent on the given {@link Order}.
+	 *
+	 * @param order the order whose fees will be calculated
+	 *
+	 * @return the total fee amount for the value traded through this order.
+	 */
+	default double feesOnTradedAmount(Order order) {
+		final double amount = order.getTotalTraded();
+		if (amount == 0.0) {
+			return 0.0;
+		}
+		return feesOnAmount(amount, order.getType(), order.getSide());
+	}
+
+	/**
+	 * Return the trading fee amount applied to the partial fill amount spent on the given {@link Order}.
+	 *
+	 * @param order the order whose fees will be calculated
+	 *
+	 * @return the fee amount for the current partial fill value traded through this order.
+	 */
+	default double feesOnPartialFill(DefaultOrder order) {
+		final double amount = order.getPartialFillTotalPrice();
+		if (amount == 0.0) {
+			return 0.0;
+		}
 		return feesOnAmount(amount, order.getType(), order.getSide());
 	}
 
@@ -44,6 +87,20 @@ public interface TradingFees {
 	 */
 	default double feesOnAmount(final double amount, Order.Type orderType, Order.Side side) {
 		return amount - takeFee(amount, orderType, side);
+	}
+
+
+	/**
+	 * Return the maximum trading fee amount that could be applied over the total order amount
+	 * (not to be confused with actual the traded/filled amount).
+	 *
+	 * @param order the original order
+	 *
+	 * @return the total fee amount for the given order;
+	 */
+	default double feesOnTotalOrderAmount(Order order) {
+		double amount = order.getTotalOrderAmount();
+		return feesOnAmount(amount, order.getType(), order.getSide());
 	}
 
 	/**

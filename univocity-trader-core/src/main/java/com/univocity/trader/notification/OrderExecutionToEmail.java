@@ -64,7 +64,7 @@ public class OrderExecutionToEmail implements OrderListener {
 		var total = new AtomicReference<>(0.0);
 		printTotalBalances(balances, new HashSet<>(), out, total, this.tradingManager);
 		out.append("\n\t* ").append(f.priceToString(tradingManager.getCash())).append(' ').append(tradingManager.getFundSymbol());
-		double holdings = total.get() + balances.getOrDefault(referenceCurrencySymbol, ZERO).getTotal().doubleValue();
+		double holdings = total.get() + balances.getOrDefault(referenceCurrencySymbol, ZERO).getTotal();
 		out.append("\n\nApproximate holdings ~$").append(f.switchToSymbol(referenceCurrencySymbol).priceToString(holdings)).append(" ").append(referenceCurrencySymbol);
 		return out.toString();
 	}
@@ -163,8 +163,8 @@ public class OrderExecutionToEmail implements OrderListener {
 
 		Balance instrument = balances.getOrDefault(next.getAssetSymbol(), ZERO);
 
-		double assets = instrument.getFreeAmount();
-		double locked = instrument.getLocked().doubleValue();
+		double assets = instrument.getFree();
+		double locked = instrument.getLocked();
 
 		if (assets != 0 || locked != 0) {
 			SymbolPriceDetails f = next.getPriceDetails();

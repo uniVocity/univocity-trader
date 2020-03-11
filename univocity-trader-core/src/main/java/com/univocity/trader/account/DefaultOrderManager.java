@@ -23,9 +23,9 @@ public class DefaultOrderManager implements OrderManager {
 
 	@Override
 	public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
-		BigDecimal originalPrice = order.getPrice();
+		double originalPrice = order.getPrice();
 
-		double availableQuantity = order.getQuantity().doubleValue();
+		double availableQuantity = order.getQuantity();
 
 		if (book != null) {
 			double spread = book.getSpread(availableQuantity);
@@ -34,9 +34,9 @@ public class DefaultOrderManager implements OrderManager {
 
 			//aims price at central price point of the spread.
 			if (order.getSide() == Order.Side.BUY) {
-				order.setPrice(BigDecimal.valueOf(bid + (spread / 2.0)));
+				order.setPrice(bid + (spread / 2.0));
 			} else {
-				order.setPrice(BigDecimal.valueOf(ask - (spread / 2.0)));
+				order.setPrice(ask - (spread / 2.0));
 			}
 
 			log.debug("{} - spread of {}: Ask {}, Bid {}. Closed at {}. Going to {} at ${}.",
@@ -49,7 +49,7 @@ public class DefaultOrderManager implements OrderManager {
 					priceDetails.priceToString(order.getPrice())
 			);
 		}
-	}
+ 	}
 
 	@Override
 	public void finalized(Order order, Trader trader) {
@@ -63,17 +63,21 @@ public class DefaultOrderManager implements OrderManager {
 
 	@Override
 	public void unchanged(Order order, Trader trader, Consumer<Order> resubmission) {
-		if (order.getTimeElapsed(trader.latestCandle().closeTime) >= maxTimeToKeepOrderOpen.ms) {
+		if (isCancellable(order) && order.getTimeElapsed(trader.latestCandle().closeTime) >= maxTimeToKeepOrderOpen.ms) {
 			order.cancel();
 		}
 	}
 
 	@Override
 	public boolean cancelToReleaseFundsFor(Order order, Trader currentTrader, Trader newSymbolTrader) {
-		if (order.getTimeElapsed(currentTrader.latestCandle().closeTime) > maxTimeToKeepOrderOpen.ms / 2) {
+		if (isCancellable(order) && order.getTimeElapsed(currentTrader.latestCandle().closeTime) > maxTimeToKeepOrderOpen.ms / 2) {
 			order.cancel();
 			return true;
 		}
 		return false;
+	}
+
+	protected boolean isCancellable(Order order) {
+		return order.getParent() == null && order.getTriggerCondition() == Order.TriggerCondition.NONE;
 	}
 }

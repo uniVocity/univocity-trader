@@ -2,11 +2,11 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.indicators.base.*;
 
-import java.math.*;
 import java.util.*;
 
 import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Status.*;
+import static com.univocity.trader.account.Order.TriggerCondition.*;
 import static com.univocity.trader.candles.Candle.*;
 
 public interface Order {
@@ -27,15 +27,25 @@ public interface Order {
 		return latestClose - getTime();
 	}
 
+	default String getFormattedTimeElapsed() {
+		return TimeInterval.getFormattedDuration(getTimeElapsed());
+	}
+
+	default String getFormattedTimeElapsed(long latestClose) {
+		return TimeInterval.getFormattedDuration(getTimeElapsed(latestClose));
+	}
+
 	String getOrderId();
 
-	BigDecimal getPrice();
+	double getPrice();
 
-	BigDecimal getQuantity();
+	double getAveragePrice();
 
-	BigDecimal getExecutedQuantity();
+	double getQuantity();
 
-	BigDecimal getFeesPaid();
+	double getExecutedQuantity();
+
+	double getFeesPaid();
 
 	Order.Side getSide();
 
@@ -43,13 +53,23 @@ public interface Order {
 
 	Type getType();
 
+	TriggerCondition getTriggerCondition();
+
+	double getTriggerPrice();
+
+	boolean isActive();
+
 	long getTime();
 
 	Status getStatus();
 
 	void cancel();
 
-	default List<Order> getAttachments(){
+	default Order getParent() {
+		return null;
+	}
+
+	default List<Order> getAttachments() {
 		return Collections.emptyList();
 	}
 
@@ -57,20 +77,24 @@ public interface Order {
 		return getStatus() == Status.CANCELLED;
 	}
 
-	default BigDecimal getRemainingQuantity() {
-		return round(getQuantity().subtract(getExecutedQuantity()));
+	default double getRemainingQuantity() {
+		return getQuantity() - getExecutedQuantity();
 	}
 
-	default BigDecimal getTotalTraded() {
-		return round(getExecutedQuantity().multiply(getPrice()));
+	default double getTotalTraded() {
+		return getExecutedQuantity() * getAveragePrice();
 	}
 
-	default BigDecimal getTotalOrderAmount() {
-		return round(getQuantity().multiply(getPrice()));
+	default double getTotalOrderAmount() {
+		return getQuantity() * getPrice();
 	}
 
 	default boolean isFinalized() {
 		return getStatus() == FILLED || getStatus() == Status.CANCELLED;
+	}
+
+	default String getParentOrderId() {
+		return getParent() == null ? "" : getParent().getOrderId();
 	}
 
 	default boolean isBuy() {
@@ -116,10 +140,17 @@ public interface Order {
 	default String print(long latestClose) {
 		StringBuilder description = new StringBuilder();
 
-		description
-				.append(getStatus()).append(' ')
-				.append(getType()).append(' ');
+		description.append(getStatus()).append(' ');
 
+		if (getTriggerCondition() != NONE) {
+			description
+					.append(getTriggerCondition())
+					.append("[")
+					.append(roundStr(getTriggerPrice()))
+					.append(']').append(' ');
+		}
+
+		description.append(getType()).append(' ');
 
 		if (isShort()) {
 			description.append(getTradeSide()).append(' ');
@@ -153,7 +184,7 @@ public interface Order {
 					.append(getFundsSymbol());
 		}
 
-		if (getStatus() == Status.PARTIALLY_FILLED || isFinalized() && getExecutedQuantity().compareTo(BigDecimal.ZERO) > 0) {
+		if (getStatus() == Status.PARTIALLY_FILLED || isFinalized() && getExecutedQuantity() > 0) {
 
 			description
 					.append(" - filled: ")
@@ -185,7 +216,10 @@ public interface Order {
 	}
 
 	default double getFillPct() {
-		return getExecutedQuantity().divide(getQuantity(), RoundingMode.FLOOR).doubleValue() * 100.0;
+		if(getQuantity() == 0.0){
+			return 0.0;
+		}
+		return getExecutedQuantity() / getQuantity() * 100.0;
 	}
 
 	default String sideDescription() {
@@ -207,6 +241,18 @@ public interface Order {
 	enum Type {
 		LIMIT,
 		MARKET
+	}
+
+	enum TriggerCondition {
+		NONE(""),
+		STOP_LOSS("SL"),
+		STOP_GAIN("SG");
+
+		public final String shortName;
+
+		TriggerCondition(String shortName) {
+			this.shortName = shortName;
+		}
 	}
 
 	enum Status {

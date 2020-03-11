@@ -120,7 +120,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *
 	 * @return a map of symbols traded by the exchange and their corresponding prices
 	 */
-	Map<String, Double> getLatestPrices();
+	Map<String, double[]> getLatestPrices();
 
 	/**
 	 * Returns the details about each traded symbol, such as minimum order size and decimal places to use for correct formatting and proper order

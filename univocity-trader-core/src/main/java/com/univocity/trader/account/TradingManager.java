@@ -52,9 +52,9 @@ public class TradingManager {
 
 		this.exchange = exchange;
 		this.client = account.getClient();
-		this.assetSymbol = assetSymbol;
-		this.fundSymbol = fundSymbol;
-		this.symbol = assetSymbol + fundSymbol;
+		this.assetSymbol = assetSymbol.intern();
+		this.fundSymbol = fundSymbol.intern();
+		this.symbol = (assetSymbol + fundSymbol).intern();
 
 		Instances<OrderListener> listenerProvider = client.getOrderListeners();
 		this.notifications = listenerProvider != null ? listenerProvider.create(symbol, params) : new OrderListener[0];
@@ -103,7 +103,7 @@ public class TradingManager {
 		return symbol;
 	}
 
-	public Map<String, Double> getAllPrices() {
+	public Map<String, double[]> getAllPrices() {
 		return exchange.getLatestPrices();
 	}
 
@@ -181,7 +181,7 @@ public class TradingManager {
 	}
 
 	public double getTotalAssets() {
-		return tradingAccount.getBalance(assetSymbol).getTotal().doubleValue();
+		return tradingAccount.getBalance(assetSymbol).getTotal();
 	}
 
 	public double getCash() {
@@ -221,7 +221,6 @@ public class TradingManager {
 
 	public final Map<String, Balance> updateBalances() {
 		return tradingAccount.updateBalances();
-
 	}
 
 	public String getReferenceCurrencySymbol() {
@@ -291,7 +290,13 @@ public class TradingManager {
 	private void notifyOrderSubmitted(Order order, Trade trade, OrderListener[] notifications) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
-				notifications[i].orderSubmitted(order, getTradeForOrder(trade, order), client);
+				trade = getTradeForOrder(trade, order);
+				notifications[i].orderSubmitted(order, trade, client);
+				if (order.getAttachments() != null) {
+					for (Order attached : order.getAttachments()) {
+						notifications[i].orderSubmitted(attached, trade, client);
+					}
+				}
 			} catch (Exception e) {
 				log.error("Error sending orderSubmitted notification for order: " + order, e);
 			}
@@ -301,7 +306,8 @@ public class TradingManager {
 	private void notifyOrderFinalized(Order order, Trade trade, OrderListener[] notifications) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
-				notifications[i].orderFinalized(order, getTradeForOrder(trade, order), client);
+				trade = getTradeForOrder(trade, order);
+				notifications[i].orderFinalized(order, trade, client);
 			} catch (Exception e) {
 				log.error("Error sending orderFinalized notification for order: " + order, e);
 			}
@@ -312,11 +318,13 @@ public class TradingManager {
 		trader.orderFinalized(order);
 		notifyOrderFinalized(order, trade, this.notifications);
 		notifyOrderFinalized(order, trade, trader.notifications);
+
 	}
 
 	void notifySimulationEnd() {
 		notifySimulationEnd(this.notifications);
 		notifySimulationEnd(trader.notifications);
+		Balance.balanceUpdateCounts.clear();
 	}
 
 	private void notifySimulationEnd(OrderListener[] notifications) {

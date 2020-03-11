@@ -61,7 +61,7 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 	}
 
 	@Override
-	public Map<String, Double> getLatestPrices() {
+	public Map<String, double[]> getLatestPrices() {
 		return new HashMap<>();
 	}
 

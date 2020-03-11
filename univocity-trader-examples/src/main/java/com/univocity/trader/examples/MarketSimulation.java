@@ -43,9 +43,11 @@ public class MarketSimulation {
 
 		account.listeners()
 				.add(new OrderExecutionToLog())
-				.add(new OrderExecutionToCsv().fileName("simulation"))
+				.add(new OrderExecutionToCsv().fileName("simulation.csv"))
 				.add((symbol) -> new SimpleStrategyStatistics(symbol))
 		;
+
+//		account.orderManager(new ExampleOrderManager());
 
 		Simulation simulation = simulator.configure().simulation();
 		simulation.initialFunds(1000.0)

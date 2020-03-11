@@ -90,7 +90,7 @@ class IB implements Exchange<Candle, Account> {
 	}
 
 	@Override
-	public Map<String, Double> getLatestPrices() {
+	public Map<String, double[]> getLatestPrices() {
 		validateContracts();
 		return null;
 	}

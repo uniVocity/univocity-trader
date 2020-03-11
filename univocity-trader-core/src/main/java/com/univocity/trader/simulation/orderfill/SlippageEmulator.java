@@ -4,8 +4,6 @@ import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 
-import java.math.*;
-
 /**
  * An {@link OrderFillEmulator} that emulates slippage.
  *
@@ -68,8 +66,8 @@ public class SlippageEmulator implements OrderFillEmulator {
 		if (order.isFinalized()) {
 			return;
 		}
-		double quantity = order.getQuantity().doubleValue();
-		double executed = order.getExecutedQuantity().doubleValue();
+		double quantity = order.getQuantity();
+		double executed = order.getExecutedQuantity();
 		if (executed >= quantity) {
 			order.setStatus(Order.Status.FILLED);
 			return;
@@ -87,14 +85,14 @@ public class SlippageEmulator implements OrderFillEmulator {
 
 		if (totalVolume == 0 && order.isMarket()) {
 			pips = 10;
-			totalVolume = order.getQuantity().doubleValue();
+			totalVolume = order.getQuantity();
 		}
 
 		double volumePerPip = pips == 0 ? totalVolume : totalVolume / pips;
 
 		final boolean buying = order.isBuy();
 
-		double price = order.getPrice().doubleValue();
+		double price = order.getPrice();
 		double high = candle.high;
 		double low = candle.low;
 		if (order.isMarket()) { //market order, let it run until order fills
@@ -119,7 +117,14 @@ public class SlippageEmulator implements OrderFillEmulator {
 				quantity -= volumePerPip;
 				if (totalVolume < 0 || quantity < 0) {
 					quantity = volumePerPip - Math.abs(Math.min(totalVolume, quantity));
-					executed += quantity;
+
+					//check if fully filled with 1% disparity against original quantity (caused by precision errors)
+					if (Math.abs(1 - (order.getQuantity() / (executed + quantity))) * 100.0 < 1.0) {
+						quantity = order.getQuantity() - executed;
+						executed = order.getQuantity();
+					} else {
+						executed += quantity;
+					}
 
 					totalPaid += price * quantity;
 					tradedVolume += quantity;
@@ -151,18 +156,17 @@ public class SlippageEmulator implements OrderFillEmulator {
 				}
 				updatePrice(order, averagePrice, tradedVolume);
 			} else if (order.isLimit()) {
-				if (order.isBuy() && candle.high < order.getPrice().doubleValue()) {
+				if (order.isBuy() && candle.high < order.getPrice()) {
 					updatePrice(order, candle.high, tradedVolume);
-				}
-				if (order.isSell() && candle.low > order.getPrice().doubleValue()) {
+				} else if (order.isSell() && candle.low > order.getPrice()) {
 					updatePrice(order, candle.low, tradedVolume);
+				} else {
+					updatePrice(order, -1, tradedVolume);
 				}
 			}
-			order.setExecutedQuantity(BigDecimal.valueOf(executed));
-			if (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) > 0) {
-				int scale = Math.min(order.getQuantity().scale(), order.getExecutedQuantity().scale());
-
-				if (order.getExecutedQuantity().setScale(scale, RoundingMode.CEILING).compareTo(order.getQuantity().setScale(scale, RoundingMode.FLOOR)) >= 0) {
+			order.setExecutedQuantity(executed);
+			if (order.getExecutedQuantity() > 0) {
+				if (order.getExecutedQuantity() >= order.getQuantity()) {
 					order.setStatus(Order.Status.FILLED);
 				} else {
 					order.setStatus(Order.Status.PARTIALLY_FILLED);
@@ -175,12 +179,19 @@ public class SlippageEmulator implements OrderFillEmulator {
 		if (tradedVolume == 0) {
 			return;
 		}
-		double currentPrice = order.getPrice().doubleValue();
-		double currentExecuted = order.getExecutedQuantity().doubleValue();
+		double currentPrice = order.getPrice();
+		double currentExecuted = order.getExecutedQuantity();
 
-		double averagePrice = ((currentPrice * currentExecuted) + (price * tradedVolume)) / (currentExecuted + tradedVolume);
+		if (price == -1) {
+			price = order.getPrice();
+		}
 
-		order.setPrice(BigDecimal.valueOf(averagePrice));
+		double averagePrice = (((currentPrice * currentExecuted) + (price * tradedVolume)) / (currentExecuted + tradedVolume));
+		if (order.isMarket()) {
+			order.setPrice(averagePrice);
+		}
+		order.setAveragePrice(averagePrice);
+		order.setPartialFillDetails((tradedVolume), (price));
 	}
 
 }

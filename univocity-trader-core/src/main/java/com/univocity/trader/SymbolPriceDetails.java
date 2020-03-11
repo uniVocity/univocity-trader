@@ -1,5 +1,6 @@
 package com.univocity.trader;
 
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 
 import java.math.*;
@@ -80,7 +81,7 @@ public class SymbolPriceDetails {
 	}
 
 	private int getPriceDecimals(SymbolInformation info) {
-		return getOrDefault(info, SymbolInformation::priceDecimalPlaces, 8);
+		return getOrDefault(info, SymbolInformation::priceDecimalPlaces, Balance.ROUND_MC.getPrecision());
 	}
 
 	public BigDecimal getMinimumOrderAmount(BigDecimal unitPrice) {
@@ -92,7 +93,7 @@ public class SymbolPriceDetails {
 	}
 
 	private int getQuantityDecimals(SymbolInformation info) {
-		return getOrDefault(info, SymbolInformation::quantityDecimalPlaces, 8);
+		return getOrDefault(info, SymbolInformation::quantityDecimalPlaces, Balance.ROUND_MC.getPrecision());
 	}
 
 	public String quantityToString(double quantity) {
@@ -116,6 +117,9 @@ public class SymbolPriceDetails {
 	}
 
 	public static String toString(int decimals, BigDecimal value) {
+		if(value == null){
+			return null;
+		}
 		return value.setScale(decimals, RoundingMode.FLOOR).toPlainString();
 	}
 

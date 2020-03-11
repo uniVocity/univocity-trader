@@ -31,7 +31,16 @@ public class OrderExecutionToCsv implements OrderListener {
 
 	public OrderExecutionToCsv(File outputDir, String fileName) {
 		this.outputDir = outputDir;
-		this.fileNameSupplier = () -> fileName + "_" + System.currentTimeMillis();
+		this.fileNameSupplier = () -> fileName;
+	}
+
+	public OrderExecutionToCsv(File outputDir, Supplier<String> fileName) {
+		this.outputDir = outputDir;
+		this.fileNameSupplier = fileName;
+	}
+
+	public OrderExecutionToCsv(Supplier<String> fileName) {
+		this.fileNameSupplier = fileName;
 	}
 
 	@Override
@@ -63,14 +72,22 @@ public class OrderExecutionToCsv implements OrderListener {
 
 	@Override
 	public void simulationEnded(Trader trader, Client client) {
-		File out = new File(outputDir.getAbsolutePath() + "/" + fileNameSupplier.get() + ".csv");
+		String dirPath = "";
+		if (outputDir != null) {
+			dirPath = outputDir.getAbsolutePath() + "/";
+		}
+		String fileName = fileNameSupplier.get();
+		if (fileName.indexOf('.') < 0) {
+			fileName += ".csv";
+		}
+		File out = new File(dirPath + fileName);
 
 		CsvRoutines routines = new CsvRoutines(Csv.writeExcel());
 		routines.getWriterSettings().setHeaderWritingEnabled(true);
 
 		String[] headers = new String[]{
 				"closeTime", "clientId", "tradeId", "operation",
-				"quantity", "assetSymbol", "price", "fundSymbol", "orderAmount",
+				"quantity", "assetSymbol", "price", "averagePrice", "fundSymbol", "orderAmount",
 				"orderType", "status", "duration",
 				"orderFillPercentage", "executedQuantity", "valueTransacted",
 				"estimatedProfitLossPct", "exitReason", "ticks",

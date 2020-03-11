@@ -4,8 +4,6 @@ import com.univocity.trader.account.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
-import java.math.*;
-
 public class OrderExecutionToLog implements OrderListener {
 
 	private static final Logger log = LoggerFactory.getLogger(OrderExecutionToLog.class);
@@ -55,12 +53,15 @@ public class OrderExecutionToLog implements OrderListener {
 			}
 			price = StringUtils.rightPad(price, maxPriceLength);
 
-			String details = StringUtils.rightPad(o.closeTime.toString(), 25) + " " + StringUtils.rightPad(o.assetSymbol, 8) + " " + type + " " + quantity + " @ $" + price;
+			String trigger = StringUtils.rightPad(o.trigger.shortName, 3);
+
+			String details = StringUtils.rightPad(o.closeTime.toString(), 25) + " " + StringUtils.rightPad(o.assetSymbol, 8) + " " + trigger + type + " " + quantity + " @ $" + price;
+
 //			details += "[" + order.getOrderId() + "]";
 			if (order.isLongBuy() || order.isShortSell()) {
 				if (order.isFinalized()) {
 					details += " + " + printFillDetails(o) + ".";
-					if (order.getExecutedQuantity().compareTo(BigDecimal.ZERO) != 0) {
+					if (order.getExecutedQuantity() != 0) {
 						if (order.isLongBuy()) {
 							details += " Worth $" + o.price + " " + o.fundSymbol + " (free $" + o.freeBalance + " " + o.fundSymbol;
 							if (!o.fundSymbol.equals(o.referenceCurrency)) {
@@ -92,7 +93,11 @@ public class OrderExecutionToLog implements OrderListener {
 
 					details += ". Expected P/L " + pl;
 
-					details += " | " + trade.ticks() + " ticks [min " + o.printMinPriceAndChange() + ", max $" + o.printMaxPriceAndChange() + ")]";
+					if (trade.ticks() > 0) {
+						details += " | " + trade.ticks() + " ticks [min " + o.printMinPriceAndChange() + ", max $" + o.printMaxPriceAndChange() + ")]";
+					} else {
+						details += " |";
+					}
 					details += " " + trade.exitReason();
 				}
 			}

@@ -10,7 +10,6 @@ import com.univocity.trader.strategy.*;
 import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
-import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -46,7 +45,7 @@ public class Trader {
 	final OrderListener[] notifications;
 	private int pipSize;
 	private final List<Trade> stoppedOut = new ArrayList<>();
-	private AtomicLong id = new AtomicLong(1);
+	private static final AtomicLong id = new AtomicLong(0);
 
 	/**
 	 * Creates a new trader for a given symbol. For internal use only.
@@ -329,7 +328,7 @@ public class Trader {
 				if (tradingManager.exitExistingPositions(tradingManager.assetSymbol, candle, strategy)) {
 					tradingManager.updateBalances();
 					return amountToSpend;
-				} else {
+				} else if (!tradingManager.getAccount().isSimulated()) {
 					tradingManager.updateBalances();
 					amountToSpend = tradingManager.allocateFunds(side);
 					if (amountToSpend <= minimum) {
@@ -366,7 +365,7 @@ public class Trader {
 			double amountToSpend = prepareTrade(tradeSide, candle, strategy);
 			order = tradingManager.buy(amountToSpend / candle.close, LONG);
 		} else if (tradeSide == SHORT) {
-			double shortedQuantity = balance().getShortedAmount();
+			double shortedQuantity = balance().getShorted();
 			order = tradingManager.buy(shortedQuantity, SHORT);
 		}
 		if (order != null) {
@@ -390,7 +389,7 @@ public class Trader {
 	private boolean sellAssets(Trade trade, Strategy strategy, String reason) {
 		double quantity;
 		if (trade != null) {
-			quantity = trade.quantityInPosition().doubleValue();
+			quantity = trade.quantityInPosition();
 			if (quantity > tradingManager.getAssets() || quantity == 0.0 && trade.isPlaceholder) {
 				quantity = tradingManager.getAssets();
 			}
@@ -408,14 +407,14 @@ public class Trader {
 	}
 
 	private boolean closeShort(Trade trade, Strategy strategy, String exitReason) {
-		BigDecimal reserveFunds = tradingManager.getBalance(fundSymbol()).getMarginReserve(assetSymbol());
-		BigDecimal shortToCover = tradingManager.getBalance(assetSymbol()).getShorted();
-		if (shortToCover.compareTo(BigDecimal.ZERO) > 0) {
-			if (shortToCover.doubleValue() * trade.lastClosingPrice() > reserveFunds.doubleValue()) {
-				log.warn("Not enough funds in margin reserve to cover short of {} {} @ {} {} per unit", assetSymbol(), shortToCover, reserveFunds, fundSymbol());
+		double reserveFunds = tradingManager.getBalance(fundSymbol()).getMarginReserve(assetSymbol());
+		double shortToCover = tradingManager.getBalance(assetSymbol()).getShorted();
+		if (shortToCover > 0) {
+			if (shortToCover * trade.lastClosingPrice() > reserveFunds) {
+				log.warn("Not enough funds in margin reserve to cover short of {} {} @ {} {} per unit. Reserve: {}, required {} {}", assetSymbol(), shortToCover, trade.lastClosingPrice(), fundSymbol(), reserveFunds, shortToCover * trade.lastClosingPrice(), fundSymbol());
 			}
 
-			Order order = tradingManager.buy(shortToCover.doubleValue(), SHORT);
+			Order order = tradingManager.buy(shortToCover, SHORT);
 			if (order != null) {
 				processOrder(trade, order, strategy, exitReason);
 				return true;
@@ -511,6 +510,18 @@ public class Trader {
 		}
 	}
 
+	private void attachOrdersToTrade(Trade trade, Order parent) {
+		if (parent.getAttachments() != null) {
+			if (trade == null) {
+				throw new IllegalStateException("Can't process buy order without a valid trade instance");
+			}
+
+			for (Order attached : parent.getAttachments()) {
+				trade.decreasePosition(attached, "Stop order");
+			}
+		}
+	}
+
 	private Trade processBuyOrder(Order order, Strategy strategy, String reason) {
 		Trade trade = null;
 		for (Trade t : trades) {
@@ -539,6 +550,8 @@ public class Trader {
 				trade.decreasePosition(order, reason);
 			}
 		}
+
+		attachOrdersToTrade(trade, order);
 		return trade;
 	}
 
@@ -573,22 +586,29 @@ public class Trader {
 				log.warn("Received a sell order without an open trade: " + order);
 			}
 		}
+		attachOrdersToTrade(trade, order);
 		return trade;
 	}
 
 	/**
-	 * Tries to exit a current trade to immediately buy into another instrument. In cases where it's supported, such as currencies and crypto, a "direct" switch will be executed to save trading fees;
-	 * i.e. if there's an open position on BTCUSDT, and the exit symbol is ETH, a single SELL order of symbol BTCETH will be executed, selling BTC to open a position in ETH. If no compatible trading
-	 * symbols exists, or the market operates just with stocks, the current position will be sold in order to make funds available for buying into the next instrument. Using the previous example, BTC
-	 * would be sold back into USDT, and another BUY order would be made using the USDT funds to buy ETH. If any call {@link StrategyMonitor#allowTradeSwitch(Trade, String, Candle, String)} evaluates to
-	 * {@code false}, the "switch" operation will be cancelled, otherwise the current open position will be closed to release funds for the trader to BUY into the exitSymbol.
+	 * Tries to exit a current trade to immediately buy into another instrument. In cases where it's supported, such as currencies and crypto, a "direct" switch
+	 * will be executed to save trading fees;
+	 * i.e. if there's an open position on BTCUSDT, and the exit symbol is ETH, a single SELL order of symbol BTCETH will be executed, selling BTC to open a
+	 * position in ETH. If no compatible trading
+	 * symbols exists, or the market operates just with stocks, the current position will be sold in order to make funds available for buying into the next
+	 * instrument. Using the previous example, BTC
+	 * would be sold back into USDT, and another BUY order would be made using the USDT funds to buy ETH. If any call {@link
+	 * StrategyMonitor#allowTradeSwitch(Trade, String, Candle, String)} evaluates to
+	 * {@code false}, the "switch" operation will be cancelled, otherwise the current open position will be closed to release funds for the trader to BUY into
+	 * the exitSymbol.
 	 *
 	 * @param exitSymbol   the new instrument to be bought into using the funds allocated by the current open order (in {@link #symbol()}.
 	 * @param candle       the latest candle of the exitSymbol that's been received from the exchange.
 	 * @param candleTicker the ticker of the received candle (not the same as {@link #symbol()}).
 	 * @param strategy     the strategy that identified an opportunity to open a position on the given exitSymbol.
 	 *
-	 * @return a flag indicating whether an order for a direct switch was opened. If {@code true}, the trader won't try to create a BUY order for the given exitSymbol. When {@code false} the trader
+	 * @return a flag indicating whether an order for a direct switch was opened. If {@code true}, the trader won't try to create a BUY order for the given
+	 * exitSymbol. When {@code false} the trader
 	 * will try to buy into the exitSymbol regardless of whether the current position was closed or not.
 	 */
 	boolean switchTo(String exitSymbol, Candle candle, String candleTicker, Strategy strategy) {

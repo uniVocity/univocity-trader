@@ -22,6 +22,7 @@ import java.math.*;
 import java.util.*;
 import java.util.function.*;
 
+import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
 import static com.univocity.trader.exchange.binance.api.client.domain.TimeInForce.*;
@@ -65,7 +66,7 @@ class BinanceClientAccount implements ClientAccount {
 	@Override
 	public Order executeOrder(OrderRequest orderDetails) {
 		String symbol = orderDetails.getSymbol();
-		String price = orderDetails.getPrice().toPlainString();
+		String price = roundStr(orderDetails.getPrice());
 		switch (orderDetails.getSide()) {
 			case BUY:
 				switch (orderDetails.getType()) {
@@ -108,8 +109,8 @@ class BinanceClientAccount implements ClientAccount {
 		for (AssetBalance b : balances) {
 			String symbol = b.getAsset();
 			Balance balance = new Balance(symbol);
-			balance.setFree(new BigDecimal(b.getFree()));
-			balance.setLocked(new BigDecimal(b.getLocked()));
+			balance.setFree(Double.parseDouble(b.getFree()));
+			balance.setLocked(Double.parseDouble(b.getLocked()));
 			out.put(symbol, balance);
 		}
 		return out;
@@ -118,9 +119,10 @@ class BinanceClientAccount implements ClientAccount {
 	private Order translate(OrderRequest preparation, OrderDetails response) {
 		DefaultOrder out = new DefaultOrder(preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), Trade.Side.LONG, response.getTime());
 
-		out.setPrice(new BigDecimal(response.getPrice()));
-		out.setQuantity(new BigDecimal(response.getOrigQty()));
-		out.setExecutedQuantity(new BigDecimal(response.getExecutedQty()));
+		out.setPrice(Double.parseDouble(response.getPrice()));
+		out.setAveragePrice(Double.parseDouble(response.getPrice()));
+		out.setQuantity(Double.parseDouble(response.getOrigQty()));
+		out.setExecutedQuantity(Double.parseDouble(response.getExecutedQty()));
 		out.setOrderId(String.valueOf(response.getOrderId()));
 		out.setStatus(translate(response.getStatus()));
 		out.setType(translate(response.getType()));
@@ -167,12 +169,12 @@ class BinanceClientAccount implements ClientAccount {
 
 	private Order execute(OrderRequest orderPreparation, Function<String, NewOrder> orderFunction) {
 		if (orderPreparation.getSide() == SELL && orderPreparation.getAssetsSymbol().equalsIgnoreCase("BNB")) {
-			BigDecimal newQuantity = orderPreparation.getQuantity().subtract(new BigDecimal(minimumBnbAmountToKeep));
+			double newQuantity = orderPreparation.getQuantity() - minimumBnbAmountToKeep;
 			orderPreparation.setQuantity(newQuantity);
 		}
 
 		SymbolPriceDetails f = getPriceDetails().switchToSymbol(orderPreparation.getSymbol());
-		if (orderPreparation.getTotalOrderAmount().compareTo(f.getMinimumOrderAmount(orderPreparation.getPrice())) > 0) {
+		if (orderPreparation.getTotalOrderAmount()> f.getMinimumOrderAmount(orderPreparation.getPrice())) {
 			NewOrder order = null;
 			try {
 				BigDecimal qty = f.adjustQuantityScale(orderPreparation.getQuantity());
@@ -196,11 +198,12 @@ class BinanceClientAccount implements ClientAccount {
 	private Order translate(Order original, com.univocity.trader.exchange.binance.api.client.domain.account.Order order) {
 		DefaultOrder out = new DefaultOrder(original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), Trade.Side.LONG, order.getTime());
 		out.setStatus(translate(order.getStatus()));
-		out.setExecutedQuantity(new BigDecimal(order.getExecutedQty()));
-		out.setPrice(new BigDecimal(order.getPrice()));
+		out.setExecutedQuantity(Double.parseDouble(order.getExecutedQty()));
+		out.setAveragePrice(Double.parseDouble(order.getPrice()));
+		out.setPrice(Double.parseDouble(order.getPrice()));
 		out.setOrderId(String.valueOf(order.getOrderId()));
 		out.setType(translate(order.getType()));
-		out.setQuantity(new BigDecimal(order.getOrigQty()));
+		out.setQuantity(Double.parseDouble(order.getOrigQty()));
 		return out;
 	}
 

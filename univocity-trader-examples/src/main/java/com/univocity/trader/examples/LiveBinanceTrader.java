@@ -56,10 +56,10 @@ public class LiveBinanceTrader {
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
 				switch (order.getSide()) {
 					case BUY:
-						order.setPrice(order.getPrice().multiply(new BigDecimal("0.9"))); //10% less
+						order.setPrice(order.getPrice() * 0.9); //10% less
 						break;
 					case SELL:
-						order.setPrice(order.getPrice().multiply(new BigDecimal("1.1"))); //10% more
+						order.setPrice(order.getPrice() * 1.1); //10% more
 				}
 			}
 		});

@@ -1,34 +1,37 @@
 package com.univocity.trader.account;
 
-import java.math.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 
-import static com.univocity.trader.account.Balance.*;
+public class DefaultOrder extends OrderRequest implements Order, Comparable<DefaultOrder> {
 
-public class DefaultOrder extends OrderRequest implements Order {
+	private static final AtomicLong orderIds = new AtomicLong(0);
 
-	private String orderId;
-	private BigDecimal executedQuantity;
+	private final long id = orderIds.incrementAndGet();
+	private String orderId = String.valueOf(id);
+	private double executedQuantity = 0.0;
 	private Order.Status status;
-	private BigDecimal feesPaid = BigDecimal.ZERO;
+	private double feesPaid = 0.0;
+	private double averagePrice = 0.0;
 	private List<Order> attachments;
+	private Order parent;
+	private double partialFillPrice = 0.0;
+	private double partialFillQuantity = 0.0;
 
 	public DefaultOrder(String assetSymbol, String fundSymbol, Order.Side side, Trade.Side tradeSide, long time) {
-		this(assetSymbol, fundSymbol, side, tradeSide, time, null);
-	}
-
-	public DefaultOrder(String assetSymbol, String fundSymbol, Order.Side side, Trade.Side tradeSide, long time, List<Order> attachments) {
 		super(assetSymbol, fundSymbol, side, tradeSide, time, null);
-		this.attachments = attachments;
 	}
 
-	public DefaultOrder(Order order) {
-		super(order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), order.getTradeSide(), order.getTime(), null);
-		this.setOrderId(order.getOrderId());
-		this.setType(order.getType());
-		this.setQuantity(order.getQuantity());
-		this.setPrice(order.getPrice());
-		this.attachments = order.getAttachments();
+	public DefaultOrder(OrderRequest request) {
+		this(request.getAssetsSymbol(), request.getFundsSymbol(), request.getSide(), request.getTradeSide(), request.getTime());
+	}
+
+	public void setParent(DefaultOrder parent) {
+		this.parent = parent;
+		if (parent.attachments == null) {
+			parent.attachments = new ArrayList<>();
+		}
+		parent.attachments.add(this);
 	}
 
 	@Override
@@ -41,22 +44,29 @@ public class DefaultOrder extends OrderRequest implements Order {
 	}
 
 	@Override
-	public BigDecimal getExecutedQuantity() {
+	public double getExecutedQuantity() {
 		return executedQuantity;
 	}
 
-	public void setExecutedQuantity(BigDecimal executedQuantity) {
-		this.executedQuantity = round(executedQuantity);
+	public double getTotalOrderAmountAtAveragePrice() {
+		if (averagePrice == 0) {
+			return getPrice() * getQuantity();
+		}
+		return averagePrice * getQuantity();
+	}
+
+	public void setExecutedQuantity(double executedQuantity) {
+		this.executedQuantity = executedQuantity;
 	}
 
 	@Override
-	public void setPrice(BigDecimal price) {
-		super.setPrice(round(price));
+	public void setPrice(double price) {
+		super.setPrice(price);
 	}
 
 	@Override
-	public void setQuantity(BigDecimal quantity) {
-		super.setQuantity(round(quantity));
+	public void setQuantity(double quantity) {
+		super.setQuantity(quantity);
 	}
 
 	@Override
@@ -70,7 +80,9 @@ public class DefaultOrder extends OrderRequest implements Order {
 
 	@Override
 	public void cancel() {
-		this.status = Status.CANCELLED;
+		if (this.status != Status.FILLED) {
+			this.status = Status.CANCELLED;
+		}
 	}
 
 	public boolean isCancelled() {
@@ -78,12 +90,12 @@ public class DefaultOrder extends OrderRequest implements Order {
 	}
 
 	@Override
-	public BigDecimal getFeesPaid() {
+	public double getFeesPaid() {
 		return feesPaid;
 	}
 
-	public void setFeesPaid(BigDecimal feesPaid) {
-		this.feesPaid = round(feesPaid);
+	public void setFeesPaid(double feesPaid) {
+		this.feesPaid = feesPaid;
 	}
 
 	@Override
@@ -91,7 +103,67 @@ public class DefaultOrder extends OrderRequest implements Order {
 		return print(0);
 	}
 
-	public List<Order> getAttachments() {
+	public void setAveragePrice(double averagePrice) {
+		this.averagePrice = averagePrice;
+	}
+
+	@Override
+	public final double getAveragePrice() {
+		return averagePrice;
+	}
+
+	public final List<Order> getAttachments() {
 		return attachments == null ? null : Collections.unmodifiableList(attachments);
 	}
+
+	public final Order getParent() {
+		return parent;
+	}
+
+	public final String getParentOrderId() {
+		return parent == null ? "" : parent.getOrderId();
+	}
+
+	public double getQuantity() { //TODO: check this implementation in live trading.
+		double out = super.getQuantity();
+		if (parent != null && parent.isFinalized()) {
+			double p = parent.getExecutedQuantity();
+			if (out > p || p == 0) {
+				return p;
+			}
+		}
+		return out;
+	}
+
+	public boolean hasPartialFillDetails() {
+		return partialFillQuantity != 0.0 && partialFillQuantity > 0;
+	}
+
+	public void clearPartialFillDetails() {
+		partialFillQuantity = 0.0;
+		partialFillPrice = 0.0;
+	}
+
+	public double getPartialFillTotalPrice() {
+		return partialFillQuantity * partialFillPrice;
+	}
+
+	public double getPartialFillPrice(){
+		return partialFillPrice;
+	}
+
+	public double getPartialFillQuantity() {
+		return partialFillQuantity;
+	}
+
+	public void setPartialFillDetails(double filledQuantity, double fillPrice) {
+		this.partialFillPrice = fillPrice;
+		this.partialFillQuantity = filledQuantity;
+	}
+
+	@Override
+	public int compareTo(DefaultOrder o) {
+		return Long.compare(this.id, o.id);
+	}
+
 }

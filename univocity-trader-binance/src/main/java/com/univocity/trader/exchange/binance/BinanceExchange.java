@@ -115,9 +115,21 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 		}
 	}
 
+	private final Map<String, double[]> latestPrices = new HashMap<>();
+
+
 	@Override
-	public Map<String, Double> getLatestPrices() {
-		return restClient().getAllPrices().stream().collect(Collectors.toMap(TickerPrice::getSymbol, TickerPrice::getPriceAmount));
+	public Map<String, double[]> getLatestPrices() {
+		restClient().getAllPrices().forEach(ticker ->
+				latestPrices.compute(ticker.getSymbol(), (symbol, v) -> {
+					if (v == null) {
+						return new double[]{ticker.getPriceAmount()};
+					} else {
+						v[0] = ticker.getPriceAmount();
+						return v;
+					}
+				}));
+		return Collections.unmodifiableMap(latestPrices);
 	}
 
 	@Override
