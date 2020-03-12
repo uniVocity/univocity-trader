@@ -192,7 +192,9 @@ public class CandleRepository {
 	}
 
 	public void evictFromCache(String symbol) {
-		log.trace("Evicting cached candles of {}", symbol);
+		if(log.isTraceEnabled()) {
+			log.trace("Evicting cached candles of {}", symbol);
+		}
 		Collection<Candle> candles = cachedResults.remove(symbol);
 		if (candles != null) {
 			candles.clear();

@@ -454,7 +454,9 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	private void lockTrading(String assetSymbol) {
 		synchronized (lockedPairs) {
-			log.trace("Locking trading on {}", assetSymbol);
+			if (log.isTraceEnabled()) {
+				log.trace("Locking trading on {}", assetSymbol);
+			}
 			lockedPairs.add(assetSymbol);
 		}
 	}
@@ -462,7 +464,9 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	private void unlockTrading(String assetSymbol) {
 		synchronized (lockedPairs) {
 			if (lockedPairs.contains(assetSymbol)) {
-				log.trace("Unlocking trading on {}", assetSymbol);
+				if (log.isTraceEnabled()) {
+					log.trace("Unlocking trading on {}", assetSymbol);
+				}
 				lockedPairs.remove(assetSymbol);
 			}
 		}

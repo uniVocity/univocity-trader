@@ -246,7 +246,9 @@ public class Trader {
 			}
 
 			if (!tradingManager.hasPosition(candle, false, trade.isLong(), trade.isShort())) {
-				log.trace("Ignoring exit signal of {}: no assets ({})", symbol(), tradingManager.getAssets());
+				if (log.isTraceEnabled()) {
+					log.trace("Ignoring exit signal of {}: no assets ({})", symbol(), tradingManager.getAssets());
+				}
 				return false;
 			}
 
@@ -294,10 +296,12 @@ public class Trader {
 		if (!trades.isEmpty()) {
 			for (Trade trade : trades) {
 				if (trade.tryingToExit() && ((trade.isLong() && isLong) || (trade.isShort() && isShort))) {
-					if (isLong) {
-						log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
-					} else {
-						log.trace("Discarding short sell of {} @ {}: attempting to buy more", tradingManager.getSymbol(), candle.close);
+					if (log.isTraceEnabled()) {
+						if (isLong) {
+							log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
+						} else {
+							log.trace("Discarding short sell of {} @ {}: attempting to buy more", tradingManager.getSymbol(), candle.close);
+						}
 					}
 					return -1.0;
 				}
@@ -307,19 +311,23 @@ public class Trader {
 		if ((isLong && tradingManager.waitingForBuyOrderToFill()) || (isShort && tradingManager.waitingForSellOrderToFill())) {
 			tradingManager.cancelStaleOrdersFor(side, this);
 			if ((isLong && tradingManager.waitingForBuyOrderToFill()) || (isShort && tradingManager.waitingForSellOrderToFill())) {
-				if (isLong) {
-					log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
-				} else {
-					log.trace("Discarding short sell of {} @ {}: got sell order waiting to be filled", tradingManager.getSymbol(), candle.close);
+				if (log.isTraceEnabled()) {
+					if (isLong) {
+						log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
+					} else {
+						log.trace("Discarding short sell of {} @ {}: got sell order waiting to be filled", tradingManager.getSymbol(), candle.close);
+					}
 				}
 				return -1.0;
 			}
 		}
 		if ((isLong && tradingManager.isBuyLocked()) || (isShort && tradingManager.isShortSellLocked())) {
-			if (isLong) {
-				log.trace("Discarding buy of {} @ {}: purchase order already being processed", tradingManager.getSymbol(), candle.close);
-			} else {
-				log.trace("Discarding short sell of {} @ {}: sell order already being processed", tradingManager.getSymbol(), candle.close);
+			if(log.isTraceEnabled()) {
+				if (isLong) {
+					log.trace("Discarding buy of {} @ {}: purchase order already being processed", tradingManager.getSymbol(), candle.close);
+				} else {
+					log.trace("Discarding short sell of {} @ {}: sell order already being processed", tradingManager.getSymbol(), candle.close);
+				}
 			}
 			return -1.0;
 		}
@@ -336,10 +344,12 @@ public class Trader {
 					tradingManager.updateBalances();
 					amountToSpend = tradingManager.allocateFunds(side);
 					if (amountToSpend <= minimum) {
-						if (isLong) {
-							log.trace("Discarding buy of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
-						} else {
-							log.trace("Discarding short selling of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
+						if(log.isTraceEnabled()) {
+							if (isLong) {
+								log.trace("Discarding buy of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
+							} else {
+								log.trace("Discarding short selling of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
+							}
 						}
 						return amountToSpend;
 					}
@@ -357,7 +367,9 @@ public class Trader {
 				processOrder(trade, order, strategy, null);
 				return true;
 			}
-			log.trace("Could not short {} @ {}", tradingManager.getSymbol(), candle.close);
+			if (log.isTraceEnabled()) {
+				log.trace("Could not short {} @ {}", tradingManager.getSymbol(), candle.close);
+			}
 		}
 		return false;
 	}
@@ -376,7 +388,9 @@ public class Trader {
 			processOrder(null, order, strategy, null);
 			return true;
 		}
-		log.trace("Could not buy {} @ {}", tradingManager.getSymbol(), candle.close);
+		if (log.isTraceEnabled()) {
+			log.trace("Could not buy {} @ {}", tradingManager.getSymbol(), candle.close);
+		}
 
 		return false;
 	}
