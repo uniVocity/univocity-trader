@@ -225,8 +225,9 @@ public class OrderExecutionToEmail implements OrderListener {
 			}
 		}
 		if (visited.size() <= 1) {
-			for (TradingManager other : tradingManager.getAccount().getAllTradingManagers()) {
-				printTotalBalances(balances, visited, msg, total, other);
+			TradingManager[] managers =  tradingManager.getAccount().getAllTradingManagers();
+			for (int i = 0; i < managers.length; i++) {
+				printTotalBalances(balances, visited, msg, total, managers[i]);
 			}
 		}
 	}

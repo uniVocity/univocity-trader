@@ -83,23 +83,23 @@ public class TradingManager {
 		return assetSymbol;
 	}
 
-	public double getLatestPrice() {
+	public final double getLatestPrice() {
 		return getLatestPrice(assetSymbol, fundSymbol);
 	}
 
-	public Candle getLatestCandle() {
+	public final Candle getLatestCandle() {
 		return trader.latestCandle();
 	}
 
-	public double getLatestPrice(String assetSymbol, String fundSymbol) {
+	public final double getLatestPrice(String assetSymbol, String fundSymbol) {
 		Candle lastCandle = getLatestCandle();
-		if (lastCandle != null && (System.currentTimeMillis() - lastCandle.closeTime) < FIFTEEN_SECONDS) {
+		if (lastCandle != null && (tradingAccount.isSimulated() || (System.currentTimeMillis() - lastCandle.closeTime) < FIFTEEN_SECONDS)) {
 			return lastCandle.close;
 		}
 		return exchange.getLatestPrice(assetSymbol, fundSymbol);
 	}
 
-	public String getSymbol() {
+	public final String getSymbol() {
 		return symbol;
 	}
 
@@ -202,8 +202,10 @@ public class TradingManager {
 
 	public boolean exitExistingPositions(String exitSymbol, Candle c, Strategy strategy) {
 		boolean exited = false;
-		for (TradingManager action : tradingAccount.getAllTradingManagers()) {
-			if (action != this && action.hasPosition(c, false, true, true) && action.trader.switchTo(exitSymbol, c, action.symbol, strategy)) {
+		TradingManager[] managers = tradingAccount.getAllTradingManagers();
+		for (int i = 0; i < managers.length; i++) {
+			TradingManager manager = managers[i];
+			if (manager != this && manager.hasPosition(c, false, true, true) && manager.trader.switchTo(exitSymbol, c, manager.symbol, strategy)) {
 				exited = true;
 				break;
 			}
@@ -227,7 +229,7 @@ public class TradingManager {
 		return tradingAccount.getReferenceCurrencySymbol();
 	}
 
-	public Trader getTrader() {
+	public final Trader getTrader() {
 		return this.trader;
 	}
 

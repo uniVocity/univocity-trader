@@ -65,7 +65,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			String assetSymbol = pair[0];
 			String fundSymbol = pair[1];
 
-			if(assetSymbol.equals(fundSymbol)){
+			if (assetSymbol.equals(fundSymbol)) {
 				return;
 			}
 
@@ -193,7 +193,10 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 	private void reportResults(Parameters parameters) {
 		for (AccountManager account : accounts()) {
-			account.getAllTradingManagers().forEach(t -> t.getTrader().liquidateOpenPositions());
+			TradingManager managers[] = account.getAllTradingManagers();
+			for (int i = 0; i < managers.length; i++) {
+				managers[i].getTrader().liquidateOpenPositions();
+			}
 		}
 
 		for (AccountManager account : accounts()) {
@@ -209,7 +212,10 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			System.out.print(account.toString());
 			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
 
-			account.getAllTradingManagers().forEach(t -> t.getTrader().notifySimulationEnd());
+			TradingManager managers[] = account.getAllTradingManagers();
+			for (int i = 0; i < managers.length; i++) {
+				managers[i].getTrader().notifySimulationEnd();
+			}
 		}
 	}
 

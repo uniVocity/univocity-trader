@@ -13,7 +13,8 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 
 	private final AccountManager account;
 	private final Map<String, SymbolInformation> symbolInformation = new TreeMap<>();
-	Map<String, double[]> latestPrices = new HashMap<>();
+	private final Map<String, double[]> latestPrices = new HashMap<>();
+	private double[][] prices;
 
 	public SimulatedExchange(AccountManager account) {
 		this.account = account;
@@ -41,16 +42,22 @@ public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfig
 
 	@Override
 	public Map<String, double[]> getLatestPrices() {
-		for (TradingManager tradingManager : account.getAllTradingManagers()) {
-			latestPrices.compute(tradingManager.getSymbol(), (symbol, v) -> {
-				if (v == null) {
-					return new double[]{tradingManager.getLatestPrice()};
-				} else {
-					v[0] = tradingManager.getLatestPrice();
-					return v;
-				}
-			});
+		TradingManager[] managers = account.getAllTradingManagers();
+
+		if (prices == null) {
+			prices = new double[managers.length][];
+			for (int i = 0; i < managers.length; i++) {
+				TradingManager manager = managers[i];
+				prices[i] = new double[]{manager.getLatestPrice()};
+				latestPrices.put(manager.getSymbol(), prices[i]);
+			}
+		} else {
+			for (int i = 0; i < managers.length; i++) {
+				TradingManager manager = managers[i];
+				prices[i][0] = manager.getLatestPrice();
+			}
 		}
+
 		return latestPrices;
 	}
 

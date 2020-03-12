@@ -29,6 +29,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	private final Map<String, Trader> traders = new ConcurrentHashMap<>();
 	private final AccountConfiguration<?> configuration;
+	private final Order[] pendingOrdersArray = new Order[1024];
+
 	private final Map<String, Order> pendingOrders = new ConcurrentHashMap<>();
 	private final Set<String> lockedPairs = ConcurrentHashMap.newKeySet();
 
@@ -407,25 +409,24 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public boolean waitingForFill(String assetSymbol, Order.Side side) {
-		for (var order : pendingOrders.values()) {
-			if (order.getAssetsSymbol().equals(assetSymbol)) {
-				if (order.getSide() == side) {
-					return true;
-				}
-			} else if (order.getFundsSymbol().equals(assetSymbol)) {
-				// If we want to know if there is an open order to buy BTC,
-				// and the symbol is "ADABTC", we need to invert the side as
-				// we are selling ADA to buy BTC.
-				if (side == BUY) {
-					if (order.isSell()) {
-						return true;
-					}
-				} else if (side == SELL) {
-					if (order.isBuy()) {
-						return true;
-					}
-				}
+		for (int i = 0; i < pendingOrdersArray.length; i++) {
+			Order order = pendingOrdersArray[i];
+			if (order == null) {
+				return false;
 			}
+			if (order.getSide() == side && order.getAssetsSymbol().equals(assetSymbol)) {
+				return true;
+			}
+			// If we want to know if there is an open order to buy BTC,
+			// and the symbol is "ADABTC", we need to invert the side as
+			// we are selling ADA to buy BTC.
+			if (side == BUY && order.isSell() && order.getFundsSymbol().equals(assetSymbol)) {
+				return true;
+
+			} else if (side == SELL && order.isBuy() && order.getFundsSymbol().equals(assetSymbol)) {
+				return true;
+			}
+
 		}
 		return false;
 	}
@@ -664,8 +665,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return null;
 	}
 
-	public Collection<TradingManager> getAllTradingManagers() {
-		return allTradingManagers.values();
+	public TradingManager[] getAllTradingManagers() {
+		return tradingManagers;
 	}
 
 	public Collection<String[]> getTradedPairs() {
@@ -727,12 +728,13 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	@Override
-	public boolean isSimulated() {
+	public final boolean isSimulated() {
 		return account.isSimulated();
 	}
 
 	public void waitForFill(Order order) {
 		pendingOrders.put(order.getOrderId(), order);
+		pendingOrdersArray[pendingOrders.size() - 1] = order;
 		if (isSimulated()) {
 			return;
 		}
@@ -763,14 +765,28 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		Order old = order;
 		order = account.updateOrderStatus(order);
 
+		String orderId = order.getOrderId();
+
 		Order.Status s = order.getStatus();
 		if (order.isFinalized()) {
 			logOrderStatus("", order);
-			pendingOrders.remove(order.getOrderId());
+			pendingOrders.remove(orderId);
+			pendingOrders.values().toArray(pendingOrdersArray);
 			orderFinalized(orderManager, order, trade);
 			return order;
 		} else { // update order status
-			pendingOrders.put(order.getOrderId(), order);
+			pendingOrders.put(orderId, order);
+			for (int i = 0; i < pendingOrdersArray.length; i++) {
+				Order prev = pendingOrdersArray[i];
+				if (prev != null) {
+					if (prev.getOrderId().equals(orderId)) {
+						pendingOrdersArray[i] = order;
+						break;
+					}
+				} else {
+					break;
+				}
+			}
 		}
 
 		if (old.getExecutedQuantity() != order.getExecutedQuantity() || (isSimulated() && order instanceof DefaultOrder && ((DefaultOrder) order).hasPartialFillDetails())) {
@@ -866,6 +882,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		} finally {
 			order = account.updateOrderStatus(order);
 			pendingOrders.remove(order.getOrderId());
+			pendingOrders.values().toArray(pendingOrdersArray);
 			orderFinalized(orderManager, order, null);
 			logOrderStatus("Cancellation via order manager: ", order);
 		}
@@ -888,8 +905,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		if (pendingOrders.isEmpty()) {
 			return;
 		}
-		for (Map.Entry<String, Order> entry : pendingOrders.entrySet()) {
-			Order order = entry.getValue();
+		for (int i = 0; i < pendingOrders.size(); i++) {
+			Order order = pendingOrdersArray[i];
 			OrderManager orderManager = configuration.orderManager(order.getSymbol());
 			if (orderManager.cancelToReleaseFundsFor(order, traderOf(order), trader)) {
 				if (order.getStatus() == CANCELLED) {
@@ -911,7 +928,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 
 	public boolean updateOpenOrders(String symbol, Candle candle) {
 		if (this.account.updateOpenOrders(symbol, candle)) {
-			for (Order order : this.pendingOrders.values()) {
+			for (int i = 0; i < pendingOrders.size(); i++) {
+				Order order = pendingOrdersArray[i];
 				if (symbol.equals(order.getSymbol())) {
 					updateOrder(order, null);
 				}

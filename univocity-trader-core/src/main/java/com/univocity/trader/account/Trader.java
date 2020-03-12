@@ -457,7 +457,7 @@ public class Trader {
 	 *
 	 * @return the most recent tick received for the symbol being traded.
 	 */
-	public Candle latestCandle() {
+	public final Candle latestCandle() {
 		return latestCandle;
 	}
 
