@@ -605,7 +605,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		SymbolPriceDetails priceDetails = tradingManager.getPriceDetails();
 		long time = tradingManager.getLatestCandle().closeTime;
 		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side, tradeSide, time, resubmissionFrom);
-		orderPreparation.setPrice(priceDetails.priceToBigDecimal(tradingManager.getLatestPrice()).doubleValue());
+		orderPreparation.setPrice(tradingManager.getLatestPrice());
 
 		if (tradeSide == LONG) {
 			if (orderPreparation.isSell()) {
@@ -616,7 +616,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 			}
 		}
 
-		orderPreparation.setQuantity(priceDetails.adjustQuantityScale(quantity).doubleValue());
+		orderPreparation.setQuantity(quantity);
 
 		OrderBook book = account.getOrderBook(tradingManager.getSymbol(), 0);
 
@@ -627,8 +627,8 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 
 		if (!orderPreparation.isCancelled() && orderPreparation.getTotalOrderAmount() > (priceDetails.getMinimumOrderAmount(orderPreparation.getPrice()))) {
-			orderPreparation.setPrice(priceDetails.adjustPriceScale(BigDecimal.valueOf(orderPreparation.getPrice())).doubleValue());
-			orderPreparation.setQuantity(priceDetails.adjustQuantityScale(orderPreparation.getQuantity()).doubleValue());
+			orderPreparation.setPrice(orderPreparation.getPrice());
+			orderPreparation.setQuantity(orderPreparation.getQuantity());
 
 			if (orderPreparation.getTotalOrderAmount() > priceDetails.getMinimumOrderAmount(orderPreparation.getPrice())) {
 				return orderPreparation;

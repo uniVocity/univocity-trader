@@ -80,8 +80,28 @@ public class SymbolPriceDetails {
 		return defaultValue;
 	}
 
+	private double getDoubleOrDefault(SymbolInformation info, ToDoubleFunction<SymbolInformation> function, double defaultValue) {
+		if (info != null) {
+			info = this.info;
+			if (info != null) {
+				return function.applyAsDouble(info);
+			}
+		}
+		return defaultValue;
+	}
+
+	private int getIntOrDefault(SymbolInformation info, ToIntFunction<SymbolInformation> function, int defaultValue) {
+		if (info != null) {
+			info = this.info;
+			if (info != null) {
+				return function.applyAsInt(info);
+			}
+		}
+		return defaultValue;
+	}
+
 	private int getPriceDecimals(SymbolInformation info) {
-		return getOrDefault(info, SymbolInformation::priceDecimalPlaces, Balance.ROUND_MC.getPrecision());
+		return getIntOrDefault(info, SymbolInformation::priceDecimalPlaces, Balance.ROUND_MC.getPrecision());
 	}
 
 	public BigDecimal getMinimumOrderAmount(BigDecimal unitPrice) {
@@ -89,11 +109,11 @@ public class SymbolPriceDetails {
 	}
 
 	public double getMinimumOrderAmount(double unitPrice) {
-		return getOrDefault(info, SymbolInformation::minimumAssetsPerOrderAmount, DEFAULT_MINIMUM_ASSETS_PER_ORDER_AMOUNT) * unitPrice;
+		return getDoubleOrDefault(info, SymbolInformation::minimumAssetsPerOrderAmount, DEFAULT_MINIMUM_ASSETS_PER_ORDER_AMOUNT) * unitPrice;
 	}
 
 	private int getQuantityDecimals(SymbolInformation info) {
-		return getOrDefault(info, SymbolInformation::quantityDecimalPlaces, Balance.ROUND_MC.getPrecision());
+		return getIntOrDefault(info, SymbolInformation::quantityDecimalPlaces, Balance.ROUND_MC.getPrecision());
 	}
 
 	public String quantityToString(double quantity) {
@@ -153,6 +173,6 @@ public class SymbolPriceDetails {
 	}
 
 	public int pipSize() {
-		return getOrDefault(info, SymbolInformation::priceDecimalPlaces, 0);
+		return getIntOrDefault(info, SymbolInformation::priceDecimalPlaces, 0);
 	}
 }

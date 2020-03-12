@@ -4,7 +4,7 @@ public class Allocation implements Cloneable {
 
 	public static final double EFFECTIVELY_ZERO = 0.000000001;
 
-	static Allocation NO_LIMITS = new Allocation();
+	static final Allocation NO_LIMITS = new Allocation();
 
 	private double maximumAmountPerAsset = Integer.MAX_VALUE;
 	private double maximumPercentagePerAsset = 100.0;

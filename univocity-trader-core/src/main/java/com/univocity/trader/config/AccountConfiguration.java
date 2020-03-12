@@ -486,22 +486,28 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 		return (T) this;
 	}
 
-	@Override
-	public T clone() {
+	public T clone(boolean deep) {
 		try {
 			T out = (T) super.clone();
+			out.tradedPairs = new ConcurrentHashMap<>(tradedPairs);
 			out.strategies = strategies.clone();
 			out.monitors = monitors.clone();
 			out.listeners = listeners.clone();
-			out.allocations = new ConcurrentHashMap<>();
-			allocations.forEach((k, v) -> out.allocations.put(k, v.clone()));
-			out.tradedPairs = new ConcurrentHashMap<>(tradedPairs);
-			out.supportedSymbols = new TreeSet<>(supportedSymbols);
 			out.orderManagers = new ConcurrentHashMap<>(orderManagers);
+			out.supportedSymbols = new TreeSet<>(supportedSymbols);
+			if (deep) {
+				out.allocations = new ConcurrentHashMap<>();
+				allocations.forEach((k, v) -> out.allocations.put(k, v.clone()));
+			}
 			return out;
 		} catch (CloneNotSupportedException e) {
 			throw new IllegalStateException(e);
 		}
+	}
+
+	@Override
+	public T clone() {
+		return clone(false);
 	}
 
 	//

@@ -508,9 +508,9 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 
 		assertEquals(50.054995, usdBalance, DELTA);
 		assertEquals(149.73512499, reservedBalance, DELTA);
-		assertEquals(110.98889999889, account.getShortedAmount("ADA"), DELTA);
+		assertEquals(110.98889999999989, account.getShortedAmount("ADA"), DELTA);
 
-		final double feesOnTotalShort = feesOn(110.98889999889 * 0.9);
+		final double feesOnTotalShort = feesOn(110.98889999999989 * 0.9);
 
 		//clears free amounts so short can only rely on reserve amount
 		Order bnbOrder = submitOrder(account, "BNB", Order.Side.BUY, LONG, 10L, 2.0, 24.98, null);
@@ -522,17 +522,17 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(3.0, account.getAmount("BNB"), DELTA);
 
 		assertEquals(149.73512499, account.getMarginReserve("USDT", "ADA"), DELTA);
-		assertEquals(110.98889999889 * 0.9 * 1.5 - feesOnTotalShort, account.getMarginReserve("USDT", "ADA"), DELTA);
-		assertEquals(110.98889999889, account.getShortedAmount("ADA"), DELTA);
+		assertEquals(110.98889999999989 * 0.9 * 1.5 - feesOnTotalShort, account.getMarginReserve("USDT", "ADA"), DELTA);
+		assertEquals(110.98889999999989, account.getShortedAmount("ADA"), DELTA);
 
 		tradeOnPrice(trader, 20, 1.2, BUY); //fills 33 units partially.
 
-		double quantityAfterCover = 110.98889999889 - 33.0;
+		double quantityAfterCover = 110.98889999999989 - 33.0;
 		assertEquals(quantityAfterCover, account.getShortedAmount("ADA"), DELTA);
 		assertEquals(0, account.getBalance("USDT").getLocked(), DELTA);
 
 		//calculates the unit price for the short taking fees into account.
-		double adjustedShortPrice = 1.2 * (149.73512499 / account.applyMarginReserve(110.98889999889 * 1.2));
+		double adjustedShortPrice = 1.2 * (149.73512499 / account.applyMarginReserve(110.98889999999989 * 1.2));
 		double profitLoss = 33 * adjustedShortPrice - 33 * 1.2 - feesOn(33 * 1.2);
 		double newMargin = quantityAfterCover * adjustedShortPrice * 1.5;
 		double accountBalanceRequirement = newMargin - newMargin / 1.5;
@@ -567,7 +567,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		tick(account.getTraderOf("ADAUSDT"), 22, 1.2);
 		quantityAfterCover = 0;
 		assertEquals(quantityAfterCover, account.getShortedAmount("ADA"), DELTA);
-		profitLoss = 110.98889999889 * adjustedShortPrice - 110.98889999889 * 1.2 - feesOn(110.98889999889 * 1.2);
+		profitLoss = 110.98889999999989 * adjustedShortPrice - 110.98889999999989 * 1.2 - feesOn(110.98889999999989 * 1.2);
 		newMargin = quantityAfterCover * adjustedShortPrice * 1.5;
 		accountBalanceRequirement = newMargin - newMargin / 1.5;
 		initialAccountBalanceRequirement = reservedBalance - reservedBalance / 1.5;

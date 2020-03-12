@@ -58,7 +58,7 @@ public class Engine {
 		this.plainStrategies = plainStrategies.toArray(new Strategy[0]);
 	}
 
-	public void process(Candle candle, boolean initializing) {
+	public final void process(Candle candle, boolean initializing) {
 		for (int i = 0; i < aggregators.length; i++)
 			aggregators[i].aggregate(candle);
 

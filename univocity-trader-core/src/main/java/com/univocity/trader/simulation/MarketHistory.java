@@ -35,17 +35,22 @@ public class MarketHistory {
 
 	public void simulate(Consumer<Candle> consumer, Instant from, Instant to, boolean cache) {
 		Enumeration<Candle> result = candleRepository.iterate(symbol, from, to, cache);
-		final long start = System.currentTimeMillis();
-		int count = 0;
-		while (result.hasMoreElements()) {
-			Candle candle = result.nextElement();
-			if (candle == null) {
-				break;
+		Candle candle;
+		if (log.isTraceEnabled()) {
+			final long start = System.currentTimeMillis();
+			int count = 0;
+
+			while ((candle = result.nextElement()) != null) {
+				consumer.accept(candle);
+				count++;
 			}
-			consumer.accept(candle);
-			count++;
+			log.trace("Processed all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
+		} else {
+			while ((candle = result.nextElement()) != null) {
+				consumer.accept(candle);
+			}
 		}
-		log.trace("Processed all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
+
 	}
 
 	public Candle last() {

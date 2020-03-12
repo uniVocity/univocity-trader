@@ -166,14 +166,16 @@ public class Trader {
 
 		boolean bought = false;
 
-		for (Trade trade : trades) {
-			if (stoppedOut.contains(trade)) {
-				continue;
-			}
-			if (isShort && trade.isShort()) {
-				bought |= exit(trade, candle, strategy, "Buy signal");
-			} else if (isLong && trade.isLong()) {
-				bought |= buy(LONG, candle, strategy); //increment position on existing trade
+		if (!trades.isEmpty()) {
+			for (Trade trade : trades) {
+				if (stoppedOut.contains(trade)) {
+					continue;
+				}
+				if (isShort && trade.isShort()) {
+					bought |= exit(trade, candle, strategy, "Buy signal");
+				} else if (isLong && trade.isLong()) {
+					bought |= buy(LONG, candle, strategy); //increment position on existing trade
+				}
 			}
 		}
 
@@ -200,22 +202,24 @@ public class Trader {
 		boolean noLongs = true;
 		boolean noShorts = true;
 
-		for (Trade trade : trades) {
-			if (stoppedOut.contains(trade)) {
-				if (trade.isShort()) {
+		if (!trades.isEmpty()) {
+			for (Trade trade : trades) {
+				if (stoppedOut.contains(trade)) {
+					if (trade.isShort()) {
+						noShorts = false;
+					}
+					if (trade.isLong()) {
+						noLongs = false;
+					}
+					continue;
+				}
+				if (isShort && trade.isShort()) {
 					noShorts = false;
-				}
-				if (trade.isLong()) {
+					sold |= sellShort(trade, candle, strategy);
+				} else if (isLong && trade.isLong()) {
 					noLongs = false;
+					sold |= exit(trade, candle, strategy, "Sell signal");
 				}
-				continue;
-			}
-			if (isShort && trade.isShort()) {
-				noShorts = false;
-				sold |= sellShort(trade, candle, strategy);
-			} else if (isLong && trade.isLong()) {
-				noLongs = false;
-				sold |= exit(trade, candle, strategy, "Sell signal");
 			}
 		}
 
@@ -715,10 +719,12 @@ public class Trader {
 	}
 
 	void removeFinalizedTrades() {
-		for (Trade trade : trades) {
-			if (trade.isFinalized()) {
-				pastTrades.add(trade);
-				trades.remove(trade);
+		if (!trades.isEmpty()) {
+			for (Trade trade : trades) {
+				if (trade.isFinalized()) {
+					pastTrades.add(trade);
+					trades.remove(trade);
+				}
 			}
 		}
 	}

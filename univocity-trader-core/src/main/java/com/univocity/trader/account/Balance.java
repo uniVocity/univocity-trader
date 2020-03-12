@@ -83,7 +83,7 @@ public class Balance implements Cloneable {
 //		String msg = symbol + " " + field + " = " + roundStr(bd);
 //		System.out.println(msg);
 
-		bd = round(bd);
+		//bd = round(bd);
 		if (bd >= 0) {
 			balanceUpdateCounts.computeIfAbsent(symbol, (s) -> new AtomicLong(1)).incrementAndGet();
 			return bd;

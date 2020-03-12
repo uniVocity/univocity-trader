@@ -70,8 +70,8 @@ public class ShortTradingTests extends OrderFillChecker {
 		assertFalse(trade.stopped());
 		assertEquals("Buy signal", trade.exitReason());
 		assertFalse(trade.tryingToExit());
-		assertEquals(72.13444444, trade.actualProfitLoss(), DELTA);
-		assertEquals(90.25831386, trade.actualProfitLossPct(), DELTA);
+		assertEquals(72.13444444444373, trade.actualProfitLoss(), DELTA);
+		assertEquals(90.258313869425, trade.actualProfitLossPct(), DELTA);
 	}
 
 
@@ -128,12 +128,12 @@ public class ShortTradingTests extends OrderFillChecker {
 		assertFalse(trade.tryingToExit());
 
 		//profit/loss includes fees.
-		assertEquals(-11.309768909, trade.actualProfitLoss(), DELTA);
-		assertEquals(-11.333555777, trade.actualProfitLossPct(), DELTA);
+		assertEquals(-11.309768909999889, trade.actualProfitLoss(), DELTA);
+		assertEquals(-11.333555778000196, trade.actualProfitLossPct(), DELTA);
 
 		double accountBalanceTakenForMargin = reservedBalance - (reservedBalance + feesOn(quantity1 * 0.9)) / 1.5;
 		assertEquals(usdBalance + accountBalanceTakenForMargin + quantity1 * 0.9 - addFees(quantity1 * 1.0), account.getAmount("USDT"), DELTA);
-		assertEquals(150.0 - 11.309768909, trader.holdings(), DELTA);
+		assertEquals(150.0 - 11.309768909999889, trader.holdings(), DELTA);
 
 		checkTradeAfterShortBuy(usdBalance, reservedBalance, trade, quantity1, 1.0, 1.2, 0.9);
 	}

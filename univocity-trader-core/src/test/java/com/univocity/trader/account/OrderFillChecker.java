@@ -16,7 +16,7 @@ import static junit.framework.TestCase.*;
  */
 public class OrderFillChecker {
 	static final double CLOSE = 0.4379;
-	static final double DELTA = 0.00000001;
+	static final double DELTA = 0.000000000001;
 
 	AccountManager getAccountManager() {
 		return getAccountManager(null);
