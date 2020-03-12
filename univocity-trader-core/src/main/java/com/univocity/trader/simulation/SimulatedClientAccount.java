@@ -7,13 +7,12 @@ import com.univocity.trader.config.*;
 import com.univocity.trader.simulation.orderfill.*;
 
 import java.util.*;
-import java.util.concurrent.*;
 
 import static com.univocity.trader.config.Allocation.*;
 
 public class SimulatedClientAccount implements ClientAccount {
 
-	private Map<String, Set<Order>> orders = new HashMap<>();
+	private Map<String, OrderSet> orders = new HashMap<>();
 	private TradingFees tradingFees;
 	private final AccountManager account;
 	private OrderFillEmulator orderFillEmulator;
@@ -119,7 +118,7 @@ public class SimulatedClientAccount implements ClientAccount {
 	}
 
 	private void activateOrder(Order order) {
-		orders.computeIfAbsent(order.getSymbol(), (s) -> new ConcurrentSkipListSet<>()).add(order);
+		orders.computeIfAbsent(order.getSymbol(), (s) -> new OrderSet()).add(order);
 	}
 
 	private DefaultOrder createOrder(OrderRequest request, double quantity, double price) {
@@ -182,15 +181,15 @@ public class SimulatedClientAccount implements ClientAccount {
 
 	@Override
 	public final synchronized boolean updateOpenOrders(String symbol, Candle candle) {
-		Set<Order> s = orders.get(symbol);
+		OrderSet s = orders.get(symbol);
 		if (s == null || s.isEmpty()) {
 			return false;
 		}
 //		System.out.println("-------");
 
-		Iterator<Order> it = s.iterator();
-		while (it.hasNext()) {
-			Order pendingOrder = it.next();
+		boolean removed = false;
+		for (int i = 0; i < s.i; i++) {
+			Order pendingOrder = s.elements[i];
 			DefaultOrder order = (DefaultOrder) pendingOrder;
 
 			activateAndTryFill(candle, order);
@@ -216,7 +215,8 @@ public class SimulatedClientAccount implements ClientAccount {
 			order.setFeesPaid(order.getFeesPaid() + getTradingFees().feesOnPartialFill(order));
 
 			if (order.isFinalized()) {
-				it.remove();
+				s.elements[i] = null;
+				removed = true;
 				if (order.getParent() != null) { //order is child of a bracket order
 					updateBalances(order, candle);
 					for (Order attached : order.getParent().getAttachments()) { //cancel all open orders
@@ -228,6 +228,8 @@ public class SimulatedClientAccount implements ClientAccount {
 
 				List<Order> attachments = order.getAttachments();
 				if (triggeredOrder == null && attachments != null && !attachments.isEmpty()) {
+					s.removeNulls();
+					removed = false;
 					for (Order attachment : attachments) {
 						processAttachedOrder(order, (DefaultOrder) attachment, candle);
 					}
@@ -240,6 +242,11 @@ public class SimulatedClientAccount implements ClientAccount {
 				processAttachedOrder(order, (DefaultOrder) triggeredOrder, candle);
 			}
 		}
+
+		if (removed) {
+			s.removeNulls();
+		}
+
 		return true;
 	}
 

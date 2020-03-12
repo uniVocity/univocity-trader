@@ -3,7 +3,7 @@ package com.univocity.trader.account;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
-public class DefaultOrder extends OrderRequest implements Order, Comparable<DefaultOrder> {
+public class DefaultOrder extends OrderRequest implements Order {
 
 	private static final AtomicLong orderIds = new AtomicLong(0);
 
@@ -162,8 +162,8 @@ public class DefaultOrder extends OrderRequest implements Order, Comparable<Defa
 	}
 
 	@Override
-	public int compareTo(DefaultOrder o) {
-		return Long.compare(this.id, o.id);
+	public int compareTo(Order o) {
+		return Long.compare(this.id, ((DefaultOrder)o).id);
 	}
 
 }

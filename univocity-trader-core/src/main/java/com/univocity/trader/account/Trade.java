@@ -9,9 +9,6 @@ import com.univocity.trader.strategy.*;
 import org.slf4j.*;
 
 import java.util.*;
-import java.util.concurrent.*;
-
-import static com.univocity.trader.account.Balance.*;
 
 /**
  * A {@code Trade} holds one or more {@link Order} placed in the {@link Exchange} through
@@ -43,9 +40,9 @@ public class Trade implements Comparable<Trade> {
 
 	private String exitReason;
 	private double averagePrice = 0.0;
-	private final Map<String, Order> position = new ConcurrentHashMap<>();
-	private final Map<String, Order> exitOrders = new ConcurrentHashMap<>();
-	private final Map<String, Order> pastOrders = new ConcurrentHashMap<>();
+	protected final OrderSet position = new OrderSet();
+	private final OrderSet exitOrders = new OrderSet();
+	private final OrderSet pastOrders = new OrderSet();
 
 	//these two are used internally only to calculate
 	// average prices with fees taken into account.
@@ -301,7 +298,7 @@ public class Trade implements Comparable<Trade> {
 		return 0;
 	}
 
-	private void updateAveragePrice(Collection<Order> orders) {
+	private void updateAveragePrice(OrderSet orders) {
 		if (isPlaceholder) {
 			return;
 		}
@@ -310,7 +307,8 @@ public class Trade implements Comparable<Trade> {
 		//calculate average price
 		totalSpent = 0.0;
 		totalUnits = 0.0;
-		for (Order order : orders) {
+		for (int i = 0; i < orders.i; i++) {
+			Order order = orders.elements[i];
 			double fees = order.getFeesPaid();
 			totalSpent += order.getTotalTraded() + (order.isBuy() ? fees : -fees);
 			totalUnits += order.getExecutedQuantity();
@@ -332,7 +330,7 @@ public class Trade implements Comparable<Trade> {
 	 */
 	public double averagePrice() {
 		if (averagePrice <= 0.0) {
-			updateAveragePrice(position.values());
+			updateAveragePrice(position);
 		}
 		return averagePrice;
 	}
@@ -402,7 +400,7 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public Collection<Order> position() {
-		return Collections.unmodifiableCollection(position.values());
+		return position.asList();
 	}
 
 	void orderFinalized(Order order) {
@@ -410,22 +408,22 @@ public class Trade implements Comparable<Trade> {
 			return;
 		}
 		if (order.getExecutedQuantity() == 0) { // nothing filled, cancelled
-			position.remove(order.getOrderId());
+			position.remove(order);
 			return;
 		}
 
-		if (position.containsKey(order.getOrderId())) {
+		if (position.contains(order)) {
 			if (order.isBuy()) {
-				updateAveragePrice(position.values());
+				updateAveragePrice(position);
 			}
-		} else if (exitOrders.containsKey(order.getOrderId())) {
+		} else if (exitOrders.contains(order)) {
 			if (isFinalized()) {
-				updateAveragePrice(exitOrders.values());
+				updateAveragePrice(exitOrders);
 				double totalSold = this.totalSpent;
 				double soldUnits = this.totalUnits;
 				double exitPrice = averagePrice;
 
-				updateAveragePrice(position.values());
+				updateAveragePrice(position);
 
 				final double cost = (totalSpent * (soldUnits / this.totalUnits));
 				actualProfitLoss = totalSold - cost;
@@ -437,15 +435,15 @@ public class Trade implements Comparable<Trade> {
 				if (Double.isNaN(actualProfitLossPct)) {
 					throw new IllegalStateException("Profit/loss % can't be determined");
 				}
-				pastOrders.putAll(position);
+				pastOrders.addAll(position);
 				position.clear();
-				pastOrders.putAll(exitOrders);
+				pastOrders.addAll(exitOrders);
 				exitOrders.clear();
 			} else {
 				double totalSold = order.getTotalTraded();
 				double sellPrice = order.getAveragePrice();
 
-				updateAveragePrice(position.values());
+				updateAveragePrice(position);
 
 				actualProfitLossPct = positivePriceChangePct(averagePrice, sellPrice);
 				actualProfitLoss = totalSold - (order.getExecutedQuantity() * averagePrice);
@@ -458,21 +456,22 @@ public class Trade implements Comparable<Trade> {
 		}
 	}
 
-	private double removeCancelledAndSumQuantities(Map<String, Order> orders) {
+	private double removeCancelledAndSumQuantities(OrderSet orders) {
 		double total = 0;
 
-		if (!orders.isEmpty()) {
-			var it = orders.entrySet().iterator();
-			while (it.hasNext()) {
-				Order order = it.next().getValue();
-				if (order.isCancelled() && order.getExecutedQuantity() == 0) {
-					it.remove();
-				} else {
-					total = total + order.getExecutedQuantity();
-				}
+		boolean removed = false;
+		for (int i = 0; i < orders.i; i++) {
+			Order order = orders.elements[i];
+			if (order.isCancelled() && order.getExecutedQuantity() == 0) {
+				orders.elements[i] = null;
+				removed = true;
+			} else {
+				total = total + order.getExecutedQuantity();
 			}
 		}
-
+		if (removed) {
+			orders.removeNulls();
+		}
 		return total;
 	}
 
@@ -541,13 +540,13 @@ public class Trade implements Comparable<Trade> {
 		if (isPlaceholder) {
 			return true;
 		}
-		if (!exitOrders.isEmpty()) {
-			for (Order order : exitOrders.values()) {
-				if (!order.isFinalized()) {
-					return true;
-				}
+
+		for (int i = 0; i < exitOrders.i; i++) {
+			if (!exitOrders.elements[i].isFinalized()) {
+				return true;
 			}
 		}
+
 		return false;
 	}
 
@@ -580,14 +579,14 @@ public class Trade implements Comparable<Trade> {
 		removeCancelledAndSumQuantities(exitOrders);
 
 		if (exitOrders.isEmpty()) {
-			this.position.put(order.getOrderId(), order);
+			this.position.add(order);
 			List<Order> attachments = order.getAttachments();
 			if (attachments != null) {
 				for (Order attachment : order.getAttachments()) {
 					if (attachment.getSide() != order.getSide()) {
-						exitOrders.put(attachment.getOrderId(), attachment);
+						exitOrders.add(attachment);
 					} else {
-						position.put(attachment.getOrderId(), attachment);
+						position.add(attachment);
 					}
 				}
 			}
@@ -604,7 +603,7 @@ public class Trade implements Comparable<Trade> {
 		if (this.exitReason == null) {
 			this.exitReason = exitReason;
 		}
-		exitOrders.put(order.getOrderId(), order);
+		exitOrders.add(order);
 		notifyOrderSubmission(order);
 	}
 
@@ -621,15 +620,15 @@ public class Trade implements Comparable<Trade> {
 
 	public boolean hasOrder(Order order) {
 		if ((order.isBuy() && order.isLong()) || (order.isSell() && order.isShort())) {
-			if (position.containsKey(order.getOrderId()) || order.getParentOrderId() != null && exitOrders.containsKey(order.getParentOrderId())) {
+			if (position.contains(order) || order.getParentOrderId() != null && exitOrders.contains(order.getParent())) {
 				return true;
 			}
 		} else if ((order.isSell() && isLong()) || (order.isShort() && order.isBuy()) || isPlaceholder) {
-			if (exitOrders.containsKey(order.getOrderId()) || order.getParentOrderId() != null && position.containsKey(order.getParentOrderId())) {
+			if (exitOrders.contains(order) || order.getParentOrderId() != null && position.contains(order.getParent())) {
 				return true;
 			}
 		}
-		return pastOrders.get(order.getOrderId()) != null || order.getParentOrderId() != null && pastOrders.containsKey(order.getParentOrderId());
+		return pastOrders.contains(order) || order.getParentOrderId() != null && pastOrders.contains(order.getParent());
 	}
 
 	/**
@@ -663,7 +662,7 @@ public class Trade implements Comparable<Trade> {
 	}
 
 	public Collection<Order> exitOrders() {
-		return Collections.unmodifiableCollection(exitOrders.values());
+		return exitOrders.asList();
 	}
 
 	@Override

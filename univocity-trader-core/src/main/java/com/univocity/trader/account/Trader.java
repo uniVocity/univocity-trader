@@ -241,8 +241,8 @@ public class Trader {
 
 	private boolean exit(Trade trade, Candle candle, Strategy strategy, String exitReason) {
 		if (trade.canExit(strategy)) {
-			for (Order order : trade.position()) {
-				tradingManager.cancelOrder(order);
+			for (int i = 0; i < trade.position.i; i++) {
+				tradingManager.cancelOrder(trade.position.elements[i]);
 			}
 
 			if (!tradingManager.hasPosition(candle, false, trade.isLong(), trade.isShort())) {
@@ -436,8 +436,8 @@ public class Trader {
 
 	private void cancelOpenBuyOrders(Trade trade, Strategy strategy) {
 		if (trade.canExit(strategy)) {
-			for (Order order : trade.position()) {
-				tradingManager.cancelOrder(order);
+			for (int i = 0; i < trade.position.i; i++) {
+				tradingManager.cancelOrder(trade.position.elements[i]);
 			}
 		}
 	}

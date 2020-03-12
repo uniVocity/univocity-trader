@@ -9,7 +9,7 @@ import static com.univocity.trader.account.Order.Status.*;
 import static com.univocity.trader.account.Order.TriggerCondition.*;
 import static com.univocity.trader.candles.Candle.*;
 
-public interface Order {
+public interface Order extends Comparable<Order> {
 
 	String getAssetsSymbol();
 
@@ -216,7 +216,7 @@ public interface Order {
 	}
 
 	default double getFillPct() {
-		if(getQuantity() == 0.0){
+		if (getQuantity() == 0.0) {
 			return 0.0;
 		}
 		return getExecutedQuantity() / getQuantity() * 100.0;
@@ -231,6 +231,11 @@ public interface Order {
 			}
 		}
 		return getSide().toString();
+	}
+
+	@Override
+	default int compareTo(Order o) {
+		return this.getOrderId().compareTo(o.getOrderId());
 	}
 
 	enum Side {
