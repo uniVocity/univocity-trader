@@ -24,7 +24,7 @@ public abstract class IndicatorGroup {
 	 *
 	 * @param parent the aggregator to be used by all indicators in this group
 	 */
-	final void initialize(Aggregator parent) {
+	public final void initialize(Aggregator parent) {
 		if (indicators != null) {
 			return;
 		}
