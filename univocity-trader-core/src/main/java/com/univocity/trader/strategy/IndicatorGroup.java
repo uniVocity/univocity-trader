@@ -61,7 +61,7 @@ public abstract class IndicatorGroup {
 	 *
 	 * @param candle the latest price details returned by an {@link com.univocity.trader.Exchange}
 	 */
-	protected void candleAccumulated(Candle candle) {
+	public void candleAccumulated(Candle candle) {
 
 	}
 
