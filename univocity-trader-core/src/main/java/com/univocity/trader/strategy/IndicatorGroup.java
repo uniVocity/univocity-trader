@@ -17,7 +17,7 @@ import java.util.*;
  */
 public abstract class IndicatorGroup {
 
-	private Indicator[] indicators;
+	public Indicator[] indicators;
 
 	/**
 	 * Initializes all indicators of this group (returned via {@link #getAllIndicators()}) to use the same {@link Aggregator}

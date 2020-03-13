@@ -346,13 +346,6 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public synchronized double getTotalFundsIn(String currency) {
-		if (tradingManagers == null) {
-			if (allTradingManagers.isEmpty()) {
-				throw new IllegalStateException("Can't calculate total funds in " + currency + " as account '" + configuration.id() + "' doesn't handle this symbol. Available symbols are: " + configuration.symbols());
-			}
-			this.tradingManagers = allTradingManagers.values().toArray(new TradingManager[0]);
-		}
-
 		final Balance[] tmp;
 		synchronized (balances) {
 			if (balancesArray == null) {
@@ -363,7 +356,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		}
 
 		double total = 0.0;
-		Map<String, double[]> allPrices = tradingManagers[0].getAllPrices();
+		Map<String, double[]> allPrices = getAllTradingManagers()[0].getAllPrices();
 		for (int i = 0; i < tmp.length; i++) {
 			Balance b = tmp[i];
 			String symbol = b.getSymbol();
@@ -667,6 +660,12 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public TradingManager[] getAllTradingManagers() {
+		if (tradingManagers == null) {
+			if (allTradingManagers.isEmpty()) {
+				throw new IllegalStateException("Can't calculate total funds in account '" + configuration.id() + "'. Available symbols are: " + configuration.symbols());
+			}
+			this.tradingManagers = allTradingManagers.values().toArray(new TradingManager[0]);
+		}
 		return tradingManagers;
 	}
 
