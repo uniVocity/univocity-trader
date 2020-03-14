@@ -13,7 +13,7 @@ public class AverageTrueRange extends ModifiedMovingAverage {
 
 	public AverageTrueRange(int length, TimeInterval interval) {
 		super(length, interval);
-		this.tr = new TrueRange(interval);
+		this.tr = Indicators.TrueRange(interval);
 	}
 
 	protected double extractValue(Candle candle, boolean updating) {

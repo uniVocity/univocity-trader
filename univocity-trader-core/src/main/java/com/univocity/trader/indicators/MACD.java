@@ -41,7 +41,7 @@ public class MACD extends SingleValueIndicator {
 	}
 
 	protected SingleValueIndicator getAverageIndicator(int count, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
-		return new ExponentialMovingAverage(count, interval, valueGetter);
+		return Indicators.ExponentialMovingAverage(count, interval, valueGetter);
 	}
 
 	protected SingleValueIndicator getShortAverageIndicator(int shortCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {

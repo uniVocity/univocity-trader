@@ -16,8 +16,8 @@ public class StochasticOscillatorK extends SingleValueIndicator {
 
 	public StochasticOscillatorK(int length, TimeInterval interval) {
 		super(interval, null);
-		this.lows = new LowestValueIndicator(length, interval, c -> c.low);
-		this.highs = new HighestValueIndicator(length, interval, c -> c.high);
+		this.lows = Indicators.LowestValueIndicator(length, interval, c -> c.low);
+		this.highs = Indicators.HighestValueIndicator(length, interval, c -> c.high);
 	}
 
 	public double getValue() {

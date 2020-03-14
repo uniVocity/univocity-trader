@@ -33,14 +33,14 @@ public class KeltnerChannel extends SingleValueCalculationIndicator {
 
 	public KeltnerChannel(int length, int atrLength, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		super(interval, valueGetter != null ? valueGetter : c -> (c.high + c.low + c.close) / 3.0);
-		this.middle = new ExponentialMovingAverage(length, interval);
-		this.atr = new AverageTrueRange(atrLength, interval);
+		this.middle = Indicators.ExponentialMovingAverage(length, interval);
+		this.atr = Indicators.AverageTrueRange(atrLength, interval);
 	}
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
 		atr.accumulate(candle);
-		if(updating) {
+		if (updating) {
 			middle.update(value);
 		} else {
 			middle.accumulate(value);

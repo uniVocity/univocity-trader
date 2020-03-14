@@ -17,12 +17,12 @@ public class EldersForceIndex extends SingleValueCalculationIndicator {
 
 	public EldersForceIndex(int length, TimeInterval interval) {
 		super(interval);
-		this.average = new ExponentialMovingAverage(length, interval);
+		this.average = Indicators.ExponentialMovingAverage(length, interval);
 	}
 
 	public EldersForceIndex(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		super(interval, valueGetter);
-		this.average = new ExponentialMovingAverage(length, interval);
+		this.average = Indicators.ExponentialMovingAverage(length, interval);
 	}
 
 	@Override

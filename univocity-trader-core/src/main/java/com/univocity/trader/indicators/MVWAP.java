@@ -12,8 +12,8 @@ public class MVWAP extends SingleValueIndicator {
 
 	public MVWAP(int length, int vwapLength, TimeInterval interval) {
 		super(interval, null);
-		vwap = new VWAP(vwapLength, interval);
-		sma = new MovingAverage(length, interval);
+		vwap = Indicators.VWAP(vwapLength, interval);
+		sma = Indicators.MovingAverage(length, interval);
 	}
 
 	@Override

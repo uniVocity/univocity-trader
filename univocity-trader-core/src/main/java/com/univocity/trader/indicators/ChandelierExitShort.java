@@ -22,8 +22,8 @@ public class ChandelierExitShort extends SingleValueCalculationIndicator {
 
 	ChandelierExitShort(int length, TimeInterval interval, double k, ToDoubleFunction<Candle> valueGetter) {
 		super(interval, null);
-		this.low = new LowestValueIndicator(length, interval, valueGetter);
-		this.atr = new AverageTrueRange(length, interval);
+		this.low = Indicators.LowestValueIndicator(length, interval, valueGetter);
+		this.atr = Indicators.AverageTrueRange(length, interval);
 		this.k = k;
 	}
 

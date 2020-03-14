@@ -1,6 +1,7 @@
 package com.univocity.trader.indicators.base.adx;
 
 import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.strategy.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -13,6 +14,6 @@ public class PlusDIIndicator extends AbstractDIIndicator {
 
 	@Override
 	protected AbstractDMIndicator getDMIndicator(TimeInterval interval) {
-		return new PlusDMIndicator(interval);
+		return Indicators.PlusDMIndicator(interval);
 	}
 }

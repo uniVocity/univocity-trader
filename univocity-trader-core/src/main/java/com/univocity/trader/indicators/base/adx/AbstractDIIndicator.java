@@ -18,8 +18,8 @@ public abstract class AbstractDIIndicator extends SingleValueIndicator {
 
 	public AbstractDIIndicator(int length, TimeInterval interval) {
 		super(interval, null);
-		this.avg = new ModifiedMovingAverage(length, interval);
-		this.atr = new AverageTrueRange(length, interval);
+		this.avg = Indicators.ModifiedMovingAverage(length, interval);
+		this.atr = Indicators.AverageTrueRange(length, interval);
 		this.dm = getDMIndicator(interval);
 	}
 

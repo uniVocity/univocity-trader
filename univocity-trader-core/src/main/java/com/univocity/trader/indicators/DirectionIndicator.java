@@ -14,18 +14,10 @@ public class DirectionIndicator<T extends SingleValueIndicator> implements Indic
 	private final LinearRegression linearRegression = new LinearRegression();
 
 	public DirectionIndicator(T indicator) {
-		this(10, indicator);
-	}
-
-	public DirectionIndicator(int length, T indicator) {
-		this(length, indicator, null);
+		this(indicator, null);
 	}
 
 	public DirectionIndicator(T indicator, ToDoubleFunction<T> valueGetter) {
-		this(10, indicator, valueGetter);
-	}
-
-	public DirectionIndicator(int length, T indicator, ToDoubleFunction<T> valueGetter) {
 		this.valueGetter = valueGetter == null ? Indicator::getValue : valueGetter;
 		this.indicator = indicator;
 	}

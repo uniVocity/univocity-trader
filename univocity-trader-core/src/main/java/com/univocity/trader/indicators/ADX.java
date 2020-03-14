@@ -28,9 +28,9 @@ public class ADX extends SingleValueIndicator {
 
 	public ADX(int diLength, int adxLength, TimeInterval interval) {
 		super(interval, null);
-		adx = new ModifiedMovingAverage(adxLength, interval, null);
-		plusDIIndicator = new PlusDIIndicator(diLength, interval);
-		minusDIIndicator = new MinusDIIndicator(diLength, interval);
+		adx = Indicators.ModifiedMovingAverage(adxLength, interval, null);
+		plusDIIndicator = Indicators.PlusDIIndicator(diLength, interval);
+		minusDIIndicator = Indicators.MinusDIIndicator(diLength, interval);
 	}
 
 	@Override
