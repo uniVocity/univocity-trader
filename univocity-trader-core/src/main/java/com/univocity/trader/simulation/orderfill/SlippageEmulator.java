@@ -59,7 +59,7 @@ import com.univocity.trader.config.*;
  * </ul>
  * {@code MARKET} orders will be always 100% filled based on the next candle.
  */
-public class SlippageEmulator implements OrderFillEmulator {
+public final  class SlippageEmulator implements OrderFillEmulator {
 
 	@Override
 	public void fillOrder(DefaultOrder order, Candle candle) {

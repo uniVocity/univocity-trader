@@ -23,7 +23,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		simulation = configuration.simulation();
 	}
 
-	protected AccountManager[] accounts() {
+	protected final AccountManager[] accounts() {
 		if (accounts == null) {
 			List<A> accountConfigs = configuration.accounts();
 			if (accountConfigs.isEmpty()) {
@@ -72,7 +72,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		return getSimulationEnd().toInstant(ZoneOffset.UTC).toEpochMilli();
 	}
 
-	protected void resetBalances() {
+	protected final void resetBalances() {
 		for (AccountManager account : accounts()) {
 			account.resetBalances();
 			double[] total = new double[]{0};
@@ -98,7 +98,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 //		return configuration.account(accountId);
 //	}
 
-	public Map<String, String[]> allPairs() {
+	public final Map<String, String[]> allPairs() {
 		return populateAllPairs();
 	}
 
@@ -125,11 +125,11 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		return out;
 	}
 
-	protected Collection<String[]> getTradePairs() {
+	protected final Collection<String[]> getTradePairs() {
 		return getAllPairs().values();
 	}
 
-	public C configure() {
+	public final C configure() {
 		return configuration;
 	}
 

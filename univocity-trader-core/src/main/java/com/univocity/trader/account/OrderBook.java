@@ -4,7 +4,7 @@ import com.univocity.trader.*;
 
 import java.util.*;
 
-public class OrderBook {
+public final class OrderBook {
 
 	private final String symbol;
 	private final int depth;

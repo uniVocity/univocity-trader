@@ -10,7 +10,7 @@ import java.util.function.*;
 
 import static com.univocity.trader.candles.SymbolInformation.*;
 
-public class SymbolPriceDetails {
+public final class SymbolPriceDetails {
 
 	private static final SymbolPriceDetails NOOP = new SymbolPriceDetails(null, Collections.emptyMap());
 

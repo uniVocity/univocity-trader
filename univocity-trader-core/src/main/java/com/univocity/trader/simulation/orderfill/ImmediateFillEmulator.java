@@ -12,7 +12,7 @@ import java.math.*;
  *
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class ImmediateFillEmulator implements OrderFillEmulator {
+public final class ImmediateFillEmulator implements OrderFillEmulator {
 
 	@Override
 	public void fillOrder(DefaultOrder order, Candle candle) {

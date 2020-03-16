@@ -23,7 +23,7 @@ import static com.univocity.trader.account.Order.Type.*;
  *
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class PriceMatchEmulator implements OrderFillEmulator {
+public  final class PriceMatchEmulator implements OrderFillEmulator {
 
 	@Override
 	public void fillOrder(DefaultOrder order, Candle candle) {

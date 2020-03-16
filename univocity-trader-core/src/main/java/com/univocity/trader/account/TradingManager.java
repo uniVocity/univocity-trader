@@ -15,7 +15,7 @@ import java.util.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.config.Allocation.*;
 
-public class TradingManager {
+public final class TradingManager {
 
 	private static final Logger log = LoggerFactory.getLogger(TradingManager.class);
 

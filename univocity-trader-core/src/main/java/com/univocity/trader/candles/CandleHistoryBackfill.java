@@ -14,7 +14,7 @@ import static com.univocity.trader.candles.Candle.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class CandleHistoryBackfill {
+public final class CandleHistoryBackfill {
 
 	private static final Logger log = LoggerFactory.getLogger(CandleRepository.class);
 	private final CandleRepository candleRepository;

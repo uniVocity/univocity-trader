@@ -5,7 +5,7 @@ import com.univocity.trader.strategy.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
-public class CandleProcessor<T> {
+public final  class CandleProcessor<T> {
 
 	private static final Logger log = LoggerFactory.getLogger(CandleProcessor.class);
 

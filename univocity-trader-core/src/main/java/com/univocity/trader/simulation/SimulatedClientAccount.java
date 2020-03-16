@@ -10,7 +10,7 @@ import java.util.*;
 
 import static com.univocity.trader.config.Allocation.*;
 
-public class SimulatedClientAccount implements ClientAccount {
+public final class SimulatedClientAccount implements ClientAccount {
 
 	private Map<String, OrderSet> orders = new HashMap<>();
 	private TradingFees tradingFees;

@@ -8,7 +8,7 @@ import java.util.concurrent.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
-public class Aggregator {
+public final class Aggregator {
 
 	protected final Map<Long, SoftReference<Aggregator>> allInstances;
 	protected final String description;

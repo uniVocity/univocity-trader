@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.*;
 
 import static com.univocity.trader.config.Allocation.*;
 
-public class Balance implements Cloneable {
+public final class Balance implements Cloneable {
 
 	public static final Map<String, AtomicLong> balanceUpdateCounts = new ConcurrentHashMap<>();
 	public static final Balance ZERO = new Balance("");
@@ -17,6 +17,7 @@ public class Balance implements Cloneable {
 	private double shorted = 0.0;
 	private Map<String, Double> marginReserves = new ConcurrentHashMap<>();
 	private String[] shortedAssetSymbols;
+	private boolean tradingLocked = false;
 
 	public static final MathContext ROUND_MC_STR = new MathContext(8, RoundingMode.HALF_EVEN);
 	public static final MathContext ROUND_MC = new MathContext(12, RoundingMode.HALF_EVEN);
@@ -124,6 +125,18 @@ public class Balance implements Cloneable {
 
 	public static final double round(double bd) {
 		return round(BigDecimal.valueOf(bd), ROUND_MC).doubleValue();
+	}
+
+	public final synchronized boolean isTradingLocked() {
+		return tradingLocked;
+	}
+
+	public final synchronized void lockTrading() {
+		tradingLocked = true;
+	}
+
+	public final synchronized void unlockTrading() {
+		tradingLocked = false;
 	}
 
 	public Balance clone() {

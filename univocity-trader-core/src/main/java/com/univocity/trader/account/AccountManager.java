@@ -21,7 +21,7 @@ import static com.univocity.trader.account.Order.Status.*;
 import static com.univocity.trader.account.Trade.Side.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
-public class AccountManager implements ClientAccount, SimulatedAccountConfiguration {
+public final class AccountManager implements ClientAccount, SimulatedAccountConfiguration {
 	private static final Logger log = LoggerFactory.getLogger(AccountManager.class);
 
 	private final Map<Integer, long[]> fundAllocationCache = new ConcurrentHashMap<>();
@@ -31,8 +31,6 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	private final AccountConfiguration<?> configuration;
 
 	private final OrderSet pendingOrders = new OrderSet();
-
-	private final Set<String> lockedPairs = ConcurrentHashMap.newKeySet();
 
 	private static final long BALANCE_EXPIRATION_TIME = minutes(10).ms;
 	private static final long FREQUENT_BALANCE_UPDATE_INTERVAL = seconds(15).ms;
@@ -102,13 +100,18 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return balances.getOrDefault(symbol, Balance.ZERO).getShorted();
 	}
 
-	public Balance getBalance(String symbol) {
-		return balances.computeIfAbsent(symbol.trim(), (s) -> {
+	public final Balance getBalance(String symbol) {
+		Balance out = balances.get(symbol);
+		if (out == null) {
 			synchronized (balances) {
-				balancesArray = null;
-				return new Balance(symbol);
+				if (balances.get(symbol) == null) {
+					out = new Balance(symbol);
+					balances.put(symbol, out);
+					balancesArray = null;
+				}
 			}
-		});
+		}
+		return out;
 	}
 
 	public void subtractFromFreeBalance(String symbol, final double amount) {
@@ -176,18 +179,14 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public synchronized void addToLockedBalance(String symbol, double amount) {
-		Balance balance = balances.get(symbol);
-		if (balance == null) {
-			balance = new Balance(symbol);
-			balances.put(symbol, balance);
-		}
+		Balance balance = getBalance(symbol);
 		amount = balance.getLocked() + amount;
 		balance.setLocked(amount);
 	}
 
 	//TODO: need to implement margin release/call according to price movement.
 	public void addToMarginReserveBalance(String fundSymbol, String assetSymbol, double amount) {
-		Balance balance = balances.get(fundSymbol);
+		Balance balance = getBalance(fundSymbol);
 		amount = balance.getMarginReserve(assetSymbol) + amount;
 		balance.setMarginReserve(assetSymbol, amount);
 	}
@@ -313,7 +312,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	public final double allocateFunds(String assetSymbol, String fundSymbol, Trade.Side tradeSide) {
 		long a = balanceUpdateCounts.getOrDefault(assetSymbol, NULL).get();
 		long f = balanceUpdateCounts.getOrDefault(fundSymbol, NULL).get();
-		int hash = hash(assetSymbol, fundSymbol, tradeSide);
+		Integer hash = hash(assetSymbol, fundSymbol, tradeSide);
 		long[] cached = fundAllocationCache.get(hash);
 		if (cached == null) {
 			double funds = executeAllocateFunds(assetSymbol, fundSymbol, tradeSide);
@@ -368,7 +367,7 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 				double reserve = b.getMarginReserve(shorted);
 				double marginWithoutReserve = reserve / marginReserveFactorPct;
 				double accountBalanceForMargin = reserve - marginWithoutReserve;
-				double shortedQuantity = balances.get(shorted).getShorted();
+				double shortedQuantity = getBalance(shorted).getShorted();
 				double originalShortedPrice = marginWithoutReserve / shortedQuantity;
 				double totalInvestmentOnShort = shortedQuantity * originalShortedPrice;
 				double totalAtCurrentPrice = multiplyWithLatestPrice(shortedQuantity, shorted, symbol, allPrices);
@@ -421,50 +420,49 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 		return false;
 	}
 
+	private boolean isTradingLocked(String assetSymbol) {
+		return getBalance(assetSymbol).isTradingLocked();
+	}
+
 	public boolean isBuyLocked(String assetSymbol) {
-		synchronized (lockedPairs) {
-			if (lockedPairs.contains(assetSymbol)) {
-				return true;
-			}
-			if (waitingForFill(assetSymbol, BUY)) {
-				return true;
-			}
-			return false;
+		if (isTradingLocked(assetSymbol)) {
+			return true;
 		}
+		if (waitingForFill(assetSymbol, BUY)) {
+			return true;
+		}
+		return false;
+
 	}
 
 	public boolean isShortSellLocked(String assetSymbol) {
-		synchronized (lockedPairs) {
-			if (lockedPairs.contains(assetSymbol)) {
-				return true;
-			}
-			if (waitingForFill(assetSymbol, SELL)) {
-				return true;
-			}
-			return false;
+		if (isTradingLocked(assetSymbol)) {
+			return true;
 		}
+		if (waitingForFill(assetSymbol, SELL)) {
+			return true;
+		}
+		return false;
 	}
 
-	private void lockTrading(String assetSymbol) {
-		synchronized (lockedPairs) {
-			if (log.isTraceEnabled()) {
-				log.trace("Locking trading on {}", assetSymbol);
-			}
-			lockedPairs.add(assetSymbol);
+	private boolean lockTrading(String assetSymbol) {
+		Balance b = getBalance(assetSymbol);
+		if (b.isTradingLocked()) {
+			return false;
 		}
+		b.lockTrading();
+		if (log.isTraceEnabled()) {
+			log.trace("Locking trading on {}", assetSymbol);
+		}
+		return true;
 	}
 
 	private void unlockTrading(String assetSymbol) {
-		synchronized (lockedPairs) {
-			if (lockedPairs.contains(assetSymbol)) {
-				if (log.isTraceEnabled()) {
-					log.trace("Unlocking trading on {}", assetSymbol);
-				}
-				lockedPairs.remove(assetSymbol);
-			}
+		getBalance(assetSymbol).unlockTrading();
+		if (log.isTraceEnabled()) {
+			log.trace("Unlocking trading on {}", assetSymbol);
 		}
 	}
-
 
 	@Override
 	public synchronized String toString() {
@@ -514,36 +512,33 @@ public class AccountManager implements ClientAccount, SimulatedAccountConfigurat
 	}
 
 	public Order buy(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity) {
-		synchronized (lockedPairs) {
-			if (!isBuyLocked(assetSymbol)) {
-				try {
-					lockTrading(assetSymbol);
-					String symbol = assetSymbol + fundSymbol;
-					TradingManager tradingManager = getTradingManagerOf(symbol);
-					if (tradingManager == null) {
-						throw new IllegalStateException("Unable to buy " + quantity + " units of unknown symbol: " + symbol);
-					}
-					if (tradeSide == SHORT) {
-						OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, SHORT, quantity, null);
-						return executeOrder(orderPreparation);
-					}
-					double maxSpend = allocateFunds(assetSymbol, tradeSide);
-					if (maxSpend > 0) {
-						maxSpend = getTradingFees().takeFee(maxSpend, Order.Type.MARKET, BUY);
-						double expectedCost = quantity * tradingManager.getLatestPrice();
-						if (expectedCost > maxSpend) {
-							quantity = quantity * (maxSpend / expectedCost);
-						}
-						quantity = quantity * 0.9999;
-						OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, tradeSide, quantity, null);
-						return executeOrder(orderPreparation);
-					}
-				} finally {
-					unlockTrading(assetSymbol);
+		if (lockTrading(assetSymbol)) {
+			try {
+				String symbol = assetSymbol + fundSymbol;
+				TradingManager tradingManager = getTradingManagerOf(symbol);
+				if (tradingManager == null) {
+					throw new IllegalStateException("Unable to buy " + quantity + " units of unknown symbol: " + symbol);
 				}
+				if (tradeSide == SHORT) {
+					OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, SHORT, quantity, null);
+					return executeOrder(orderPreparation);
+				}
+				double maxSpend = allocateFunds(assetSymbol, tradeSide);
+				if (maxSpend > 0) {
+					maxSpend = getTradingFees().takeFee(maxSpend, Order.Type.MARKET, BUY);
+					double expectedCost = quantity * tradingManager.getLatestPrice();
+					if (expectedCost > maxSpend) {
+						quantity = quantity * (maxSpend / expectedCost);
+					}
+					quantity = quantity * 0.9999;
+					OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, tradeSide, quantity, null);
+					return executeOrder(orderPreparation);
+				}
+			} finally {
+				unlockTrading(assetSymbol);
 			}
-			return null;
 		}
+		return null;
 	}
 
 	public Order sell(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity) {

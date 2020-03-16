@@ -9,7 +9,7 @@ import com.univocity.trader.utils.*;
 
 import java.util.*;
 
-public class SimulatedExchange implements Exchange<Candle, SimulatedClientConfiguration> {
+public final class SimulatedExchange implements Exchange<Candle, SimulatedClientConfiguration> {
 
 	private final AccountManager account;
 	private final Map<String, SymbolInformation> symbolInformation = new TreeMap<>();

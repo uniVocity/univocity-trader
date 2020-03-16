@@ -11,7 +11,6 @@ import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 import static com.univocity.trader.account.Trade.Side.*;
@@ -30,7 +29,7 @@ import static com.univocity.trader.utils.NewInstances.*;
  * @see StrategyMonitor
  * @see Strategy
  */
-public class Trader {
+public final class Trader {
 	private static final Logger log = LoggerFactory.getLogger(Trader.class);
 
 	final TradingManager tradingManager;
@@ -39,8 +38,8 @@ public class Trader {
 
 	private StrategyMonitor[] monitors;
 
-	private final Set<Trade> trades = new ConcurrentSkipListSet<>();
-	private final Set<Trade> pastTrades = new ConcurrentSkipListSet<>();
+	private final TradeSet trades = new TradeSet();
+	private final TradeSet pastTrades = new TradeSet();
 	final boolean allowMixedStrategies;
 	final OrderListener[] notifications;
 	private int pipSize;
@@ -140,7 +139,8 @@ public class Trader {
 
 		if (hasPosition) {
 			stoppedOut.clear();
-			for (Trade trade : trades) {
+			for (int i = 0; i < trades.i; i++) {
+				Trade trade = trades.elements[i];
 				if (trade.tick(candle, signal, strategy) != null) {
 					stoppedOut.add(trade);
 				}
@@ -166,16 +166,15 @@ public class Trader {
 
 		boolean bought = false;
 
-		if (!trades.isEmpty()) {
-			for (Trade trade : trades) {
-				if (stoppedOut.contains(trade)) {
-					continue;
-				}
-				if (isShort && trade.isShort()) {
-					bought |= exit(trade, candle, strategy, "Buy signal");
-				} else if (isLong && trade.isLong()) {
-					bought |= buy(LONG, candle, strategy); //increment position on existing trade
-				}
+		for (int i = 0; i < trades.i; i++) {
+			Trade trade = trades.elements[i];
+			if (stoppedOut.contains(trade)) {
+				continue;
+			}
+			if (isShort && trade.isShort()) {
+				bought |= exit(trade, candle, strategy, "Buy signal");
+			} else if (isLong && trade.isLong()) {
+				bought |= buy(LONG, candle, strategy); //increment position on existing trade
 			}
 		}
 
@@ -202,24 +201,23 @@ public class Trader {
 		boolean noLongs = true;
 		boolean noShorts = true;
 
-		if (!trades.isEmpty()) {
-			for (Trade trade : trades) {
-				if (stoppedOut.contains(trade)) {
-					if (trade.isShort()) {
-						noShorts = false;
-					}
-					if (trade.isLong()) {
-						noLongs = false;
-					}
-					continue;
-				}
-				if (isShort && trade.isShort()) {
+		for (int i = 0; i < trades.i; i++) {
+			Trade trade = trades.elements[i];
+			if (stoppedOut.contains(trade)) {
+				if (trade.isShort()) {
 					noShorts = false;
-					sold |= sellShort(trade, candle, strategy);
-				} else if (isLong && trade.isLong()) {
-					noLongs = false;
-					sold |= exit(trade, candle, strategy, "Sell signal");
 				}
+				if (trade.isLong()) {
+					noLongs = false;
+				}
+				continue;
+			}
+			if (isShort && trade.isShort()) {
+				noShorts = false;
+				sold |= sellShort(trade, candle, strategy);
+			} else if (isLong && trade.isLong()) {
+				noLongs = false;
+				sold |= exit(trade, candle, strategy, "Sell signal");
 			}
 		}
 
@@ -293,18 +291,17 @@ public class Trader {
 				return -1.0;
 			}
 		}
-		if (!trades.isEmpty()) {
-			for (Trade trade : trades) {
-				if (trade.tryingToExit() && ((trade.isLong() && isLong) || (trade.isShort() && isShort))) {
-					if (log.isTraceEnabled()) {
-						if (isLong) {
-							log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
-						} else {
-							log.trace("Discarding short sell of {} @ {}: attempting to buy more", tradingManager.getSymbol(), candle.close);
-						}
+		for (int i = 0; i < trades.i; i++) {
+			Trade trade = trades.elements[i];
+			if (trade.tryingToExit() && ((trade.isLong() && isLong) || (trade.isShort() && isShort))) {
+				if (log.isTraceEnabled()) {
+					if (isLong) {
+						log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
+					} else {
+						log.trace("Discarding short sell of {} @ {}: attempting to buy more", tradingManager.getSymbol(), candle.close);
 					}
-					return -1.0;
 				}
+				return -1.0;
 			}
 		}
 
@@ -322,7 +319,7 @@ public class Trader {
 			}
 		}
 		if ((isLong && tradingManager.isBuyLocked()) || (isShort && tradingManager.isShortSellLocked())) {
-			if(log.isTraceEnabled()) {
+			if (log.isTraceEnabled()) {
 				if (isLong) {
 					log.trace("Discarding buy of {} @ {}: purchase order already being processed", tradingManager.getSymbol(), candle.close);
 				} else {
@@ -344,7 +341,7 @@ public class Trader {
 					tradingManager.updateBalances();
 					amountToSpend = tradingManager.allocateFunds(side);
 					if (amountToSpend <= minimum) {
-						if(log.isTraceEnabled()) {
+						if (log.isTraceEnabled()) {
 							if (isLong) {
 								log.trace("Discarding buy of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
 							} else {
@@ -443,8 +440,8 @@ public class Trader {
 
 
 	private void cancelOpenBuyOrders(Strategy strategy) {
-		for (Trade trade : trades) {
-			cancelOpenBuyOrders(trade, strategy);
+		for (int i = 0; i < trades.i; i++) {
+			cancelOpenBuyOrders(trades.elements[i], strategy);
 		}
 	}
 
@@ -480,7 +477,8 @@ public class Trader {
 	}
 
 	public void liquidateOpenPositions() {
-		for (Trade t : trades) {
+		for (int i = 0; i < trades.i; i++) {
+			Trade t = trades.elements[i];
 			if (!t.isFinalized()) {
 				if (t.isLong()) {
 					if (!sellAssets(t, null, "Liquidate position")) {
@@ -509,14 +507,16 @@ public class Trader {
 		}
 		try {
 			try {
-				if (order.isBuy()) {
-					trade = processBuyOrder(order, strategy, reason);
-				} else if (order.isSell()) {
-					trade = processSellOrder(trade, order, strategy, reason);
-				}
+				synchronized (trades) {
+					if (order.isBuy()) {
+						trade = processBuyOrder(order, strategy, reason);
+					} else if (order.isSell()) {
+						trade = processSellOrder(trade, order, strategy, reason);
+					}
 
-				if (trade != null) {
-					trades.add(trade);
+					if (trade != null) {
+						trades.add(trade);
+					}
 				}
 			} finally {
 				tradingManager.updateBalances();
@@ -542,7 +542,8 @@ public class Trader {
 
 	private Trade processBuyOrder(Order order, Strategy strategy, String reason) {
 		Trade trade = null;
-		for (Trade t : trades) {
+		for (int i = 0; i < trades.i; i++) {
+			Trade t = trades.elements[i];
 			if (!t.isFinalized() && t.getSide() == order.getTradeSide()) {
 				trade = t;
 				break;
@@ -576,7 +577,8 @@ public class Trader {
 
 	private Trade processSellOrder(Trade trade, Order order, Strategy strategy, String reason) {
 		if (trade == null) {
-			for (Trade t : trades) {
+			for (int i = 0; i < trades.i; i++) {
+				Trade t = trades.elements[i];
 				if (!t.isFinalized() && t.canExit(strategy)) {
 					trade = t;
 					break;
@@ -635,7 +637,8 @@ public class Trader {
 				return false;
 			}
 
-			for (Trade trade : trades) {
+			for (int i = 0; i < trades.i; i++) {
+				Trade trade = trades.elements[i];
 				if (!trade.isFinalized() && trade.allowTradeSwitch(exitSymbol, candle, candleTicker)) {
 					if (exit(trade, trade.latestCandle(), strategy, "exit to buy " + exitSymbol)) {
 						return true;
@@ -734,22 +737,27 @@ public class Trader {
 
 	void removeFinalizedTrades() {
 		if (!trades.isEmpty()) {
-			for (Trade trade : trades) {
-				if (trade.isFinalized()) {
-					pastTrades.add(trade);
-					trades.remove(trade);
+			synchronized (trades) {
+				for (int i = trades.i - 1; i >= 0; i--) {
+					Trade trade = trades.elements[i];
+					if (trade.isFinalized()) {
+						pastTrades.add(trade);
+						trades.remove(trade);
+					}
 				}
 			}
 		}
 	}
 
 	public Trade tradeOf(Order order) {
-		for (Trade trade : trades) {
+		for (int i = 0; i < trades.i; i++) {
+			Trade trade = trades.elements[i];
 			if (trade.hasOrder(order)) {
 				return trade;
 			}
 		}
-		for (Trade trade : pastTrades) {
+		for (int i = 0; i < pastTrades.i; i++) {
+			Trade trade = pastTrades.elements[i];
 			if (trade.hasOrder(order)) {
 				return trade;
 			}
@@ -759,7 +767,8 @@ public class Trader {
 
 	public Strategy strategyOf(Order order) {
 		if (!allowMixedStrategies) {
-			for (Trade trade : trades) {
+			for (int i = 0; i < trades.i; i++) {
+				Trade trade = trades.elements[i];
 				if (trade.hasOrder(order)) {
 					return trade.openingStrategy();
 				}
@@ -779,7 +788,7 @@ public class Trader {
 	}
 
 	public Set<Trade> trades() {
-		return new TreeSet<>(trades);
+		return trades.asSet();
 	}
 
 	public int pipSize() {

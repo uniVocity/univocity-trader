@@ -12,7 +12,7 @@ public class CircularList {
 		this.values = new double[length];
 	}
 
-	public double first() {
+	public final double first() {
 		if (updating) {
 			return getRecentValue(Math.min(size(), values.length));
 		} else if (size() < values.length) {
@@ -22,7 +22,7 @@ public class CircularList {
 		}
 	}
 
-	public double last() {
+	public final double last() {
 		return last;
 	}
 
@@ -38,7 +38,7 @@ public class CircularList {
 		this.updating = updating;
 	}
 
-	public void accumulate(double value, boolean updating) {
+	public final void accumulate(double value, boolean updating) {
 		if (updating) {
 			update(value, true);
 		} else {
@@ -57,19 +57,19 @@ public class CircularList {
 		return Math.min(values.length, (int) (updating ? count + 1 : count));
 	}
 
-	public double get(int i) {
+	public final double get(int i) {
 		return values[i % values.length];
 	}
 
-	public int capacity() {
+	public final int capacity() {
 		return values.length;
 	}
 
-	public double sum() {
+	public final double sum() {
 		return sum;
 	}
 
-	public int getStartingIndex(int backwardCount) {
+	public final int getStartingIndex(int backwardCount) {
 		if (backwardCount == 0) {
 			throw new IllegalArgumentException("Invalid recent value index");
 		}
@@ -88,7 +88,7 @@ public class CircularList {
 		return backwardCount;
 	}
 
-	public double avg() {
+	public final double avg() {
 		return sum / size();
 	}
 
@@ -119,15 +119,15 @@ public class CircularList {
 		return out;
 	}
 
-	public double getMin(int backwardCount) {
+	public final double getMin(int backwardCount) {
 		return calculateOnSection(backwardCount, (min, v) -> v < min);
 	}
 
-	public double getMax(int backwardCount) {
+	public final double getMax(int backwardCount) {
 		return calculateOnSection(backwardCount, (max, v) -> v > max);
 	}
 
-	public double getRecentValue(int backwardCount) {
+	public final double getRecentValue(int backwardCount) {
 		return values[getStartingIndex(backwardCount)];
 	}
 }

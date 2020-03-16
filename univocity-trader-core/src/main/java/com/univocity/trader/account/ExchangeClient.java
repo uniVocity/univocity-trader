@@ -10,7 +10,7 @@ import com.univocity.trader.utils.*;
 import java.time.*;
 import java.util.*;
 
-public class ExchangeClient<T> implements Client {
+public final class ExchangeClient<T> implements Client {
 
 	private TradingManager root;
 

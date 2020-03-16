@@ -21,19 +21,19 @@ public class MarketHistory {
 		this.candleRepository = candleRepository;
 	}
 
-	public String getSymbol() {
+	public final String getSymbol() {
 		return symbol;
 	}
 
-	public void simulate(Consumer<Candle> consumer, boolean cache) {
+	public final void simulate(Consumer<Candle> consumer, boolean cache) {
 		simulate(consumer, null, null, cache);
 	}
 
-	public void simulate(Consumer<Candle> consumer, Instant from, boolean cache) {
+	public final void simulate(Consumer<Candle> consumer, Instant from, boolean cache) {
 		simulate(consumer, from, null, cache);
 	}
 
-	public void simulate(Consumer<Candle> consumer, Instant from, Instant to, boolean cache) {
+	public final void simulate(Consumer<Candle> consumer, Instant from, Instant to, boolean cache) {
 		Enumeration<Candle> result = candleRepository.iterate(symbol, from, to, cache);
 		Candle candle;
 		if (log.isTraceEnabled()) {
@@ -53,11 +53,11 @@ public class MarketHistory {
 
 	}
 
-	public Candle last() {
+	public final Candle last() {
 		return candleRepository.lastCandle(symbol);
 	}
 
-	public long size() {
+	public final  long size() {
 		return candleRepository.countCandles(symbol);
 	}
 }

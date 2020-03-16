@@ -29,7 +29,7 @@ import java.util.*;
  * These statistics take into account one {@link Order} or more which represent the current
  * position being held.
  */
-public class Trade implements Comparable<Trade> {
+public final class Trade implements Comparable<Trade> {
 
 	private static final Logger log = LoggerFactory.getLogger(Trade.class);
 

@@ -219,20 +219,20 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		}
 	}
 
-	public void backfillHistory() {
+	public final void backfillHistory() {
 		TreeSet<String> allSymbols = new TreeSet<>();
 		configuration.accounts().forEach(a -> allSymbols.addAll(a.symbolPairs().keySet()));
 		allSymbols.addAll(new CandleRepository(configure().database()).getKnownSymbols());
 		backfillHistory(allSymbols);
 	}
 
-	public void backfillHistory(String... symbolsToUpdate) {
+	public final void backfillHistory(String... symbolsToUpdate) {
 		LinkedHashSet<String> allSymbols = new LinkedHashSet<>();
 		Collections.addAll(allSymbols, symbolsToUpdate);
 		backfillHistory(allSymbols);
 	}
 
-	public void backfillHistory(Collection<String> symbols) {
+	public final void backfillHistory(Collection<String> symbols) {
 		Exchange<?, A> exchange = exchangeSupplier.get();
 		backfillHistory(exchange, symbols);
 	}
@@ -255,7 +255,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		Engine[] engines;
 	}
 
-	public CandleRepository getCandleRepository() {
+	public final CandleRepository getCandleRepository() {
 		return candleRepository;
 	}
 }
