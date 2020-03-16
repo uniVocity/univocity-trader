@@ -21,6 +21,12 @@ public class SortedSet<T extends Comparable<T>> {
 	}
 
 	public final void add(T order) {
+		int slot = Arrays.binarySearch(elements, 0, i, order);
+		if (slot >= 0) {
+			elements[slot] = order;
+			return;
+		}
+
 		if (i >= elements.length) {
 			elements = Arrays.copyOf(elements, elements.length + 16);
 		}
