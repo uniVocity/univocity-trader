@@ -40,13 +40,13 @@ public class MarketHistory {
 			final long start = System.currentTimeMillis();
 			int count = 0;
 
-			while ((candle = result.nextElement()) != null) {
+			while (result.hasMoreElements() && (candle = result.nextElement()) != null) {
 				consumer.accept(candle);
 				count++;
 			}
 			log.trace("Processed all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
 		} else {
-			while ((candle = result.nextElement()) != null) {
+			while (result.hasMoreElements() && (candle = result.nextElement()) != null) {
 				consumer.accept(candle);
 			}
 		}
