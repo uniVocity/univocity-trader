@@ -22,8 +22,8 @@ public class ChandelierExitLong extends SingleValueCalculationIndicator {
 
 	ChandelierExitLong(int length, TimeInterval interval, double k, ToDoubleFunction<Candle> valueGetter) {
 		super(interval, null);
-		this.high = Indicators.HighestValueIndicator(length, interval, valueGetter);
-		this.atr = Indicators.AverageTrueRange(length, interval);
+		this.high = new HighestValueIndicator(length, interval, valueGetter);
+		this.atr = new AverageTrueRange(length, interval);
 		this.k = k;
 	}
 

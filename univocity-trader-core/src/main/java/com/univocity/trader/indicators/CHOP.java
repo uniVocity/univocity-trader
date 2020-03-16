@@ -35,10 +35,10 @@ public class CHOP extends SingleValueCalculationIndicator {
 
 	public CHOP(int length, int scaleTo, TimeInterval interval) { //@param scaleTo maximum value to scale this oscillator, usually '1' or '100'
 		super(interval);
-		this.atrIndicator = Indicators.AverageTrueRange(1, interval); // ATR(1) = Average True Range (Period of 1)
+		this.atrIndicator = new AverageTrueRange(1, interval); // ATR(1) = Average True Range (Period of 1)
 		this.atrIndicators = new CircularList(length);
-		hvi = Indicators.HighestValueIndicator(length, interval, c -> c.high);
-		lvi = Indicators.LowestValueIndicator(length, interval, c -> c.low);
+		hvi = new HighestValueIndicator(length, interval, c -> c.high);
+		lvi = new LowestValueIndicator(length, interval, c -> c.low);
 		this.log10n = Math.log10(length);
 		this.scaleUpTo = scaleTo;
 	}
@@ -55,7 +55,7 @@ public class CHOP extends SingleValueCalculationIndicator {
 			atrIndicators.add(this.atrIndicator.getValue());
 		}
 
-		if (getAccumulationCount() == 0) {
+		if(getAccumulationCount() == 0){
 			return 0.0;
 		}
 

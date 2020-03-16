@@ -25,7 +25,7 @@ public class TTMTrend extends SingleValueIndicator {
 
 	public TTMTrend(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		super(interval, valueGetter);
-		this.avg = Indicators.MovingAverage(length, interval);
+		this.avg = new MovingAverage(length, interval);
 	}
 
 	@Override

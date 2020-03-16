@@ -19,8 +19,8 @@ public class RSI extends SingleValueIndicator {
 
 	public RSI(int length, TimeInterval interval) {
 		super(interval, null);
-		this.averageGainIndicator = Indicators.ModifiedMovingAverage(length, interval, this::calculateGain);
-		this.averageLossIndicator = Indicators.ModifiedMovingAverage(length, interval, this::calculateLoss);
+		this.averageGainIndicator = new ModifiedMovingAverage(length, interval, this::calculateGain);
+		this.averageLossIndicator = new ModifiedMovingAverage(length, interval, this::calculateLoss);
 	}
 
 
@@ -68,7 +68,7 @@ public class RSI extends SingleValueIndicator {
 			this.value = 100.0 - (100.0 / (1.0 + relativeStrength));
 		}
 
-		if (!updating) {
+		if(!updating) {
 			prev = candle;
 		}
 		return true;

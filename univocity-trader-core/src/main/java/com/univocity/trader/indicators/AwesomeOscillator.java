@@ -31,8 +31,8 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 
 	public AwesomeOscillator(int lengthShort, int lengthLong, TimeInterval interval) {
 		super(interval, null);
-		this.sma5 = Indicators.MovingAverage(lengthShort, interval, this::getMedianPrice);
-		this.sma34 = Indicators.MovingAverage(lengthLong, interval, this::getMedianPrice);
+		this.sma5 = new MovingAverage(lengthShort, interval, this::getMedianPrice);
+		this.sma34 = new MovingAverage(lengthLong, interval, this::getMedianPrice);
 	}
 
 	@Override

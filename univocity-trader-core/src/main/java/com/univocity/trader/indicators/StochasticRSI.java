@@ -17,9 +17,9 @@ public class StochasticRSI extends SingleValueIndicator {
 
 	public StochasticRSI(int length, TimeInterval interval) {
 		super(interval, null);
-		this.rsi = Indicators.RSI(length, interval);
-		this.minRsi = Indicators.LowestValueIndicator(length, interval, null);
-		this.maxRsi = Indicators.HighestValueIndicator(length, interval, null);
+		this.rsi = new RSI(length, interval);
+		this.minRsi = new LowestValueIndicator(length, interval, null);
+		this.maxRsi = new HighestValueIndicator(length, interval, null);
 	}
 
 	public double getValue() {

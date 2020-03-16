@@ -19,8 +19,8 @@ public class StochasticOscillatorD extends SingleValueIndicator {
 
 	public StochasticOscillatorD(int dLength, int kLength, TimeInterval interval) {
 		super(interval, null);
-		this.k = Indicators.StochasticOscillatorK(kLength, interval);
-		this.sma = Indicators.MovingAverage(dLength, interval, null);
+		this.k = new StochasticOscillatorK(kLength, interval);
+		this.sma = new MovingAverage(dLength, interval, null);
 	}
 
 	@Override

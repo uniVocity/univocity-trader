@@ -10,9 +10,21 @@ import java.util.function.*;
 
 public abstract class Indicators {
 
+	public static HashMap<String, Indicator> instances = new HashMap<>();
+	public static BiFunction<Indicator, Object[], String> keyBuilder = (indicator, params) -> indicator.getClass().getName() + Arrays.toString(params);
+
 	protected Indicators() {
 
 	}
+
+	protected synchronized static <T extends Indicator> T register(T indicator, Object... params) {
+		if (keyBuilder != null) {
+			String key = keyBuilder.apply(indicator, params);
+			return (T) instances.computeIfAbsent(key, (k) -> indicator);
+		}
+		return indicator;
+	}
+
 
 	public static ADX ADX(TimeInterval interval) {
 		return register(new ADX(interval), interval);
@@ -370,11 +382,5 @@ public abstract class Indicators {
 	public static ZeroLagMovingAverage ZeroLagMovingAverage(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return register(new ZeroLagMovingAverage(length, interval, valueGetter), length, interval, valueGetter);
 	}
-
-	protected static <T extends Indicator> T register(T indicator, Object... params) {
-		String key = indicator.getClass().getName() + Arrays.toString(params);
-		return indicator;
-	}
-
 
 }

@@ -19,7 +19,7 @@ public class DoubleExponentialMovingAverage extends ExponentialMovingAverage {
 
 	public DoubleExponentialMovingAverage(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		super(length, interval, valueGetter);
-		ema = Indicators.ExponentialMovingAverage(length, interval, valueGetter);
+		ema = new ExponentialMovingAverage(length, interval, valueGetter);
 	}
 
 	@Override

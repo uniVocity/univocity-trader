@@ -18,7 +18,7 @@ public class PercentRankIndicator extends SingleValueIndicator {
 	public PercentRankIndicator(int length, TimeInterval interval) {
 		super(interval, null);
 		this.values = new CircularList(length);
-		this.roc = Indicators.RateOfChange(1, interval);
+		this.roc = new RateOfChange(1, interval);
 	}
 
 	@Override

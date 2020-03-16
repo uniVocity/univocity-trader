@@ -13,7 +13,7 @@ public class ConnorsRSI extends SingleValueIndicator {
 
 	private double value;
 
-	@Override
+		@Override
 	protected Indicator[] children() {
 		return new Indicator[]{rsi, streakRsi, streak, rank};
 	}
@@ -24,12 +24,12 @@ public class ConnorsRSI extends SingleValueIndicator {
 
 	public ConnorsRSI(int rsiLength, int streakRsiLength, int pctRankLength, TimeInterval interval) {
 		super(interval, null);
-		rsi = Indicators.RSI(rsiLength, interval);
+		rsi = new RSI(rsiLength, interval);
 
-		streak = Indicators.StreakIndicator(TimeInterval.millis(1));
-		streakRsi = Indicators.RSI(streakRsiLength, TimeInterval.millis(1));
+		streak = new StreakIndicator(TimeInterval.millis(1));
+		streakRsi = new RSI(streakRsiLength, TimeInterval.millis(1));
 
-		rank = Indicators.PercentRankIndicator(pctRankLength, TimeInterval.millis(1));
+		rank = new PercentRankIndicator(pctRankLength, TimeInterval.millis(1));
 	}
 
 	public double getValue() {

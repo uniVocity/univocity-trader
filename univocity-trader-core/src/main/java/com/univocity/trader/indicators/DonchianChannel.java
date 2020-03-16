@@ -5,6 +5,7 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
+import static com.univocity.trader.indicators.Signal.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 /**
@@ -20,10 +21,16 @@ public class DonchianChannel extends SingleValueCalculationIndicator {
 	private double upperBandValue = 0.0;
 	private double lowerBandValue = 0.0;
 
+	private int hitsDown = 0;
+	private double downPrice;
+
+	private int hitsUp = 0;
+	private double upPrice;
+
 	public DonchianChannel(int length, TimeInterval interval) {
 		super(interval);
-		upperBand = Indicators.HighestValueIndicator(length, millis(1), null);
-		lowerBand = Indicators.LowestValueIndicator(length, millis(1), null);
+		upperBand = new HighestValueIndicator(length, millis(1), null);
+		lowerBand = new LowestValueIndicator(length, millis(1), null);
 	}
 
 	@Override
@@ -33,7 +40,7 @@ public class DonchianChannel extends SingleValueCalculationIndicator {
 
 	@Override
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
-		if (updating) {
+		if(updating) {
 			upperBand.update(candle.high);
 			lowerBand.update(candle.low);
 		} else {
