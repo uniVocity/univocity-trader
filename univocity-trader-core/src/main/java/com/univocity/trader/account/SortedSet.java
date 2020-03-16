@@ -28,7 +28,7 @@ public class SortedSet<T extends Comparable<T>> {
 		}
 
 		if (i >= elements.length) {
-			elements = Arrays.copyOf(elements, elements.length + 16);
+			elements = Arrays.copyOf(elements, elements.length + elements.length);
 		}
 		elements[i++] = order;
 		sort();
@@ -83,6 +83,10 @@ public class SortedSet<T extends Comparable<T>> {
 			}
 		}
 		i = n;
+	}
+
+	public final void removeFirst() {
+		System.arraycopy(elements, 1, elements, 0, --i);
 	}
 
 	public final Collection<T> asList() {

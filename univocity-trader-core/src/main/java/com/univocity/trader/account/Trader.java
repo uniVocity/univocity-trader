@@ -741,8 +741,11 @@ public final class Trader {
 				for (int i = trades.i - 1; i >= 0; i--) {
 					Trade trade = trades.elements[i];
 					if (trade.isFinalized()) {
-						pastTrades.add(trade);
 						trades.remove(trade);
+						while (pastTrades.size() >= 16) {
+							pastTrades.removeFirst();
+						}
+						pastTrades.add(trade);
 					}
 				}
 			}
