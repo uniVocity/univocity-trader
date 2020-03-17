@@ -252,7 +252,7 @@ public final class Trader {
 
 			if (trade.isLong()) {
 				return sellAssets(trade, strategy, exitReason);
-			} else if (trade.isShort()) {
+			} else if (trade.isShort() && trade.exitOrders().isEmpty()) {
 				return closeShort(trade, strategy, exitReason);
 			}
 		}
@@ -376,6 +376,9 @@ public final class Trader {
 		Order order = null;
 		if (tradeSide == LONG) {
 			double amountToSpend = prepareTrade(tradeSide, candle, strategy);
+			if(amountToSpend <= 0){
+				return false;
+			}
 			order = tradingManager.buy(amountToSpend / candle.close, LONG);
 		} else if (tradeSide == SHORT) {
 			double shortedQuantity = balance().getShorted();
