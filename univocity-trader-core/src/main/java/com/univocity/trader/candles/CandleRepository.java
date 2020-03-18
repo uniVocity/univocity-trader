@@ -164,17 +164,15 @@ public class CandleRepository {
 
 	private boolean isDatabaseMySQL() {
 		if (databaseName == null) {
-			synchronized (this) {
-				try {
-					databaseName = db().execute((ConnectionCallback<String>) connection -> connection.getMetaData().getDatabaseProductName());
-				} catch (Exception e) {
-					log.warn("Unable to determine database name", e);
-				}
-				if (databaseName == null) {
-					databaseName = "";
-				}
-				databaseName = databaseName.trim().toLowerCase();
+			try {
+				databaseName = db().execute((ConnectionCallback<String>) connection -> connection.getMetaData().getDatabaseProductName());
+			} catch (Exception e) {
+				log.warn("Unable to determine database name", e);
 			}
+			if (databaseName == null) {
+				databaseName = "";
+			}
+			databaseName = databaseName.trim().toLowerCase();
 		}
 		return databaseName.contains("mysql") || databaseName.contains("maria");
 	}
@@ -192,7 +190,7 @@ public class CandleRepository {
 	}
 
 	public void evictFromCache(String symbol) {
-		if(log.isTraceEnabled()) {
+		if (log.isTraceEnabled()) {
 			log.trace("Evicting cached candles of {}", symbol);
 		}
 		Collection<Candle> candles = cachedResults.remove(symbol);

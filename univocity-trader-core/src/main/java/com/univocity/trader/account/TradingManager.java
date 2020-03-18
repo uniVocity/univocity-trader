@@ -162,7 +162,7 @@ public final class TradingManager {
 //	}
 
 	public Order sell(double quantity, Trade.Side tradeSide) {
-		if (quantity * getLatestPrice() < minimumInvestmentAmountPerTrade()) {
+		if (!trader.liquidating && quantity * getLatestPrice() < minimumInvestmentAmountPerTrade()) {
 			return null;
 		}
 		return tradingAccount.sell(assetSymbol, fundSymbol, tradeSide, quantity);
@@ -327,6 +327,7 @@ public final class TradingManager {
 		notifySimulationEnd(this.notifications);
 		notifySimulationEnd(trader.notifications);
 		Balance.balanceUpdateCounts.clear();
+		getAccount().notifySimulationEnd();
 	}
 
 	private void notifySimulationEnd(OrderListener[] notifications) {

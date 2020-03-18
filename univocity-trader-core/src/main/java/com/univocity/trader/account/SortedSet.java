@@ -116,4 +116,20 @@ public class SortedSet<T extends Comparable<T>> {
 		System.arraycopy(position.elements, 0, this.elements, i, position.i);
 		this.i += position.i;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder out = new StringBuilder();
+		for (int i = 0; i < this.i; i++) {
+			if (elements[i] == null) {
+				break;
+			}
+			if (out.length() > 0) {
+				out.append(',');
+			}
+			out.append(elements[i]);
+		}
+
+		return out.toString();
+	}
 }

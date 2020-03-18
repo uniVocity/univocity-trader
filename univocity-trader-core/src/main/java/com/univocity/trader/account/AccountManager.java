@@ -886,7 +886,16 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		for (int i = 0; i < pendingOrders.i; i++) {
 			Order order = pendingOrders.elements[i];
 			OrderManager orderManager = configuration.orderManager(order.getSymbol());
-			if (orderManager.cancelToReleaseFundsFor(order, traderOf(order), trader)) {
+			Trader traderOfOrder = traderOf(order);
+			if (traderOfOrder == null) {
+				log.warn("Cancelling order {} as no trader found for this order", order);
+				order.cancel();
+			} else if (traderOfOrder.latestCandle() == null) {
+				log.warn("Cancelling order {} as latest candle information is available for this symbol", order);
+				order.cancel();
+			}
+
+			if (order.isCancelled() || traderOfOrder != null && orderManager.cancelToReleaseFundsFor(order, traderOfOrder, trader)) {
 				if (order.getStatus() == CANCELLED) {
 					cancelOrder(orderManager, order);
 					return;
@@ -900,7 +909,16 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 			this.balances.clear();
 			this.balancesArray = null;
 		}
-		executeUpdateBalances();
+		fundAllocationCache.clear();
+		pendingOrders.clear();
+
+		traders.clear();
+		allTradingManagers.clear();
+		tradingManagers = null;
+
+		client.reset();
+		lastBalanceSync = 0L;
+
 		return this;
 	}
 
@@ -927,5 +945,18 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 
 	public final double marginReserveFactorPct() {
 		return marginReserveFactorPct;
+	}
+
+	public void notifySimulationEnd() {
+		for (int i = 0; i < this.pendingOrders.i; i++) {
+			pendingOrders.elements[i].cancel();
+		}
+
+		for (TradingManager t : this.getAllTradingManagers()) {
+			updateOpenOrders(t.getSymbol(), t.getLatestCandle());
+		}
+
+		balances.clear();
+		pendingOrders.clear();
 	}
 }

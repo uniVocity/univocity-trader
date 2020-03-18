@@ -45,6 +45,7 @@ public final class Trader {
 	private int pipSize;
 	private final List<Trade> stoppedOut = new ArrayList<>();
 	private static final AtomicLong id = new AtomicLong(0);
+	boolean liquidating = false;
 
 	/**
 	 * Creates a new trader for a given symbol. For internal use only.
@@ -131,6 +132,9 @@ public final class Trader {
 	 * @return a signal indicating the action taken by this {@code Trader}, i.e. {@code BUY} if it bought assets,
 	 */
 	public void trade(Candle candle, Signal signal, Strategy strategy) {
+		if (candle == null) {
+			throw new IllegalArgumentException("Candle of " + symbol() + " can't be null");
+		}
 		latestCandle = candle;
 
 		removeFinalizedTrades();
@@ -376,7 +380,7 @@ public final class Trader {
 		Order order = null;
 		if (tradeSide == LONG) {
 			double amountToSpend = prepareTrade(tradeSide, candle, strategy);
-			if(amountToSpend <= 0){
+			if (amountToSpend <= 0) {
 				return false;
 			}
 			order = tradingManager.buy(amountToSpend / candle.close, LONG);
@@ -480,23 +484,34 @@ public final class Trader {
 	}
 
 	public void liquidateOpenPositions() {
-		for (int i = 0; i < trades.i; i++) {
-			Trade t = trades.elements[i];
-			if (!t.isFinalized()) {
-				if (t.isLong()) {
-					if (!sellAssets(t, null, "Liquidate position")) {
-						log.warn("Could not liquidate open trade: " + t);
-					} else {
-						t.liquidate();
-					}
-				} else if (t.isShort()) {
-					if (!closeShort(t, null, "Liquidate position")) {
-						log.warn("Could not liquidate open trade: " + t);
-					} else {
-						t.liquidate();
+		liquidating = true;
+		try {
+			for (int i = 0; i < trades.i; i++) {
+				Trade t = trades.elements[i];
+				if (!t.isFinalized()) {
+					if (t.isLong()) {
+						if (!sellAssets(t, null, "Liquidate position")) {
+							Balance balance = tradingManager.getBalance(assetSymbol());
+							if (balance.getFree() + balance.getLocked() > 0) {
+								log.warn("Could not liquidate open trade: " + t);
+							}
+						} else {
+							t.liquidate();
+						}
+					} else if (t.isShort()) {
+						if (!closeShort(t, null, "Liquidate position")) {
+							Balance balance = tradingManager.getBalance(assetSymbol());
+							if (balance.getShorted() > 0) {
+								log.warn("Could not liquidate open trade: " + t);
+							}
+						} else {
+							t.liquidate();
+						}
 					}
 				}
 			}
+		} finally {
+			liquidating = false;
 		}
 	}
 

@@ -42,7 +42,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 	@Override
 	protected final void executeSimulation(Collection<Parameters> parameters) {
-		candleRepository = createCandleRepository();
+		getCandleRepository();
 		executor = Executors.newCachedThreadPool();
 		try {
 			for (Parameters p : parameters) {
@@ -256,6 +256,9 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	}
 
 	public final CandleRepository getCandleRepository() {
+		if(candleRepository == null){
+			candleRepository = createCandleRepository();
+		}
 		return candleRepository;
 	}
 }

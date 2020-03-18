@@ -13,6 +13,8 @@ import java.util.*;
 public final class ExchangeClient<T> implements Client {
 
 	private TradingManager root;
+	private CandleRepository candleRepository;
+	private Exchange<T, ?> exchange;
 
 	private final List<CandleProcessor<T>> candleProcessors = new ArrayList<>();
 
@@ -42,6 +44,8 @@ public final class ExchangeClient<T> implements Client {
 		if (accountManager.configuration().symbolPairs().isEmpty()) {
 			throw new IllegalStateException("No trade symbols defined for client " + accountManager.configuration().id());
 		}
+		this.candleRepository = candleRepository;
+		this.exchange = exchange;
 		final SymbolPriceDetails priceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol()); //loads price information from exchange
 
 		Set<TradingManager> all = new HashSet<>();
@@ -67,6 +71,14 @@ public final class ExchangeClient<T> implements Client {
 			candleProcessors.add(processor);
 		}
 		allInstances.clear();
+	}
+
+	void reset() {
+		if (candleRepository != null && exchange != null) {
+			candleProcessors.clear();
+			root = null;
+			initialize(candleRepository, exchange, null);
+		}
 	}
 
 	public void sendBalanceEmail(String title) {
