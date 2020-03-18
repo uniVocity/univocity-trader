@@ -23,7 +23,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		simulation = configuration.simulation();
 	}
 
-	protected final AccountManager[] accounts() {
+	protected AccountManager[] accounts() {
 		if (accounts == null) {
 			List<A> accountConfigs = configuration.accounts();
 			if (accountConfigs.isEmpty()) {

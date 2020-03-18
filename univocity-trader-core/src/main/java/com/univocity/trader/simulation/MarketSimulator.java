@@ -32,7 +32,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	}
 
 
-	private void initialize() {
+	protected void initialize() {
 		resetBalances();
 	}
 
@@ -45,19 +45,22 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		getCandleRepository();
 		executor = Executors.newCachedThreadPool();
 		try {
-			for (Parameters p : parameters) {
-				initialize();
-				executeSimulation(p);
-				reportResults(p);
-			}
+			executeWithParameters(parameters);
 		} finally {
 			executor.shutdown();
 			candleRepository.clearCaches();
 		}
-
 	}
 
-	protected final void executeSimulation(Parameters parameters) {
+	protected void executeWithParameters(Collection<Parameters> parameters){
+		for (Parameters p : parameters) {
+			initialize();
+			executeSimulation(createEngines(p));
+			reportResults(p);
+		}
+	}
+
+	protected Map<String, Engine[]> createEngines(Parameters parameters){
 		Set<Object> allInstances = new HashSet<>();
 		Map<String, Engine[]> symbolHandlers = new HashMap<>();
 
@@ -95,7 +98,10 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		});
 
 		allInstances.clear();
+		return symbolHandlers;
+	}
 
+	protected final void executeSimulation(Map<String, Engine[]> symbolHandlers) {
 		ConcurrentHashMap<String, Enumeration<Candle>> markets = new ConcurrentHashMap<>();
 
 		LocalDateTime start = getSimulationStart();
@@ -191,7 +197,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		return out.toArray(new MarketReader[0]);
 	}
 
-	private void reportResults(Parameters parameters) {
+	protected void reportResults(Parameters parameters) {
 		for (AccountManager account : accounts()) {
 			TradingManager managers[] = account.getAllTradingManagers();
 			for (int i = 0; i < managers.length; i++) {
