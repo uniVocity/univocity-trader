@@ -49,7 +49,6 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				draggingButton = e.getButton();
 				if(isMouseDraggingChart()){
 					dragStart = canvas.scrollBar.drag(e, dragStart);
 				}
