@@ -65,7 +65,7 @@ public final class ExchangeClient<T> implements Client {
 			}
 			all.add(tradingManager);
 
-			Engine engine = new Engine(tradingManager, allInstances);
+			Engine engine = new TradingEngine(tradingManager, allInstances);
 
 			CandleProcessor<T> processor = new CandleProcessor<T>(candleRepository, engine, exchange);
 			candleProcessors.add(processor);

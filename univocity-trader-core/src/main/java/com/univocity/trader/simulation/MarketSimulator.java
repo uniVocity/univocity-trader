@@ -60,6 +60,14 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		}
 	}
 
+	protected TradingManager createTradingManager(AccountManager accountManager, String assetSymbol, String fundSymbol, Parameters parameters){
+		SimulatedExchange exchange = new SimulatedExchange(accountManager);
+		exchange.setSymbolInformation(this.symbolInformation);
+		SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol());
+
+		return new TradingManager(exchange, symbolPriceDetails, accountManager, assetSymbol, fundSymbol, parameters);
+	}
+
 	protected Map<String, Engine[]> createEngines(Parameters parameters){
 		Set<Object> allInstances = new HashSet<>();
 		Map<String, Engine[]> symbolHandlers = new HashMap<>();
@@ -81,14 +89,8 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 			Engine[] engines = new Engine[accountsTradingSymbol.size()];
 			for (int i = 0; i < engines.length; i++) {
-				AccountManager accountManager = accountsTradingSymbol.get(i);
-				SimulatedExchange exchange = new SimulatedExchange(accountManager);
-				exchange.setSymbolInformation(this.symbolInformation);
-				SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol());
-
-				TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, accountManager, assetSymbol, fundSymbol, parameters);
-
-				Engine engine = new Engine(tradingManager, parameters, allInstances);
+				TradingManager tradingManager = createTradingManager(accounts()[i], assetSymbol, fundSymbol, parameters);
+				Engine engine = new TradingEngine(tradingManager, parameters, allInstances);
 				engines[i] = engine;
 			}
 
