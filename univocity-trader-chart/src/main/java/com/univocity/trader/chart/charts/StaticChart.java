@@ -106,11 +106,11 @@ public abstract class StaticChart<C extends BasicChartController> {
 		lastPaint = System.currentTimeMillis();
 	}
 
-	public int getBoundaryLeft(){
+	public int getBoundaryLeft() {
 		return canvas.getBoundaryLeft();
 	}
 
-	public int getBoundaryRight(){
+	public int getBoundaryRight() {
 		return canvas.getBoundaryRight();
 	}
 
@@ -167,7 +167,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		}
 	}
 
-	public int getRequiredWidth(){
+	public int getRequiredWidth() {
 		return canvas.getRequiredWidth();
 	}
 
@@ -216,7 +216,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		if (displayLogarithmicScale()) {
 			return Math.pow(10, (y + logLow * getHeight() / logRange) / getHeight() * logRange);
 		} else {
-			return maximum * y / (getHeight() - getLinearYCoordinate(maximum));
+			return minimum + ((maximum - minimum) / getHeight()) * y;
 		}
 	}
 
@@ -250,11 +250,11 @@ public abstract class StaticChart<C extends BasicChartController> {
 		}
 	}
 
-	public final void invokeRepaint(){
+	public final void invokeRepaint() {
 		canvas.invokeRepaint();
 	}
 
-	public final int getWidth(){
+	public final int getWidth() {
 		return canvas.getWidth();
 	}
 
@@ -347,7 +347,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		this.height = height;
 	}
 
-	public int getBarWidth(){
+	public int getBarWidth() {
 		return canvas.getBarWidth();
 	}
 }
