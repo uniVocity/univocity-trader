@@ -38,7 +38,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		return accounts;
 	}
 
-	private SimulatedClientAccount createAccountInstance(A accountConfiguration) {
+	protected SimulatedClientAccount createAccountInstance(A accountConfiguration) {
 		return new SimulatedClientAccount(accountConfiguration, configuration.simulation());
 	}
 

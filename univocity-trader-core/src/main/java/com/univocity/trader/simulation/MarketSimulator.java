@@ -56,6 +56,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		for (Parameters p : parameters) {
 			initialize();
 			executeSimulation(createEngines(p));
+			liquidateOpenPositions();
 			reportResults(p);
 		}
 	}
@@ -199,33 +200,41 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		return out.toArray(new MarketReader[0]);
 	}
 
-	protected void reportResults(Parameters parameters) {
+	protected void liquidateOpenPositions(){
 		for (AccountManager account : accounts()) {
-			TradingManager managers[] = account.getAllTradingManagers();
+			TradingManager[] managers = account.getAllTradingManagers();
 			for (int i = 0; i < managers.length; i++) {
 				managers[i].getTrader().liquidateOpenPositions();
 			}
 		}
+	}
 
+	protected void reportResults(Parameters parameters) {
 		for (AccountManager account : accounts()) {
-			String id = account.getClient().getId();
-			System.out.print("-------");
-			if (parameters != null && parameters != Parameters.NULL) {
-				System.out.print(" | Parameters: " + parameters);
-			}
-			if (StringUtils.isNotBlank(id)) {
-				System.out.print(" | Client: " + id);
-			}
-			System.out.println(" | -------");
-			System.out.print(account.toString());
-			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
-
-			TradingManager managers[] = account.getAllTradingManagers();
-			for (int i = 0; i < managers.length; i++) {
-				managers[i].getTrader().notifySimulationEnd();
-			}
+			reportResults(account, parameters);
 		}
 	}
+
+	protected void reportResults(AccountManager account, Parameters parameters){
+		String id = account.getClient().getId();
+		System.out.print("-------");
+		if (parameters != null && parameters != Parameters.NULL) {
+			System.out.print(" | Parameters: " + parameters);
+		}
+		if (StringUtils.isNotBlank(id)) {
+			System.out.print(" | Client: " + id);
+		}
+		System.out.println(" | -------");
+		System.out.print(account.toString());
+		System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
+
+		TradingManager managers[] = account.getAllTradingManagers();
+		for (int i = 0; i < managers.length; i++) {
+			managers[i].getTrader().notifySimulationEnd();
+		}
+	}
+
+
 
 	public final void backfillHistory() {
 		TreeSet<String> allSymbols = new TreeSet<>();
