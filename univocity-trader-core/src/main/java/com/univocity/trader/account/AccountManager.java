@@ -23,9 +23,11 @@ import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 public final class AccountManager implements ClientAccount, SimulatedAccountConfiguration {
 	private static final Logger log = LoggerFactory.getLogger(AccountManager.class);
+	private static final AtomicLong NULL = new AtomicLong(0);
+	private final AtomicLong tradeIdGenerator = new AtomicLong(0);
 
 	private final Map<Integer, long[]> fundAllocationCache = new ConcurrentHashMap<>();
-	private static final AtomicLong NULL = new AtomicLong(0);
+	final Map<String, AtomicLong> balanceUpdateCounts = new ConcurrentHashMap<>();
 
 	private final Map<String, Trader> traders = new ConcurrentHashMap<>();
 	private final AccountConfiguration<?> configuration;
@@ -105,7 +107,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		if (out == null) {
 			synchronized (balances) {
 				if (balances.get(symbol) == null) {
-					out = new Balance(symbol);
+					out = new Balance(this, symbol);
 					balances.put(symbol, out);
 					balancesArray = null;
 				}
@@ -208,7 +210,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 	public synchronized AccountManager setAmount(String symbol, double amount) {
 		if (configuration.isSymbolSupported(symbol)) {
 			synchronized (balances) {
-				balances.put(symbol, new Balance(symbol, amount));
+				balances.put(symbol, new Balance(this, symbol, amount));
 				this.balancesArray = null;
 			}
 			return this;
@@ -885,6 +887,9 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		}
 		for (int i = 0; i < pendingOrders.i; i++) {
 			Order order = pendingOrders.elements[i];
+			if(order.isFinalized()){
+				continue;
+			}
 			OrderManager orderManager = configuration.orderManager(order.getSymbol());
 			Trader traderOfOrder = traderOf(order);
 			if (traderOfOrder == null) {
@@ -958,5 +963,9 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 
 		balances.clear();
 		pendingOrders.clear();
+	}
+
+	public AtomicLong getTradeIdGenerator() {
+		return tradeIdGenerator;
 	}
 }

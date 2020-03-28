@@ -1,14 +1,11 @@
 package com.univocity.trader.account;
 
 import java.util.*;
-import java.util.concurrent.atomic.*;
 
 public class DefaultOrder extends OrderRequest implements Order {
 
-	private static final AtomicLong orderIds = new AtomicLong(0);
-
-	private final long id = orderIds.incrementAndGet();
-	private String orderId = String.valueOf(id);
+	private final long id;
+	private String orderId;
 	private double executedQuantity = 0.0;
 	private Order.Status status;
 	private double feesPaid = 0.0;
@@ -18,12 +15,14 @@ public class DefaultOrder extends OrderRequest implements Order {
 	private double partialFillPrice = 0.0;
 	private double partialFillQuantity = 0.0;
 
-	public DefaultOrder(String assetSymbol, String fundSymbol, Order.Side side, Trade.Side tradeSide, long time) {
+	public DefaultOrder(long id, String assetSymbol, String fundSymbol, Order.Side side, Trade.Side tradeSide, long time) {
 		super(assetSymbol, fundSymbol, side, tradeSide, time, null);
+		this.id = id;
+		this.orderId = String.valueOf(id);
 	}
 
-	public DefaultOrder(OrderRequest request) {
-		this(request.getAssetsSymbol(), request.getFundsSymbol(), request.getSide(), request.getTradeSide(), request.getTime());
+	public DefaultOrder(long id, OrderRequest request) {
+		this(id, request.getAssetsSymbol(), request.getFundsSymbol(), request.getSide(), request.getTradeSide(), request.getTime());
 	}
 
 	public void setParent(DefaultOrder parent) {
@@ -148,7 +147,7 @@ public class DefaultOrder extends OrderRequest implements Order {
 		return partialFillQuantity * partialFillPrice;
 	}
 
-	public double getPartialFillPrice(){
+	public double getPartialFillPrice() {
 		return partialFillPrice;
 	}
 
@@ -161,9 +160,13 @@ public class DefaultOrder extends OrderRequest implements Order {
 		this.partialFillQuantity = filledQuantity;
 	}
 
+	public long getInternalId() {
+		return id;
+	}
+
 	@Override
 	public int compareTo(Order o) {
-		return Long.compare(this.id, ((DefaultOrder)o).id);
+		return Long.compare(this.id, ((DefaultOrder) o).id);
 	}
 
 }

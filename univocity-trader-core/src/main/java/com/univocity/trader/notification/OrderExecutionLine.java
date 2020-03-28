@@ -197,4 +197,49 @@ public class OrderExecutionLine {
 	private String concat(String amount, String percentage) {
 		return amount + " (" + percentage + ')';
 	}
+
+	@Override
+	public String toString() {
+		return "{" +
+				"tradeId=" + tradeId +
+				", orderId='" + orderId + '\'' +
+				", closeTime=" + closeTime +
+				", clientId='" + clientId + '\'' +
+				", assetSymbol='" + assetSymbol + '\'' +
+				", operation='" + operation + '\'' +
+				", exitReason='" + exitReason + '\'' +
+				", ticks=" + ticks +
+				", fundSymbol='" + fundSymbol + '\'' +
+				", minPrice='" + minPrice + '\'' +
+				", minChangePct='" + minChangePct + '\'' +
+				", maxChangePct='" + maxChangePct + '\'' +
+				", maxPrice='" + maxPrice + '\'' +
+				", price='" + price + '\'' +
+				", averagePrice='" + averagePrice + '\'' +
+				", priceChangePct='" + priceChangePct + '\'' +
+				", quantity='" + quantity + '\'' +
+				", referenceCurrency='" + referenceCurrency + '\'' +
+				", status=" + status +
+				", orderType=" + orderType +
+				", orderAmount='" + orderAmount + '\'' +
+				", executedQuantity='" + executedQuantity + '\'' +
+				", valueTransacted='" + valueTransacted + '\'' +
+				", freeBalance='" + freeBalance + '\'' +
+				", shortedQuantity='" + shortedQuantity + '\'' +
+				", marginReserve='" + marginReserve + '\'' +
+				", freeBalanceReferenceCurrency='" + freeBalanceReferenceCurrency + '\'' +
+				", estimatedProfitLossPct='" + estimatedProfitLossPct + '\'' +
+				", profitLoss='" + profitLoss + '\'' +
+				", profitLossPct='" + profitLossPct + '\'' +
+				", profitLossReferenceCurrency='" + profitLossReferenceCurrency + '\'' +
+				", holdings='" + holdings + '\'' +
+				", duration='" + duration + '\'' +
+				", orderFillPercentage='" + orderFillPercentage + '\'' +
+				", trigger=" + trigger +
+				", triggerPrice='" + triggerPrice + '\'' +
+				", fillPct=" + fillPct +
+				", isShort=" + isShort +
+				", isBuy=" + isBuy +
+				'}';
+	}
 }

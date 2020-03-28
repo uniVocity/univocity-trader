@@ -265,7 +265,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		}
 	}
 
-	private static class MarketReader {
+	protected static class MarketReader {
 		String symbol;
 		Enumeration<Candle> input;
 		Candle pending;

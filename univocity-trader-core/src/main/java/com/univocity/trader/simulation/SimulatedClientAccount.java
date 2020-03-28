@@ -7,11 +7,13 @@ import com.univocity.trader.config.*;
 import com.univocity.trader.simulation.orderfill.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.*;
 
 import static com.univocity.trader.config.Allocation.*;
 
 public final class SimulatedClientAccount implements ClientAccount {
 
+	private final AtomicLong orderIdGenerator = new AtomicLong(0);
 	private Map<String, OrderSet> orders = new HashMap<>();
 	private TradingFees tradingFees;
 	private final AccountManager account;
@@ -122,7 +124,7 @@ public final class SimulatedClientAccount implements ClientAccount {
 	}
 
 	private DefaultOrder createOrder(OrderRequest request, double quantity, double price) {
-		DefaultOrder out = new DefaultOrder(request);
+		DefaultOrder out = new DefaultOrder(orderIdGenerator.incrementAndGet(), request);
 		initializeOrder(out, price, quantity, request);
 		return out;
 	}

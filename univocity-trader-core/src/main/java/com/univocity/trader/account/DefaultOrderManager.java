@@ -72,7 +72,9 @@ public class DefaultOrderManager implements OrderManager {
 	public boolean cancelToReleaseFundsFor(Order order, Trader currentTrader, Trader newSymbolTrader) {
 		if (isCancellable(order) && order.getTimeElapsed(currentTrader.latestCandle().closeTime) > maxTimeToKeepOrderOpen.ms / 2) {
 			order.cancel();
-			return true;
+			if(order.isCancelled()) {
+				return true;
+			}
 		}
 		return false;
 	}

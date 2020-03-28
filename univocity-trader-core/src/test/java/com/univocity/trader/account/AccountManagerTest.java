@@ -10,8 +10,8 @@ public class AccountManagerTest extends OrderFillChecker {
 
 	@Test
 	public void testFundAllocationBasics() {
-		Balance.balanceUpdateCounts.clear();
 		AccountManager account = getAccountManager();
+		account.balanceUpdateCounts.clear();
 		AccountConfiguration<?> cfg = account.configuration();
 
 		account.setAmount("USDT", 350);

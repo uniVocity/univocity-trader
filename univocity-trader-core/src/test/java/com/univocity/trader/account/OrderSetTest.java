@@ -106,13 +106,12 @@ public class OrderSetTest {
 	}
 
 	private DefaultOrder newOrder(long orderId) {
-		DefaultOrder out = new DefaultOrder("a", "b", Order.Side.BUY, Trade.Side.LONG, 0) {
+		DefaultOrder out = new DefaultOrder(orderId,"a", "b", Order.Side.BUY, Trade.Side.LONG, 0) {
 			@Override
 			public int compareTo(Order o) {
 				return StringUtils.leftPad(this.getOrderId(), 2, '0').compareTo(StringUtils.leftPad(o.getOrderId(), 2, '0'));
 			}
 		};
-		out.setOrderId(String.valueOf(orderId));
 		return out;
 	}
 }

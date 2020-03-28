@@ -9,8 +9,9 @@ import static com.univocity.trader.config.Allocation.*;
 
 public final class Balance implements Cloneable {
 
-	public static final Map<String, AtomicLong> balanceUpdateCounts = new ConcurrentHashMap<>();
-	public static final Balance ZERO = new Balance("");
+	public static final Balance ZERO = new Balance(null, "");
+
+	private final Map<String, AtomicLong> balanceUpdateCounts;
 	private final String symbol;
 	private double free = 0.0;
 	private double locked = 0.0;
@@ -22,11 +23,13 @@ public final class Balance implements Cloneable {
 	public static final MathContext ROUND_MC_STR = new MathContext(8, RoundingMode.HALF_EVEN);
 	public static final MathContext ROUND_MC = new MathContext(12, RoundingMode.HALF_EVEN);
 
-	public Balance(String symbol) {
+	public Balance(AccountManager accountManager, String symbol) {
+		this.balanceUpdateCounts = accountManager != null ? accountManager.balanceUpdateCounts : new ConcurrentHashMap<>();
 		this.symbol = symbol;
 	}
 
-	public Balance(String symbol, double free) {
+	public Balance(AccountManager accountManager, String symbol, double free) {
+		this.balanceUpdateCounts = accountManager != null ? accountManager.balanceUpdateCounts : new ConcurrentHashMap<>();
 		this.symbol = symbol;
 		this.free = ensurePositive(free, "free balance");
 	}

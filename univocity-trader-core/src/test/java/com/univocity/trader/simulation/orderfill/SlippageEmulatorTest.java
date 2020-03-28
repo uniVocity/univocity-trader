@@ -5,6 +5,7 @@ import com.univocity.trader.candles.*;
 import org.junit.*;
 
 import java.math.*;
+import java.util.concurrent.atomic.*;
 
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Type.*;
@@ -13,13 +14,14 @@ import static org.junit.Assert.*;
 public class SlippageEmulatorTest {
 
 	private static final SlippageEmulator emulator = new SlippageEmulator();
+	private static AtomicLong id = new AtomicLong(0);
 
 	private void tryFill(DefaultOrder order, Candle candle) {
 		emulator.fillOrder(order, candle);
 	}
 
 	static DefaultOrder newOrder(Order.Type type, Order.Side side, double price, double quantity) {
-		DefaultOrder order = new DefaultOrder("BTC", "USDT", side, Trade.Side.LONG, System.currentTimeMillis());
+		DefaultOrder order = new DefaultOrder(id.incrementAndGet(), "BTC", "USDT", side, Trade.Side.LONG, System.currentTimeMillis());
 		order.setType(type);
 
 		order.setPrice(price);

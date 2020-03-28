@@ -20,6 +20,7 @@ import org.slf4j.*;
 
 import java.math.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 import java.util.function.*;
 
 import static com.univocity.trader.account.Balance.*;
@@ -32,6 +33,7 @@ class BinanceClientAccount implements ClientAccount {
 
 	private static final Logger log = LoggerFactory.getLogger(BinanceApiRestClient.class);
 
+	private static final AtomicLong id = new AtomicLong(0);
 	private final BinanceApiClientFactory factory;
 	private final BinanceApiRestClient client;
 	private SymbolPriceDetails symbolPriceDetails;
@@ -108,7 +110,7 @@ class BinanceClientAccount implements ClientAccount {
 		Map<String, Balance> out = new HashMap<>();
 		for (AssetBalance b : balances) {
 			String symbol = b.getAsset();
-			Balance balance = new Balance(symbol);
+			Balance balance = new Balance(null, symbol);
 			balance.setFree(Double.parseDouble(b.getFree()));
 			balance.setLocked(Double.parseDouble(b.getLocked()));
 			out.put(symbol, balance);
@@ -117,7 +119,7 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	private Order translate(OrderRequest preparation, OrderDetails response) {
-		DefaultOrder out = new DefaultOrder(preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), Trade.Side.LONG, response.getTime());
+		DefaultOrder out = new DefaultOrder(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), Trade.Side.LONG, response.getTime());
 
 		out.setPrice(Double.parseDouble(response.getPrice()));
 		out.setAveragePrice(Double.parseDouble(response.getPrice()));
@@ -196,7 +198,7 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	private Order translate(Order original, com.univocity.trader.exchange.binance.api.client.domain.account.Order order) {
-		DefaultOrder out = new DefaultOrder(original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), Trade.Side.LONG, order.getTime());
+		DefaultOrder out = new DefaultOrder(((DefaultOrder)original).getInternalId(), original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), Trade.Side.LONG, order.getTime());
 		out.setStatus(translate(order.getStatus()));
 		out.setExecutedQuantity(Double.parseDouble(order.getExecutedQty()));
 		out.setAveragePrice(Double.parseDouble(order.getPrice()));

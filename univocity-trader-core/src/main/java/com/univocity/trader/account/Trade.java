@@ -731,4 +731,8 @@ public final class Trade implements Comparable<Trade> {
 	public long id() {
 		return id;
 	}
+
+	public boolean isEmpty() {
+		return pastOrders.i == 0 && position.i == 0 && exitOrders.i == 0;
+	}
 }

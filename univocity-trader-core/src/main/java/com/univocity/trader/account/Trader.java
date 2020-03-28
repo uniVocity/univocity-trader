@@ -32,7 +32,7 @@ import static com.univocity.trader.utils.NewInstances.*;
 public final class Trader {
 	private static final Logger log = LoggerFactory.getLogger(Trader.class);
 
-	final TradingManager tradingManager;
+	public final TradingManager tradingManager;
 	private Candle latestCandle;
 	private Parameters parameters;
 
@@ -44,7 +44,7 @@ public final class Trader {
 	final OrderListener[] notifications;
 	private int pipSize;
 	private final List<Trade> stoppedOut = new ArrayList<>();
-	private static final AtomicLong id = new AtomicLong(0);
+	private final AtomicLong id;
 	boolean liquidating = false;
 
 	/**
@@ -58,6 +58,7 @@ public final class Trader {
 	 *                       {@code Trader} instances.
 	 */
 	public Trader(TradingManager tradingManager, Parameters params, Set<Object> allInstances) {
+		this.id = tradingManager.getAccount().getTradeIdGenerator();
 		this.parameters = params;
 		this.tradingManager = tradingManager;
 		this.tradingManager.trader = this;
@@ -334,6 +335,7 @@ public final class Trader {
 		}
 		double amountToSpend = tradingManager.allocateFunds(side);
 		final double minimum = priceDetails().getMinimumOrderAmount(candle.close);
+
 		if (amountToSpend <= minimum) {
 			tradingManager.cancelStaleOrdersFor(side, this);
 			amountToSpend = tradingManager.allocateFunds(side);
@@ -563,8 +565,17 @@ public final class Trader {
 		for (int i = 0; i < trades.i; i++) {
 			Trade t = trades.elements[i];
 			if (!t.isFinalized() && t.getSide() == order.getTradeSide()) {
-				trade = t;
-				break;
+				if (order.isLong()) {
+					if (t.increasePosition(order)) {
+						trade = t;
+						break;
+					}
+				} else if (order.isShort()) {
+					t.decreasePosition(order, reason);
+					trade = t;
+					break;
+				}
+
 			}
 		}
 
@@ -576,15 +587,6 @@ public final class Trader {
 				trade = Trade.createPlaceholder(-1, this, order.getTradeSide());
 				trade.decreasePosition(order, "Exit short position");
 				log.warn("Received a short-covering buy order without an open trade: " + order);
-			}
-		} else {
-			if (order.isLong()) {
-				if (!trade.increasePosition(order)) {
-					trade = new Trade(id.incrementAndGet(), order, this, strategy);
-					trades.add(trade);
-				}
-			} else if (order.isShort()) {
-				trade.decreasePosition(order, reason);
 			}
 		}
 
@@ -763,7 +765,9 @@ public final class Trader {
 						while (pastTrades.size() >= 16) {
 							pastTrades.removeFirst();
 						}
-						pastTrades.add(trade);
+						if(!trade.isEmpty()) {
+							pastTrades.add(trade);
+						}
 					}
 				}
 			}

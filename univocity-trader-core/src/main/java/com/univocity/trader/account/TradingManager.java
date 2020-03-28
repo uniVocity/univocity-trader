@@ -326,7 +326,7 @@ public final class TradingManager {
 	void notifySimulationEnd() {
 		notifySimulationEnd(this.notifications);
 		notifySimulationEnd(trader.notifications);
-		Balance.balanceUpdateCounts.clear();
+		getAccount().balanceUpdateCounts.clear();
 		getAccount().notifySimulationEnd();
 	}
 

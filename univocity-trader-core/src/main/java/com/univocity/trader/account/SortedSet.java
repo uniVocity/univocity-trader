@@ -61,6 +61,7 @@ public class SortedSet<T extends Comparable<T>> {
 
 	private void sort() {
 		Arrays.sort(elements, 0, i);
+		Arrays.fill(elements, i, elements.length, null);
 	}
 
 	public final int size() {
@@ -87,6 +88,7 @@ public class SortedSet<T extends Comparable<T>> {
 
 	public final void removeFirst() {
 		System.arraycopy(elements, 1, elements, 0, --i);
+		elements[i] = null;
 	}
 
 	public final Collection<T> asList() {
