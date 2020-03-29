@@ -30,7 +30,7 @@ public class CircularList {
 		update(value, true);
 	}
 
-	private void update(double value, boolean updating) {
+	protected void update(double value, boolean updating) {
 		sum -= values[i];
 		sum += value;
 		values[i] = value;
