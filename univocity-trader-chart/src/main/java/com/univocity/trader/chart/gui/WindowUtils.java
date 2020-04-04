@@ -160,6 +160,26 @@ public class WindowUtils {
 
 		return ok.getColor();
 	}
+
+	public static void displayTestFrame(Component component) {
+		try {
+			final JFrame f = new JFrame();
+			f.setLayout(new BorderLayout());
+			f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+			f.add(component, BorderLayout.CENTER);
+			f.setBounds(0, 0, 800, 600);
+			f.setLocationRelativeTo(null);
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					f.setVisible(true);
+					f.repaint(100);
+				}
+			});
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
 }
 
 class ColorTracker implements ActionListener {

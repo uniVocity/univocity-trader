@@ -24,6 +24,9 @@ public abstract class StaticChart<C extends BasicChartController> {
 	private Candle selectedCandle;
 	private Candle currentCandle;
 
+	private Candle firstVisibleCandle;
+	private Candle lastVisibleCandle;
+
 	private C controller;
 
 	public final CandleHistoryView candleHistory;
@@ -145,8 +148,8 @@ public abstract class StaticChart<C extends BasicChartController> {
 		updateIncrements();
 
 		// avoids touching upper and lower limits of the chart
-		minimum = minimum * 0.99;
-		maximum = maximum * 1.01;
+		minimum = minimum * 0.995;
+		maximum = maximum * 1.0005;
 
 		updateLogarithmicData();
 	}
@@ -246,6 +249,22 @@ public abstract class StaticChart<C extends BasicChartController> {
 	public final void setCurrentCandle(Candle candle) {
 		if (this.currentCandle != candle) {
 			currentCandle = candle;
+			invokeRepaint();
+		}
+	}
+
+	public Candle getFirstVisibleCandle() {
+		return firstVisibleCandle;
+	}
+
+	public Candle getLastVisibleCandleShown() {
+		return firstVisibleCandle;
+	}
+
+	public void setFirstAndLastVisibleCandles(Candle firstVisibleCandle, Candle lastVisibleCandle) {
+		if (this.firstVisibleCandle != firstVisibleCandle && this.lastVisibleCandle != lastVisibleCandle) {
+			this.firstVisibleCandle = firstVisibleCandle;
+			this.lastVisibleCandle = lastVisibleCandle;
 			invokeRepaint();
 		}
 	}

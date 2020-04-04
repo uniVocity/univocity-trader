@@ -4,6 +4,7 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.ruler.*;
 import com.univocity.trader.chart.charts.scrolling.*;
+import com.univocity.trader.config.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,9 +17,11 @@ public class ChartWindow extends JFrame {
 	private JButton addCandleButton;
 	private JPanel centralPanel;
 	private JPanel leftPanel;
+	private JPanel topPanel;
 	private CandleHistoryView chartHistoryView;
 	private ValueRuler valueRuler;
 	private TimeRuler timeRuler;
+	private SymbolSelector symbolSelector;
 
 
 	public ChartWindow() {
@@ -30,10 +33,29 @@ public class ChartWindow extends JFrame {
 
 		this.add(getCentralPanel(), BorderLayout.CENTER);
 		this.add(new JScrollPane(getLeftPanel()), BorderLayout.WEST);
+		this.add(getTopPanel(), BorderLayout.NORTH);
 
 		this.add(getAddCandleButton(), BorderLayout.SOUTH);
 
 		addCandles();
+	}
+
+	private JPanel getTopPanel() {
+		if (topPanel == null) {
+			topPanel = new JPanel();
+			topPanel.add(getSymbolSelector());
+		}
+		return topPanel;
+	}
+
+	private SymbolSelector getSymbolSelector() {
+		if (symbolSelector == null) {
+			DatabaseConfiguration databaseConfiguration = new SimulationConfiguration().database();
+			CandleRepository candleRepository = new CandleRepository(databaseConfiguration);
+
+			symbolSelector = new SymbolSelector(candleRepository, getCandleHistory());
+		}
+		return symbolSelector;
 	}
 
 	private JPanel getLeftPanel() {

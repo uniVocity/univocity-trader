@@ -9,7 +9,7 @@ import java.util.*;
  */
 public class CandleHistory implements Iterable<Candle> {
 
-	private List<Candle> tradeHistory = new ArrayList<>(1000);
+	private List<Candle> candles = new ArrayList<>(1000);
 	private final List<Runnable> dataUpdateListeners = new ArrayList<>();
 
 	public void addDataUpdateListener(Runnable r) {
@@ -17,44 +17,50 @@ public class CandleHistory implements Iterable<Candle> {
 	}
 
 	public int size() {
-		return tradeHistory.size();
+		return candles.size();
 	}
 
 	public Candle get(int i) {
-		if (i < 0 || i > tradeHistory.size() - 1) {
+		if (i < 0 || i > candles.size() - 1) {
 			return null;
 		}
-		return tradeHistory.get(i);
+		return candles.get(i);
 	}
 
 	@Override
 	public Iterator<Candle> iterator() {
-		return tradeHistory.iterator();
+		return candles.iterator();
 	}
 
 	public boolean isEmpty() {
-		return tradeHistory.isEmpty();
+		return candles.isEmpty();
 	}
 
 	public int indexOf(Candle candle) {
 		if (candle == null) {
 			return -1;
 		}
-		return Collections.binarySearch(tradeHistory, candle);
+		return Collections.binarySearch(candles, candle);
 	}
 
 	public void addAll(Collection<Candle> candles) {
-		if (this.tradeHistory.addAll(candles)) {
+		if (this.candles.addAll(candles)) {
 			notifyUpdateListeners();
 		}
 	}
 
 	public void addSilently(Candle candle) {
-		tradeHistory.add(candle);
+		candles.add(candle);
 	}
 
 	public void add(Candle candle) {
-		tradeHistory.add(candle);
+		candles.add(candle);
+		notifyUpdateListeners();
+	}
+
+	public void setCandles(List<Candle> candles){
+		this.candles.clear();
+		this.candles.addAll(candles);
 		notifyUpdateListeners();
 	}
 

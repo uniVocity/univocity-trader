@@ -136,7 +136,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		executeSimulation(readers);
 	}
 
-	private void executeSimulation(MarketReader[] readers) {
+	protected void executeSimulation(MarketReader[] readers) {
 		LocalDateTime start = getSimulationStart();
 		LocalDateTime end = getSimulationEnd();
 

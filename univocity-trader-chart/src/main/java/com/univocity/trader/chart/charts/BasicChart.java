@@ -71,7 +71,6 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 				if (candle != getCurrentCandle()) {
 					setCurrentCandle(candle);
 				}
-				invokeRepaint();
 			}
 		});
 
