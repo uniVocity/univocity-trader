@@ -50,6 +50,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		painters.put(Painter.Z.BACK, new ArrayList<>());
 		painters.put(Painter.Z.FRONT, new ArrayList<>());
 		candleHistory.addDataUpdateListener(this::dataUpdated);
+		canvas.addScrollPositionListener(this::onScrollPositionUpdate);
 	}
 
 	protected Color getBackgroundColor() {
@@ -125,8 +126,25 @@ public abstract class StaticChart<C extends BasicChartController> {
 		}
 	}
 
+	private void onScrollPositionUpdate(int newPosition){
+		onScrollPositionUpdate();
+		updateEdgeValues();
+		invokeRepaint();
+	}
+
+	private void onScrollPositionUpdate(){
+		if(canvas.isScrollingView()){
+			this.firstVisibleCandle = getCandleAtCoordinate(canvas.scrollBar.getBoundaryLeft());
+			this.lastVisibleCandle = getCandleAtCoordinate(canvas.scrollBar.getBoundaryRight());
+		} else {
+			this.firstVisibleCandle = null;
+			this.lastVisibleCandle = null;
+		}
+	}
 
 	private void dataUpdated() {
+		onScrollPositionUpdate();
+
 		maximum = 0;
 		minimum = Double.MAX_VALUE;
 
@@ -160,6 +178,10 @@ public abstract class StaticChart<C extends BasicChartController> {
 	}
 
 	private void updateEdgeValues(Candle candle) {
+		if ((firstVisibleCandle != null && candle.openTime < firstVisibleCandle.openTime) || (lastVisibleCandle != null && candle.closeTime > lastVisibleCandle.closeTime)) {
+			return;
+		}
+
 		double value = getHighestPlottedValue(candle);
 		if (maximum < value) {
 			maximum = value;
@@ -249,22 +271,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 	public final void setCurrentCandle(Candle candle) {
 		if (this.currentCandle != candle) {
 			currentCandle = candle;
-			invokeRepaint();
-		}
-	}
-
-	public Candle getFirstVisibleCandle() {
-		return firstVisibleCandle;
-	}
-
-	public Candle getLastVisibleCandleShown() {
-		return firstVisibleCandle;
-	}
-
-	public void setFirstAndLastVisibleCandles(Candle firstVisibleCandle, Candle lastVisibleCandle) {
-		if (this.firstVisibleCandle != firstVisibleCandle && this.lastVisibleCandle != lastVisibleCandle) {
-			this.firstVisibleCandle = firstVisibleCandle;
-			this.lastVisibleCandle = lastVisibleCandle;
 			invokeRepaint();
 		}
 	}

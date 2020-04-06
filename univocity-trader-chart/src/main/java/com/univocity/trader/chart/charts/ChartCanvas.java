@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 import java.util.*;
+import java.util.function.*;
 
 public class ChartCanvas extends JPanel {
 
@@ -22,6 +23,8 @@ public class ChartCanvas extends JPanel {
 	private int barWidth;
 
 	private List<StaticChart<?>> charts = new ArrayList<>();
+	private List<IntConsumer> scrollPositionListeners = new ArrayList<>();
+	private boolean repainting;
 
 	public ChartCanvas() {
 		this.setLayout(null);
@@ -87,8 +90,9 @@ public class ChartCanvas extends JPanel {
 	}
 
 	public void enableScrolling() {
-		if(scrollBar == null) {
+		if (scrollBar == null) {
 			scrollBar = new ScrollBar(this);
+			scrollPositionListeners.forEach(l -> scrollBar.addScrollPositionListener(l));
 		}
 	}
 
@@ -144,7 +148,7 @@ public class ChartCanvas extends JPanel {
 		return point.y < getHeight() - scrollBar.getHeight() && (isOverDisabledSectionAtRight(getWidth(), point.x) || point.x < insets.left + getBarWidth());
 	}
 
-	public int getBarWidth(){
+	public int getBarWidth() {
 		return barWidth;
 	}
 
@@ -158,7 +162,19 @@ public class ChartCanvas extends JPanel {
 	}
 
 	public final void invokeRepaint() {
+		if (repainting) {
+			return;
+		}
+		repainting = true;
 		SwingUtilities.invokeLater(this::repaint);
 	}
 
+	public void repaint() {
+		super.repaint();
+		repainting = false;
+	}
+
+	public void addScrollPositionListener(IntConsumer scrollPositionListener) {
+		scrollPositionListeners.add(scrollPositionListener);
+	}
 }
