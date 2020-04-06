@@ -6,9 +6,7 @@ import java.awt.*;
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 class ScrollHandle extends Draggable {
-	static final int MIN_WIDTH = 20;
-
-	private int width = MIN_WIDTH;
+	private int width = 0;
 
 	private static final Color glassBlack = new Color(0, 0, 0, 128);
 	private static final Color glassGray = new Color(128, 128, 128, 92);
@@ -33,9 +31,6 @@ class ScrollHandle extends Draggable {
 	public void setWidth(int width) {
 		if(this.width != width) {
 			boolean pinnedToRight = pinnedToRight();
-			if (width < MIN_WIDTH) {
-				width = MIN_WIDTH;
-			}
 			this.width = width;
 			setPosition(pinnedToRight ? maxPosition() : getPosition());
 		}
@@ -57,6 +52,11 @@ class ScrollHandle extends Draggable {
 
 	public void draw(Graphics2D g, Component c) {
 		int position = this.getPosition();
+
+		int width = this.width;
+		if(width < 5){
+			width = 5;
+		}
 
 		gradientStart.x = position + (width);
 		gradientEnd.x = position - 2;

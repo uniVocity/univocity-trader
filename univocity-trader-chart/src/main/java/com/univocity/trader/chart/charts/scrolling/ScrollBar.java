@@ -51,8 +51,7 @@ public class ScrollBar extends MouseAdapter {
 		double required = canvas.getRequiredWidth();
 		double available = canvas.getWidth();
 
-		double scrollingArea = available < ScrollHandle.MIN_WIDTH ? ScrollHandle.MIN_WIDTH : available;
-		double handleWidth = scrollingArea * (available / required);
+		double handleWidth = available * (available / required);
 		scrollStep = (required - available) / (available - handleWidth);
 		scrollHandle.setWidth((int) handleWidth);
 

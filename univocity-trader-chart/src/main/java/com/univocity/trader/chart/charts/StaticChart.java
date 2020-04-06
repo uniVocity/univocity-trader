@@ -126,14 +126,14 @@ public abstract class StaticChart<C extends BasicChartController> {
 		}
 	}
 
-	private void onScrollPositionUpdate(int newPosition){
+	private void onScrollPositionUpdate(int newPosition) {
 		onScrollPositionUpdate();
 		updateEdgeValues();
 		invokeRepaint();
 	}
 
-	private void onScrollPositionUpdate(){
-		if(canvas.isScrollingView()){
+	private void onScrollPositionUpdate() {
+		if (canvas.isScrollingView()) {
 			this.firstVisibleCandle = getCandleAtCoordinate(canvas.scrollBar.getBoundaryLeft());
 			this.lastVisibleCandle = getCandleAtCoordinate(canvas.scrollBar.getBoundaryRight());
 		} else {
@@ -143,6 +143,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 	}
 
 	private void dataUpdated() {
+		canvas.updateScroll();
 		onScrollPositionUpdate();
 
 		maximum = 0;

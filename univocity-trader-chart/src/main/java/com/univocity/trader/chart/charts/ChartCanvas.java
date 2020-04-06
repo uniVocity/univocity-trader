@@ -58,8 +58,8 @@ public class ChartCanvas extends JPanel {
 
 
 		for (StaticChart<?> chart : charts) {
-			this.requiredWidth = Math.max(chart.calculateRequiredWidth(), requiredWidth);
-			this.barWidth = Math.max(chart.calculateBarWidth(), barWidth);
+			this.requiredWidth = chart.calculateRequiredWidth();
+			this.barWidth = chart.calculateBarWidth();
 		}
 
 		updateScroll();
@@ -112,7 +112,7 @@ public class ChartCanvas extends JPanel {
 		return scrollBar != null ? scrollBar.getHeight() : 0;
 	}
 
-	private void updateScroll() {
+	void updateScroll() {
 		if (scrollBar != null) {
 			scrollBar.updateScroll();
 		}
