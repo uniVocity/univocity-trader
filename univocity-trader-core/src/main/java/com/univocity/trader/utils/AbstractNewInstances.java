@@ -40,11 +40,12 @@ public abstract class AbstractNewInstances<T, S extends AbstractNewInstances<T, 
 		if (providers.isEmpty()) {
 			return empty;
 		}
-		T[] out = Arrays.copyOf(empty, providers.size());
-		for (int i = 0; i < out.length; i++) {
-			out[i] = providers.get(i).create(symbol, params);
+		Set<T> tmp = new HashSet<>();
+		for (int i = 0; i < providers.size(); i++) {
+			tmp.add(providers.get(i).create(symbol, params));
 		}
-		return out;
+		T[] out = Arrays.copyOf(empty, tmp.size());
+		return tmp.toArray(out);
 	}
 
 	public static <T> T[] getInstances(String symbol, Parameters params, InstancesProvider<T> provider, String description, boolean mandatory, Set<Object> allInstances) {
