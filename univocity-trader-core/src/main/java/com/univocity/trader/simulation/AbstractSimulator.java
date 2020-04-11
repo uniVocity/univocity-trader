@@ -138,7 +138,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		if (parameters.isEmpty()) {
 			parameters = Collections.singletonList(Parameters.NULL);
 		} else {
-			System.out.println("Running simulation with " + parameters.size() + " parameters");
+			System.out.println("Running simulation with " + parameters.size() + " parameters - " + new Date());
 		}
 
 		long start = System.currentTimeMillis();
