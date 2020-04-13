@@ -87,6 +87,7 @@ abstract class IBRequests {
 		if (reader == null) {
 			synchronized (this) {
 				if (reader == null) {
+					log.info("Connecting to IB...");
 					reader = new EReader(getClient(), getSignal());
 					reader.start();
 				}
@@ -152,7 +153,7 @@ abstract class IBRequests {
 		}
 	}
 
-	public int submitRequest(String description, Consumer resultConsumer, Consumer<Integer> action) {
+	protected final int submitRequest(String description, Consumer resultConsumer, Consumer<Integer> action) {
 		int requestId = requestHandler.prepareRequest(resultConsumer);
 		log.debug("New request [" + requestId + "]: " + description);
 		action.accept(requestId);

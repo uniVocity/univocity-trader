@@ -16,6 +16,7 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	private final Simulation simulation = new Simulation();
 	final AccountList<T> accountList = new AccountList<T>(this::newAccountConfiguration);
 	private TimeInterval tickInterval = minutes(1);
+	private boolean updateHistoryBeforeLiveTrading = true;
 
 	protected Configuration() {
 		this("univocity-trader.properties");
@@ -106,4 +107,13 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	}
 
 	protected abstract T newAccountConfiguration(String id);
+
+	public boolean updateHistoryBeforeLiveTrading() {
+		return updateHistoryBeforeLiveTrading;
+	}
+
+	public C updateHistoryBeforeLiveTrading(boolean updateHistoryBeforeLiveTrading) {
+		this.updateHistoryBeforeLiveTrading = updateHistoryBeforeLiveTrading;
+		return (C)this;
+	}
 }

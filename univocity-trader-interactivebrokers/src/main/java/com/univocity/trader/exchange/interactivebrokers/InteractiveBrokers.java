@@ -38,7 +38,7 @@ public final class InteractiveBrokers implements EntryPoint {
 
 	public static final class Trader extends LiveTrader<Candle, Configuration, Account> {
 		private Trader() {
-			super(new IB(), new Configuration());
+			super(new IB(), new Configuration().updateHistoryBeforeLiveTrading(false));
 		}
 	}
 

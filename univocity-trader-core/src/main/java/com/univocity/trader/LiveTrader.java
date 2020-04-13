@@ -131,7 +131,9 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 			}
 		}
 
-		updateDatabase();
+		if(configuration.updateHistoryBeforeLiveTrading()) {
+			updateDatabase();
+		}
 	}
 
 	private void updateDatabase() {
@@ -230,8 +232,12 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 	}
 
 	private void retryRunWebsocket() {
-		retryCount.incrementAndGet();
-		runLiveStream();
+		try {
+			close();
+		} finally {
+			retryCount.incrementAndGet();
+			runLiveStream();
+		}
 	}
 
 	@Override

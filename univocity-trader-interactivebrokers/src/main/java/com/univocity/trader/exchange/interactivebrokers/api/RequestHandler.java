@@ -43,7 +43,7 @@ class RequestHandler {
 		if (twsDisconnected) {
 			log.warn("Last request failed. Check if TWS is connected.");
 		}
-		int reqId = requestId.incrementAndGet();
+		int reqId = requestId.getAndIncrement();
 		pendingRequests.put(reqId, consumer);
 		awaitingResponse.add(reqId);
 		return reqId;
