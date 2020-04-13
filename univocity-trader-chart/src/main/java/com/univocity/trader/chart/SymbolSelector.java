@@ -98,7 +98,7 @@ public class SymbolSelector extends JPanel {
 
 		try {
 			Instant from = Instant.now().minus(30, ChronoUnit.DAYS);
-			Instant to = Instant.now().minus(30, ChronoUnit.DAYS).plus(2, ChronoUnit.DAYS);
+			Instant to = Instant.now().minus(30, ChronoUnit.DAYS).plus(12, ChronoUnit.DAYS);
 
 			List<Candle> candles = Collections.list(candleRepository.iterate(symbol, from, to, true));
 			if (candles.size() == 0) {

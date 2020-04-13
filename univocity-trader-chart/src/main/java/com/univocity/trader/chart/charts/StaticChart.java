@@ -4,7 +4,9 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
 import com.univocity.trader.chart.charts.painter.*;
+import com.univocity.trader.chart.charts.painter.Painter;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.util.List;
@@ -134,6 +136,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 	private void onScrollPositionUpdate() {
 		if (canvas.isScrollingView()) {
+			updateIncrements();
 			this.firstVisibleCandle = getCandleAtCoordinate(canvas.scrollBar.getBoundaryLeft());
 			this.lastVisibleCandle = getCandleAtCoordinate(canvas.scrollBar.getBoundaryRight());
 		} else {
@@ -144,13 +147,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 	private void dataUpdated() {
 		canvas.updateScroll();
-		onScrollPositionUpdate();
-
-		maximum = 0;
-		minimum = Double.MAX_VALUE;
-
-		updateEdgeValues();
-		invokeRepaint();
+		onScrollPositionUpdate(-1);
 	}
 
 	public double getMaximum() {

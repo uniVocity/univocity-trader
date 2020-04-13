@@ -21,7 +21,7 @@ class ScrollHandle extends Draggable {
 	}
 
 	public boolean isCursorOver(Point p, Component c) {
-		return p.x >= getPosition() && p.x <= getPosition() + width && p.y <= c.getHeight() && p.y >= c.getHeight() - scrollBar.height;
+		return p.x >= getPosition() && p.x <= getPosition() + Math.max(width, 20) && p.y <= c.getHeight() && p.y >= c.getHeight() - scrollBar.height;
 	}
 
 	public boolean pinnedToRight() {
@@ -54,8 +54,8 @@ class ScrollHandle extends Draggable {
 		int position = this.getPosition();
 
 		int width = this.width;
-		if(width < 5){
-			width = 5;
+		if(width < 10){
+			width = 10;
 		}
 
 		gradientStart.x = position + (width);
