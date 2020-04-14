@@ -131,9 +131,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 			}
 		}
 
-		if(configuration.updateHistoryBeforeLiveTrading()) {
-			updateDatabase();
-		}
+		updateDatabase();
 	}
 
 	private void updateDatabase() {
@@ -150,33 +148,36 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository);
 
 		this.allClientPairs = tmp.toString().toLowerCase();
-		//fill history with last 30 days of data
-		for (String symbol : allPairs.keySet()) {
-			backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
-		}
 
-		//quick update for the last 30 minutes in case the previous step takes too long and we miss a few ticks
-		for (String symbol : allPairs.keySet()) {
-			backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
-			symbols.put(symbol, System.currentTimeMillis());
-		}
+		if(configuration.updateHistoryBeforeLiveTrading()) {
+			//fill history with last 30 days of data
+			for (String symbol : allPairs.keySet()) {
+				backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
+			}
 
-		//loads last 30 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
-		for (String symbol : allPairs.keySet()) {
-			Enumeration<Candle> it = candleRepository.iterate(symbol, Instant.now().minus(30, ChronoUnit.DAYS), Instant.now(), false);
-			while (it.hasMoreElements()) {
-				Candle candle = it.nextElement();
-				if (candle != null) {
-					clients.forEach(c -> c.processCandle(symbol, candle, true));
+			//quick update for the last 30 minutes in case the previous step takes too long and we miss a few ticks
+			for (String symbol : allPairs.keySet()) {
+				backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
+				symbols.put(symbol, System.currentTimeMillis());
+			}
+
+			//loads last 30 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
+			for (String symbol : allPairs.keySet()) {
+				Enumeration<Candle> it = candleRepository.iterate(symbol, Instant.now().minus(30, ChronoUnit.DAYS), Instant.now(), false);
+				while (it.hasMoreElements()) {
+					Candle candle = it.nextElement();
+					if (candle != null) {
+						clients.forEach(c -> c.processCandle(symbol, candle, true));
+					}
 				}
 			}
-		}
 
-		//loads the very latest ticks and process them before we can finally connect to the live stream and trade for real.
-		for (String symbol : allPairs.keySet()) {
-			IncomingCandles<T> candles = exchange.getLatestTicks(symbol, tickInterval);
-			for (T candle : candles) {
-				clients.forEach(c -> c.processCandle(symbol, candle, true));
+			//loads the very latest ticks and process them before we can finally connect to the live stream and trade for real.
+			for (String symbol : allPairs.keySet()) {
+				IncomingCandles<T> candles = exchange.getLatestTicks(symbol, tickInterval);
+				for (T candle : candles) {
+					clients.forEach(c -> c.processCandle(symbol, candle, true));
+				}
 			}
 		}
 	}

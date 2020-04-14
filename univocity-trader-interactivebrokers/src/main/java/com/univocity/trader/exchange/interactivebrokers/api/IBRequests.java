@@ -63,6 +63,7 @@ abstract class IBRequests {
 					if (client.isConnected()) {
 						log.info("Connected to TWS server (version {}})", client.serverVersion());
 					} else {
+						client = null;
 						throw new IllegalStateException("Could not connect to TWS. Make sure it's running on " + (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
 					}
 				}
@@ -98,7 +99,25 @@ abstract class IBRequests {
 
 	private synchronized void connect() {
 		boolean[] ready = new boolean[]{false};
-		getReader();
+
+		EReader reader = null;
+		int retryCount = 0;
+		while (reader == null && ++retryCount <= 10) {
+			try {
+				reader = getReader();
+			} catch (RuntimeException e) {
+				if (retryCount == 10) {
+					log.error("Unable to connect after " + retryCount + " attempts. Aborting.", e);
+					throw e;
+				}
+				log.error("Unable to connect. Will retry in 30 seconds", e);
+				try {
+					Thread.sleep(30_000);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+				}
+			}
+		}
 
 		new Thread(() -> {
 			Thread.currentThread().setName("IB live stream");

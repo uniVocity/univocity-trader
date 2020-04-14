@@ -164,6 +164,18 @@ public class InteractiveBrokersApi extends IBRequests {
 	public int loadAccountPositions(Consumer<Balance> balanceConsumer) {
 		return submitRequest(POSITION_UPDATE_REQUEST_ID, "Updating account balances (positions)", balanceConsumer, (reqId) -> client.reqPositions());
 	}
+
+	public int openFeed(String symbol, Contract contract, Types.WhatToShow whatToShow, Consumer<Candle> candleConsumer) {
+		if (contract == null) {
+			throw new IllegalArgumentException("Contract for " + symbol + " cannot be null");
+		}
+
+		client.reqMarketDataType(3);
+
+		Consumer<Integer> request = (reqId) ->
+				client.reqRealTimeBars(reqId, contract, 60, whatToShow.toString(), true, Collections.emptyList());
+		return submitRequest("Real time bars for " + symbol, candleConsumer, request);
+	}
 }
 
 

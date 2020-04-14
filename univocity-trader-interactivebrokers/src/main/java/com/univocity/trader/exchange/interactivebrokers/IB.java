@@ -16,11 +16,14 @@ import java.util.concurrent.*;
 class IB implements Exchange<Candle, Account> {
 
 	private static final Logger log = LoggerFactory.getLogger(IB.class);
+	private static final double[] ZERO = new double[]{0.0};
 
 	private InteractiveBrokersApi api;
 	private Map<String, Contract> tradedContracts;
 	private Map<String, TradeType> tradeTypes = new ConcurrentHashMap<>();
 	private Map<String, SymbolInformation> symbolInformation;
+
+	private Map<String, double[]> latestPrices = new ConcurrentHashMap<>();
 
 	IB() {
 		this("", 7497, 0, "");
@@ -82,7 +85,11 @@ class IB implements Exchange<Candle, Account> {
 	@Override
 	public synchronized void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candle> consumer) {
 		validateContracts();
-		//TODO
+
+		for (String symbol : symbols.split(",")) {
+			this.api.openFeed(symbol, getContract(symbol.toUpperCase()), Types.WhatToShow.TRADES, (candle) -> consumer.tickReceived(symbol, candle));
+		}
+
 	}
 
 	@Override
@@ -92,8 +99,7 @@ class IB implements Exchange<Candle, Account> {
 
 	@Override
 	public Map<String, double[]> getLatestPrices() {
-		validateContracts();
-		return null;
+		return latestPrices;
 	}
 
 	@Override
@@ -133,7 +139,7 @@ class IB implements Exchange<Candle, Account> {
 
 	@Override
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
-		return 0;
+		return latestPrices.getOrDefault(assetSymbol + fundSymbol, ZERO)[0];
 	}
 
 	@Override
