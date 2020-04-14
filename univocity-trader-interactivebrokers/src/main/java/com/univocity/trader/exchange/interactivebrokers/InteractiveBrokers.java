@@ -29,7 +29,7 @@ public final class InteractiveBrokers implements EntryPoint {
 
 		@Override
 		protected void backfillHistory(Exchange<?, Account> exchange, Collection<String> symbols) {
-			for(Account account : configure().accounts()){
+			for (Account account : configure().accounts()) {
 				exchange.connectToAccount(account);
 			}
 			super.backfillHistory(exchange, symbols);
@@ -38,7 +38,10 @@ public final class InteractiveBrokers implements EntryPoint {
 
 	public static final class Trader extends LiveTrader<Candle, Configuration, Account> {
 		private Trader() {
-			super(new IB(), new Configuration().updateHistoryBeforeLiveTrading(false));
+			super(new IB(), new Configuration()
+					.updateHistoryBeforeLiveTrading(false)
+					.pollCandles(false)
+			);
 		}
 	}
 

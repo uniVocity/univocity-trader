@@ -20,6 +20,7 @@ import org.slf4j.*;
 
 import java.math.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.function.*;
 
@@ -103,11 +104,11 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	@Override
-	public synchronized Map<String, Balance> updateBalances() {
+	public synchronized ConcurrentHashMap<String, Balance> updateBalances() {
 		Account account = client.getAccount();
 		List<AssetBalance> balances = account.getBalances();
 
-		Map<String, Balance> out = new HashMap<>();
+		ConcurrentHashMap<String, Balance> out = new ConcurrentHashMap<>();
 		for (AssetBalance b : balances) {
 			String symbol = b.getAsset();
 			Balance balance = new Balance(null, symbol);

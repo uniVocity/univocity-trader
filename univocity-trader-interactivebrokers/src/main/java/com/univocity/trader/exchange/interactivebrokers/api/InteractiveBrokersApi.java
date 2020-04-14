@@ -1,6 +1,7 @@
 package com.univocity.trader.exchange.interactivebrokers.api;
 
 import com.ib.client.*;
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.exchange.interactivebrokers.*;
 import com.univocity.trader.indicators.base.*;
@@ -18,6 +19,7 @@ import static java.util.concurrent.TimeUnit.*;
  */
 public class InteractiveBrokersApi extends IBRequests {
 
+	public static final int POSITION_UPDATE_REQUEST_ID = -999;
 	private static final Map<TimeUnit, Set<Integer>> validBarSizes = new ConcurrentHashMap<>();
 
 	static {
@@ -153,4 +155,15 @@ public class InteractiveBrokersApi extends IBRequests {
 	IBRequests newInstance(IBRequests old) {
 		return new InteractiveBrokersApi(old.ip, old.port, old.clientID, old.optionalCapabilities, old.requestHandler.reconnectProcess);
 	}
+
+	public int loadAccountBalances(String referenceCurrency, Consumer<Balance> balanceConsumer) {
+		Consumer<Integer> request = (reqId) -> client.reqAccountSummary(reqId, "All", "$LEDGER:" + referenceCurrency);
+		return submitRequest("Updating account balances", balanceConsumer, request);
+	}
+
+	public int loadAccountPositions(Consumer<Balance> balanceConsumer) {
+		return submitRequest(POSITION_UPDATE_REQUEST_ID, "Updating account balances (positions)", balanceConsumer, (reqId) -> client.reqPositions());
+	}
 }
+
+

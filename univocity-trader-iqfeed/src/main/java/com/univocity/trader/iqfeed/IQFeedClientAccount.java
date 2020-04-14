@@ -8,7 +8,7 @@ import io.netty.channel.nio.*;
 import org.asynchttpclient.*;
 import org.slf4j.*;
 
-import java.util.*;
+import java.util.concurrent.*;
 
 class IQFeedClientAccount implements ClientAccount {
 
@@ -46,7 +46,7 @@ class IQFeedClientAccount implements ClientAccount {
 	}
 
 	@Override
-	public Map<String, Balance> updateBalances() {
+	public ConcurrentHashMap<String, Balance> updateBalances() {
 		return null;
 	}
 

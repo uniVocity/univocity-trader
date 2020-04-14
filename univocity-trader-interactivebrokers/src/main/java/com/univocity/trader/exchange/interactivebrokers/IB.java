@@ -2,6 +2,7 @@ package com.univocity.trader.exchange.interactivebrokers;
 
 import com.ib.client.*;
 import com.univocity.trader.*;
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.api.*;
@@ -29,7 +30,7 @@ class IB implements Exchange<Candle, Account> {
 		api = new InteractiveBrokersApi(ip, port, clientID, optionalCapabilities, this::reconnectApi);
 	}
 
-	private void reconnectApi(){
+	private void reconnectApi() {
 		api = (InteractiveBrokersApi) InteractiveBrokersApi.reconnect(api);
 	}
 
@@ -50,7 +51,7 @@ class IB implements Exchange<Candle, Account> {
 
 		tradeTypes.putAll(account.tradeTypes());
 
-		return new IBAccount(this);
+		return new IBAccount(this, account);
 	}
 
 	@Override
@@ -118,6 +119,16 @@ class IB implements Exchange<Candle, Account> {
 
 	private Contract getContract(String assetSymbol, String fundSymbol) {
 		return getContract(assetSymbol + fundSymbol);
+	}
+
+	public ConcurrentHashMap<String, Balance> getAccountBalances(String referenceCurrency) {
+		ConcurrentHashMap<String, Balance> out = new ConcurrentHashMap<>();
+//		int requestId = this.api.loadAccountBalances(referenceCurrency, (balance -> out.put(balance.getSymbol(), balance)));
+//		this.api.waitForResponse(requestId);
+
+		int requestId = this.api.loadAccountPositions((balance -> out.put(balance.getSymbol(), balance)));
+		this.api.waitForResponse(requestId);
+		return out;
 	}
 
 	@Override

@@ -159,22 +159,6 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 		log.info(EWrapperMsgGenerator.commissionReport(commissionReport));
 	}
 
-	public final void position(String account, Contract contract, double pos, double avgCost) {
-		log.info(EWrapperMsgGenerator.position(account, contract, pos, avgCost));
-	}
-
-	public final void positionEnd() {
-		log.info(EWrapperMsgGenerator.positionEnd());
-	}
-
-	public final void accountSummary(int reqId, String account, String tag, String value, String currency) {
-		log.info(EWrapperMsgGenerator.accountSummary(reqId, account, tag, value, currency));
-	}
-
-	public final void accountSummaryEnd(int reqId) {
-		log.info(EWrapperMsgGenerator.accountSummaryEnd(reqId));
-	}
-
 	public final void positionMulti(int reqId, String account, String modelCode, Contract contract, double pos, double avgCost) {
 		log.info(EWrapperMsgGenerator.positionMulti(reqId, account, modelCode, contract, pos, avgCost));
 	}

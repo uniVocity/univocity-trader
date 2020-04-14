@@ -38,7 +38,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 	private static final long FREQUENT_BALANCE_UPDATE_INTERVAL = seconds(15).ms;
 
 	private long lastBalanceSync = 0L;
-	private final Map<String, Balance> balances = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Balance> balances = new ConcurrentHashMap<>();
 	private Balance[] balancesArray;
 
 	private final ExchangeClient client;
@@ -74,7 +74,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		return client;
 	}
 
-	public Map<String, Balance> getBalances() {
+	public ConcurrentHashMap<String, Balance> getBalances() {
 		long now = System.currentTimeMillis();
 		if ((now - lastBalanceSync) > BALANCE_EXPIRATION_TIME) {
 			lastBalanceSync = now;
@@ -499,7 +499,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 	}
 
 	@Override
-	public synchronized Map<String, Balance> updateBalances() {
+	public synchronized ConcurrentHashMap<String, Balance> updateBalances() {
 		long now = System.currentTimeMillis();
 		if (now - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL) {
 			return balances;

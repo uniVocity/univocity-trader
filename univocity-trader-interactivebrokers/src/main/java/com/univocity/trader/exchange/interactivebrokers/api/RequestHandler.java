@@ -31,7 +31,7 @@ class RequestHandler {
 
 	Runnable reconnectProcess;
 
-	public RequestHandler(Runnable reconnectProcess){
+	public RequestHandler(Runnable reconnectProcess) {
 		this.reconnectProcess = reconnectProcess;
 	}
 
@@ -39,14 +39,18 @@ class RequestHandler {
 		orderId.set(nextOrder);
 	}
 
-	int prepareRequest(Consumer consumer) {
+	int prepareRequest(int requestId, Consumer consumer) {
 		if (twsDisconnected) {
 			log.warn("Last request failed. Check if TWS is connected.");
 		}
-		int reqId = requestId.getAndIncrement();
-		pendingRequests.put(reqId, consumer);
-		awaitingResponse.add(reqId);
-		return reqId;
+		int reqId = requestId == 0 ? this.requestId.getAndIncrement() : requestId;
+
+		if(!pendingRequests.containsKey(requestId)) {
+			pendingRequests.put(reqId, consumer);
+			awaitingResponse.add(reqId);
+			return reqId;
+		}
+		return 0;
 	}
 
 	void responseFinalized(int requestId) {
@@ -83,7 +87,7 @@ class RequestHandler {
 					cancelAllPendingRequests();
 					try {
 						Thread.sleep(30_000);
-					} catch (InterruptedException e){
+					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
 //					reconnectProcess.run();
@@ -153,9 +157,11 @@ class RequestHandler {
 
 			handler.accept(consumer);
 		} finally {
-			awaitingResponse.remove(requestId);
-			synchronized (syncLock) {
-				syncLock.notifyAll();
+			if(requestId > 0) {
+				awaitingResponse.remove(requestId);
+				synchronized (syncLock) {
+					syncLock.notifyAll();
+				}
 			}
 		}
 	}
@@ -189,7 +195,7 @@ class RequestHandler {
 	}
 
 	public void waitForResponse(int requestId, int maxSecondsToWait) {
-		if (!awaitingResponse.contains(requestId)) {
+		if (!awaitingResponse.contains(requestId) || requestId == 0) {
 			return;
 		}
 

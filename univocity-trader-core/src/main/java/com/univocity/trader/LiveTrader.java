@@ -199,7 +199,9 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 					log.error("Error closing socket", e);
 				}
 			} else {
-				new PollThread().start();
+				if(configuration.pollCandles()) {
+					new PollThread().start();
+				}
 			}
 
 			exchange.openLiveStream(allClientPairs, tickInterval, new TickConsumer<T>() {

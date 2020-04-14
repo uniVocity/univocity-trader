@@ -42,24 +42,27 @@ public final class Balance implements Cloneable {
 		return free;
 	}
 
-	public void setFree(double free) {
+	public Balance setFree(double free) {
 		this.free = ensurePositive(free, "free balance");
+		return this;
 	}
 
 	public double getLocked() {
 		return locked;
 	}
 
-	public void setLocked(double locked) {
+	public Balance setLocked(double locked) {
 		this.locked = ensurePositive(locked, "locked balance");
+		return this;
 	}
 
 	public double getShorted() {
 		return shorted;
 	}
 
-	public void setShorted(double shorted) {
+	public Balance setShorted(double shorted) {
 		this.shorted = ensurePositive(shorted, "shorted balance");
+		return this;
 	}
 
 	public double getMarginReserve(String assetSymbol) {
@@ -73,7 +76,7 @@ public final class Balance implements Cloneable {
 		return shortedAssetSymbols;
 	}
 
-	public void setMarginReserve(String assetSymbol, double marginReserve) {
+	public Balance setMarginReserve(String assetSymbol, double marginReserve) {
 		marginReserve = ensurePositive(marginReserve, "margin reserve");
 		if (marginReserve <= 0) {
 			this.marginReserves.remove(assetSymbol);
@@ -81,6 +84,7 @@ public final class Balance implements Cloneable {
 			this.marginReserves.put(assetSymbol, marginReserve);
 		}
 		shortedAssetSymbols = null;
+		return this;
 	}
 
 	private double ensurePositive(double bd, String field) {

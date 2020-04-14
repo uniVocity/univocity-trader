@@ -1,6 +1,7 @@
 package com.univocity.trader.exchange.interactivebrokers.api;
 
 import com.ib.client.*;
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.model.account.*;
@@ -8,6 +9,8 @@ import com.univocity.trader.exchange.interactivebrokers.model.book.*;
 import org.slf4j.*;
 
 import java.util.*;
+
+import static com.univocity.trader.exchange.interactivebrokers.api.InteractiveBrokersApi.*;
 
 /**
  * {@link EWrapper} implementation of methods that are being currently used or have some logic in them
@@ -193,4 +196,24 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	public final void updatePortfolio(Contract contract, double position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
 		accountBalance.updatePortfolio(contract, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName);
 	}
+
+	public final void accountSummary(int reqId, String account, String tag, String value, String currency) {
+		//TODO: check what comes here.
+		requestHandler.handleResponse(reqId, new Balance(null, tag),
+				() -> EWrapperMsgGenerator.accountSummary(reqId, account, tag, value, currency));
+	}
+
+	public final void accountSummaryEnd(int reqId) {
+		requestHandler.responseFinalized(reqId);
+	}
+
+	public final void position(String account, Contract contract, double pos, double avgCost) {
+		requestHandler.handleResponse(POSITION_UPDATE_REQUEST_ID, new Balance(null, contract.symbol()).setFree(pos),
+				() -> EWrapperMsgGenerator.position(account, contract, pos, avgCost));
+	}
+
+	public final void positionEnd() {
+		requestHandler.responseFinalized(POSITION_UPDATE_REQUEST_ID);
+	}
+
 }

@@ -153,10 +153,16 @@ abstract class IBRequests {
 		}
 	}
 
-	protected final int submitRequest(String description, Consumer resultConsumer, Consumer<Integer> action) {
-		int requestId = requestHandler.prepareRequest(resultConsumer);
-		log.debug("New request [" + requestId + "]: " + description);
-		action.accept(requestId);
+	protected final <T> int submitRequest(String description, Consumer<T> resultConsumer, Consumer<Integer> action) {
+		return submitRequest(0, description, resultConsumer, action);
+	}
+
+	protected final <T> int submitRequest(int requestId, String description, Consumer<T> resultConsumer, Consumer<Integer> action) {
+		requestId = requestHandler.prepareRequest(requestId, resultConsumer);
+		if (requestId != 0) {
+			log.debug("New request [" + requestId + "]: " + description);
+			action.accept(requestId);
+		}
 		return requestId;
 	}
 

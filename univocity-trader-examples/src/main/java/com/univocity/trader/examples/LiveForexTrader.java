@@ -39,8 +39,10 @@ public class LiveForexTrader {
 				.referenceCurrency("GBP");
 
 		account
-				.referenceCurrency("GBP") //Balances will be calculated using the reference currency.
-				.tradeWith(FOREX, "EUR", "GBP");
+				.referenceCurrency("USD")
+				.tradeWith(STOCKS, "IBKR")
+				.tradeWith(STOCKS, "BWX")
+				.tradeWith(STOCKS, "DVY");
 
 		account
 				.minimumInvestmentAmountPerTrade(50.0);

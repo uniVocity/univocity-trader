@@ -5,6 +5,7 @@ import com.univocity.trader.account.*;
 import org.slf4j.*;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 
 class IBAccount implements ClientAccount {
@@ -12,9 +13,11 @@ class IBAccount implements ClientAccount {
 	private static final Logger log = LoggerFactory.getLogger(IBAccount.class);
 
 	private final IB ib;
+	private final Account account;
 
-	public IBAccount(IB ib) {
+	public IBAccount(IB ib, Account account) {
 		this.ib = ib;
+		this.account = account;
 	}
 
 	@Override
@@ -23,8 +26,8 @@ class IBAccount implements ClientAccount {
 	}
 
 	@Override
-	public Map<String, Balance> updateBalances() {
-		return null;
+	public ConcurrentHashMap<String, Balance> updateBalances() {
+		return ib.getAccountBalances(account.referenceCurrency());
 	}
 
 	@Override

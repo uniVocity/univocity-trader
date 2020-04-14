@@ -17,21 +17,22 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	final AccountList<T> accountList = new AccountList<T>(this::newAccountConfiguration);
 	private TimeInterval tickInterval = minutes(1);
 	private boolean updateHistoryBeforeLiveTrading = true;
+	private boolean pollCandles = true;
 
 	protected Configuration() {
 		this("univocity-trader.properties");
 	}
 
-	final void loadConfigurationGroups(){
+	final void loadConfigurationGroups() {
 		this.addConfigurationGroups(configurationGroups);
 	}
 
-	final List<ConfigurationGroup> getConfigurationGroups(){
+	final List<ConfigurationGroup> getConfigurationGroups() {
 		return configurationGroups;
 	}
 
 	protected Configuration(String defaultConfigurationFile) {
-		manager = new ConfigurationManager<C>((C)this, defaultConfigurationFile);
+		manager = new ConfigurationManager<C>((C) this, defaultConfigurationFile);
 	}
 
 	public C configure() {
@@ -59,7 +60,7 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		}
 	}
 
-	protected ConfigurationGroup[] getAdditionalConfigurationGroups(){
+	protected ConfigurationGroup[] getAdditionalConfigurationGroups() {
 		return new ConfigurationGroup[0];
 	}
 
@@ -83,7 +84,7 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		return accountList.account(accountId);
 	}
 
-	public List<T> accounts(){
+	public List<T> accounts() {
 		return accountList.accounts();
 	}
 
@@ -92,8 +93,8 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	}
 
 	public C tickInterval(TimeInterval tickInterval) {
-		 this.tickInterval = tickInterval;
-		 return (C)this;
+		this.tickInterval = tickInterval;
+		return (C) this;
 	}
 
 	@Override
@@ -114,6 +115,15 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 
 	public C updateHistoryBeforeLiveTrading(boolean updateHistoryBeforeLiveTrading) {
 		this.updateHistoryBeforeLiveTrading = updateHistoryBeforeLiveTrading;
-		return (C)this;
+		return (C) this;
+	}
+
+	public boolean pollCandles() {
+		return pollCandles;
+	}
+
+	public C pollCandles(boolean pollCandles) {
+		this.pollCandles = pollCandles;
+		return (C) this;
 	}
 }

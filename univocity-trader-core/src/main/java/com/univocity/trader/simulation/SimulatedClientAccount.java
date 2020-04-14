@@ -7,6 +7,7 @@ import com.univocity.trader.config.*;
 import com.univocity.trader.simulation.orderfill.*;
 
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 import static com.univocity.trader.config.Allocation.*;
@@ -139,7 +140,7 @@ public final class SimulatedClientAccount implements ClientAccount {
 	}
 
 	@Override
-	public Map<String, Balance> updateBalances() {
+	public ConcurrentHashMap<String, Balance> updateBalances() {
 		return account.getBalances();
 	}
 

@@ -4,7 +4,7 @@ import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 
-import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * A {@code ClientAccount} implementation controls the account of a user on an exchange or broker,
@@ -60,7 +60,7 @@ public interface ClientAccount {
 	 *
 	 * @return a map of symbols traded by the account and the corresponding {@link Balance} of each one.
 	 */
-	Map<String, Balance> updateBalances();
+	ConcurrentHashMap<String, Balance> updateBalances();
 
 	/**
 	 * Returns the {@link TradingFees} applied to this account as determined by the exchange. Even though the exchange generally
