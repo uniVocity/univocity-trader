@@ -5,11 +5,11 @@ import org.apache.commons.lang3.*;
 
 import java.util.*;
 
-public class IntParameters extends Parameters {
+public class LongParameters extends Parameters {
 
-	public int[] params;
+	public long[] params;
 
-	public IntParameters(int... params) {
+	public LongParameters(long... params) {
 		this.params = params;
 	}
 
@@ -19,7 +19,7 @@ public class IntParameters extends Parameters {
 	}
 
 	@Override
-	public IntParameters fromString(String s) {
+	public LongParameters fromString(String s) {
 		if (s.indexOf('[') >= 0) {
 			s = StringUtils.substringBetween(s, "[", "]");
 		} else if (s.indexOf('(') >= 0) {
@@ -29,16 +29,16 @@ public class IntParameters extends Parameters {
 		}
 
 		if (s.isBlank()) {
-			return new IntParameters();
+			return new LongParameters();
 		}
 		String[] params = s.split(",");
-		int[] p = new int[params.length];
+		long[] p = new long[params.length];
 		for (int i = 0; i < params.length; i++) {
 			params[i] = params[i].trim();
-			p[i] = Integer.parseInt(params[i]);
+			p[i] = Long.parseLong(params[i]);
 		}
 
-		return new IntParameters(p);
+		return new LongParameters(p);
 	}
 
 

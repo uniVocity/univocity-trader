@@ -511,7 +511,7 @@ public ExampleStrategy(Parameters params) {
  int length = 12; //default bollinger length
  int interval = 5; //default interval  
  //if we receive parameters as an array of integers
- if (params instanceof IntParameters) { 
+ if (params instanceof LongParameters) { 
  int[] p = ((IntParameters) params).params;
  length = p[0];
  interval = p[1];
@@ -550,7 +550,7 @@ simulation.cacheCandles(true);
 for (int interval = 1; interval <= 15; interval++) {
   // with length varying from 5 to 25 bars
   for (int length = 5; length <= 25; length++) {
-    simulation.parameters().add(new IntParameters(length, interval));
+    simulation.parameters().add(new LongParameters(length, interval));
   }
 }
 
