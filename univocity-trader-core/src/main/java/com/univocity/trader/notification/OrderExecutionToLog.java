@@ -35,9 +35,8 @@ public class OrderExecutionToLog implements OrderListener {
 		return details;
 	}
 
-	private void logDetails(Order order, Trade trade, Client client) {
+	protected void logDetails(Order order, Trade trade, Client client) {
 		if (log.isDebugEnabled()) {
-
 			OrderExecutionLine o = new OrderExecutionLine(order, trade, trade.trader(), client);
 			String type = StringUtils.rightPad(o.operation, 5);
 
@@ -104,11 +103,15 @@ public class OrderExecutionToLog implements OrderListener {
 
 			details = "[" + trade.id() + "]" + details;
 
-			if (StringUtils.isNotBlank(client.getId())) {
-				log.debug(client.getId() + ": " + details);
-			} else {
-				log.debug(details);
-			}
+			logDetails(details, trade, client);
+		}
+	}
+
+	protected void logDetails(String details, Trade trade, Client client) {
+		if (StringUtils.isNotBlank(client.getId())) {
+			log.debug(client.getId() + ": " + details);
+		} else {
+			log.debug(details);
 		}
 	}
 }

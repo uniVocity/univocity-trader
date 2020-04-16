@@ -33,7 +33,7 @@ public final class Trader {
 	private static final Logger log = LoggerFactory.getLogger(Trader.class);
 
 	public final TradingManager tradingManager;
-	private Candle latestCandle;
+	public Candle latestCandle;
 	private Parameters parameters;
 
 	private StrategyMonitor[] monitors;

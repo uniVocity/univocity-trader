@@ -140,19 +140,37 @@ public class CandleRepository {
 		Runnable readingProcess = () -> {
 			Thread.currentThread().setName(symbol + " candle reader");
 			log.debug("Executing SQL query: [{}]", query);
+
 			int count = 0;
+			try {
+				boolean retry = false;
+				do {
+					count = 0;
+					if(retry){
+						try {
+							log.info("Waiting 5 seconds before retrying to read candles of {}", symbol);
+							Thread.sleep(5_000);
+						}catch (InterruptedException e){
+							Thread.currentThread().interrupt();
+						}
+					}
 
-			try (Connection c = db().getDataSource().getConnection();
-				 final PreparedStatement s = c.prepareStatement(query);
-				 ResultSet rs = executeQuery(s)) {
+					try (Connection c = db().getDataSource().getConnection();
+						 final PreparedStatement s = c.prepareStatement(query);
+						 ResultSet rs = executeQuery(s)) {
 
-				while (rs.next()) {
-					Candle candle = CANDLE_MAPPER.mapRow(rs, 0);
-					storeCandle(symbol, from, to, out, candle);
-					count++;
-				}
-			} catch (SQLException e) {
-				log.error("Error reading " + symbol + " Candle from db().", e);
+						while (rs.next()) {
+							Candle candle = CANDLE_MAPPER.mapRow(rs, 0);
+							storeCandle(symbol, from, to, out, candle);
+							count++;
+						}
+
+						retry = false;
+					} catch (SQLException e) {
+						log.error("Error reading " + symbol + " candles from database.", e);
+						retry = e.getMessage().contains("Too many open files");
+					}
+				} while (retry);
 			} finally {
 				log.trace("Read all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
 				ended(symbol, ended);
