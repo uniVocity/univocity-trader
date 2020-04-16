@@ -763,11 +763,13 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 
 		if (order.isFinalized()) {
 			logOrderStatus("", order);
-			pendingOrders.remove(order);
+			pendingOrders.remove(old);
 			orderFinalized(orderManager, order, trade);
 			return order;
 		} else { // update order status
-			pendingOrders.addOrReplace(order);
+
+			pendingOrders.remove(old);
+			pendingOrders.add(order);
 		}
 
 		if (old.getExecutedQuantity() != order.getExecutedQuantity() || (isSimulated() && order instanceof DefaultOrder && ((DefaultOrder) order).hasPartialFillDetails())) {
