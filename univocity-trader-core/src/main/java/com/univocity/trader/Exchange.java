@@ -94,6 +94,11 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	PreciseCandle generatePreciseCandle(T exchangeCandle);
 
 	/**
+	 * Starts a thread that periodically sends a keep-alive message to the underlying connection.
+	 */
+    default void startKeepAlive() { }
+
+    /**
 	 * Connects to the live exchange stream to receive real time signals which will be delegated to a given {@link TickConsumer}.
 	 *
 	 * On top of the live stream, the {@link LiveTrader} will continuously check for updates on the signals of the symbols subscribed to with this method.
