@@ -31,11 +31,19 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
 	private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536);
+	private String listenKey;
+	private Timer timer;
+	private BinanceClientAccount binanceClientAccount;
+	private char[] apiSecret;
+	private String apiKey;
 
 
 	@Override
 	public BinanceClientAccount connectToAccount(Account clientConfiguration) {
-		return new BinanceClientAccount(clientConfiguration.apiKey(), new String(clientConfiguration.secret()), this);
+		this.apiKey = clientConfiguration.apiKey();
+		this.apiSecret = clientConfiguration.secret();
+		this.binanceClientAccount = new BinanceClientAccount(clientConfiguration.apiKey(), new String(clientConfiguration.secret()), this);
+		return this.binanceClientAccount;
 	}
 
 	@Override
@@ -87,6 +95,22 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 		);
 	}
 
+	@Override
+	public void startKeepAlive(){
+		BinanceApiRestClient client = restClient();
+
+		this.listenKey = client.startUserDataStream();
+		TimerTask task = new TimerTask() {
+			public void run() {
+				client.keepAliveUserDataStream(listenKey);
+
+			}
+		};
+		timer = new Timer("Keep-alive Timer", true);
+		long delay = 10000L;
+		timer.scheduleAtFixedRate(task, delay, delay);
+
+	}
 	@Override
 	public void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candlestick> consumer) {
 		CandlestickInterval interval = CandlestickInterval.fromTimeInterval(tickInterval);
@@ -174,15 +198,17 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private BinanceApiWebSocketClient socketClient() {
 		if (socketClient == null) {
-			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(asyncHttpClient);
+			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, new String(apiSecret), asyncHttpClient);
 			socketClient = factory.newWebSocketClient();
 		}
 		return socketClient;
 	}
 
+
+
 	private BinanceApiRestClient restClient() {
 		if (restClient == null) {
-			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(asyncHttpClient);
+			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, new String(apiSecret), asyncHttpClient);
 			restClient = factory.newRestClient();
 		}
 		return restClient;
