@@ -737,6 +737,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		new Thread(() -> {
 			Thread.currentThread().setName("Order " + order.getOrderId() + " monitor:" + order.getSide() + " " + order.getSymbol());
 			OrderManager orderManager = configuration.orderManager(order.getSymbol());
+			Order updated = order;
 			while (true) {
 				try {
 					try {
@@ -744,7 +745,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
-					Order updated = updateOrder(order, null);
+					updated = updateOrder(updated, null);
 					if (updated.isFinalized()) {
 						return;
 					}
