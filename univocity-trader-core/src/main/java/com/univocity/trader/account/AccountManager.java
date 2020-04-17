@@ -863,8 +863,9 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		} catch (Exception e) {
 			log.error("Failed to execute cancellation of order '" + order + "' on exchange", e);
 		} finally {
+			Order old = order;
 			order = account.updateOrderStatus(order);
-			pendingOrders.remove(order);
+			pendingOrders.remove(old);
 			orderFinalized(orderManager, order, null);
 			logOrderStatus("Cancellation via order manager: ", order);
 		}

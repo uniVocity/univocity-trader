@@ -39,10 +39,8 @@ public class LiveForexTrader {
 				.referenceCurrency("GBP");
 
 		account
-				.referenceCurrency("USD")
-				.tradeWith(STOCKS, "IBKR")
-				.tradeWith(STOCKS, "BWX")
-				.tradeWith(STOCKS, "DVY");
+				.referenceCurrency("GBP")
+				.tradeWith(FOREX, "EUR", "GBP");
 
 		account
 				.minimumInvestmentAmountPerTrade(50.0);
