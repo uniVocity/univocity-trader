@@ -316,7 +316,7 @@ simulator.run();
 
 Here we test with data from July 2018 to July 2019, and you should see each trade when they happen as the
 [OrderExecutionToLog](./univocity-trader-core/src/main/java/com/univocity/trader/notification/OrderExecutionToLog.java) 
-will print each trade made to the log.
+will print each trade made to the log, you may also log to a Google Sheet via [OrderExecutionToGoogleSheet](./univocity-trader-core/src/main/java/com/univocity/trader/notification/OrderExecutionToGoogleSheet.java).
 
 The last line will show something like this:
 
