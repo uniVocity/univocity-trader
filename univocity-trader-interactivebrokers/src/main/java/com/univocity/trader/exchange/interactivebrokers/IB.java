@@ -87,9 +87,23 @@ class IB implements Exchange<Candle, Account> {
 		validateContracts();
 
 		for (String symbol : symbols.split(",")) {
-			this.api.openFeed(symbol, getContract(symbol.toUpperCase()), Types.WhatToShow.TRADES, (candle) -> consumer.tickReceived(symbol, candle));
-		}
+			Contract contract = getContract(symbol.toUpperCase());
+			SecurityType securityType = SecurityType.fromSecurityCode(contract.getSecType());
 
+			//TODO: allow this to be configurable
+			TradeType tradeType = securityType.defaultTradeType();
+			TickType tickType = securityType.defaultTickType();
+			Types.WhatToShow whatToShow = null; //not used yet
+
+			this.api.openFeed(symbol, contract, tickInterval, tradeType, tickType, whatToShow, (candle) -> consumer.tickReceived(symbol, candle));
+
+
+//			TODO: PRODUCE LIVE BOOK WITH THIS
+//			Consumer<Integer> request1 = (reqId) ->
+//					client.reqMktData(reqId, contract, "", false, false, null);
+//			submitRequest("Market data for " + symbol, candleConsumer, request1);
+
+		}
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import com.ib.client.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.exchange.interactivebrokers.*;
+import com.univocity.trader.exchange.interactivebrokers.TickType;
 import com.univocity.trader.indicators.base.*;
 
 import java.time.*;
@@ -110,8 +111,6 @@ public class InteractiveBrokersApi extends IBRequests {
 
 	private int loadHistoricalData(Contract contract, long startTime, long endTime, TimeInterval interval, TradeType tradeType, Consumer<Candle> candleConsumer) {
 		String durationStr = toDurationString(startTime, endTime);
-
-
 		boolean requestTicks = interval.ms <= 1;
 
 		String candleStr = requestTicks ? "" : getBarSizeString(interval);
@@ -165,15 +164,31 @@ public class InteractiveBrokersApi extends IBRequests {
 		return submitRequest(POSITION_UPDATE_REQUEST_ID, "Updating account balances (positions)", balanceConsumer, (reqId) -> client.reqPositions());
 	}
 
-	public int openFeed(String symbol, Contract contract, Types.WhatToShow whatToShow, Consumer<Candle> candleConsumer) {
+	public int openFeed(String symbol, Contract contract, TimeInterval interval, TradeType tradeType, TickType tickType, Types.WhatToShow whatToShow, Consumer<Candle> candleConsumer) {
 		if (contract == null) {
 			throw new IllegalArgumentException("Contract for " + symbol + " cannot be null");
 		}
 
 		client.reqMarketDataType(3);
+		Consumer<Integer> request;
 
-		Consumer<Integer> request = (reqId) ->
-				client.reqRealTimeBars(reqId, contract, 60, whatToShow.toString(), true, Collections.emptyList());
+		if (interval.ms >= 5000L) {//requesting candles of at least 5 seconds.
+			String candleStr = getBarSizeString(interval);
+
+			//The keepUpToDate functionality can only be used with bar sizes 5 seconds or greater and requires the endDate is set as the empty string.
+			//https://interactivebrokers.github.io/tws-api/historical_bars.html
+			request = (reqId) ->
+					client.reqHistoricalData(reqId, contract, "", "60 S", candleStr, tradeType.toString(), 1, 1, true, null);
+
+			//unsure about this one.
+			//request = (reqId) -> client.reqRealTimeBars(reqId, contract, 5, whatToShow.toString(), true, Collections.emptyList());
+		} else if (interval.ms <= 1) { //requesting ticks
+			request = (reqId) ->
+					client.reqTickByTickData(reqId, contract, tickType.toString(), 1000, true);
+		} else {
+			throw new IllegalArgumentException("Can't use interval '" + interval + "'. Only the following candle intervals are allowed: " + validBarSizes);
+		}
+
 		return submitRequest("Real time bars for " + symbol, candleConsumer, request);
 	}
 }
