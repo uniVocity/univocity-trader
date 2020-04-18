@@ -97,19 +97,7 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	@Override
 	public void startKeepAlive(){
-		BinanceApiRestClient client = restClient();
-
-		this.listenKey = client.startUserDataStream();
-		TimerTask task = new TimerTask() {
-			public void run() {
-				client.keepAliveUserDataStream(listenKey);
-
-			}
-		};
-		timer = new Timer("Keep-alive Timer", true);
-		long delay = 10000L;
-		timer.scheduleAtFixedRate(task, delay, delay);
-
+		new KeepAliveUserDataStream(restClient()).start();
 	}
 	@Override
 	public void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candlestick> consumer) {
