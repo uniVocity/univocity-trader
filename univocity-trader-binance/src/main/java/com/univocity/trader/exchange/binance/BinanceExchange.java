@@ -186,7 +186,7 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private BinanceApiWebSocketClient socketClient() {
 		if (socketClient == null) {
-			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, new String(apiSecret), asyncHttpClient);
+			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient);
 			socketClient = factory.newWebSocketClient();
 		}
 		return socketClient;
@@ -196,7 +196,7 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private BinanceApiRestClient restClient() {
 		if (restClient == null) {
-			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, new String(apiSecret), asyncHttpClient);
+			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient);
 			restClient = factory.newRestClient();
 		}
 		return restClient;
