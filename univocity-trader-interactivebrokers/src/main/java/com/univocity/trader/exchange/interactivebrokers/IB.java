@@ -24,6 +24,7 @@ class IB implements Exchange<Candle, Account> {
 	private Map<String, SymbolInformation> symbolInformation;
 
 	private Map<String, double[]> latestPrices = new ConcurrentHashMap<>();
+	private Map<String, LiveIBIncomingCandles> activeStreams = new ConcurrentHashMap<>();
 
 	IB() {
 		this("", 7497, 0, "");
@@ -95,8 +96,8 @@ class IB implements Exchange<Candle, Account> {
 			TickType tickType = securityType.defaultTickType();
 			Types.WhatToShow whatToShow = null; //not used yet
 
-			this.api.openFeed(symbol, contract, tickInterval, tradeType, tickType, whatToShow, (candle) -> consumer.tickReceived(symbol, candle));
-
+			LiveIBIncomingCandles feed = this.api.openFeed(symbol, contract, tickInterval, tradeType, tickType, whatToShow, consumer);
+			activeStreams.put(symbol, feed);
 
 //			TODO: PRODUCE LIVE BOOK WITH THIS
 //			Consumer<Integer> request1 = (reqId) ->
@@ -113,6 +114,9 @@ class IB implements Exchange<Candle, Account> {
 
 	@Override
 	public Map<String, double[]> getLatestPrices() {
+		for (LiveIBIncomingCandles live : activeStreams.values()) {
+			latestPrices.computeIfAbsent(live.symbol, s -> new double[]{0.0})[0] = live.latestPrice();
+		}
 		return latestPrices;
 	}
 
@@ -149,6 +153,14 @@ class IB implements Exchange<Candle, Account> {
 		int requestId = this.api.loadAccountPositions((balance -> out.put(balance.getSymbol(), balance)));
 		this.api.waitForResponse(requestId);
 		return out;
+	}
+
+	public Candle getLatestTick(String symbol, TimeInterval interval) {
+		LiveIBIncomingCandles stream = activeStreams.get(symbol);
+		if(stream == null){
+			return null;
+		}
+		return stream.latestCandle;
 	}
 
 	@Override

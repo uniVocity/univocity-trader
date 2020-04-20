@@ -484,6 +484,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 	private void executeUpdateBalances() {
 		Map<String, Balance> updatedBalances = account.updateBalances();
 		if (updatedBalances != null && updatedBalances != balances) {
+			log.debug("Balances updated - available: " + updatedBalances);
 			updatedBalances.keySet().retainAll(configuration.symbols());
 			synchronized (balances) {
 				this.balances.clear();
@@ -492,7 +493,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 			}
 
 			updatedBalances.values().removeIf(b -> b.getTotal() == 0);
-			log.debug("Balances updated: " + updatedBalances);
+			log.debug("Balances updated - trading: " + updatedBalances);
 
 			lastBalanceSync = System.currentTimeMillis();
 		}

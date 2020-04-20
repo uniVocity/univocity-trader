@@ -43,7 +43,7 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 		this.timeout = timeout;
 	}
 
-	public final void stopProducing() {
+	public void stopProducing() {
 		noMoreCandles = true;
 		notifyNotEmpty();
 	}

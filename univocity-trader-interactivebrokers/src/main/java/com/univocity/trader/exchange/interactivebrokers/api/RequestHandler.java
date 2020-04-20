@@ -1,6 +1,7 @@
 package com.univocity.trader.exchange.interactivebrokers.api;
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import java.text.*;
@@ -26,6 +27,7 @@ class RequestHandler {
 	private Set<Integer> awaitingResponse = ConcurrentHashMap.newKeySet();
 	private Map<Integer, IBIncomingCandles> activeFeeds = new ConcurrentHashMap<>();
 
+
 	private final Object syncLock = new Object();
 	private boolean twsDisconnected = false;
 
@@ -45,7 +47,7 @@ class RequestHandler {
 		}
 		int reqId = requestId == 0 ? this.requestId.getAndIncrement() : requestId;
 
-		if(!pendingRequests.containsKey(requestId)) {
+		if (!pendingRequests.containsKey(requestId)) {
 			pendingRequests.put(reqId, consumer);
 			awaitingResponse.add(reqId);
 			return reqId;
@@ -66,9 +68,15 @@ class RequestHandler {
 	}
 
 	void closeOpenFeed(int requestId) {
-		IBIncomingCandles feed = activeFeeds.remove(requestId);
+		IBIncomingCandles feed = activeFeeds.get(requestId);
+		if(feed instanceof LiveIBIncomingCandles live){ //live feed
+			if (!live.consumerStopped()){
+				return;
+			}
+		}
 		if (feed != null) {
 			log.info("Closing active feed opened by request {}", requestId);
+			activeFeeds.remove(requestId);
 			feed.stopProducing();
 		}
 		responseFinalized(requestId);
@@ -157,7 +165,7 @@ class RequestHandler {
 
 			handler.accept(consumer);
 		} finally {
-			if(requestId > 0) {
+			if (requestId > 0) {
 				awaitingResponse.remove(requestId);
 				synchronized (syncLock) {
 					syncLock.notifyAll();
@@ -238,17 +246,15 @@ class RequestHandler {
 		}
 	}
 
-	public IBIncomingCandles openFeed(Function<Consumer<Candle>, Integer> request) {
-		return doOpenFeed(request, null);
+	public <T extends IBIncomingCandles> T openFeed(T out, Function<Consumer<Candle>, Integer> request) {
+		return doOpenFeed(out, request, null);
 	}
 
-	public IBIncomingCandles openFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
-		return doOpenFeed(request, cancelRequestHandler);
+	public <T extends IBIncomingCandles> T openFeed(T out, Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
+		return doOpenFeed(out, request, cancelRequestHandler);
 	}
 
-	private IBIncomingCandles doOpenFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
-		IBIncomingCandles out = new IBIncomingCandles();
-
+	public <T extends IBIncomingCandles> T doOpenFeed(T out, Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
 		int[] reqId = new int[1];
 		reqId[0] = request.apply((candle) -> {
 					if (!out.consumerStopped()) {
