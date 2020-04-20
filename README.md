@@ -51,7 +51,7 @@ update a database of historical data and start trading.
 
 Make sure you have the following installed:
 
- * Java 11
+ * Java 14
  
  * MySQL or MariaDB (you can change this to something else, just adapt the database setup instructions below to your needs)
  
