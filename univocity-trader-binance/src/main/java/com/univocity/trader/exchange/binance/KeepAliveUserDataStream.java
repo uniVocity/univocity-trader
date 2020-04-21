@@ -20,8 +20,8 @@ public class KeepAliveUserDataStream {
         this.listenKey = client.startUserDataStream();
         TimerTask task = new TimerTask() {
             public void run() {
+                client.ping();
                 client.keepAliveUserDataStream(listenKey);
-
             }
         };
         timer = new Timer("Keep-alive Timer", true);
