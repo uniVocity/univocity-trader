@@ -2,6 +2,7 @@ package com.univocity.trader.notification;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
@@ -16,6 +17,7 @@ import org.springframework.util.ReflectionUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -119,7 +121,15 @@ public class OrderExecutionToGoogleSheet implements OrderListener {
 	}
 
 	void addToRow(List<Object> rowData, Object o){
-		rowData.add(o == null ? "" : o + ""); // convert everything to a string to easily deal with primitive types, enums, etc
+		Object tmp = o == null ? "" : o;
+		if (o != null){
+			if (o instanceof Timestamp){
+				tmp = new DateTime(((Timestamp) o).getTime());
+			} else if (o instanceof Enum){
+				tmp = o.toString();
+			}
+		}
+		rowData.add(tmp);
 	}
 	protected void logDetails(Order order, Trade trade, Client client) {
 
@@ -139,7 +149,7 @@ public class OrderExecutionToGoogleSheet implements OrderListener {
 
 
 		OrderExecutionLine o = new OrderExecutionLine(order, trade, trade.trader(), client);
-		ReflectionUtils.doWithFields(OrderExecutionLine.class, field -> addToRow(rowData, field.get(o)));
+		ReflectionUtils.doWithFields(OrderExecutionLine.class, field -> addToRow(rowData, field.get(o)), field -> field.canAccess(o) && field.getAnnotation(NotForExport.class) == null);
 
 
 		try {
