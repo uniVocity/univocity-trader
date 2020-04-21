@@ -483,7 +483,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 
 	private void executeUpdateBalances() {
 		Map<String, Balance> updatedBalances = account.updateBalances();
-		if (updatedBalances != null && updatedBalances != balances) {
+		if (updatedBalances != null && updatedBalances != balances && !updatedBalances.isEmpty()) {
 			log.debug("Balances updated - available: " + updatedBalances);
 			updatedBalances.keySet().retainAll(configuration.symbols());
 			synchronized (balances) {
@@ -774,7 +774,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 			pendingOrders.add(order);
 		}
 
-		if (old.getExecutedQuantity() != order.getExecutedQuantity() || (isSimulated() && order instanceof DefaultOrder && ((DefaultOrder) order).hasPartialFillDetails())) {
+		if (old.getExecutedQuantity() != order.getExecutedQuantity() || (isSimulated() && order instanceof DefaultOrder d && d.hasPartialFillDetails())) {
 			logOrderStatus("", order);
 			executeUpdateBalances();
 			orderManager.updated(order, traderOf(order), this::resubmit);

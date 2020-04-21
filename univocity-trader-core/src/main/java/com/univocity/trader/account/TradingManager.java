@@ -264,8 +264,8 @@ public final class TradingManager {
 	public OrderExecutionToEmail getEmailNotifier() {
 		if (emailNotifier == null) {
 			for (int i = 0; i < notifications.length; i++) {
-				if (notifications[i] instanceof OrderExecutionToEmail) {
-					emailNotifier = (OrderExecutionToEmail) notifications[i];
+				if (notifications[i] instanceof OrderExecutionToEmail email) {
+					emailNotifier = email;
 					break;
 				}
 			}

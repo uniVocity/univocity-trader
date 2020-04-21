@@ -6,6 +6,7 @@ import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.api.*;
+import com.univocity.trader.exchange.interactivebrokers.model.book.*;
 import com.univocity.trader.indicators.base.*;
 import org.slf4j.*;
 
@@ -98,12 +99,6 @@ class IB implements Exchange<Candle, Account> {
 
 			LiveIBIncomingCandles feed = this.api.openFeed(symbol, contract, tickInterval, tradeType, tickType, whatToShow, consumer);
 			activeStreams.put(symbol, feed);
-
-//			TODO: PRODUCE LIVE BOOK WITH THIS
-//			Consumer<Integer> request1 = (reqId) ->
-//					client.reqMktData(reqId, contract, "", false, false, null);
-//			submitRequest("Market data for " + symbol, candleConsumer, request1);
-
 		}
 	}
 
@@ -176,5 +171,25 @@ class IB implements Exchange<Candle, Account> {
 	@Override
 	public long timeToWaitPerRequest() {
 		return 10_000L;
+	}
+
+	OrderBook getOrderBook(IBAccount account, boolean smartDepth, String symbol, int depth){
+		OrderBook out = new OrderBook(account, symbol, depth);
+
+		Contract contract = getContract(symbol);
+
+		int requestId = this.api.populateTradingBook(symbol, smartDepth, contract, depth, t -> {
+			BookEntry[] asks = t.asks();
+			for(int i = 0; i < asks.length; i++){
+				out.addAsk(asks[i].price, asks[i].quantity);
+			}
+			BookEntry[] bids = t.bids();
+			for(int i = 0; i < bids.length; i++){
+				out.addBid(bids[i].price, bids[i].quantity);
+			}
+		});
+		//this.api.waitFor(requestId, );
+
+		return out;
 	}
 }

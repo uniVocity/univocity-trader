@@ -5,6 +5,7 @@ import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.exchange.interactivebrokers.TickType;
 import com.univocity.trader.exchange.interactivebrokers.*;
+import com.univocity.trader.exchange.interactivebrokers.model.book.*;
 import com.univocity.trader.indicators.base.*;
 
 import java.time.*;
@@ -192,6 +193,14 @@ public class InteractiveBrokersApi extends IBRequests {
 		}
 
 		return requestHandler.openFeed(new LiveIBIncomingCandles(symbol, candleConsumer), (consumer) -> submitRequest("Real time bars for " + symbol, consumer, request), cancelRequest);
+	}
+
+	public int populateTradingBook(String symbol, boolean isSmartDepth, Contract contract, int depth, Consumer<TradingBook> resultConsumer) {
+		return submitRequest("Getting market depth data for '" + symbol + "'", resultConsumer,
+				(reqId) -> {
+					requestHandler.openBook(reqId, depth, isSmartDepth);
+					client.reqMktDepth(reqId, contract, depth, false, null);
+				});
 	}
 }
 

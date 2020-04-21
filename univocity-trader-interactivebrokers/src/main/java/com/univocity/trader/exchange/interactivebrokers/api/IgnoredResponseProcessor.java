@@ -58,11 +58,6 @@ abstract class IgnoredResponseProcessor implements EWrapper {
 	}
 
 	@Override
-	public final void tickByTickMidPoint(int reqId, long time, double midPoint) {
-		log.info(EWrapperMsgGenerator.tickByTickMidPoint(reqId, time, midPoint));
-	}
-
-	@Override
 	public final void orderBound(long orderId, int apiClientId, int apiOrderId) {
 		log.info(EWrapperMsgGenerator.orderBound(orderId, apiClientId, apiOrderId));
 	}

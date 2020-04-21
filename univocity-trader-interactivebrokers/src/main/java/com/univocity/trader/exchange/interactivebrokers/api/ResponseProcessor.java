@@ -25,9 +25,6 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	private final RequestHandler requestHandler;
 	private AccountBalance accountBalance = new AccountBalance();
 
-	private Map<Integer, TradingBook> marketBooks = new HashMap<>();
-	private Map<Integer, TradingBook> smartBooks = new HashMap<>();
-
 	private boolean disconnecting = false;
 
 	public ResponseProcessor(RequestHandler requestHandler) {
@@ -56,9 +53,9 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	@Override
 	public final void updateMktDepth(int tickerId, int position, int operation, int side, double price, int size) {
-		TradingBook depthDialog = marketBooks.get(tickerId);
-		if (depthDialog != null) {
-			depthDialog.updateBook(tickerId, position, "", operation, side, price, size);
+		TradingBook book = requestHandler.getBook(tickerId, false);
+		if (book != null) {
+			book.updateBook(tickerId, position, "", operation, side, price, size);
 		} else {
 			log.warn("No book information associated with request {}", tickerId);
 		}
@@ -66,13 +63,7 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	@Override
 	public final void updateMktDepthL2(int tickerId, int position, String marketMaker, int operation, int side, double price, int size, boolean isSmartDepth) {
-		TradingBook book;
-
-		if (isSmartDepth) {
-			book = smartBooks.get(tickerId);
-		} else {
-			book = marketBooks.get(tickerId);
-		}
+		TradingBook book = requestHandler.getBook(tickerId, isSmartDepth);
 		if (book != null) {
 			book.updateBook(tickerId, position, marketMaker, operation, side, price, size);
 		} else {
@@ -216,4 +207,9 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 		requestHandler.responseFinalized(POSITION_UPDATE_REQUEST_ID);
 	}
 
+	@Override
+	public final void tickByTickMidPoint(int reqId, long time, double midPoint) {
+		requestHandler.handleResponse(reqId, new Candle(time, time, midPoint, midPoint, midPoint, midPoint, -1),
+				() -> EWrapperMsgGenerator.tickByTickMidPoint(reqId, time, midPoint));
+	}
 }

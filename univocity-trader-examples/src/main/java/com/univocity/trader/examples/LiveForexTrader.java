@@ -4,6 +4,7 @@ import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.exchange.interactivebrokers.*;
+import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
 
 import static com.univocity.trader.exchange.interactivebrokers.SecurityType.*;
@@ -47,6 +48,8 @@ public class LiveForexTrader {
 
 		//shorting is disabled by default
 		account.enableShorting();
+
+		trader.configure().tickInterval(TimeInterval.millis(1));
 
 		account.strategies().add(ScalpingStrategy::new);
 		account.monitors().add(ScalpingStrategyMonitor::new);

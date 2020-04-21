@@ -66,8 +66,8 @@ public final class Trader {
 		this.monitors = createStrategyMonitors(allInstances);
 		List<OrderListener> tmp = new ArrayList<>();
 		for (StrategyMonitor monitor : monitors) {
-			if (monitor instanceof OrderListener) {
-				tmp.add((OrderListener) monitor);
+			if (monitor instanceof OrderListener l) {
+				tmp.add(l);
 			}
 		}
 		this.notifications = tmp.toArray(new OrderListener[0]);

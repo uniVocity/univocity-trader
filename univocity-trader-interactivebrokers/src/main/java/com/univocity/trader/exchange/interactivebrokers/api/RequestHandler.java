@@ -1,7 +1,7 @@
 package com.univocity.trader.exchange.interactivebrokers.api;
 
 import com.univocity.trader.candles.*;
-import com.univocity.trader.utils.*;
+import com.univocity.trader.exchange.interactivebrokers.model.book.*;
 import org.slf4j.*;
 
 import java.text.*;
@@ -26,7 +26,8 @@ class RequestHandler {
 	private Map<Integer, Consumer> pendingRequests = new ConcurrentHashMap<>();
 	private Set<Integer> awaitingResponse = ConcurrentHashMap.newKeySet();
 	private Map<Integer, IBIncomingCandles> activeFeeds = new ConcurrentHashMap<>();
-
+	private Map<Integer, TradingBook> marketBooks = new ConcurrentHashMap<>();
+	private Map<Integer, TradingBook> smartBooks = new ConcurrentHashMap<>();
 
 	private final Object syncLock = new Object();
 	private boolean twsDisconnected = false;
@@ -69,8 +70,8 @@ class RequestHandler {
 
 	void closeOpenFeed(int requestId) {
 		IBIncomingCandles feed = activeFeeds.get(requestId);
-		if(feed instanceof LiveIBIncomingCandles live){ //live feed
-			if (!live.consumerStopped()){
+		if (feed instanceof LiveIBIncomingCandles live) { //live feed
+			if (!live.consumerStopped()) {
 				return;
 			}
 		}
@@ -274,5 +275,22 @@ class RequestHandler {
 		);
 		activeFeeds.put(reqId[0], out);
 		return out;
+	}
+
+	TradingBook getBook(int tickerId, boolean isSmartDepth) {
+		if (isSmartDepth) {
+			return smartBooks.get(tickerId);
+		} else {
+			return marketBooks.get(tickerId);
+		}
+	}
+
+	void openBook(int reqId, int depth, boolean isSmartDepth) {
+		TradingBook book = new TradingBook(reqId, depth, isSmartDepth);
+		if (isSmartDepth) {
+			smartBooks.put(reqId, book);
+		} else {
+			marketBooks.put(reqId, book);
+		}
 	}
 }

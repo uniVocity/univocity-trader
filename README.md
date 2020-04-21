@@ -511,8 +511,8 @@ public ExampleStrategy(Parameters params) {
  int length = 12; //default bollinger length
  int interval = 5; //default interval  
  //if we receive parameters as an array of integers
- if (params instanceof LongParameters) { 
- int[] p = ((IntParameters) params).params;
+ if (params instanceof LongParameters lp) { 
+ int[] p = lp.params;
  length = p[0];
  interval = p[1];
  }

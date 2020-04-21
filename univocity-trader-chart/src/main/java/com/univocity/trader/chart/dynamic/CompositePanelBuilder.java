@@ -61,8 +61,8 @@ public class CompositePanelBuilder {
 		try {
 			return new CompositePanelBuilder(compositeUIController.getClass()).getPanel(compositeUIController);
 		} catch (Exception e) {
-			if (e instanceof RuntimeException) {
-				throw (RuntimeException) e;
+			if (e instanceof RuntimeException r) {
+				throw r;
 			}
 			throw new RuntimeException(e);
 		}

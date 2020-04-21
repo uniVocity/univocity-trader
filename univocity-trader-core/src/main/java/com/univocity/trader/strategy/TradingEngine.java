@@ -40,8 +40,8 @@ public final class TradingEngine implements Engine {
 		Set<IndicatorGroup> groups = new LinkedHashSet<>();
 		Set<Strategy> plainStrategies = new LinkedHashSet<>();
 		for (Strategy strategy : this.strategies) {
-			if (strategy instanceof IndicatorGroup) {
-				groups.add((IndicatorGroup) strategy);
+			if (strategy instanceof IndicatorGroup group) {
+				groups.add(group);
 			} else {
 				plainStrategies.add(strategy);
 			}

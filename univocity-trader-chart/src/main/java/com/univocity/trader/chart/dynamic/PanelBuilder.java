@@ -145,14 +145,14 @@ public class PanelBuilder<T> {
 		Method setter = setters.get(index);
 		Annotation[] annotations = field.getDeclaredAnnotations();
 		for (Annotation annotation : annotations) {
-			if (annotation instanceof CheckBoxBound) {
-				return createCheckBox((CheckBoxBound) annotation, field, setter);
-			} else if (annotation instanceof ColorBound) {
-				return createColorSelector((ColorBound) annotation, field, setter);
-			} else if (annotation instanceof FontBound) {
-				return createFontSelector((FontBound) annotation, field, setter);
-			} else if (annotation instanceof SpinnerBound) {
-				return createSpinner((SpinnerBound) annotation, field, setter);
+			if (annotation instanceof CheckBoxBound chk) {
+				return createCheckBox(chk, field, setter);
+			} else if (annotation instanceof ColorBound color) {
+				return createColorSelector(color, field, setter);
+			} else if (annotation instanceof FontBound font) {
+				return createFontSelector(font, field, setter);
+			} else if (annotation instanceof SpinnerBound spinner) {
+				return createSpinner(spinner, field, setter);
 			}
 		}
 		throw new IllegalArgumentException("Unsupported field: " + field.getName());

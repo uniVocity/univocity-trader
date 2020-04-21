@@ -4,7 +4,6 @@ import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 import org.slf4j.*;
 
-import java.util.*;
 import java.util.concurrent.*;
 
 
@@ -32,7 +31,7 @@ class IBAccount implements ClientAccount {
 
 	@Override
 	public OrderBook getOrderBook(String symbol, int depth) {
-		return null;
+		return ib.getOrderBook(this, false, symbol, depth);
 	}
 
 	@Override

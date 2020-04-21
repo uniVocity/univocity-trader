@@ -65,8 +65,8 @@ public final class ConfigurationManager<C extends Configuration<C, ?>> {
 			return initialize(true);
 		} catch (Throwable t) {
 			configurationFiles = original;
-			if (t instanceof IllegalConfigurationException) {
-				throw (IllegalConfigurationException) t;
+			if (t instanceof IllegalConfigurationException i) {
+				throw i;
 			} else {
 				throw new IllegalConfigurationException("Unable to load configuration from " + Arrays.toString(configurationFiles), t);
 			}
