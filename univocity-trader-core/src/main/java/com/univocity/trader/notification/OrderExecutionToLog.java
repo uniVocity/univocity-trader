@@ -1,8 +1,10 @@
 package com.univocity.trader.notification;
 
-import com.univocity.trader.account.*;
-import org.apache.commons.lang3.*;
-import org.slf4j.*;
+import com.univocity.trader.account.Order;
+import com.univocity.trader.account.Trade;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OrderExecutionToLog implements OrderListener {
 
@@ -29,7 +31,7 @@ public class OrderExecutionToLog implements OrderListener {
 			if (o.fillPct != 100.0) {
 				details += o.orderFillPercentage + " filled, ";
 			}
-			details += (o.isBuy ? "spent" : "sold") + " $" + o.valueTransacted + " " + o.fundSymbol;
+			details += (o.isBuy ? "spent" : "sold") + " $" + o.getFormattedValueTransacted() + " " + o.fundSymbol;
 			details += time;
 		}
 		return details;
@@ -40,13 +42,13 @@ public class OrderExecutionToLog implements OrderListener {
 			OrderExecutionLine o = new OrderExecutionLine(order, trade, trade.trader(), client);
 			String type = StringUtils.rightPad(o.operation, 5);
 
-			String quantity = o.quantity;
+			String quantity = o.getFormattedQuantity();
 			if (maxQuantityLength < quantity.length()) {
 				maxQuantityLength = quantity.length();
 			}
 			quantity = StringUtils.leftPad(quantity, maxQuantityLength);
 
-			String price = o.price;
+			String price = o.getFormattedPrice();
 			if (maxPriceLength < price.length()) {
 				maxPriceLength = price.length();
 			}
@@ -62,13 +64,13 @@ public class OrderExecutionToLog implements OrderListener {
 					details += " + " + printFillDetails(o) + ".";
 					if (order.getExecutedQuantity() != 0) {
 						if (order.isLongBuy()) {
-							details += " Worth $" + o.price + " " + o.fundSymbol + " (free $" + o.freeBalance + " " + o.fundSymbol;
+							details += " Worth $" + o.getFormattedPrice() + " " + o.fundSymbol + " (free $" + o.getFormattedFreeBalance() + " " + o.fundSymbol;
 							if (!o.fundSymbol.equals(o.referenceCurrency)) {
-								details += ", $" + o.freeBalanceReferenceCurrency + " " + o.referenceCurrency;
+								details += ", $" + o.getFormattedFreeBalanceReferenceCurrency() + " " + o.referenceCurrency;
 							}
 							details += ")";
 						} else if (order.isShortSell()) {
-							details += " Shorting total " + o.assetSymbol + " " + o.shortedQuantity + " (" + o.fundSymbol + " margin reserve: $" + o.marginReserve + ", free $" + o.freeBalance + ")";
+							details += " Shorting total " + o.assetSymbol + " " + o.getFormattedShortedQuantity() + " (" + o.fundSymbol + " margin reserve: $" + o.getFormattedMarginReserve() + ", free $" + o.getFormattedFreeBalance() + ")";
 						}
 					}
 				} else {
@@ -81,7 +83,7 @@ public class OrderExecutionToLog implements OrderListener {
 						details += " P/L " + o.printReferenceCurrencyProfitLossAndChange();
 					}
 
-					details += " Holdings $" + o.printHoldingsAndReferenceCurrency() + " (free $" + o.freeBalanceReferenceCurrency + ")";
+					details += " Holdings $" + o.printHoldingsAndReferenceCurrency() + " (free $" + o.getFormattedFreeBalanceReferenceCurrency() + ")";
 				} else {
 					details += " - PENDING     worth $" + o.printOrderAmountAndCurrency();
 
