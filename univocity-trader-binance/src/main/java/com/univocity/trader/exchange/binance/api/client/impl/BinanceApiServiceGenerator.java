@@ -1,23 +1,27 @@
 package com.univocity.trader.exchange.binance.api.client.impl;
 
-import com.univocity.trader.exchange.binance.api.client.*;
-import com.univocity.trader.exchange.binance.api.client.constant.*;
-import com.univocity.trader.exchange.binance.api.client.exception.*;
-import okhttp3.*;
-import org.asynchttpclient.*;
-import org.asynchttpclient.extras.retrofit.*;
+import com.univocity.trader.exchange.binance.api.client.BinanceApiError;
+import com.univocity.trader.exchange.binance.api.client.constant.BinanceApiConstants;
+import com.univocity.trader.exchange.binance.api.client.exception.BinanceApiException;
+import okhttp3.ResponseBody;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.extras.retrofit.AsyncHttpClientCallFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Call;
+import retrofit2.Converter;
 import retrofit2.Response;
-import retrofit2.*;
-import retrofit2.converter.jackson.*;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
-import java.io.*;
-import java.lang.annotation.*;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
 
 /**
  * Generates a Binance API implementation based on @see {@link BinanceApiService}.
  */
 public class BinanceApiServiceGenerator {
+	private static final Logger log = LoggerFactory.getLogger(BinanceApiServiceGenerator.class);
 
 	private static final Converter.Factory converterFactory = JacksonConverterFactory.create();
 
@@ -25,6 +29,7 @@ public class BinanceApiServiceGenerator {
 	private static final Converter<ResponseBody, BinanceApiError> errorBodyConverter =
 			(Converter<ResponseBody, BinanceApiError>) converterFactory.responseBodyConverter(
 					BinanceApiError.class, new Annotation[0], null);
+	public static final int MAX_RETRY_FAILURES = 5;
 
 	public static <S> S createService(Class<S> serviceClass, AsyncHttpClient httpClient) {
 		return createService(serviceClass, httpClient, null, null);
@@ -51,17 +56,34 @@ public class BinanceApiServiceGenerator {
 	 * @return the response
 	 */
 	public static <T> T executeSync(Call<T> call) {
-		try {
-			Response<T> response = call.execute();
-			if (response.isSuccessful()) {
-				return response.body();
-			} else {
-				BinanceApiError apiError = getBinanceApiError(response);
-				throw new BinanceApiException(apiError);
+		boolean success = false;
+		int failures=0;
+		while (!success && failures < MAX_RETRY_FAILURES) {
+			try {
+				Response<T> response = call.clone().execute();
+				if (response.isSuccessful()) {
+					success = true;
+					if (failures > 0) {
+						log.trace("Successful call with failures count set to " + failures);
+					}
+					return response.body();
+				} else {
+					success = true;
+					BinanceApiError apiError = getBinanceApiError(response);
+					throw new BinanceApiException(apiError);
+				}
+			} catch (IOException e) {
+				log.error("Got IO Exception. Will retry in 5 seconds. Original error: "+e.getMessage(), e);
+				failures++;
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException interruptedException) {
+					log.error("Received interrupt", interruptedException);
+				}
 			}
-		} catch (IOException e) {
-			throw new BinanceApiException(e);
 		}
+
+		return null;
 	}
 
 	/**
