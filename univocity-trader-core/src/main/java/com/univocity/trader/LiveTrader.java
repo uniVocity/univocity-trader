@@ -30,7 +30,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 	private final Map<String, Long> symbols = new ConcurrentHashMap<>();
 	private final Exchange<T, A> exchange;
 	private TimeInterval tickInterval;
-	private final SmtpMailSender mailSender;
+	private SmtpMailSender mailSender;
 	private long lastHour;
 	private Map<String, String[]> allPairs;
 	private C configuration;
@@ -100,8 +100,15 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		this.configuration = configuration;
 		Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 		this.exchange = exchange;
-		EmailConfiguration mail = configuration.mailSender();
-		this.mailSender = mail.isConfigured() ? new SmtpMailSender(mail) : null;
+
+	}
+
+	private final SmtpMailSender mailSender() {
+		if(mailSender == null){
+			EmailConfiguration mail = configuration.mailSender();
+			this.mailSender = mail.isConfigured() ? new SmtpMailSender(mail) : null;
+		}
+		return mailSender;
 	}
 
 	public C configure() {
@@ -126,7 +133,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		if (allPairs == null) {
 			allPairs = new TreeMap<>();
 			for (ExchangeClient client : clients) {
-				client.initialize(candleRepository, exchange, mailSender);
+				client.initialize(candleRepository, exchange, mailSender());
 				allPairs.putAll(client.getSymbolPairs());
 			}
 		}
