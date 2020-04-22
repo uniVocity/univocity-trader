@@ -213,7 +213,21 @@ class BinanceClientAccount implements ClientAccount {
 
 	@Override
 	public void cancel(Order order) {
-		CancelOrderResponse response = client.cancelOrder(new CancelOrderRequest(order.getSymbol(), Long.valueOf(order.getOrderId())));
-		log.info("Cancelled order {}. Response: {}", order, response);
+		try{
+			// Try to fetch existing order status
+			com.univocity.trader.exchange.binance.api.client.domain.account.Order status = client.getOrderStatus(new OrderStatusRequest(order.getSymbol(), Long.valueOf(order.getOrderId())));
+			// Order might have been cancelled manually by user
+			if (OrderStatus.CANCELED.equals(status.getStatus()) || OrderStatus.PENDING_CANCEL.equals(status.getStatus())){
+				log.info("Order {} was already cancelled or is pending cancellation", order);
+			} else {
+				CancelOrderResponse response = client.cancelOrder(new CancelOrderRequest(order.getSymbol(), Long.valueOf(order.getOrderId())));
+				log.info("Cancelled order {}. Response: {}", order, response);
+			}
+		} catch (BinanceApiException e){
+			if (!"Unknown order sent.".equals(e.getMessage())){
+				throw e;
+			}
+			log.debug("Attempted to cancel an order that was not found on Binance (order {})", order);
+		}
 	}
 }
