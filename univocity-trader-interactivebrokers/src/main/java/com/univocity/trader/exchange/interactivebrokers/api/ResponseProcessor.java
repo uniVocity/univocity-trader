@@ -56,6 +56,9 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 		TradingBook book = requestHandler.getBook(tickerId, false);
 		if (book != null) {
 			book.updateBook(tickerId, position, "", operation, side, price, size);
+			if(book.isReady()) {
+				requestHandler.handleResponse(tickerId, book, () -> EWrapperMsgGenerator.updateMktDepth(tickerId, position, operation, side, price, size));
+			}
 		} else {
 			log.warn("No book information associated with request {}", tickerId);
 		}
@@ -66,6 +69,9 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 		TradingBook book = requestHandler.getBook(tickerId, isSmartDepth);
 		if (book != null) {
 			book.updateBook(tickerId, position, marketMaker, operation, side, price, size);
+			if(book.isReady()) {
+				requestHandler.handleResponse(tickerId, book, () -> EWrapperMsgGenerator.updateMktDepthL2(tickerId, position, marketMaker, operation, side, price, size, isSmartDepth));
+			}
 		} else {
 			log.warn("No book information associated with request {}", tickerId);
 		}
@@ -189,7 +195,6 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 	}
 
 	public final void accountSummary(int reqId, String account, String tag, String value, String currency) {
-		//TODO: check what comes here.
 		requestHandler.handleResponse(reqId, new Balance(null, tag),
 				() -> EWrapperMsgGenerator.accountSummary(reqId, account, tag, value, currency));
 	}

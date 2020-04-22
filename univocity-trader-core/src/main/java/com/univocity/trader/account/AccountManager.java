@@ -494,7 +494,8 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 
 			updatedBalances.values().removeIf(b -> b.getTotal() == 0);
 			log.debug("Balances updated - trading: " + updatedBalances);
-
+		}
+		if(!this.isSimulated()) {
 			lastBalanceSync = System.currentTimeMillis();
 		}
 	}

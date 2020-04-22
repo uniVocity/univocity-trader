@@ -14,9 +14,13 @@ class IBAccount implements ClientAccount {
 	private final IB ib;
 	private final Account account;
 
+	private final ConcurrentHashMap<String, Balance> balances = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, OrderBook> orderBooks = new ConcurrentHashMap<>();
+
 	public IBAccount(IB ib, Account account) {
 		this.ib = ib;
 		this.account = account;
+		ib.getAccountBalances(account.referenceCurrency(), balances);
 	}
 
 	@Override
@@ -26,12 +30,23 @@ class IBAccount implements ClientAccount {
 
 	@Override
 	public ConcurrentHashMap<String, Balance> updateBalances() {
-		return ib.getAccountBalances(account.referenceCurrency());
+		return balances;
+	}
+
+	public void resetBalances() {
+		balances.clear();
+		ib.resetAccountBalances();
 	}
 
 	@Override
 	public OrderBook getOrderBook(String symbol, int depth) {
-		return ib.getOrderBook(this, false, symbol, depth);
+		OrderBook book = orderBooks.computeIfAbsent(symbol, s -> new OrderBook(this, symbol, depth));
+		ib.getOrderBook(book, false, symbol, depth);
+		return book;
+	}
+
+	public void closeOrderBook(String symbol) {
+		ib.closeOrderBook(symbol);
 	}
 
 	@Override

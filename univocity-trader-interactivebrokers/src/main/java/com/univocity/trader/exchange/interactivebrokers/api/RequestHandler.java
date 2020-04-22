@@ -293,4 +293,13 @@ class RequestHandler {
 			marketBooks.put(reqId, book);
 		}
 	}
+
+	void closeBook(int reqId, boolean isSmartDepth) {
+		if (isSmartDepth) {
+			smartBooks.remove(reqId);
+		} else {
+			marketBooks.remove(reqId);
+		}
+		responseFinalized(reqId);
+	}
 }

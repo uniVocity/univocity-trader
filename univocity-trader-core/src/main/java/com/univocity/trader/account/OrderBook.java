@@ -128,4 +128,17 @@ public final class OrderBook {
 	public OrderBook update(int depth) {
 		return account.getOrderBook(this.symbol, depth);
 	}
+
+	@Override
+	public String toString() {
+		return "OrderBook{" +
+				"symbol='" + symbol + '\'' +
+				", bids=" + bids +
+				", asks=" + asks +
+				'}';
+	}
+
+	public boolean isEmpty() {
+		return bids.isEmpty() || asks.isEmpty();
+	}
 }

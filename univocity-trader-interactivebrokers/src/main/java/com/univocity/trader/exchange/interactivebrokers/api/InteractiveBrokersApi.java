@@ -196,6 +196,9 @@ public class InteractiveBrokersApi extends IBRequests {
 	}
 
 	public int populateTradingBook(String symbol, boolean isSmartDepth, Contract contract, int depth, Consumer<TradingBook> resultConsumer) {
+		if(contract == null){
+			throw new IllegalArgumentException("No contract defined for symbol " + symbol);
+		}
 		return submitRequest("Getting market depth data for '" + symbol + "'", resultConsumer,
 				(reqId) -> {
 					requestHandler.openBook(reqId, depth, isSmartDepth);

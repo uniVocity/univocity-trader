@@ -186,6 +186,10 @@ abstract class IBRequests {
 	}
 
 	public void waitForResponse(int requestId) {
+		if (requestId == 0) {
+			log.warn("Previous request was ignored as a similar one is already being processed");
+			return;
+		}
 		waitForResponse(requestId, 10);
 	}
 
@@ -201,5 +205,12 @@ abstract class IBRequests {
 		requestHandler.waitForResponses(requestIds, maxSecondsToWait);
 	}
 
+	public void closeOrderBook(int requestId, boolean smartDepth) {
+		client.cancelMktDepth(requestId, smartDepth);
+		requestHandler.closeBook(requestId, smartDepth);
+	}
 
+	public void closeAccountListener() {
+		client.cancelPositions();
+	}
 }

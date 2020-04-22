@@ -27,7 +27,7 @@ public class DefaultOrderManager implements OrderManager {
 
 		double availableQuantity = order.getQuantity();
 
-		if (book != null) {
+		if (book != null && !book.isEmpty()) {
 			double spread = book.getSpread(availableQuantity);
 			double ask = book.getAverageAskAmount(availableQuantity);
 			double bid = book.getAverageBidAmount(availableQuantity);

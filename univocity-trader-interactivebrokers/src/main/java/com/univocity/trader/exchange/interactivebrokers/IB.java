@@ -27,6 +27,10 @@ class IB implements Exchange<Candle, Account> {
 	private Map<String, double[]> latestPrices = new ConcurrentHashMap<>();
 	private Map<String, LiveIBIncomingCandles> activeStreams = new ConcurrentHashMap<>();
 
+	private Map<String, Integer> orderBookRequests = new HashMap<>();
+	private Map<String, Integer> smartOrderBookRequests = new HashMap<>();
+	private int accountBalanceRequest = 0;
+
 	IB() {
 		this("", 7497, 0, "");
 	}
@@ -56,7 +60,14 @@ class IB implements Exchange<Candle, Account> {
 
 		tradeTypes.putAll(account.tradeTypes());
 
-		return new IBAccount(this, account);
+		IBAccount out = new IBAccount(this, account);
+
+		for (String symbol : account.tradedContracts().keySet()) {
+			out.getOrderBook(symbol, 10); //TODO: book depth must be configurable
+		}
+
+
+		return out;
 	}
 
 	@Override
@@ -140,19 +151,21 @@ class IB implements Exchange<Candle, Account> {
 		return getContract(assetSymbol + fundSymbol);
 	}
 
-	public ConcurrentHashMap<String, Balance> getAccountBalances(String referenceCurrency) {
-		ConcurrentHashMap<String, Balance> out = new ConcurrentHashMap<>();
-//		int requestId = this.api.loadAccountBalances(referenceCurrency, (balance -> out.put(balance.getSymbol(), balance)));
-//		this.api.waitForResponse(requestId);
+	public synchronized void getAccountBalances(String referenceCurrency, ConcurrentHashMap<String, Balance> out) {
+		if (accountBalanceRequest == 0) {
+			accountBalanceRequest = this.api.loadAccountPositions((balance -> out.put(balance.getSymbol(), balance)));
+			api.waitForResponse(accountBalanceRequest, 5);
+		}
+	}
 
-		int requestId = this.api.loadAccountPositions((balance -> out.put(balance.getSymbol(), balance)));
-		this.api.waitForResponse(requestId);
-		return out;
+	public void resetAccountBalances() {
+		this.api.closeAccountListener();
+		accountBalanceRequest = 0;
 	}
 
 	public Candle getLatestTick(String symbol, TimeInterval interval) {
 		LiveIBIncomingCandles stream = activeStreams.get(symbol);
-		if(stream == null){
+		if (stream == null) {
 			return null;
 		}
 		return stream.latestCandle;
@@ -173,23 +186,42 @@ class IB implements Exchange<Candle, Account> {
 		return 10_000L;
 	}
 
-	OrderBook getOrderBook(IBAccount account, boolean smartDepth, String symbol, int depth){
-		OrderBook out = new OrderBook(account, symbol, depth);
 
-		Contract contract = getContract(symbol);
+	public synchronized void getOrderBook(OrderBook out, boolean smartDepth, String symbol, int depth) {
+		Map<String, Integer> requests = smartDepth ? smartOrderBookRequests : orderBookRequests;
+		int requestId = requests.getOrDefault(symbol, 0);
 
-		int requestId = this.api.populateTradingBook(symbol, smartDepth, contract, depth, t -> {
-			BookEntry[] asks = t.asks();
-			for(int i = 0; i < asks.length; i++){
-				out.addAsk(asks[i].price, asks[i].quantity);
-			}
-			BookEntry[] bids = t.bids();
-			for(int i = 0; i < bids.length; i++){
-				out.addBid(bids[i].price, bids[i].quantity);
-			}
-		});
-		//this.api.waitFor(requestId, );
+		if (requestId == 0) {
+			Contract contract = getContract(symbol);
 
-		return out;
+			requestId = this.api.populateTradingBook(symbol, smartDepth, contract, depth, t -> {
+				BookEntry[] asks = t.asks();
+				for (int i = 0; i < asks.length; i++) {
+					out.addAsk(asks[i].price, asks[i].quantity);
+				}
+				BookEntry[] bids = t.bids();
+				for (int i = 0; i < bids.length; i++) {
+					out.addBid(bids[i].price, bids[i].quantity);
+				}
+			});
+
+			api.waitForResponse(requestId, 5);
+
+			requests.put(symbol, requestId);
+		}
+	}
+
+	public synchronized void closeOrderBook(String symbol) {
+		boolean smartDepth = false;
+		int requestId = orderBookRequests.getOrDefault(symbol, 0);
+		if (requestId == 0) {
+			requestId = smartOrderBookRequests.getOrDefault(symbol, 0);
+			smartDepth = true;
+		}
+		orderBookRequests.remove(symbol);
+		smartOrderBookRequests.remove(symbol);
+		if (requestId != 0) {
+			this.api.closeOrderBook(requestId, smartDepth);
+		}
 	}
 }
