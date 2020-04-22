@@ -249,7 +249,7 @@ public final class CandleHistoryBackfill {
 		if(received > 0 && persisted == 0){
 			// deleting then inserting on purpose to avoid using a database-specific function to update the
 			// timestamp is column `candle.ts`. This allows people to use the database they prefer.
-			var delete = "DELETE FROM CANDLE WHERE symbol = ? AND open_time = ? AND close_time = ?";
+			var delete = "DELETE FROM candle WHERE symbol = ? AND open_time = ? AND close_time = ?";
 			candleRepository.db().update(delete, symbol, firstCandleReceived.openTime, firstCandleReceived.closeTime);
 
 			if (candleRepository.addToHistory(symbol, firstCandleReceived, true)) {

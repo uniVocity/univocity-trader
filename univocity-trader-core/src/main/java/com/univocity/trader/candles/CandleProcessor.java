@@ -25,7 +25,7 @@ public final  class CandleProcessor<T> {
 		}
 		try {
 			if (!initializing) {
-				log.debug("{} - {}", symbol, candle);
+				log.trace("{} - {}", symbol, candle);
 			}
 			consumer.process(candle, initializing);
 		} catch (Exception e) {

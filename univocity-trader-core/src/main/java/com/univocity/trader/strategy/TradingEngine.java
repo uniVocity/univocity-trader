@@ -17,6 +17,9 @@ import static com.univocity.trader.utils.NewInstances.*;
 public final class TradingEngine implements Engine {
 
 	private static final Logger log = LoggerFactory.getLogger(Engine.class);
+	static {
+		Indicators.keyBuilder = null;
+	}
 
 	private final Trader trader;
 	private final Strategy[] strategies;
@@ -54,7 +57,6 @@ public final class TradingEngine implements Engine {
 			indicatorGroups[i].initialize(rootAggregator);
 		}
 		aggregators = rootAggregator.getAggregators();
-
 		this.plainStrategies = plainStrategies.toArray(new Strategy[0]);
 	}
 
