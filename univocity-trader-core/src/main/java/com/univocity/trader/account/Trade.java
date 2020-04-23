@@ -6,9 +6,11 @@ import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.simulation.orderfill.*;
 import com.univocity.trader.strategy.*;
+import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import java.util.*;
+import java.util.concurrent.locks.*;
 
 /**
  * A {@code Trade} holds one or more {@link Order} placed in the {@link Exchange} through
@@ -43,6 +45,7 @@ public final class Trade implements Comparable<Trade> {
 	protected final OrderSet position = new OrderSet();
 	private final OrderSet exitOrders = new OrderSet();
 	private final OrderSet pastOrders = new OrderSet();
+	final Lock orderLock;
 
 	//these two are used internally only to calculate
 	// average prices with fees taken into account.
@@ -83,6 +86,7 @@ public final class Trade implements Comparable<Trade> {
 		this.openingStrategy = openingStrategy;
 		this.side = side;
 		this.isPlaceholder = isPlaceholder;
+		this.orderLock = trader.tradingManager.getAccount().isSimulated() ? new FakeLock() : new ReentrantLock();
 		initTrade();
 	}
 
@@ -307,11 +311,16 @@ public final class Trade implements Comparable<Trade> {
 		//calculate average price
 		totalSpent = 0.0;
 		totalUnits = 0.0;
-		for (int i = 0; i < orders.i; i++) {
-			Order order = orders.elements[i];
-			double fees = order.getFeesPaid();
-			totalSpent += order.getTotalTraded() + (order.isBuy() ? fees : -fees);
-			totalUnits += order.getExecutedQuantity();
+		orderLock.lock();
+		try {
+			for (int i = 0; i < orders.i; i++) {
+				Order order = orders.elements[i];
+				double fees = order.getFeesPaid();
+				totalSpent += order.getTotalTraded() + (order.isBuy() ? fees : -fees);
+				totalUnits += order.getExecutedQuantity();
+			}
+		} finally {
+			orderLock.unlock();
 		}
 		if (totalUnits == 0.0) {
 			averagePrice = 0.0;
@@ -400,59 +409,69 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	public Collection<Order> position() {
-		return position.asList();
+		orderLock.lock();
+		try {
+			return position.asList();
+		} finally {
+			orderLock.unlock();
+		}
 	}
 
 	void orderFinalized(Order order) {
 		if (isPlaceholder) {
 			return;
 		}
-		if (order.getExecutedQuantity() == 0) { // nothing filled, cancelled
-			position.remove(order);
-			return;
-		}
-
-		if (position.contains(order)) {
-			if (order.isBuy()) {
-				updateAveragePrice(position);
+		orderLock.lock();
+		try {
+			if (order.getExecutedQuantity() == 0) { // nothing filled, cancelled
+				position.remove(order);
+				return;
 			}
-		} else if (exitOrders.contains(order)) {
-			if (isFinalized()) {
-				updateAveragePrice(exitOrders);
-				double totalSold = this.totalSpent;
-				double soldUnits = this.totalUnits;
-				double exitPrice = averagePrice;
 
-				updateAveragePrice(position);
+			if (position.contains(order)) {
+				if (order.isBuy()) {
+					updateAveragePrice(position);
+				}
+			} else if (exitOrders.contains(order)) {
+				if (isFinalized()) {
+					updateAveragePrice(exitOrders);
+					double totalSold = this.totalSpent;
+					double soldUnits = this.totalUnits;
+					double exitPrice = averagePrice;
 
-				final double cost = (totalSpent * (soldUnits / this.totalUnits));
-				actualProfitLoss = totalSold - cost;
-				if (Double.isNaN(actualProfitLoss)) {
-					throw new IllegalStateException("Profit/loss amount can't be determined");
+					updateAveragePrice(position);
+
+					final double cost = (totalSpent * (soldUnits / this.totalUnits));
+					actualProfitLoss = totalSold - cost;
+					if (Double.isNaN(actualProfitLoss)) {
+						throw new IllegalStateException("Profit/loss amount can't be determined");
+					}
+
+					actualProfitLossPct = positivePriceChangePct(averagePrice, exitPrice);
+					if (Double.isNaN(actualProfitLossPct)) {
+						throw new IllegalStateException("Profit/loss % can't be determined");
+					}
+					pastOrders.addAll(position);
+					position.clear();
+					pastOrders.addAll(exitOrders);
+					exitOrders.clear();
+				} else {
+					double totalSold = order.getTotalTraded();
+					double sellPrice = order.getAveragePrice();
+
+					updateAveragePrice(position);
+
+					actualProfitLossPct = positivePriceChangePct(averagePrice, sellPrice);
+					actualProfitLoss = totalSold - (order.getExecutedQuantity() * averagePrice);
 				}
 
-				actualProfitLossPct = positivePriceChangePct(averagePrice, exitPrice);
-				if (Double.isNaN(actualProfitLossPct)) {
-					throw new IllegalStateException("Profit/loss % can't be determined");
+				if (isShort()) {
+					actualProfitLoss = -actualProfitLoss;
+					actualProfitLossPct = -actualProfitLossPct;
 				}
-				pastOrders.addAll(position);
-				position.clear();
-				pastOrders.addAll(exitOrders);
-				exitOrders.clear();
-			} else {
-				double totalSold = order.getTotalTraded();
-				double sellPrice = order.getAveragePrice();
-
-				updateAveragePrice(position);
-
-				actualProfitLossPct = positivePriceChangePct(averagePrice, sellPrice);
-				actualProfitLoss = totalSold - (order.getExecutedQuantity() * averagePrice);
 			}
-
-			if (isShort()) {
-				actualProfitLoss = -actualProfitLoss;
-				actualProfitLossPct = -actualProfitLossPct;
-			}
+		} finally {
+			orderLock.unlock();
 		}
 	}
 
@@ -460,17 +479,22 @@ public final class Trade implements Comparable<Trade> {
 		double total = 0;
 
 		boolean removed = false;
-		for (int i = 0; i < orders.i; i++) {
-			Order order = orders.elements[i];
-			if (order.isCancelled() && order.getExecutedQuantity() == 0) {
-				orders.elements[i] = null;
-				removed = true;
-			} else {
-				total = total + order.getExecutedQuantity();
+		orderLock.lock();
+		try {
+			for (int i = 0; i < orders.i; i++) {
+				Order order = orders.elements[i];
+				if (order.isCancelled() && order.getExecutedQuantity() == 0) {
+					orders.elements[i] = null;
+					removed = true;
+				} else {
+					total = total + order.getExecutedQuantity();
+				}
 			}
-		}
-		if (removed) {
-			orders.removeNulls();
+			if (removed) {
+				orders.removeNulls();
+			}
+		} finally {
+			orderLock.unlock();
 		}
 		return total;
 	}
@@ -483,30 +507,34 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	private boolean checkIfFinalized() {
-		if (isPlaceholder || position.isEmpty()) {
-			return true;
-		}
-
-		if (exitOrders.isEmpty()) {
-			return false;
-		}
-
-		synchronized (this) {
-			double qtyInPosition = removeCancelledAndSumQuantities(position);
-			if (qtyInPosition == 0.0) {
-				return false;
-			}
-			double qtyInExit = removeCancelledAndSumQuantities(exitOrders);
-
-			double exitPct = qtyInExit * 100.0 / qtyInPosition;
-
-			if ((qtyInPosition - qtyInExit) * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() || exitPct > 98.0) {
-				double fractionRemaining = qtyInPosition - qtyInExit;
-				finalizedQuantity = qtyInPosition - fractionRemaining;
+		orderLock.lock();
+		try {
+			if (isPlaceholder || position.isEmpty()) {
 				return true;
 			}
 
-			return false;
+			if (exitOrders.isEmpty()) {
+				return false;
+			}
+
+			synchronized (this) {
+				double qtyInPosition = removeCancelledAndSumQuantities(position);
+				if (qtyInPosition == 0.0) {
+					return false;
+				}
+				double qtyInExit = removeCancelledAndSumQuantities(exitOrders);
+
+				double exitPct = qtyInExit * 100.0 / qtyInPosition;
+
+				if ((qtyInPosition - qtyInExit) * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() || exitPct > 98.0) {
+					double fractionRemaining = qtyInPosition - qtyInExit;
+					finalizedQuantity = qtyInPosition - fractionRemaining;
+					return true;
+				}
+				return false;
+			}
+		} finally {
+			orderLock.unlock();
 		}
 	}
 
@@ -569,31 +597,36 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	public synchronized boolean increasePosition(Order order) {
-		if (finalized) {
-			if (position.isEmpty()) {
-				initTrade();
-			} else {
-				throw new IllegalStateException("Trying to increase position of finalized trade");
-			}
-		}
-		removeCancelledAndSumQuantities(exitOrders);
-
-		if (exitOrders.isEmpty()) {
-			this.position.add(order);
-			List<Order> attachments = order.getAttachments();
-			if (attachments != null) {
-				for (Order attachment : order.getAttachments()) {
-					if (attachment.getSide() != order.getSide()) {
-						exitOrders.add(attachment);
-					} else {
-						position.add(attachment);
-					}
+		orderLock.lock();
+		try {
+			if (finalized) {
+				if (position.isEmpty()) {
+					initTrade();
+				} else {
+					throw new IllegalStateException("Trying to increase position of finalized trade");
 				}
 			}
-			notifyOrderSubmission(order);
-			return true;
+			removeCancelledAndSumQuantities(exitOrders);
+
+			if (exitOrders.isEmpty()) {
+				this.position.add(order);
+				List<Order> attachments = order.getAttachments();
+				if (attachments != null) {
+					for (Order attachment : order.getAttachments()) {
+						if (attachment.getSide() != order.getSide()) {
+							exitOrders.add(attachment);
+						} else {
+							position.add(attachment);
+						}
+					}
+				}
+				notifyOrderSubmission(order);
+				return true;
+			}
+			return false;
+		} finally {
+			orderLock.unlock();
 		}
-		return false;
 	}
 
 	public synchronized void decreasePosition(Order order, String exitReason) {
@@ -619,16 +652,21 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	public boolean hasOrder(Order order) {
-		if ((order.isBuy() && order.isLong()) || (order.isSell() && order.isShort())) {
-			if (position.contains(order) || order.getParentOrderId() != null && exitOrders.contains(order.getParent())) {
-				return true;
+		orderLock.lock();
+		try {
+			if ((order.isBuy() && order.isLong()) || (order.isSell() && order.isShort())) {
+				if (position.contains(order) || order.getParentOrderId() != null && exitOrders.contains(order.getParent())) {
+					return true;
+				}
+			} else if ((order.isSell() && isLong()) || (order.isShort() && order.isBuy()) || isPlaceholder) {
+				if (exitOrders.contains(order) || order.getParentOrderId() != null && position.contains(order.getParent())) {
+					return true;
+				}
 			}
-		} else if ((order.isSell() && isLong()) || (order.isShort() && order.isBuy()) || isPlaceholder) {
-			if (exitOrders.contains(order) || order.getParentOrderId() != null && position.contains(order.getParent())) {
-				return true;
-			}
+			return pastOrders.contains(order) || order.getParentOrderId() != null && pastOrders.contains(order.getParent());
+		} finally {
+			orderLock.unlock();
 		}
-		return pastOrders.contains(order) || order.getParentOrderId() != null && pastOrders.contains(order.getParent());
 	}
 
 	/**
@@ -706,7 +744,12 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	public String toString() {
-		return position.toString() + exitOrders.toString();
+		orderLock.lock();
+		try {
+			return position.toString() + exitOrders.toString();
+		} finally {
+			orderLock.unlock();
+		}
 	}
 
 	public double quantityInPosition() {
@@ -733,6 +776,11 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	public boolean isEmpty() {
-		return pastOrders.i == 0 && position.i == 0 && exitOrders.i == 0;
+		orderLock.lock();
+		try {
+			return pastOrders.i == 0 && position.i == 0 && exitOrders.i == 0;
+		} finally {
+			orderLock.unlock();
+		}
 	}
 }
