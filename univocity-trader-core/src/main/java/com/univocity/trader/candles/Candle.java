@@ -12,7 +12,7 @@ public final class Candle implements Comparable<Candle>, Cloneable {
 	public static final ThreadLocal<DecimalFormat> MONEY_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00"));
 	public static final ThreadLocal<DecimalFormat> PRICE_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00000000"));
 	public static final ThreadLocal<DecimalFormat> CHANGE_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00%"));
-	public static final ThreadLocal<DecimalFormat> VOLUME_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,###"));
+	public static final ThreadLocal<DecimalFormat> VOLUME_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00000000"));
 
 	public long openTime;
 	public long closeTime;
