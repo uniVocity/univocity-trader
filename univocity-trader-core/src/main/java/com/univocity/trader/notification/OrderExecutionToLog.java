@@ -79,7 +79,7 @@ public class OrderExecutionToLog implements OrderListener {
 			} else {
 				if (order.isFinalized()) {
 					details += " - " + printFillDetails(o) + ".";
-					if (o.fillPct > 0.0) {
+					if (o.fillPct > 0.0 && o.profitLossReferenceCurrency != null) {
 						details += " P/L " + o.printReferenceCurrencyProfitLossAndChange();
 					}
 
