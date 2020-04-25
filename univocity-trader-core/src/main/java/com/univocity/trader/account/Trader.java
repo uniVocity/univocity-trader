@@ -450,7 +450,7 @@ public final class Trader {
 
 
 		Order order = tradingManager.sell(quantity, trade.getSide());
-		if (order != null) {
+ 		if (order != null) {
 			processOrder(trade, order, strategy, reason);
 			return true;
 		}

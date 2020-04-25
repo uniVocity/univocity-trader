@@ -36,6 +36,7 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	private BinanceClientAccount binanceClientAccount;
 	private char[] apiSecret;
 	private String apiKey;
+	private final double[] NO_PRICE = new double[]{-1.0};
 
 
 	@Override
@@ -106,6 +107,12 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 		socketClientCloseable = socketClient().onCandlestickEvent(symbols, interval, new BinanceApiCallback<>() {
 			@Override
 			public void onResponse(CandlestickEvent response) {
+				try {
+					priceReceived(response.getSymbol(), Double.parseDouble(response.getClose()));
+				} catch (Exception e){
+					log.warn("Error updating latest price of " + response.getSymbol(), e);
+				}
+
 				consumer.tickReceived(response.getSymbol(), response);
 			}
 
@@ -129,29 +136,33 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private final Map<String, double[]> latestPrices = new HashMap<>();
 
+	private void priceReceived(String symbol, double price){
+		latestPrices.compute(symbol, (s, v) -> {
+			if (v == null) {
+				return new double[]{price};
+			} else {
+				v[0] = price;
+				return v;
+			}
+		});
+	}
 
 	@Override
 	public Map<String, double[]> getLatestPrices() {
-		restClient().getAllPrices().forEach(ticker ->
-				latestPrices.compute(ticker.getSymbol(), (symbol, v) -> {
-					if (v == null) {
-						return new double[]{ticker.getPriceAmount()};
-					} else {
-						v[0] = ticker.getPriceAmount();
-						return v;
-					}
-				}));
+		restClient().getAllPrices().forEach(ticker -> priceReceived(ticker.getSymbol(), ticker.getPriceAmount()));
 		return Collections.unmodifiableMap(latestPrices);
 	}
 
 	@Override
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
+		double price = latestPrices.getOrDefault(assetSymbol, NO_PRICE)[0];
 		try {
-			return Double.parseDouble(restClient().getPrice(assetSymbol + fundSymbol).getPrice());
+			price = Double.parseDouble(restClient().getPrice(assetSymbol + fundSymbol).getPrice());
+			priceReceived(assetSymbol + fundSymbol, price);
 		} catch (Exception e) {
 			log.error("Error getting latest price of " + assetSymbol + fundSymbol, e);
-			return -1.0;
 		}
+		return price;
 	}
 
 	@Override
