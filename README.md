@@ -550,7 +550,7 @@ simulation.cacheCandles(true);
 for (int interval = 1; interval <= 15; interval++) {
   // with length varying from 5 to 25 bars
   for (int length = 5; length <= 25; length++) {
-    simulation.parameters().add(new LongParameters(length, interval));
+    simulation.addParameters(new LongParameters(length, interval));
   }
 }
 
