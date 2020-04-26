@@ -359,6 +359,11 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return this;
 	}
 
+	public Simulation setParameters(Stream<Parameters> parameters){
+		this.parameters = parameters;
+		return this;
+	}
+
 	public Simulation addParameters(Parameters parameters) {
 		this.parameters = this.parameters == null ? Stream.of(parameters) : Stream.concat(this.parameters, Stream.of(parameters));
 		return this;
