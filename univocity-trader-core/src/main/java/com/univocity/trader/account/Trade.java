@@ -100,6 +100,22 @@ public final class Trade implements Comparable<Trade> {
 		return new Trade(id, trader, side, null, new StrategyMonitor[0], true);
 	}
 
+	public void finalizeTrade() {
+		orderLock.lock();
+		try {
+			if (!exitOrders.isEmpty()) {
+				for (int i = 0; i < exitOrders.i; i++) {
+					if (!exitOrders.elements[i].isFinalized()) {
+						trader.tradingManager.cancelOrder(exitOrders.elements[i]);
+					}
+				}
+			}
+		} finally {
+			finalized = true;
+			orderLock.unlock();
+		}
+	}
+
 	public boolean isShort() {
 		return side == Side.SHORT;
 	}

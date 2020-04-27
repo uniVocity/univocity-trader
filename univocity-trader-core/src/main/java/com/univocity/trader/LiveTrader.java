@@ -168,9 +168,9 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 				symbols.put(symbol, System.currentTimeMillis());
 			}
 
-			//loads last 30 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
+			//loads last 60 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
 			for (String symbol : allPairs.keySet()) {
-				Enumeration<Candle> it = candleRepository.iterate(symbol, Instant.now().minus(30, ChronoUnit.DAYS), Instant.now(), false);
+				Enumeration<Candle> it = candleRepository.iterate(symbol, Instant.now().minus(60, ChronoUnit.DAYS), Instant.now(), false);
 				while (it.hasMoreElements()) {
 					Candle candle = it.nextElement();
 					if (candle != null) {

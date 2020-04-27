@@ -84,6 +84,11 @@ public final class TradingEngine implements Engine {
 		for (int i = 0; i < strategies.length; i++) {
 			Strategy strategy = strategies[i];
 			Signal signal = strategy.getSignal(candle);
+
+			if(log.isTraceEnabled()) {
+				log.trace("{} - {}: {} ({})", getSymbol(), candle, signal, strategy.getClass().getSimpleName());
+			}
+
 			try {
 				trader.trade(candle, signal, strategy);
 			} catch (Exception e) {

@@ -53,7 +53,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		}
 	}
 
-	protected void executeWithParameters(Stream<Parameters> parameters){
+	protected void executeWithParameters(Stream<Parameters> parameters) {
 		parameters.forEach(p -> {
 			initialize();
 			executeSimulation(createEngines(p));
@@ -62,7 +62,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		});
 	}
 
-	protected TradingManager createTradingManager(AccountManager accountManager, String assetSymbol, String fundSymbol, Parameters parameters){
+	protected TradingManager createTradingManager(AccountManager accountManager, String assetSymbol, String fundSymbol, Parameters parameters) {
 		SimulatedExchange exchange = new SimulatedExchange(accountManager);
 		exchange.setSymbolInformation(this.symbolInformation);
 		SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol());
@@ -70,7 +70,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		return new TradingManager(exchange, symbolPriceDetails, accountManager, assetSymbol, fundSymbol, parameters);
 	}
 
-	protected Map<String, Engine[]> createEngines(Parameters parameters){
+	protected Map<String, Engine[]> createEngines(Parameters parameters) {
 		Set<Object> allInstances = new HashSet<>();
 		Map<String, Engine[]> symbolHandlers = new HashMap<>();
 
@@ -201,7 +201,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		return out.toArray(new MarketReader[0]);
 	}
 
-	protected void liquidateOpenPositions(){
+	protected void liquidateOpenPositions() {
 		for (AccountManager account : accounts()) {
 			TradingManager[] managers = account.getAllTradingManagers();
 			for (int i = 0; i < managers.length; i++) {
@@ -216,7 +216,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		}
 	}
 
-	protected void reportResults(AccountManager account, Parameters parameters){
+	protected void reportResults(AccountManager account, Parameters parameters) {
 		String id = account.getClient().getId();
 		System.out.print("-------");
 		if (parameters != null && parameters != Parameters.NULL) {
@@ -234,7 +234,6 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			managers[i].getTrader().notifySimulationEnd();
 		}
 	}
-
 
 
 	public final void backfillHistory() {
@@ -274,7 +273,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	}
 
 	public final CandleRepository getCandleRepository() {
-		if(candleRepository == null){
+		if (candleRepository == null) {
 			candleRepository = createCandleRepository();
 		}
 		return candleRepository;

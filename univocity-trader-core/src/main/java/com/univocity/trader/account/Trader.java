@@ -268,9 +268,16 @@ public final class Trader {
 				}
 
 				if (!tradingManager.hasPosition(candle, false, trade.isLong(), trade.isShort())) {
-					if (log.isTraceEnabled()) {
-						log.trace("Ignoring exit signal of {}: no assets ({})", symbol(), tradingManager.getAssets());
-					}
+					if (tradingManager.hasPosition(candle, true, trade.isLong(), trade.isShort())) {
+						if (log.isTraceEnabled()) {
+							log.trace("Ignoring exit signal of {}: no free assets ({}) as {} are already locked in order", symbol(), tradingManager.getAssets(), tradingManager.getTotalAssets());
+						}
+					} else if (!trade.isEmpty()) {
+						if (log.isTraceEnabled()) {
+							log.trace("Ignoring exit signal of {}: no assets ({}). Sold manually? Closing trade", symbol(), tradingManager.getAssets());
+						}
+						trade.finalizeTrade();
+					} // else trade object is empty and reused from previous attempt to create order which was cancelled.
 					return false;
 				}
 			} finally {
@@ -450,7 +457,7 @@ public final class Trader {
 
 
 		Order order = tradingManager.sell(quantity, trade.getSide());
- 		if (order != null) {
+		if (order != null) {
 			processOrder(trade, order, strategy, reason);
 			return true;
 		}

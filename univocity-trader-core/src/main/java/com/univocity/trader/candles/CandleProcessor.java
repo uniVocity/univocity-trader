@@ -24,9 +24,6 @@ public final  class CandleProcessor<T> {
 			return;
 		}
 		try {
-			if (!initializing) {
-				log.trace("{} - {}", symbol, candle);
-			}
 			consumer.process(candle, initializing);
 		} catch (Exception e) {
 			log.error("Error processing current candle:" + candle, e);
