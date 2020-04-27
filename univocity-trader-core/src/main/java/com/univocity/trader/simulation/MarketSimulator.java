@@ -12,6 +12,7 @@ import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
+import java.util.stream.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
@@ -41,7 +42,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	}
 
 	@Override
-	protected final void executeSimulation(Collection<Parameters> parameters) {
+	protected final void executeSimulation(Stream<Parameters> parameters) {
 		getCandleRepository();
 		executor = Executors.newCachedThreadPool();
 		try {
@@ -52,13 +53,13 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		}
 	}
 
-	protected void executeWithParameters(Collection<Parameters> parameters){
-		for (Parameters p : parameters) {
+	protected void executeWithParameters(Stream<Parameters> parameters){
+		parameters.forEach(p -> {
 			initialize();
 			executeSimulation(createEngines(p));
 			liquidateOpenPositions();
 			reportResults(p);
-		}
+		});
 	}
 
 	protected TradingManager createTradingManager(AccountManager accountManager, String assetSymbol, String fundSymbol, Parameters parameters){

@@ -13,6 +13,7 @@ import java.time.temporal.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
+import java.util.stream.*;
 
 import static com.univocity.trader.config.Utils.*;
 
@@ -53,7 +54,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	private boolean resumeBackfill = false;
 
 	private Map<String, Double> initialFunds = new ConcurrentHashMap<>();
-	private final List<Parameters> parameters = new ArrayList<>();
+	private Stream<Parameters> parameters = null;
 
 	public final LocalDateTime simulateFrom() {
 		return simulationStart != null ? simulationStart : LocalDateTime.now().minusYears(1);
@@ -347,24 +348,29 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		//TODO: load with univocity-parsers
 	}
 
-	public List<Parameters> parameters() {
+	public Stream<Parameters> parameters() {
 		return parameters;
 	}
 
 	public Simulation addParameters(Collection<Parameters> parameters) {
 		if (parameters != null) {
-			this.parameters.addAll(parameters);
+			this.parameters = this.parameters == null ? parameters.stream() : Stream.concat(this.parameters, parameters.stream());
 		}
 		return this;
 	}
 
+	public Simulation setParameters(Stream<Parameters> parameters){
+		this.parameters = parameters;
+		return this;
+	}
+
 	public Simulation addParameters(Parameters parameters) {
-		this.parameters.add(parameters);
+		this.parameters = this.parameters == null ? Stream.of(parameters) : Stream.concat(this.parameters, Stream.of(parameters));
 		return this;
 	}
 
 	public Simulation clearParameters() {
-		this.parameters.clear();
+		this.parameters = null;
 		return this;
 	}
 

@@ -7,6 +7,7 @@ import com.univocity.trader.indicators.base.*;
 
 import java.time.*;
 import java.util.*;
+import java.util.stream.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
@@ -134,11 +135,11 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 	}
 
 	public final void run() {
-		List<Parameters> parameters = simulation.parameters();
-		if (parameters.isEmpty()) {
-			parameters = Collections.singletonList(Parameters.NULL);
+		Stream<Parameters> parameters = simulation.parameters();
+		if (parameters == null) {
+			parameters = Stream.of(Parameters.NULL);
 		} else {
-			System.out.println("Running simulation with " + parameters.size() + " parameters - " + new Date());
+			System.out.println("Running simulation with parameters - " + new Date());
 		}
 
 		long start = System.currentTimeMillis();
@@ -149,5 +150,5 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		}
 	}
 
-	protected abstract void executeSimulation(Collection<Parameters> parameters);
+	protected abstract void executeSimulation(Stream<Parameters> parameters);
 }
