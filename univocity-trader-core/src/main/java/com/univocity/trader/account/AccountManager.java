@@ -493,7 +493,12 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 	private void executeUpdateBalances() {
 		Map<String, Balance> updatedBalances = account.updateBalances();
 		if (updatedBalances != null && updatedBalances != balances && !updatedBalances.isEmpty()) {
-			log.debug("Balances updated - available: " + new TreeMap<>(updatedBalances));
+			log.debug("Balances updated - available: " + new TreeMap<>(
+					updatedBalances.entrySet().stream().filter(p -> p.getValue().getTotal() > 0 ||
+							p.getValue().getShorted() > 0)
+							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+					)
+			);
 			updatedBalances.keySet().retainAll(configuration.symbols());
 			synchronized (balances) {
 				this.balances.clear();
