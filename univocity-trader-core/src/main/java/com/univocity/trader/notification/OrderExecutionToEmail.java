@@ -159,26 +159,28 @@ public class OrderExecutionToEmail implements OrderListener {
 		if (visited.contains(next)) {
 			return;
 		}
+
 		visited.add(next);
 
 		Balance instrument = balances.getOrDefault(next.getAssetSymbol(), ZERO);
 
 		double assets = instrument.getFree();
 		double locked = instrument.getLocked();
-
-		if (assets != 0 || locked != 0) {
+		double allAssets = assets + locked;
+		if (allAssets != 0) {
 			SymbolPriceDetails f = next.getPriceDetails();
 			double lastPrice = next.getLatestPrice();
 			boolean printing = false;
-			if (assets > 0.0) {
+			if (allAssets > 0.0) {
 				Trader trader = next.getTrader();
-				double worth = assets * lastPrice;
+
+				double worth = allAssets * lastPrice;
 				total.set(total.get() + convertToReferenceCurrency(worth, next));
-				if (worth > 0.5) {
+				if (worth > next.getPriceDetails().getMinimumOrderAmount(lastPrice)) {
 					printing = true;
 					msg.append("\n\t* ").append(f.quantityToString(assets)).append(" ").append(next.getAssetSymbol());
 					msg.append(", ");
-					msg.append("trading at ").append(f.priceToString(trader.lastClosingPrice()));
+					msg.append("trading at ").append(f.priceToString(lastPrice));
 					msg.append(". Holding ").append(f.quantityToString(trader.assetQuantity())).append(" units");
 					msg.append(", worth ~").append(f.switchToSymbol(trader.assetSymbol() + referenceCurrencySymbol).priceToString(worth)).append(" ").append(next.getFundSymbol());
 

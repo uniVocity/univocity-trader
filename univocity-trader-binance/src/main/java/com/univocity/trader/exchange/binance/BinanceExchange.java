@@ -149,7 +149,12 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	@Override
 	public Map<String, double[]> getLatestPrices() {
-		restClient().getAllPrices().forEach(ticker -> priceReceived(ticker.getSymbol(), ticker.getPriceAmount()));
+		try {
+			List<TickerPrice> allPrices = restClient().getAllPrices();
+			allPrices.forEach(ticker -> priceReceived(ticker.getSymbol(), ticker.getPriceAmount()));
+		} catch (Exception e){
+			log.warn("Unable to load latest prices from Binance", e);
+		}
 		return Collections.unmodifiableMap(latestPrices);
 	}
 
