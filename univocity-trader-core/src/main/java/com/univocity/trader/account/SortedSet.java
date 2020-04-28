@@ -20,6 +20,15 @@ public class SortedSet<T extends Comparable<T>> {
 		}
 	}
 
+	public boolean replace(T order) {
+		int slot = Arrays.binarySearch(elements, 0, i, order);
+		if (slot >= 0) {
+			elements[slot] = order;
+			return true;
+		}
+		return false;
+	}
+
 	public final void add(T order) {
 		int slot = Arrays.binarySearch(elements, 0, i, order);
 		if (slot >= 0) {

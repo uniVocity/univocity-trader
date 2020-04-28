@@ -448,13 +448,12 @@ public final class Trader {
 		double quantity;
 		if (trade != null) {
 			quantity = trade.quantityInPosition();
-			if (quantity > tradingManager.getAssets() || quantity == 0.0 && trade.isPlaceholder) {
+			if (quantity > tradingManager.getAssets() || quantity == 0.0) {
 				quantity = tradingManager.getAssets();
 			}
 		} else {
 			quantity = tradingManager.getAssets();
 		}
-
 
 		Order order = tradingManager.sell(quantity, trade.getSide());
 		if (order != null) {

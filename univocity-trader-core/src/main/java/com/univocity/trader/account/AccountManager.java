@@ -493,12 +493,8 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 	private void executeUpdateBalances() {
 		Map<String, Balance> updatedBalances = account.updateBalances();
 		if (updatedBalances != null && updatedBalances != balances && !updatedBalances.isEmpty()) {
-			log.debug("Balances updated - available: " + new TreeMap<>(
-					updatedBalances.entrySet().stream().filter(p -> p.getValue().getTotal() > 0 ||
-							p.getValue().getShorted() > 0)
-							.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-					)
-			);
+			var sortedBalances = new TreeMap<>(updatedBalances);
+			log.trace("Balances updated - available: " + sortedBalances.values());
 			updatedBalances.keySet().retainAll(configuration.symbols());
 			synchronized (balances) {
 				this.balances.clear();
@@ -507,7 +503,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 			}
 
 			updatedBalances.values().removeIf(b -> b.getTotal() == 0);
-			log.debug("Balances updated - trading: " + new TreeMap<>(updatedBalances));
+			log.debug("Balances updated - trading: " + sortedBalances.values());
 		}
 		if (!this.isSimulated()) {
 			lastBalanceSync = System.currentTimeMillis();
@@ -784,6 +780,10 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 
 		orderLock.lock();
 		try {
+			if (trade != null) {
+				trade.orderUpdated(order);
+			}
+
 			if (order.isFinalized()) {
 				logOrderStatus("", order);
 				pendingOrders.remove(old);
@@ -976,7 +976,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 						updateOrder(order, null);
 					}
 				}
-			}finally {
+			} finally {
 				orderLock.unlock();
 			}
 			return true;

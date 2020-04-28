@@ -318,6 +318,18 @@ public final class Trade implements Comparable<Trade> {
 		return 0;
 	}
 
+	void orderUpdated(Order order) {
+		orderLock.lock();
+		try {
+			if(!position.replace(order) || !exitOrders.replace(order)) {
+				log.warn("Could not update order {} in trade {}", order, this);
+			}
+		} finally {
+			orderLock.unlock();
+		}
+	}
+
+
 	private void updateAveragePrice(OrderSet orders) {
 		if (isPlaceholder) {
 			return;
@@ -769,6 +781,7 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	public double quantityInPosition() {
+		//FIXME: update orders held in position!!!! it's always set to 0.
 		double pos = removeCancelledAndSumQuantities(position);
 		double exit = removeCancelledAndSumQuantities(exitOrders);
 		if (pos - exit < 0) {

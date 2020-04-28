@@ -110,13 +110,40 @@ public final class Balance implements Cloneable {
 
 	@Override
 	public String toString() {
-		return "{" +
-				"'" + symbol + '\'' +
-				", free=" + getFree() +
-				", locked=" + getLocked() +
-				", shorted=" + getShorted() +
-				", margin reserves=" + marginReserves +
-				'}';
+		StringBuilder out = new StringBuilder(symbol);
+
+		double free = getFree();
+		double locked = getLocked();
+		double shorted = getShorted();
+
+		out.append('(');
+		if (free > 0 || locked > 0 || shorted > 0) {
+			out.append(roundStr(free));
+			if (locked > 0) {
+				out.append(", ").append(roundStr(locked)).append(" locked");
+			}
+			if (shorted > 0) {
+				out.append(", ").append(roundStr(locked)).append(" shorted");
+				if (!marginReserves.isEmpty()) {
+					out.append(" - margin: {");
+					boolean first = true;
+					Map<String, Double> sorted = new TreeMap<>(marginReserves);
+					for (var entry : sorted.entrySet()) {
+						if (first) {
+							first = false;
+						} else {
+							out.append(", ");
+						}
+						out.append(entry.getKey()).append('=').append(roundStr(entry.getValue()));
+					}
+					out.append('}');
+				}
+			}
+		} else {
+			out.append("0.0");
+		}
+		out.append(')');
+		return out.toString();
 	}
 
 	private static final BigDecimal round(BigDecimal bd, MathContext mc) {
