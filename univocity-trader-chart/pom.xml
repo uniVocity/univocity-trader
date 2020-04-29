@@ -21,5 +21,17 @@
 			<artifactId>univocity-trader-examples</artifactId>
 			<version>${revision}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.github.weisj</groupId>
+			<artifactId>darklaf-core</artifactId>
+			<version>[2.0.3,)</version>
+		</dependency>
+		<dependency>
+			<!-- For the themes-->
+			<groupId>com.github.weisj</groupId>
+			<artifactId>darklaf-theme</artifactId>
+			<version>[2.0.3,)</version>
+		</dependency>
 	</dependencies>
 </project>

@@ -1,5 +1,7 @@
 package com.univocity.trader.chart;
 
+import com.github.weisj.darklaf.*;
+import com.github.weisj.darklaf.theme.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.ruler.*;
@@ -181,6 +183,7 @@ public class ChartWindow extends JFrame {
 	};
 
 	public static void main(String... args) {
+		LafManager.install(/*new DarculaTheme()*/);
 		SwingUtilities.invokeLater(() -> new ChartWindow().setVisible(true));
 	}
 }
