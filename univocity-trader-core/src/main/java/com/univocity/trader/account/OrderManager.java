@@ -2,7 +2,6 @@ package com.univocity.trader.account;
 
 
 import com.univocity.trader.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -11,12 +10,13 @@ import java.util.function.*;
 
 /**
  * The {@code OrderManager} is responsible to preparing, submitting and tracking the state of an {@link Order}
- * submitted to the {@link Exchange} via {@link AccountManager#buy(String, String, double)} or {@link AccountManager#sell(String, String, double)}.
+ * submitted to the {@link Exchange} via {@link AccountManager#buy(String, String, Trade.Side, double)} or
+ * {@link AccountManager#sell(String, String, Trade.Side, double)}.
  *
  * For example, when the {@link com.univocity.trader.strategy.Strategy} produces a {@code BUY} or {@code SELL} {@link Signal},
  * the {@link Engine} will request the associated {@link Trader} of the observed instrument to perform the corresponding action (i.e. submitting
  * a buy or sell order). Based on the funds/assets available, the {@link AccountManager} will produce an initial {@link OrderRequest}, which will in
- * turn be sent to the {@code OrderManager} via {@link #prepareOrder(SymbolPriceDetails, OrderBook, OrderRequest, Candle)}.
+ * turn be sent to the {@code OrderManager} via {@link #prepareOrder(SymbolPriceDetails, OrderBook, OrderRequest, Trader)}.
  *
  * This callback method allows the user to modify the initial {@link OrderRequest}, i.e. adjusting the quantity to be bought/sold, unit price,
  * order type, etc.
@@ -34,7 +34,8 @@ import java.util.function.*;
  *
  * An order might also be cancelled if it is not yet {@code FILLED} and another {@code BUY} or {@code SELL} signal appears for
  * another instrument when there are no funds available. In that case, {@link AccountManager#cancelStaleOrdersFor(Trader)} will be used to cycle through
- * all pending orders, which will in turn invoke {@link #cancelToReleaseFundsFor(Order, Trader, Trader)}. The implementation of this method should decide whether or
+ * all pending orders, which will in turn invoke {@link #cancelToReleaseFundsFor(Order, Trader, Trader)}. The implementation of this method should decide
+ * whether or
  * not to cancel the order so that the instrument of the given {@link Trader} can be traded.
  */
 public interface OrderManager {
@@ -46,8 +47,8 @@ public interface OrderManager {
 	TimeInterval DEFAULT_ORDER_UPDATE_FREQUENCY = TimeInterval.seconds(30);
 
 	/**
-	 * Prepares a given {@link OrderRequest} for submission to the exchange (via {@link AccountManager#buy(String, String, double)} or
-	 * {@link AccountManager#sell(String, String, double)}). Allows for modifications in the price and quantity pre-filled using the
+	 * Prepares a given {@link OrderRequest} for submission to the exchange (via {@link AccountManager#buy(String, String, Trade.Side, double)} or
+	 * {@link AccountManager#sell(String, String, Trade.Side, double)}). Allows for modifications in the price and quantity pre-filled using the
 	 * available allocated funds to the instrument represented by the symbol being traded. The order request can be cancelled via
 	 * {@link OrderRequest#cancel()}
 	 *
@@ -57,9 +58,11 @@ public interface OrderManager {
 	 * @param book         a snapshot of the current state of the order book for the traded symbol. Use {@link OrderBook#update(int)} to receive
 	 *                     a new snapshot.
 	 * @param order        the order request to be adjusted if needed
-	 * @param latestCandle the latest candle received from the exchange for the current order symbol (in {@link OrderRequest#getSymbol()}
+	 * @param trader       the {@link Trader} object responsible for executing trades on a given symbol. From there you can obtain information such as the
+	 *                     latest candle received from the exchange (e.g. {@link Trader#latestCandle()}) and how much is your account worth {using @link
+	 *                     Trader#holdings()} to help you better determine the size of your order.
 	 */
-	void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle);
+	void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader);
 
 	/**
 	 * The time interval to wait between calls to {@link AccountManager#updateOrderStatus(Order)}, to identify if an {@link Order} has
@@ -86,7 +89,7 @@ public interface OrderManager {
 	 * @param trader       the {@code Trader} responsible for the order
 	 * @param resubmission a consumer provided by the framework which allows requesting for
 	 *                     the current order to be cancelled then resubmitted to the exchange, effectively
-	 *                     invoking {@link #prepareOrder(SymbolPriceDetails, OrderBook, OrderRequest, Candle)} with
+	 *                     invoking {@link #prepareOrder(SymbolPriceDetails, OrderBook, OrderRequest, Trader)}  with
 	 *                     new order details. The resubmission request will be ignored if the order is 98% filled or more
 	 *                     (i.e. {@link Order#getFillPct()}  is greater than 98.0).
 	 */
@@ -101,7 +104,7 @@ public interface OrderManager {
 	 * @param trader       the {@code Trader} responsible for the order
 	 * @param resubmission a consumer provided by the framework which allows requesting for
 	 *                     the current order to be cancelled then resubmitted to the exchange, effectively
-	 *                     invoking {@link #prepareOrder(SymbolPriceDetails, OrderBook, OrderRequest, Candle)} with
+	 *                     invoking {@link #prepareOrder(SymbolPriceDetails, OrderBook, OrderRequest, Trader)} with
 	 *                     new order details. The resubmission request will be ignored if the order is 98% filled or more
 	 *                     (i.e. {@link Order#getFillPct()} is greater than 98.0).
 	 */

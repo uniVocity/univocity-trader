@@ -115,11 +115,15 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		return configuration;
 	}
 
-	private void initialize() {
-		this.tickInterval = configuration.tickInterval();
+	public CandleRepository candleRepository(){
 		if (candleRepository == null) {
 			candleRepository = new CandleRepository(configuration.database());
 		}
+		return candleRepository;
+	}
+
+	private void initialize() {
+		this.tickInterval = configuration.tickInterval();
 
 		if (clients.isEmpty()) {
 			for (var account : configuration.accounts()) {
@@ -133,7 +137,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		if (allPairs == null) {
 			allPairs = new TreeMap<>();
 			for (ExchangeClient client : clients) {
-				client.initialize(candleRepository, exchange, mailSender());
+				client.initialize(candleRepository(), exchange, mailSender());
 				allPairs.putAll(client.getSymbolPairs());
 			}
 		}
@@ -152,7 +156,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 			}
 			tmp.append(symbol);
 		}
-		CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository);
+		CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository());
 
 		this.allClientPairs = tmp.toString().toLowerCase();
 
@@ -170,7 +174,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 
 			//loads last 60 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
 			for (String symbol : allPairs.keySet()) {
-				Enumeration<Candle> it = candleRepository.iterate(symbol, Instant.now().minus(60, ChronoUnit.DAYS), Instant.now(), false);
+				Enumeration<Candle> it = candleRepository().iterate(symbol, Instant.now().minus(60, ChronoUnit.DAYS), Instant.now(), false);
 				while (it.hasMoreElements()) {
 					Candle candle = it.nextElement();
 					if (candle != null) {

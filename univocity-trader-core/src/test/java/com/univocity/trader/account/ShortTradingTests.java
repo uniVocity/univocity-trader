@@ -276,7 +276,7 @@ public class ShortTradingTests extends OrderFillChecker {
 	public void testShortTradingWithMarketBracketOrder() {
 		AccountManager account = getAccountManager(new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
+			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest takeProfit = order.attach(MARKET, -1.0);
 					OrderRequest marketBuyOnLoss = order.attach(MARKET, 1.0);

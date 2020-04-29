@@ -53,7 +53,7 @@ public class LiveBinanceTrader {
 //		overrides the default order manager submit orders that likely won't be filled so you can see what the program does.
 		account.orderManager(new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
+			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
 				switch (order.getSide()) {
 					case BUY:
 						order.setPrice(order.getPrice() * 0.9); //10% less

@@ -256,7 +256,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 	public void testCancellationOnPartiallyFilledLongBracketOrderProfit() {
 		OrderManager om = new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
+			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest limitSellOnLoss = order.attach(LIMIT, -1.0);
 					OrderRequest takeProfit = order.attach(LIMIT, 1.0);
@@ -324,7 +324,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 	public void testCancellationOnPartiallyFilledLongBracketOrderLoss() {
 		OrderManager om = new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
+			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest limitSellOnLoss = order.attach(LIMIT, -1.0);
 					OrderRequest takeProfit = order.attach(LIMIT, 1.0);
@@ -393,7 +393,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 	public void testCancellationOnPartiallyFilledShortBracketOrderProfit() {
 		OrderManager om = new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
+			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest limitSellOnLoss = order.attach(LIMIT, -1.0);
 					OrderRequest takeProfit = order.attach(LIMIT, 1.0);

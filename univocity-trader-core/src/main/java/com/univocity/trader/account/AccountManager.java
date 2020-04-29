@@ -626,7 +626,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 
 		OrderManager orderCreator = configuration.orderManager(tradingManager.getSymbol());
 		if (orderCreator != null) {
-			orderCreator.prepareOrder(priceDetails, book, orderPreparation, tradingManager.getLatestCandle());
+			orderCreator.prepareOrder(priceDetails, book, orderPreparation, tradingManager.trader);
 		}
 
 		if (!orderPreparation.isCancelled() && orderPreparation.getTotalOrderAmount() > (priceDetails.getMinimumOrderAmount(orderPreparation.getPrice()))) {

@@ -263,8 +263,12 @@ public final class Trader {
 		if (trade.canExit(strategy)) {
 			trade.orderLock.lock();
 			try {
+				boolean notEmptyBeforeCancellations = !trade.isEmpty();
 				for (int i = 0; i < trade.position.i; i++) {
 					tradingManager.cancelOrder(trade.position.elements[i]);
+				}
+				if(notEmptyBeforeCancellations && trade.isEmpty()){
+					return false;
 				}
 
 				if (!tradingManager.hasPosition(candle, false, trade.isLong(), trade.isShort())) {
