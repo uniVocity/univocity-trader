@@ -633,7 +633,10 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 			orderPreparation.setPrice(orderPreparation.getPrice());
 			orderPreparation.setQuantity(orderPreparation.getQuantity());
 
-			if (orderPreparation.getTotalOrderAmount() > priceDetails.getMinimumOrderAmount(orderPreparation.getPrice())) {
+			double minimumInvestment = configuration.minimumInvestmentAmountPerTrade(orderPreparation.getAssetsSymbol());
+			double orderAmount = orderPreparation.getTotalOrderAmount();
+
+			if (orderAmount >= minimumInvestment && orderAmount > priceDetails.getMinimumOrderAmount(orderPreparation.getPrice())) {
 				return orderPreparation;
 			}
 		}
