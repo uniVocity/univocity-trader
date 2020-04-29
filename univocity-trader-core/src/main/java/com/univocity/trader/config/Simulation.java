@@ -52,6 +52,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	private LocalDateTime backfillFrom = null;
 	private LocalDateTime backfillTo = null;
 	private boolean resumeBackfill = false;
+	private boolean randomizeTicks;
 
 	private Map<String, Double> initialFunds = new ConcurrentHashMap<>();
 	private Stream<Parameters> parameters = null;
@@ -125,6 +126,15 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return this;
 	}
 
+	public boolean randomizeTicks() {
+		return randomizeTicks;
+	}
+
+	public Simulation randomizeTicks(boolean randomizeTicks) {
+		this.randomizeTicks = randomizeTicks;
+		return this;
+	}
+
 	@Override
 	public void readProperties(PropertyBasedConfiguration properties) {
 		simulateFrom(parseDateTime(properties, "simulation.start"));
@@ -148,6 +158,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		backfillFrom(parseDateTime(properties, "simulation.history.backfill.from"));
 		backfillTo(parseDateTime(properties, "simulation.history.backfill.to"));
 		resumeBackfill(properties.getBoolean("simulation.history.backfill.resume", false));
+		randomizeTicks(properties.getBoolean("simulation.randomize.ticks", false));
 
 		parseInitialFunds(properties);
 
@@ -359,7 +370,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return this;
 	}
 
-	public Simulation setParameters(Stream<Parameters> parameters){
+	public Simulation setParameters(Stream<Parameters> parameters) {
 		this.parameters = parameters;
 		return this;
 	}

@@ -130,7 +130,6 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			}
 		});
 
-		//TODO: allow the original randomized candle processing to happen via configuration.
 		final var sortedMarkets = new TreeMap<>(markets);
 		MarketReader[] readers = buildMarketReaderList(sortedMarkets, symbolHandlers);
 
@@ -146,7 +145,12 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 		long candlesProcessed = 0;
 
+		boolean randomize = configuration.simulation().randomizeTicks();
+
 		for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
+			if (randomize) {
+				ArrayUtils.shuffle(readers);
+			}
 			boolean resetClock = false;
 			for (int i = 0; i < readers.length; i++) {
 				MarketReader reader = readers[i];
