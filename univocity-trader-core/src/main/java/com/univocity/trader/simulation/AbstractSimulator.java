@@ -14,7 +14,7 @@ import static com.univocity.trader.indicators.base.TimeInterval.*;
 public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends AccountConfiguration<A>> {
 
 	protected Map<String, SymbolInformation> symbolInformation = new TreeMap<>();
-	private AccountManager[] accounts;
+	private SimulatedAccountManager[] accounts;
 	protected final Simulation simulation;
 	protected final C configuration;
 	private Map<String, String[]> allPairs;
@@ -24,16 +24,16 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		simulation = configuration.simulation();
 	}
 
-	protected AccountManager[] accounts() {
+	protected SimulatedAccountManager[] accounts() {
 		if (accounts == null) {
 			List<A> accountConfigs = configuration.accounts();
 			if (accountConfigs.isEmpty()) {
 				throw new IllegalStateException("No account configuration defined");
 			}
-			this.accounts = new AccountManager[accountConfigs.size()];
+			this.accounts = new SimulatedAccountManager[accountConfigs.size()];
 			int i = 0;
 			for (A accountConfig : accountConfigs) {
-				this.accounts[i++] = createAccountInstance(accountConfig).getAccount();
+				this.accounts[i++] = (SimulatedAccountManager)createAccountInstance(accountConfig).getAccount();
 			}
 		}
 		return accounts;
@@ -74,7 +74,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 	}
 
 	protected final void resetBalances() {
-		for (AccountManager account : accounts()) {
+		for (SimulatedAccountManager account : accounts()) {
 			account.resetBalances();
 			double[] total = new double[]{0};
 			simulation.initialAmounts().forEach((symbol, amount) -> {
@@ -112,7 +112,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 
 	private Map<String, String[]> populateAllPairs() {
 		TreeMap<String, String[]> out = new TreeMap<>();
-		for (AccountManager account : accounts()) {
+		for (SimulatedAccountManager account : accounts()) {
 			out.putAll(account.configuration().symbolPairs());
 		}
 		return out;
@@ -120,7 +120,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 
 	private Set<String> populateAllReferenceCurrencies() {
 		TreeSet<String> out = new TreeSet<>();
-		for (AccountManager account : accounts()) {
+		for (SimulatedAccountManager account : accounts()) {
 			out.add(account.getReferenceCurrencySymbol());
 		}
 		return out;

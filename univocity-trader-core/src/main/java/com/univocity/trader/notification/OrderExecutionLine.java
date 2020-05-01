@@ -91,18 +91,18 @@ public class OrderExecutionLine {
 		clientId = client.getId();
 		referenceCurrency = trader.referenceCurrencySymbol();
 
-		freeBalanceReferenceCurrency = Double.parseDouble(refPriceDetails.priceToString(trader.balance().getFree()));
+		freeBalanceReferenceCurrency = Double.parseDouble(refPriceDetails.priceToString(trader.freeBalance()));
 		holdings = refPriceDetails.priceToString(trader.holdings());
 
 		double priceAmount = order == null || order.getPrice() == 0.0 ? trader.latestCandle().close : order.getPrice();
 
 		if (order != null) {
 			fundSymbol = trader.fundSymbol();
-			closeTime = trader.latestCandle().closeTimestamp();
 			assetSymbol = trader.assetSymbol();
+			closeTime = trader.latestCandle().closeTimestamp();
 
 			Balance balance = trader.balanceOf(fundSymbol);
-			shortedQuantity = trader.balance(assetSymbol).getShorted();
+			shortedQuantity = trader.shortedQuantity();
 
 			SymbolPriceDetails amountDetails = fundSymbol.equals(referenceCurrency) ? refPriceDetails : priceDetails;
 
@@ -310,7 +310,7 @@ public class OrderExecutionLine {
 	public String getFormattedShortedQuantity() {
 
 		SymbolPriceDetails priceDetails = this.trader.priceDetails();
-		return trade == null || order == null ? null : priceDetails.quantityToString(trader.balance(assetSymbol).getShorted());
+		return trade == null || order == null ? null : priceDetails.quantityToString(trader.shortedQuantity());
 	}
 
 	@Parsed(field = "marginReserve")

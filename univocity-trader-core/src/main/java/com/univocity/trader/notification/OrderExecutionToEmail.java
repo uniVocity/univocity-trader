@@ -47,8 +47,7 @@ public class OrderExecutionToEmail implements OrderListener {
 			email.setFrom(mailSender.getSenderAddress());
 			email.setTitle(title);
 
-			Map<String, Balance> balances = tradingManager.updateBalances();
-			String body = printTotalBalances(balances);
+			String body = printTotalBalances();
 
 			email.setBody(body);
 			email.setTo(new String[]{client.getEmail()});
@@ -58,10 +57,12 @@ public class OrderExecutionToEmail implements OrderListener {
 		}
 	}
 
-	private synchronized String printTotalBalances(Map<String, Balance> balances) {
+	private synchronized String printTotalBalances() {
 		SymbolPriceDetails f = tradingManager.getPriceDetails();
 		StringBuilder out = new StringBuilder("\nActual balances:\n");
 		var total = new AtomicReference<>(0.0);
+
+		Map<String, Balance> balances = tradingManager.getBalanceSnapshot();
 		printTotalBalances(balances, new HashSet<>(), out, total, this.tradingManager);
 		out.append("\n\t* ").append(f.priceToString(tradingManager.getCash())).append(' ').append(tradingManager.getFundSymbol());
 		double holdings = total.get() + balances.getOrDefault(referenceCurrencySymbol, ZERO).getTotal();
@@ -79,7 +80,7 @@ public class OrderExecutionToEmail implements OrderListener {
 		String fundSymbol = trader.fundSymbol();
 		try {
 			SymbolPriceDetails f = trader.priceDetails();
-			String balances = printTotalBalances(tradingManager.updateBalances());
+			String balances = printTotalBalances();
 
 			String timeLong = " at " + trader.latestCandle().getFormattedCloseTime("h:mma, MMMM dd, yyyy", client.getTimezone());
 			String timeShort = " - " + trader.latestCandle().getFormattedCloseTime("EEEE hh:mma", client.getTimezone());

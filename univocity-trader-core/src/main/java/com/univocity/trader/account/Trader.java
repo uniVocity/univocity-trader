@@ -33,6 +33,7 @@ import static com.univocity.trader.utils.NewInstances.*;
 public final class Trader {
 	private static final Logger log = LoggerFactory.getLogger(Trader.class);
 	public final TradingManager tradingManager;
+	private AccountManager accountManager;
 	public Candle latestCandle;
 	private Parameters parameters;
 
@@ -82,6 +83,7 @@ public final class Trader {
 			allowMixedStrategies &= this.monitors[i].allowMixedStrategies();
 		}
 		this.allowMixedStrategies = allowMixedStrategies;
+		this.accountManager = tradingManager.getAccount();
 	}
 
 	/**
@@ -267,7 +269,7 @@ public final class Trader {
 				for (int i = 0; i < trade.position.i; i++) {
 					tradingManager.cancelOrder(trade.position.elements[i]);
 				}
-				if(notEmptyBeforeCancellations && trade.isEmpty()){
+				if (notEmptyBeforeCancellations && trade.isEmpty()) {
 					return false;
 				}
 
@@ -425,7 +427,7 @@ public final class Trader {
 			}
 			order = tradingManager.buy(amountToSpend / candle.close, LONG);
 		} else if (tradeSide == SHORT) {
-			double shortedQuantity = balance().getShorted();
+			double shortedQuantity = accountManager.getBalance(referenceCurrencySymbol(), Balance::getShorted);
 			order = tradingManager.buy(shortedQuantity, SHORT);
 		}
 		if (order != null) {
@@ -468,8 +470,8 @@ public final class Trader {
 	}
 
 	private boolean closeShort(Trade trade, Strategy strategy, String exitReason) {
-		double reserveFunds = tradingManager.getBalance(fundSymbol()).getMarginReserve(assetSymbol());
-		double shortToCover = tradingManager.getBalance(assetSymbol()).getShorted();
+		double reserveFunds = accountManager.getBalance(fundSymbol(), b -> b.getMarginReserve(assetSymbol()));
+		double shortToCover = accountManager.getBalance(assetSymbol(), Balance::getShorted);
 		if (shortToCover > 0) {
 			if (shortToCover * trade.lastClosingPrice() > reserveFunds) {
 				log.warn("Not enough funds in margin reserve to cover short of {} {} @ {} {} per unit. Reserve: {}, required {} {}", assetSymbol(), shortToCover, trade.lastClosingPrice(), fundSymbol(), reserveFunds, shortToCover * trade.lastClosingPrice(), fundSymbol());
@@ -541,19 +543,21 @@ public final class Trader {
 				if (!t.isFinalized()) {
 					if (t.isLong()) {
 						if (!sellAssets(t, null, "Liquidate position")) {
-							Balance balance = tradingManager.getBalance(assetSymbol());
-							if (balance.getFree() + balance.getLocked() > 0) {
-								log.warn("Could not liquidate open trade: " + t);
-							}
+							accountManager.consumeBalance(assetSymbol(), b -> {
+								if (b.getFree() + b.getLocked() > 0) {
+									log.warn("Could not liquidate open trade: " + t);
+								}
+							});
 						} else {
 							t.liquidate();
 						}
 					} else if (t.isShort()) {
 						if (!closeShort(t, null, "Liquidate position")) {
-							Balance balance = tradingManager.getBalance(assetSymbol());
-							if (balance.getShorted() > 0) {
-								log.warn("Could not liquidate open trade: " + t);
-							}
+							accountManager.consumeBalance(assetSymbol(), b -> {
+								if (b.getShorted() > 0) {
+									log.warn("Could not liquidate open trade: " + t);
+								}
+							});
 						} else {
 							t.liquidate();
 						}
@@ -788,16 +792,16 @@ public final class Trader {
 		return tradingManager.getTotalFundsIn(symbol);
 	}
 
-	public Balance balance(String symbol) {
-		return tradingManager.getBalance(symbol).clone();
+	public double freeBalance(){
+		return accountManager.getBalance(referenceCurrencySymbol(), Balance::getFree);
 	}
 
-	public Balance balance() {
-		return tradingManager.getBalance(referenceCurrencySymbol()).clone();
+	public double shortedQuantity(){
+		return accountManager.getBalance(assetSymbol(), Balance::getShorted);
 	}
 
 	public Balance balanceOf(String symbol) {
-		return tradingManager.getBalance(symbol).clone();
+		return accountManager.queryBalance(symbol, Balance::clone);
 	}
 
 	public SymbolPriceDetails priceDetails() {

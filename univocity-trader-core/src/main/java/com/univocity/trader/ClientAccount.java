@@ -120,18 +120,6 @@ public interface ClientAccount {
 	void cancel(Order order);
 
 	/**
-	 * Tries filling any open orders of a symbol based on its latest candle. Used in simulations only.
-	 *
-	 * @param symbol a symbol that might have open an open {@link Order} which has not been completed yet.
-	 * @param candle the latest candle of the given symbol.
-	 *
-	 * @return {@code true} if any order of the given symbol was finalized (i.e. FILLED or CANCELLED) by this method, otherwise {@code false}
-	 */
-	default boolean updateOpenOrders(String symbol, Candle candle) {
-		return false;
-	}
-
-	/**
 	 * Identifies whether this account is a simulated account or a live one connected to a live exchange with real funds.
 	 *
 	 * @return {@code true} if this account is simulated, otherwise {@code false}

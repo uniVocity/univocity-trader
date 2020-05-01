@@ -1,7 +1,6 @@
 package com.univocity.trader.account;
 
 import com.univocity.trader.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import org.junit.*;
 
@@ -21,7 +20,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 
 	@Test
 	public void testLongBuyTradingWithPartialFillThenCancel() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double MAX = 40.0;
 		final double initialBalance = 100;
@@ -50,7 +49,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 
 	@Test
 	public void testLongBuyTradingWithPartialFillAverage() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double MAX = 40.0;
 		final double initialBalance = 100;
@@ -89,7 +88,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 
 	@Test
 	public void testLongSellTradingWithPartialFill() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		long time = 0;
 		final double MAX = 40.0;
@@ -149,7 +148,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 
 	@Test
 	public void testLongSellTradingWithPartialFillThenCancel() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		long time = 0;
 		final double MAX = 40.0;
@@ -211,7 +210,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 
 	@Test
 	public void testShortSellTradingWithPartialFillThenCancel() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double MAX = 40.0;
 		final double initialBalance = 100;
@@ -264,7 +263,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 			}
 		};
 
-		AccountManager account = getAccountManager(om);
+		SimulatedAccountManager account = getSimulatedAccountManager(om);
 
 		account.setAmount("USDT", 100.0);
 		long time = 1;
@@ -332,7 +331,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 			}
 		};
 
-		AccountManager account = getAccountManager(om);
+		SimulatedAccountManager account = getSimulatedAccountManager(om);
 
 		account.setAmount("USDT", 100.0);
 		long time = 1;
@@ -401,7 +400,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 			}
 		};
 
-		AccountManager account = getAccountManager(om);
+		SimulatedAccountManager account = getSimulatedAccountManager(om);
 
 		account.setAmount("USDT", 100.0);
 		long time = 1;
@@ -479,7 +478,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 
 	@Test
 	public void testCoverShortAtLossWithNoRemainingFreeFunds() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double initialBalance = 100;
 

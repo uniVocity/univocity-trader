@@ -18,15 +18,15 @@ public class OrderFillChecker {
 	static final double CLOSE = 0.4379;
 	static final double DELTA = 0.000000000001;
 
-	AccountManager getAccountManager() {
-		return getAccountManager(null);
+	SimulatedAccountManager getSimulatedAccountManager() {
+		return getSimulatedAccountManager(null);
 	}
 
 	protected void configure(SimulationConfiguration configuration) {
 
 	}
 
-	AccountManager getAccountManager(OrderManager orderManager) {
+	SimulatedAccountManager getSimulatedAccountManager(OrderManager orderManager) {
 		SimulationConfiguration configuration = new SimulationConfiguration();
 
 		SimulationAccount accountCfg = new SimulationConfiguration().account();
@@ -43,7 +43,7 @@ public class OrderFillChecker {
 		configure(configuration);
 
 		SimulatedClientAccount clientAccount = new SimulatedClientAccount(accountCfg, configuration.simulation());
-		AccountManager account = clientAccount.getAccount();
+		SimulatedAccountManager account = clientAccount.getAccount();
 
 		TradingManager m = new TradingManager(new SimulatedExchange(account), null, account, "ADA", "USDT", Parameters.NULL);
 		Trader trader = new Trader(m, null, new HashSet<>());
@@ -78,7 +78,7 @@ public class OrderFillChecker {
 
 	void checkProfitLoss(Trade trade, double initialBalance, double totalInvested) {
 		Trader trader = trade.trader();
-		AccountManager account = trader.tradingManager.getAccount();
+		SimulatedAccountManager account = (SimulatedAccountManager) trader.tradingManager.getAccount();
 
 		double finalBalance = account.getAmount("USDT");
 		double profitLoss = finalBalance - initialBalance;
@@ -113,7 +113,7 @@ public class OrderFillChecker {
 	}
 
 
-	double checkTradeAfterLongBuy(double usdBalanceBeforeTrade, Trade trade, double spendingLimit, double previousQuantity, double unitPrice, double maxUnitPrice, double minUnitPrice, Function<AccountManager, Double> assetBalance) {
+	double checkTradeAfterLongBuy(double usdBalanceBeforeTrade, Trade trade, double spendingLimit, double previousQuantity, double unitPrice, double maxUnitPrice, double minUnitPrice, Function<SimulatedAccountManager, Double> assetBalance) {
 		Trader trader = trade.trader();
 
 		double quantity = calculateBuyingQuantity(usdBalanceBeforeTrade, spendingLimit, unitPrice);
@@ -126,7 +126,7 @@ public class OrderFillChecker {
 
 		assertEquals(totalQuantity, trade.quantity(), DELTA);
 
-		AccountManager account = trader.tradingManager.getAccount();
+		SimulatedAccountManager account = (SimulatedAccountManager) trader.tradingManager.getAccount();
 		assertEquals(totalQuantity, assetBalance.apply(account), DELTA);
 
 		double balance = account.getAmount("USDT");
@@ -146,7 +146,7 @@ public class OrderFillChecker {
 		checkLongTradeStats(trade, unitPrice, maxUnitPrice, minUnitPrice);
 
 		assertEquals(quantity, trade.quantity(), DELTA);
-		AccountManager account = trader.tradingManager.getAccount();
+		SimulatedAccountManager account = (SimulatedAccountManager)trader.tradingManager.getAccount();
 		assertEquals(0.0, account.getAmount("ADA"), DELTA);
 		assertEquals(usdBalanceBeforeTrade + receivedAfterFees, account.getAmount("USDT"), DELTA);
 	}
@@ -199,7 +199,7 @@ public class OrderFillChecker {
 		checkShortTradeStats(trade, unitPrice, maxUnitPrice, minUnitPrice);
 
 		assertEquals(quantity, trade.quantity(), DELTA);
-		AccountManager account = trader.tradingManager.getAccount();
+		SimulatedAccountManager account = (SimulatedAccountManager)trader.tradingManager.getAccount();
 		assertEquals(0.0, account.getAmount("ADA"), DELTA);
 
 		assertEquals(0.0, account.getBalance("ADA").getFree(), DELTA);
@@ -229,7 +229,7 @@ public class OrderFillChecker {
 
 		assertEquals(totalQuantity, trade.quantity(), DELTA);
 
-		AccountManager account = trader.tradingManager.getAccount();
+		SimulatedAccountManager account = (SimulatedAccountManager)trader.tradingManager.getAccount();
 		assertEquals(0.0, account.getAmount("ADA"), DELTA);
 		assertEquals(totalQuantity, account.getShortedAmount("ADA"), DELTA); //orders submitted to buy it all back
 		assertEquals(0.0, account.getBalance("ADA").getLocked(), DELTA);
@@ -264,7 +264,7 @@ public class OrderFillChecker {
 
 		assertEquals(totalQuantity, trade.quantity(), DELTA);
 
-		AccountManager account = trader.tradingManager.getAccount();
+		SimulatedAccountManager account = (SimulatedAccountManager) trader.tradingManager.getAccount();
 		assertEquals(0.0, account.getAmount("ADA"), DELTA);
 		assertEquals(totalQuantity, account.getShortedAmount("ADA"), DELTA);
 
@@ -289,26 +289,26 @@ public class OrderFillChecker {
 		return new Candle(time, time, price, price, price, price, 33.0);
 	}
 
-	void executeOrder(AccountManager account, Order order, long time) {
+	void executeOrder(SimulatedAccountManager account, Order order, long time) {
 		executeOrder(account, order, 25.0, time);
 	}
 
-	void executeOrder(AccountManager account, Order order, double price, long time) {
+	void executeOrder(SimulatedAccountManager account, Order order, double price, long time) {
 		Trader trader = account.getTraderOf(order.getSymbol());
 		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(time, price));
 	}
 
-	void cancelOrder(AccountManager account, Order order, long time) {
+	void cancelOrder(SimulatedAccountManager account, Order order, long time) {
 		cancelOrder(account, order, 25, time);
 	}
 
-	void cancelOrder(AccountManager account, Order order, double price, long time) {
+	void cancelOrder(SimulatedAccountManager account, Order order, double price, long time) {
 		Trader trader = account.getTraderOf("ADAUSDT");
 		order.cancel();
 		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(time, price));
 	}
 
-	void assertNoChangeInFunds(AccountManager account, String symbol, String marginSymbol, double initialBalance) {
+	void assertNoChangeInFunds(SimulatedAccountManager account, String symbol, String marginSymbol, double initialBalance) {
 		assertEquals(initialBalance, account.getBalance(symbol).getFree(), DELTA);
 		assertEquals(0.0, account.getBalance(symbol).getLocked(), DELTA);
 		assertEquals(0.0, account.getBalance(symbol).getShorted(), DELTA);
@@ -316,15 +316,15 @@ public class OrderFillChecker {
 	}
 
 
-	Order submitOrder(AccountManager account, Order.Side orderSide, Trade.Side tradeSide, long time, double units) {
+	Order submitOrder(SimulatedAccountManager account, Order.Side orderSide, Trade.Side tradeSide, long time, double units) {
 		return submitOrder(account, orderSide, tradeSide, time, units, 25, null);
 	}
 
-	Order submitOrder(AccountManager account, Order.Side orderSide, Trade.Side tradeSide, long time, double units, double price, OrderManager orderManager) {
+	Order submitOrder(SimulatedAccountManager account, Order.Side orderSide, Trade.Side tradeSide, long time, double units, double price, OrderManager orderManager) {
 		return submitOrder(account, "ADA", orderSide, tradeSide, time, units, price, orderManager);
 	}
 
-	Order submitOrder(AccountManager account, String symbol, Order.Side orderSide, Trade.Side tradeSide, long time, double units, double price, OrderManager orderManager) {
+	Order submitOrder(SimulatedAccountManager account, String symbol, Order.Side orderSide, Trade.Side tradeSide, long time, double units, double price, OrderManager orderManager) {
 		Candle next = newTick(time, 25.0);
 		OrderRequest req = new OrderRequest(symbol, "USDT", orderSide, tradeSide, time, null);
 		req.setQuantity(units);

@@ -10,7 +10,7 @@ public class AccountManagerTest extends OrderFillChecker {
 
 	@Test
 	public void testFundAllocationBasics() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 		account.balanceUpdateCounts.clear();
 		AccountConfiguration<?> cfg = account.configuration();
 
@@ -45,7 +45,7 @@ public class AccountManagerTest extends OrderFillChecker {
 
 	@Test
 	public void testFundAllocationPercentageWithInvestedAmounts() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		account.setAmount("USDT", 100);
 		account.configuration().maximumInvestmentPercentagePerAsset(90.0);
@@ -74,7 +74,7 @@ public class AccountManagerTest extends OrderFillChecker {
 
 	@Test
 	public void testFundAllocationAmountWithInvestedAmounts() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		account.setAmount("USDT", 100);
 		account.configuration().maximumInvestmentAmountPerAsset(60.0);
@@ -97,7 +97,7 @@ public class AccountManagerTest extends OrderFillChecker {
 
 	@Test
 	public void testFundAllocationPercentagePerTradeWithInvestedAmounts() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		account.setAmount("USDT", 100);
 		account.configuration().maximumInvestmentPercentagePerTrade(40.0);
@@ -126,7 +126,7 @@ public class AccountManagerTest extends OrderFillChecker {
 
 	@Test
 	public void testFundAllocationAmountPerTradeWithInvestedAmounts() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		account.setAmount("USDT", 100);
 		account.configuration().maximumInvestmentAmountPerTrade(40.0);

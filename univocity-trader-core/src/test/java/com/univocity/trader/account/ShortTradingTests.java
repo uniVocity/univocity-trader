@@ -1,7 +1,6 @@
 package com.univocity.trader.account;
 
 import com.univocity.trader.*;
-import com.univocity.trader.candles.*;
 import org.junit.*;
 
 import static com.univocity.trader.account.Order.Status.*;
@@ -18,7 +17,7 @@ public class ShortTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testShortPositionTrading() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double MAX = 40.0;
 		final double initialBalance = 100;
@@ -77,7 +76,7 @@ public class ShortTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testShortPositionTradingNoMax() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double initialBalance = 100;
 
@@ -157,7 +156,7 @@ public class ShortTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testTradingWithStopLoss() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double MAX = 40.0;
 		final double initialBalance = 100;
@@ -222,7 +221,7 @@ public class ShortTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testTradingWithStopGain() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double MAX = 40.0;
 		final double initialBalance = 100;
@@ -274,7 +273,7 @@ public class ShortTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testShortTradingWithMarketBracketOrder() {
-		AccountManager account = getAccountManager(new DefaultOrderManager() {
+		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
@@ -298,7 +297,7 @@ public class ShortTradingTests extends OrderFillChecker {
 
 	}
 
-	private double testShortBracketOrder(AccountManager account, double initialBalance, final double unitPrice, double priceIncrement, long time) {
+	private double testShortBracketOrder(SimulatedAccountManager account, double initialBalance, final double unitPrice, double priceIncrement, long time) {
 		Trader trader = account.getTraderOf("ADAUSDT");
 
 		double usdBalance = account.getAmount("USDT");
@@ -360,7 +359,7 @@ public class ShortTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testCancellation() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		account.setAmount("USDT", 100.0);
 		long time = 1;
@@ -402,7 +401,7 @@ public class ShortTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testShortTradingEffectOnLong() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double MAX = 40.0;
 		final double initialBalance = 100;

@@ -181,7 +181,7 @@ public final class TradingManager {
 	}
 
 	public double getTotalAssets() {
-		return tradingAccount.getBalance(assetSymbol).getTotal();
+		return tradingAccount.getBalance(assetSymbol, Balance::getTotal);
 	}
 
 	public double getCash() {
@@ -221,8 +221,8 @@ public final class TradingManager {
 		return tradingAccount.waitingForFill(assetSymbol, SELL);
 	}
 
-	public final Map<String, Balance> updateBalances() {
-		return tradingAccount.updateBalances();
+	public final void updateBalances() {
+		tradingAccount.updateBalances();
 	}
 
 	public String getReferenceCurrencySymbol() {
@@ -326,8 +326,9 @@ public final class TradingManager {
 	void notifySimulationEnd() {
 		notifySimulationEnd(this.notifications);
 		notifySimulationEnd(trader.notifications);
-		getAccount().balanceUpdateCounts.clear();
-		getAccount().notifySimulationEnd();
+		SimulatedAccountManager account = (SimulatedAccountManager) getAccount();
+		account.balanceUpdateCounts.clear();
+		account.notifySimulationEnd();
 	}
 
 	private void notifySimulationEnd(OrderListener[] notifications) {
@@ -341,13 +342,9 @@ public final class TradingManager {
 	}
 
 	public void updateOpenOrders(String symbol, Candle candle) {
-		if (tradingAccount.isSimulated()) {
-			tradingAccount.updateOpenOrders(symbol, candle);
+		if (tradingAccount instanceof SimulatedAccountManager account) {
+			account.updateOpenOrders(symbol, candle);
 		}
-	}
-
-	public Balance getBalance(String symbol) {
-		return tradingAccount.getBalance(symbol);
 	}
 
 	public int pipSize() {
@@ -358,11 +355,7 @@ public final class TradingManager {
 		return tradingAccount.canShortSell();
 	}
 
-	public double marginReserveFactorPct() {
-		return tradingAccount.marginReserveFactorPct();
+	public Map<String, Balance> getBalanceSnapshot() {
+		return tradingAccount.getBalanceSnapshot();
 	}
-
-//	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
-//		return exchange.isDirectSwitchSupported(currentAssetSymbol, targetAssetSymbol);
-//	}
 }

@@ -17,13 +17,13 @@ public final class SimulatedClientAccount implements ClientAccount {
 	private final AtomicLong orderIdGenerator = new AtomicLong(0);
 	private Map<String, OrderSet> orders = new HashMap<>();
 	private TradingFees tradingFees;
-	private final AccountManager account;
+	private final SimulatedAccountManager account;
 	private OrderFillEmulator orderFillEmulator;
 	private final int marginReservePercentage;
 
 	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, Simulation simulation) {
 		this.marginReservePercentage = accountConfiguration.marginReservePercentage();
-		this.account = new AccountManager(this, accountConfiguration, simulation);
+		this.account = new SimulatedAccountManager(this, accountConfiguration, simulation);
 		this.orderFillEmulator = simulation.orderFillEmulator();
 	}
 
@@ -144,7 +144,7 @@ public final class SimulatedClientAccount implements ClientAccount {
 		return account.getBalances();
 	}
 
-	public AccountManager getAccount() {
+	public SimulatedAccountManager getAccount() {
 		return account;
 	}
 
@@ -182,7 +182,6 @@ public final class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	@Override
 	public final synchronized boolean updateOpenOrders(String symbol, Candle candle) {
 		OrderSet s = orders.get(symbol);
 		if (s == null || s.isEmpty()) {

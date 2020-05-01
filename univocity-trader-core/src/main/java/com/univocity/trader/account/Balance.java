@@ -1,5 +1,7 @@
 package com.univocity.trader.account;
 
+import org.slf4j.*;
+
 import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -9,6 +11,7 @@ import static com.univocity.trader.config.Allocation.*;
 
 public final class Balance implements Cloneable {
 
+	private static final Logger log = LoggerFactory.getLogger(Balance.class);
 	public static final Balance ZERO = new Balance(null, "");
 
 	private final Map<String, AtomicLong> balanceUpdateCounts;
@@ -16,7 +19,7 @@ public final class Balance implements Cloneable {
 	private double free = 0.0;
 	private double locked = 0.0;
 	private double shorted = 0.0;
-	private Map<String, Double> marginReserves = new ConcurrentHashMap<>();
+	private final Map<String, Double> marginReserves = new ConcurrentHashMap<>();
 	private String[] shortedAssetSymbols;
 	private boolean tradingLocked = false;
 
@@ -161,15 +164,21 @@ public final class Balance implements Cloneable {
 		return round(BigDecimal.valueOf(bd), ROUND_MC).doubleValue();
 	}
 
-	public final synchronized boolean isTradingLocked() {
+	public final boolean isTradingLocked() {
 		return tradingLocked;
 	}
 
-	public final synchronized void lockTrading() {
+	public final void lockTrading() {
+		if (log.isTraceEnabled()) {
+			log.trace("Locking trading on {}", symbol);
+		}
 		tradingLocked = true;
 	}
 
-	public final synchronized void unlockTrading() {
+	public final void unlockTrading() {
+		if (log.isTraceEnabled()) {
+			log.trace("Unlocking trading on {}", symbol);
+		}
 		tradingLocked = false;
 	}
 

@@ -1,10 +1,8 @@
 package com.univocity.trader.account;
 
 import com.univocity.trader.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
-import com.univocity.trader.simulation.*;
 import com.univocity.trader.strategy.*;
 import com.univocity.trader.utils.*;
 import org.apache.commons.lang3.*;
@@ -15,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.concurrent.locks.*;
+import java.util.function.*;
 import java.util.stream.*;
 
 import static com.univocity.trader.account.Order.Side.*;
@@ -22,37 +21,37 @@ import static com.univocity.trader.account.Order.Status.*;
 import static com.univocity.trader.account.Trade.Side.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
-public final class AccountManager implements ClientAccount, SimulatedAccountConfiguration {
+public class AccountManager implements ClientAccount {
 	private static final Logger log = LoggerFactory.getLogger(AccountManager.class);
 	private static final AtomicLong NULL = new AtomicLong(0);
 	private final AtomicLong tradeIdGenerator = new AtomicLong(0);
 
-	private final Map<Integer, long[]> fundAllocationCache = new ConcurrentHashMap<>();
+	final Map<Integer, long[]> fundAllocationCache = new ConcurrentHashMap<>();
 	final Map<String, AtomicLong> balanceUpdateCounts = new ConcurrentHashMap<>();
 
-	private final Map<String, Trader> traders = new ConcurrentHashMap<>();
-	private final AccountConfiguration<?> configuration;
+	final Map<String, Trader> traders = new ConcurrentHashMap<>();
+	final AccountConfiguration<?> configuration;
 
-	private final OrderSet pendingOrders = new OrderSet();
-	private final Lock orderLock;
+	final OrderSet pendingOrders = new OrderSet();
+	final Lock orderLock;
 
 	private static final long BALANCE_EXPIRATION_TIME = minutes(10).ms;
 	private static final long FREQUENT_BALANCE_UPDATE_INTERVAL = seconds(15).ms;
 
 	private long lastBalanceSync = 0L;
-	private final ConcurrentHashMap<String, Balance> balances = new ConcurrentHashMap<>();
-	private Balance[] balancesArray;
+	final ConcurrentHashMap<String, Balance> balances = new ConcurrentHashMap<>();
+	Balance[] balancesArray;
+	private final Lock balanceLock;
 
-	private final ExchangeClient client;
+	final ExchangeClient client;
 	private final ClientAccount account;
-	private final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
-	private TradingManager[] tradingManagers;
-	private final Simulation simulation;
-	private final double marginReserveFactor;
+	final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
+	TradingManager[] tradingManagers;
+	final double marginReserveFactor;
 	private final double marginReserveFactorPct;
 	private final int accountHash;
 
-	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration, Simulation simulation) {
+	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration) {
 		if (StringUtils.isBlank(configuration.referenceCurrency())) {
 			throw new IllegalConfigurationException("Please configure the reference currency symbol");
 		}
@@ -60,14 +59,16 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 			throw new IllegalConfigurationException("Please configure traded symbol pairs");
 		}
 		this.accountHash = configuration.id().hashCode();
-		this.simulation = simulation;
 		this.account = account;
 		this.configuration = configuration;
+
 		this.marginReserveFactor = account.marginReservePercentage() / 100.0;
 		this.marginReserveFactorPct = marginReserveFactor;
+
 		this.client = new ExchangeClient(this);
 
 		this.orderLock = account.isSimulated() ? new FakeLock() : new ReentrantLock();
+		this.balanceLock = account.isSimulated() ? new FakeLock() : new ReentrantLock();
 
 		if (account.marginReservePercentage() < 100) {
 			throw new IllegalStateException("Margin reserve percentage must be at least 100%");
@@ -78,18 +79,11 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		return client;
 	}
 
-	public ConcurrentHashMap<String, Balance> getBalances() {
-		long now = System.currentTimeMillis();
-		if ((now - lastBalanceSync) > BALANCE_EXPIRATION_TIME) {
-			lastBalanceSync = now;
-			updateBalances();
-		}
+	ConcurrentHashMap<String, Balance> getBalances() {
+		updateBalances();
 		return balances;
 	}
 
-	public double applyMarginReserve(double amount) {
-		return amount * marginReserveFactor;
-	}
 
 	/**
 	 * Returns the amount held in the account for the given symbol.
@@ -99,136 +93,52 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 	 * @return the amount held for the given symbol.
 	 */
 	public double getAmount(String symbol) {
-		return balances.getOrDefault(symbol, Balance.ZERO).getFree();
+		return getBalance(symbol, Balance::getFree);
 	}
 
 	public double getShortedAmount(String symbol) {
-		return balances.getOrDefault(symbol, Balance.ZERO).getShorted();
+		return getBalance(symbol, Balance::getShorted);
 	}
 
-	public final Balance getBalance(String symbol) {
+	Balance getBalance(String symbol) {
 		Balance out = balances.get(symbol);
 		if (out == null) {
-			synchronized (balances) {
-				if (balances.get(symbol) == null) {
-					out = new Balance(this, symbol);
-					balances.put(symbol, out);
-					balancesArray = null;
-				}
-			}
+			out = new Balance(this, symbol);
+			balances.put(symbol, out);
+			balancesArray = null;
 		}
 		return out;
 	}
 
-	public void subtractFromFreeBalance(String symbol, final double amount) {
-		Balance balance = getBalance(symbol);
-		balance.setFree(balance.getFree() - amount);
+	public final void consumeBalance(String symbol, Consumer<Balance> consumer) {
+		modifyBalance(symbol, consumer);
 	}
 
-	public void subtractFromLockedBalance(String symbol, final double amount) {
-		Balance balance = getBalance(symbol);
-		balance.setLocked(balance.getLocked() - amount);
-	}
-
-	public void releaseFromLockedBalance(String symbol, final double amount) {
-		Balance balance = getBalance(symbol);
-		double locked = balance.getLocked();
-		if (locked < amount) {
-			double toTakeFromFreeBalance = amount - locked;
-			locked -= toTakeFromFreeBalance;
-
-			balance.setLocked(0.0);
-			balance.setFree(balance.getFree() + locked);
-		} else {
-			balance.setLocked(locked - amount);
-			balance.setFree(balance.getFree() + amount);
+	public final void modifyBalance(String symbol, Consumer<Balance> consumer) {
+		balanceLock.lock();
+		try {
+			consumer.accept(getBalance(symbol));
+		} finally {
+			balanceLock.unlock();
 		}
 	}
 
-	public void subtractFromShortedBalance(String symbol, final double amount) {
-		Balance balance = getBalance(symbol);
-		balance.setShorted(balance.getShorted() - amount);
-	}
-
-	public double getMarginReserve(String fundSymbol, String assetSymbol) {
-		return getBalance(fundSymbol).getMarginReserve(assetSymbol);
-
-	}
-
-	public void subtractFromMarginReserveBalance(String fundSymbol, String assetSymbol, final double amount) {
-		Balance balance = getBalance(fundSymbol);
-		balance.setMarginReserve(assetSymbol, balance.getMarginReserve(assetSymbol) - amount);
-	}
-
-	public void subtractFromLockedOrFreeBalance(String funds, double amount) {
-		subtractFromLockedOrFreeBalance(funds, null, amount);
-	}
-
-	public void subtractFromLockedOrFreeBalance(String funds, String asset, double amount) {
-		Balance balance = getBalance(funds);
-		double locked = balance.getLocked();
-
-		if (amount < locked) { //got more locked funds
-			subtractFromLockedBalance(funds, amount);
-		} else { //clear locked funds. Account reserve is greater than locked amount when price jumps a bit
-			subtractFromLockedBalance(funds, locked);
-			double remainder = amount - locked;
-			if (balance.getFree() >= remainder) {
-				subtractFromFreeBalance(funds, remainder);
-			} else if (asset != null) { //use margin
-				subtractFromMarginReserveBalance(funds, asset, remainder);
-			} else {
-				//will throw exception.
-				subtractFromLockedBalance(funds, amount);
-			}
+	public final <T> T queryBalance(String symbol, Function<Balance, T> function) {
+		balanceLock.lock();
+		try {
+			return function.apply(getBalance(symbol));
+		} finally {
+			balanceLock.unlock();
 		}
 	}
 
-	public synchronized void addToLockedBalance(String symbol, double amount) {
-		Balance balance = getBalance(symbol);
-		amount = balance.getLocked() + amount;
-		balance.setLocked(amount);
-	}
-
-	//TODO: need to implement margin release/call according to price movement.
-	public void addToMarginReserveBalance(String fundSymbol, String assetSymbol, double amount) {
-		Balance balance = getBalance(fundSymbol);
-		amount = balance.getMarginReserve(assetSymbol) + amount;
-		balance.setMarginReserve(assetSymbol, amount);
-	}
-
-
-	public void addToFreeBalance(String symbol, double amount) {
-		Balance balance = getBalance(symbol);
-		amount = balance.getFree() + amount;
-		balance.setFree(amount);
-	}
-
-	public void addToShortedBalance(String symbol, double amount) {
-		Balance balance = getBalance(symbol);
-		amount = balance.getShorted() + amount;
-		balance.setShorted(amount);
-	}
-
-	@Override
-	public synchronized AccountManager setAmount(String symbol, double amount) {
-		if (configuration.isSymbolSupported(symbol)) {
-			synchronized (balances) {
-				balances.put(symbol, new Balance(this, symbol, amount));
-				this.balancesArray = null;
-			}
-			return this;
+	public final double getBalance(String symbol, ToDoubleFunction<Balance> function) {
+		balanceLock.lock();
+		try {
+			return function.applyAsDouble(getBalance(symbol));
+		} finally {
+			balanceLock.unlock();
 		}
-		throw configuration.reportUnknownSymbol("Can't set funds", symbol);
-	}
-
-	public synchronized AccountManager lockAmount(String symbol, double amount) {
-		if (configuration.isSymbolSupported(symbol)) {
-			subtractFromFreeBalance(symbol, amount);
-			addToLockedBalance(symbol, amount);
-			return this;
-		}
-		throw configuration.reportUnknownSymbol("Can't set funds", symbol);
 	}
 
 	private Trader findTrader(String assetSymbol, String fundSymbol) {
@@ -346,47 +256,49 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		return allocateFunds(assetSymbol, getReferenceCurrencySymbol(), tradeSide);
 	}
 
-	public synchronized double getTotalFundsInReferenceCurrency() {
+	public double getTotalFundsInReferenceCurrency() {
 		return getTotalFundsIn(configuration.referenceCurrency());
 	}
 
-	public synchronized double getTotalFundsIn(String currency) {
+	public double getTotalFundsIn(String currency) {
 		final Balance[] tmp;
-		synchronized (balances) {
+		balanceLock.lock();
+		double total = 0.0;
+		try {
 			if (balancesArray == null) {
 				tmp = balancesArray = balances.values().toArray(new Balance[0]);
 			} else {
 				tmp = balancesArray;
 			}
-		}
+			Map<String, double[]> allPrices = getAllTradingManagers()[0].getAllPrices();
+			for (int i = 0; i < tmp.length; i++) {
+				Balance b = tmp[i];
+				String symbol = b.getSymbol();
+				double quantity = b.getTotal();
 
-		double total = 0.0;
-		Map<String, double[]> allPrices = getAllTradingManagers()[0].getAllPrices();
-		for (int i = 0; i < tmp.length; i++) {
-			Balance b = tmp[i];
-			String symbol = b.getSymbol();
-			double quantity = b.getTotal();
+				String[] shortedAssetSymbols = b.getShortedAssetSymbols();
+				for (int j = 0; j < shortedAssetSymbols.length; j++) {
+					String shorted = shortedAssetSymbols[j];
+					double reserve = b.getMarginReserve(shorted);
+					double marginWithoutReserve = reserve / marginReserveFactorPct;
+					double accountBalanceForMargin = reserve - marginWithoutReserve;
+					double shortedQuantity = getBalance(shorted, Balance::getShorted);
+					double originalShortedPrice = marginWithoutReserve / shortedQuantity;
+					double totalInvestmentOnShort = shortedQuantity * originalShortedPrice;
+					double totalAtCurrentPrice = multiplyWithLatestPrice(shortedQuantity, shorted, symbol, allPrices);
+					double shortProfitLoss = totalInvestmentOnShort - totalAtCurrentPrice;
 
-			String[] shortedAssetSymbols = b.getShortedAssetSymbols();
-			for (int j = 0; j < shortedAssetSymbols.length; j++) {
-				String shorted = shortedAssetSymbols[j];
-				double reserve = b.getMarginReserve(shorted);
-				double marginWithoutReserve = reserve / marginReserveFactorPct;
-				double accountBalanceForMargin = reserve - marginWithoutReserve;
-				double shortedQuantity = getBalance(shorted).getShorted();
-				double originalShortedPrice = marginWithoutReserve / shortedQuantity;
-				double totalInvestmentOnShort = shortedQuantity * originalShortedPrice;
-				double totalAtCurrentPrice = multiplyWithLatestPrice(shortedQuantity, shorted, symbol, allPrices);
-				double shortProfitLoss = totalInvestmentOnShort - totalAtCurrentPrice;
+					total += accountBalanceForMargin + shortProfitLoss;
+				}
 
-				total += accountBalanceForMargin + shortProfitLoss;
+				if (currency.equals(symbol)) {
+					total += quantity;
+				} else {
+					total += multiplyWithLatestPrice(quantity, symbol, currency, allPrices);
+				}
 			}
-
-			if (currency.equals(symbol)) {
-				total += quantity;
-			} else {
-				total += multiplyWithLatestPrice(quantity, symbol, currency, allPrices);
-			}
+		} finally {
+			balanceLock.unlock();
 		}
 		return total;
 	}
@@ -432,51 +344,33 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 	}
 
 	private boolean isTradingLocked(String assetSymbol) {
-		return getBalance(assetSymbol).isTradingLocked();
+		return queryBalance(assetSymbol, Balance::isTradingLocked);
 	}
 
 	public boolean isBuyLocked(String assetSymbol) {
-		if (isTradingLocked(assetSymbol)) {
-			return true;
-		}
-		if (waitingForFill(assetSymbol, BUY)) {
-			return true;
-		}
-		return false;
-
+		return isTradingLocked(assetSymbol) || waitingForFill(assetSymbol, BUY);
 	}
 
 	public boolean isShortSellLocked(String assetSymbol) {
-		if (isTradingLocked(assetSymbol)) {
-			return true;
-		}
-		if (waitingForFill(assetSymbol, SELL)) {
-			return true;
-		}
-		return false;
+		return (isTradingLocked(assetSymbol) || waitingForFill(assetSymbol, SELL));
 	}
 
 	private boolean lockTrading(String assetSymbol) {
-		Balance b = getBalance(assetSymbol);
-		if (b.isTradingLocked()) {
-			return false;
-		}
-		b.lockTrading();
-		if (log.isTraceEnabled()) {
-			log.trace("Locking trading on {}", assetSymbol);
-		}
-		return true;
+		return queryBalance(assetSymbol, b -> {
+			if (b.isTradingLocked()) {
+				return false;
+			}
+			b.lockTrading();
+			return true;
+		});
 	}
 
 	private void unlockTrading(String assetSymbol) {
-		getBalance(assetSymbol).unlockTrading();
-		if (log.isTraceEnabled()) {
-			log.trace("Unlocking trading on {}", assetSymbol);
-		}
+		modifyBalance(assetSymbol, Balance::unlockTrading);
 	}
 
 	@Override
-	public synchronized String toString() {
+	public String toString() {
 		StringBuilder out = new StringBuilder();
 		Map<String, Balance> positions = account.updateBalances();
 		positions.entrySet().stream()
@@ -491,28 +385,33 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 	}
 
 	private void executeUpdateBalances() {
-		Map<String, Balance> updatedBalances = account.updateBalances();
-		if (updatedBalances != null && updatedBalances != balances && !updatedBalances.isEmpty()) {
-			log.trace("Balances updated - available: " + new TreeMap<>(updatedBalances).values());
-			updatedBalances.keySet().retainAll(configuration.symbols());
-			synchronized (balances) {
+		balanceLock.lock();
+		try {
+			if (System.currentTimeMillis() - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL) {
+				return;
+			}
+			Map<String, Balance> updatedBalances = account.updateBalances();
+			if (updatedBalances != null && updatedBalances != balances && !updatedBalances.isEmpty()) {
+				log.trace("Balances updated - available: " + new TreeMap<>(updatedBalances).values());
+				updatedBalances.keySet().retainAll(configuration.symbols());
+
 				this.balances.clear();
 				this.balances.putAll(updatedBalances);
 				this.balancesArray = null;
-			}
 
-			updatedBalances.values().removeIf(b -> b.getTotal() == 0);
-			log.debug("Balances updated - trading: " + new TreeMap<>(updatedBalances).values());
-		}
-		if (!this.isSimulated()) {
+
+				updatedBalances.values().removeIf(b -> b.getTotal() == 0);
+				log.debug("Balances updated - trading: " + new TreeMap<>(updatedBalances).values());
+			}
 			lastBalanceSync = System.currentTimeMillis();
+		} finally {
+			balanceLock.unlock();
 		}
 	}
 
 	@Override
-	public synchronized ConcurrentHashMap<String, Balance> updateBalances() {
-		long now = System.currentTimeMillis();
-		if (now - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL) {
+	public ConcurrentHashMap<String, Balance> updateBalances() {
+		if (System.currentTimeMillis() - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL) {
 			return balances;
 		}
 		executeUpdateBalances();
@@ -571,10 +470,10 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 				return null;
 			}
 			if (orderDetails.getQuantity() == 0) {
-				throw new IllegalArgumentException("Not quantity specified for order " + orderDetails);
+				throw new IllegalArgumentException("No quantity specified for order " + orderDetails);
 			}
 			if (orderDetails.getPrice() == 0 && orderDetails.getType() == Order.Type.LIMIT) {
-				throw new IllegalArgumentException("Not price specified for LIMIT order " + orderDetails);
+				throw new IllegalArgumentException("No price specified for LIMIT order " + orderDetails);
 			}
 
 			Order order = account.executeOrder(orderDetails);
@@ -633,10 +532,11 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 			orderPreparation.setPrice(orderPreparation.getPrice());
 			orderPreparation.setQuantity(orderPreparation.getQuantity());
 
+			boolean closingShort = tradeSide == SHORT && side == BUY;
 			double minimumInvestment = configuration.minimumInvestmentAmountPerTrade(orderPreparation.getAssetsSymbol());
 			double orderAmount = orderPreparation.getTotalOrderAmount();
 
-			if (orderAmount >= minimumInvestment && orderAmount > priceDetails.getMinimumOrderAmount(orderPreparation.getPrice())) {
+			if ((orderAmount >= minimumInvestment || closingShort) && orderAmount > priceDetails.getMinimumOrderAmount(orderPreparation.getPrice())) {
 				return orderPreparation;
 			}
 		}
@@ -697,12 +597,6 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 	}
 
 	public TradingFees getTradingFees() {
-		if (simulation != null) {
-			if (simulation.tradingFees() == null) {
-				throw new IllegalConfigurationException("Please configure trading fess");
-			}
-			return simulation.tradingFees();
-		}
 		return ClientAccount.super.getTradingFees();
 	}
 
@@ -907,7 +801,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		}
 	}
 
-	public synchronized void cancelOrder(Order order) {
+	public void cancelOrder(Order order) {
 		OrderManager orderManager = configuration.orderManager(order.getSymbol());
 		if (!order.isFinalized()) {
 			order = account.updateOrderStatus(order);
@@ -917,7 +811,7 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		}
 	}
 
-	public synchronized void cancelStaleOrdersFor(Trader trader) {
+	public void cancelStaleOrdersFor(Trader trader) {
 		orderLock.lock();
 		try {
 			if (pendingOrders.isEmpty()) {
@@ -950,42 +844,6 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		}
 	}
 
-	public SimulatedAccountConfiguration resetBalances() {
-		synchronized (balances) {
-			this.balances.clear();
-			this.balancesArray = null;
-		}
-		fundAllocationCache.clear();
-		pendingOrders.clear();
-
-		traders.clear();
-		allTradingManagers.clear();
-		tradingManagers = null;
-
-		client.reset();
-		lastBalanceSync = 0L;
-
-		return this;
-	}
-
-	public boolean updateOpenOrders(String symbol, Candle candle) {
-		if (this.account.updateOpenOrders(symbol, candle)) {
-			orderLock.lock();
-			try {
-				for (int i = 0; i < pendingOrders.i; i++) {
-					Order order = pendingOrders.elements[i];
-					if (symbol.equals(order.getSymbol())) {
-						updateOrder(order, null);
-					}
-				}
-			} finally {
-				orderLock.unlock();
-			}
-			return true;
-		}
-		return false;
-	}
-
 	public AccountConfiguration<?> configuration() {
 		return configuration;
 	}
@@ -998,20 +856,19 @@ public final class AccountManager implements ClientAccount, SimulatedAccountConf
 		return marginReserveFactorPct;
 	}
 
-	public void notifySimulationEnd() {
-		for (int i = 0; i < this.pendingOrders.i; i++) {
-			pendingOrders.elements[i].cancel();
-		}
-
-		for (TradingManager t : this.getAllTradingManagers()) {
-			updateOpenOrders(t.getSymbol(), t.getLatestCandle());
-		}
-
-		balances.clear();
-		pendingOrders.clear();
-	}
-
 	public AtomicLong getTradeIdGenerator() {
 		return tradeIdGenerator;
+	}
+
+	public Map<String, Balance> getBalanceSnapshot() {
+		balanceLock.lock();
+		try {
+			return balances.entrySet()
+					.stream()
+					.collect(Collectors
+							.toMap(Map.Entry::getKey, e -> e.getValue().clone()));
+		} finally {
+			balanceLock.unlock();
+		}
 	}
 }

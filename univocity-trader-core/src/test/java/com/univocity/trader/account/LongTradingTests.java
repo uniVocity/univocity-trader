@@ -1,7 +1,6 @@
 package com.univocity.trader.account;
 
 import com.univocity.trader.*;
-import com.univocity.trader.candles.*;
 import org.junit.*;
 
 import static com.univocity.trader.account.Order.Status.*;
@@ -17,7 +16,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testLongPositionTradingWithFullAccount() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double initialBalance = 100;
 
@@ -54,7 +53,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testLongPositionTrading() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double MAX = 40.0;
 		final double initialBalance = 100;
@@ -93,7 +92,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testTradingWithStopLoss() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double MAX = 40.0;
 		final double initialBalance = 100;
@@ -137,7 +136,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testTradingWithStopGain() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		final double MAX = 40.0;
 		final double initialBalance = 100;
@@ -191,7 +190,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testLongTradingWithMarketBracketOrder() {
-		AccountManager account = getAccountManager(new DefaultOrderManager() {
+		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
@@ -215,7 +214,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 	}
 
-	double testLongMarketBracketOrder(AccountManager account, double initialBalance, double unitPrice, double priceIncrement, long time) {
+	double testLongMarketBracketOrder(SimulatedAccountManager account, double initialBalance, double unitPrice, double priceIncrement, long time) {
 		Trader trader = account.getTraderOf("ADAUSDT");
 
 		double usdBalance = account.getAmount("USDT");
@@ -277,7 +276,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testLongTradingWithLimitBracketOrder() {
-		AccountManager account = getAccountManager(new DefaultOrderManager() {
+		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
@@ -301,7 +300,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 	}
 
-	double testLongLimitBracketOrder(AccountManager account, double initialBalance, double unitPrice, double priceIncrement, long time) {
+	double testLongLimitBracketOrder(SimulatedAccountManager account, double initialBalance, double unitPrice, double priceIncrement, long time) {
 		Trader trader = account.getTraderOf("ADAUSDT");
 
 		double usdBalance = account.getAmount("USDT");
@@ -385,7 +384,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testCancellation() {
-		AccountManager account = getAccountManager();
+		SimulatedAccountManager account = getSimulatedAccountManager();
 
 		account.setAmount("USDT", 100.0);
 		long time = 1;
@@ -435,7 +434,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 	@Test
 	public void testCancellationOfOrdersInBracket() {
-		AccountManager account = getAccountManager(new DefaultOrderManager() {
+		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
