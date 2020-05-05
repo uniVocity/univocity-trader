@@ -128,8 +128,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		if (clients.isEmpty()) {
 			for (var account : configuration.accounts()) {
 				ClientAccount clientAccount = exchange.connectToAccount(account);
-				AccountManager accountManager = new AccountManager(clientAccount, account);
-				var client = new ExchangeClient<T>(accountManager);
+				var client = new ExchangeClient<T>(createAccountManager(clientAccount, account));
 				clients.add(client);
 			}
 		}
@@ -143,6 +142,10 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		}
 
 		updateDatabase();
+	}
+
+	protected AccountManager createAccountManager(ClientAccount clientAccount, A account){
+		return new AccountManager(clientAccount, account);
 	}
 
 	private void updateDatabase() {

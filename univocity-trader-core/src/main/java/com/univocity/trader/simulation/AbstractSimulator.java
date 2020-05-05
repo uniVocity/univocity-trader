@@ -33,7 +33,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 			this.accounts = new SimulatedAccountManager[accountConfigs.size()];
 			int i = 0;
 			for (A accountConfig : accountConfigs) {
-				this.accounts[i++] = (SimulatedAccountManager)createAccountInstance(accountConfig).getAccount();
+				this.accounts[i++] = (SimulatedAccountManager) createAccountInstance(accountConfig).getAccount();
 			}
 		}
 		return accounts;

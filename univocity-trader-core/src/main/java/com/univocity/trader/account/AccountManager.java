@@ -321,8 +321,13 @@ public class AccountManager implements ClientAccount {
 	public boolean waitingForFill(String assetSymbol, Order.Side side) {
 		orderLock.lock();
 		try {
-			for (int i = 0; i < pendingOrders.i; i++) {
+			for (int i = pendingOrders.i - 1; i >= 0; i--) {
 				Order order = pendingOrders.elements[i];
+
+				if (order.isFinalized()) {
+					continue;
+				}
+
 				if (order.getSide() == side && order.getAssetsSymbol().equals(assetSymbol)) {
 					return true;
 				}
@@ -486,11 +491,11 @@ public class AccountManager implements ClientAccount {
 						return order;
 					case FILLED:
 						logOrderStatus("Completed order. ", order);
-						orderFinalized(null, order, null);
+						orderFinalized(null, order);
 						return order;
 					case CANCELLED:
 						logOrderStatus("Could not create order. ", order);
-						orderFinalized(null, order, null);
+						orderFinalized(null, order);
 						return null;
 				}
 			}
@@ -610,16 +615,20 @@ public class AccountManager implements ClientAccount {
 		account.cancel(order);
 	}
 
-	private static void logOrderStatus(String msg, Order order) {
+	private void logOrderStatus(String msg, Order order) {
 		if (log.isTraceEnabled()) {
+			Long tradeId = order.getTrade() != null ? order.getTrade().id() : null;
+
+
 			//e.g. PARTIALLY_FILLED LIMIT BUY of 1 BTC @ 9000 USDT each after 10 seconds.
-			log.trace("{}{} {} {} of {}/{} {} @ {} {} each after {}. Order id: {}, order quantity: {}, amount: ${} of expected ${} {}",
+			log.trace("Trade[{}] {}{} {} {} of {}/{} {} @ {} {} each after {}. Order id: {}, order quantity: {}, amount: ${} of expected ${} {}",
+					tradeId,
 					msg,
 					order.getStatus(),
 					order.getType(),
 					order.getSide(),
-					order.getQuantity(),
 					BigDecimal.valueOf(order.getExecutedQuantity()).setScale(8, RoundingMode.FLOOR).toPlainString(),
+					order.getQuantity(),
 					order.getAssetsSymbol(),
 					BigDecimal.valueOf(order.getAveragePrice()).setScale(8, RoundingMode.FLOOR).toPlainString(),
 					order.getFundsSymbol(),
@@ -648,98 +657,118 @@ public class AccountManager implements ClientAccount {
 			return;
 		}
 		new Thread(() -> {
-			Thread.currentThread().setName("Order " + order.getOrderId() + " monitor:" + order.getSide() + " " + order.getSymbol());
+			Thread.currentThread().setName("Order " + order.getOrderId() + " monitor: " + order.getSide() + " " + order.getSymbol());
 			OrderManager orderManager = configuration.orderManager(order.getSymbol());
 			while (true) {
+				Order o = order;
 				try {
 					try {
 						Thread.sleep(orderManager.getOrderUpdateFrequency().ms);
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
-					Order updated = updateOrder(order, null);
-					if (updated.isFinalized()) {
+
+					o = updateOrder(o);
+					if (o == null || o.isFinalized()) {
 						return;
 					}
+
+
 				} catch (Exception e) {
-					log.error("Error tracking state of order " + order, e);
+					log.error("Error tracking state of order " + o, e);
 					return;
 				}
 			}
 		}).start();
 	}
 
-	public Order updateOrder(Order order, Trade trade) {
-		OrderManager orderManager = configuration.orderManager(order.getSymbol());
+	public Order updateOrder(Order order) {
 		Order old = order;
-		order = account.updateOrderStatus(order);
+		OrderManager orderManager = configuration.orderManager(order.getSymbol());
+		boolean locked = orderLock.tryLock();
+		if (locked) {
+			try {
+				if(!isSimulated()) {
+					if (order.isFinalized()) {
+						pendingOrders.remove(order);
+						return order;
+					}
+					Order me = pendingOrders.get(order);
+					if (me != order) {
+						return me;
+					}
+				}
 
-		orderLock.lock();
-		try {
-			if (trade != null) {
-				trade.orderUpdated(order);
+				order = account.updateOrderStatus(order);
+
+				if (order.getTrade() != null) {
+					if (!order.getTrade().orderUpdated(order)) {
+						pendingOrders.remove(old);
+						return order;
+					}
+				}
+				if (order.isFinalized()) {
+					logOrderStatus("Order finalized. ", order);
+					pendingOrders.remove(old);
+					orderFinalized(orderManager, order);
+					return order;
+				} else { // update order status
+					pendingOrders.addOrReplace(order);
+				}
+
+				if (old.getExecutedQuantity() != order.getExecutedQuantity() || (isSimulated() && order instanceof DefaultOrder d && d.hasPartialFillDetails())) {
+					logOrderStatus("Order updated. ", order);
+					executeUpdateBalances();
+					orderManager.updated(order, traderOf(order), this::resubmit);
+				} else {
+					logOrderStatus("Unchanged ", order);
+					orderManager.unchanged(order, traderOf(order), this::resubmit);
+				}
+
+				//order manager could have cancelled the order
+				if (order.getStatus() == CANCELLED && pendingOrders.contains(order)) {
+					cancelOrder(orderManager, order);
+				}
+			} finally {
+				orderLock.unlock();
 			}
-
-			if (order.isFinalized()) {
-				logOrderStatus("", order);
-				pendingOrders.remove(old);
-				orderFinalized(orderManager, order, trade);
-				return order;
-			} else { // update order status
-				pendingOrders.addOrReplace(order);
-			}
-		} finally {
-			orderLock.unlock();
-		}
-
-		if (old.getExecutedQuantity() != order.getExecutedQuantity() || (isSimulated() && order instanceof DefaultOrder d && d.hasPartialFillDetails())) {
-			logOrderStatus("", order);
-			executeUpdateBalances();
-			orderManager.updated(order, traderOf(order), this::resubmit);
+			return order;
 		} else {
-			logOrderStatus("Unchanged ", order);
-			orderManager.unchanged(order, traderOf(order), this::resubmit);
-		}
-
-		orderLock.lock();
-		try {
-			//order manager could have cancelled the order
-			if (order.getStatus() == CANCELLED && pendingOrders.contains(order)) {
-				cancelOrder(orderManager, order);
+			orderLock.lock();
+			try {
+				return pendingOrders.get(order);
+			} finally {
+				orderLock.unlock();
 			}
-		} finally {
-			orderLock.unlock();
 		}
-		return order;
 	}
 
-	private void orderFinalized(OrderManager orderManager, Order order, Trade trade) {
+	private void orderFinalized(OrderManager orderManager, Order order) {
 		orderManager = orderManager == null ? configuration.orderManager(order.getSymbol()) : orderManager;
 		try {
 			executeUpdateBalances();
 		} finally {
 			Trader trader;
-			if (trade != null) {
-				trader = trade.trader();
+			if (order.getTrade() != null) {
+				trader = order.getTrade().trader();
 			} else {
 				trader = traderOf(order);
-				trade = trader.tradeOf(order);
 			}
-			notifyFinalized(orderManager, order, trade, trader);
+			notifyFinalized(orderManager, order, trader);
 			if (order.getAttachments() != null && order.isCancelled() && order.getExecutedQuantity() == 0.0) {
 				for (Order attached : order.getAttachments()) {
 					attached.cancel();
-					notifyFinalized(orderManager, attached, trade, trader);
+					notifyFinalized(orderManager, attached, trader);
 				}
 			}
 		}
 	}
 
-	private void notifyFinalized(OrderManager orderManager, Order order, Trade trade, Trader trader) {
+	private void notifyFinalized(OrderManager orderManager, Order order, Trader trader) {
 		try {
 			orderManager.finalized(order, trader);
 		} finally {
-			getTradingManagerOf(order.getSymbol()).notifyOrderFinalized(order, trade);
+			getTradingManagerOf(order.getSymbol()).notifyOrderFinalized(order);
 		}
 	}
 
@@ -758,7 +787,7 @@ public class AccountManager implements ClientAccount {
 		cancelOrder(orderManager, order);
 
 		TradingManager tradingManager = getTradingManagerOf(order.getSymbol());
-		Trade trade = tradingManager.getTrader().tradeOf(order);
+		Trade trade = order.getTrade();
 
 		tradingManager.updateOpenOrders(order.getSymbol(), tradingManager.trader.latestCandle());
 
@@ -782,22 +811,21 @@ public class AccountManager implements ClientAccount {
 	}
 
 	private void cancelOrder(OrderManager orderManager, Order order) {
+		orderLock.lock();
 		try {
 			order.cancel();
 			account.cancel(order);
 		} catch (Exception e) {
 			log.error("Failed to execute cancellation of order '" + order + "' on exchange", e);
 		} finally {
-			order = account.updateOrderStatus(order);
-			orderLock.lock();
 			try {
+				order = account.updateOrderStatus(order);
 				pendingOrders.remove(order);
+				orderFinalized(orderManager, order);
+				logOrderStatus("Cancellation via order manager: ", order);
 			} finally {
 				orderLock.unlock();
 			}
-			orderFinalized(orderManager, order, null);
-			logOrderStatus("Cancellation via order manager: ", order);
-
 		}
 	}
 
@@ -817,7 +845,7 @@ public class AccountManager implements ClientAccount {
 			if (pendingOrders.isEmpty()) {
 				return;
 			}
-			for (int i = 0; i < pendingOrders.i; i++) {
+			for (int i = pendingOrders.i - 1; i >= 0; i--) {
 				Order order = pendingOrders.elements[i];
 				if (order.isFinalized()) {
 					continue;

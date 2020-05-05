@@ -305,21 +305,20 @@ public final class TradingManager {
 		}
 	}
 
-	private void notifyOrderFinalized(Order order, Trade trade, OrderListener[] notifications) {
+	private void notifyOrderFinalized(Order order, OrderListener[] notifications) {
 		for (int i = 0; i < notifications.length; i++) {
 			try {
-				trade = getTradeForOrder(trade, order);
-				notifications[i].orderFinalized(order, trade, client);
+				notifications[i].orderFinalized(order, order.getTrade(), client);
 			} catch (Exception e) {
 				log.error("Error sending orderFinalized notification for order: " + order, e);
 			}
 		}
 	}
 
-	void notifyOrderFinalized(Order order, Trade trade) {
+	void notifyOrderFinalized(Order order) {
 		trader.orderFinalized(order);
-		notifyOrderFinalized(order, trade, this.notifications);
-		notifyOrderFinalized(order, trade, trader.notifications);
+		notifyOrderFinalized(order, this.notifications);
+		notifyOrderFinalized(order, trader.notifications);
 
 	}
 

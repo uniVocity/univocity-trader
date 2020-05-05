@@ -45,17 +45,19 @@ public class OrderExecutionToCsv implements OrderListener {
 
 	@Override
 	public void orderSubmitted(Order order, Trade trade, Client client) {
-		logDetails(order, trade, client);
+		logDetails(order, client);
 	}
 
 	@Override
 	public void orderFinalized(Order order, Trade trade, Client client) {
-		logDetails(order, trade, client);
+		logDetails(order, client);
 	}
 
 
-	private void logDetails(Order order, Trade trade, Client client) {
-		lines.add(new OrderExecutionLine(order, trade, trade.trader(), client));
+	private void logDetails(Order order, Client client) {
+		if(order.getTrade() != null){
+			lines.add(new OrderExecutionLine(order, order.getTrade(), order.getTrade().trader(), client));
+		}
 	}
 
 	private List<OrderExecutionLine> filterLines() {

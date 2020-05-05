@@ -2,10 +2,8 @@ package com.univocity.trader.account;
 
 import org.apache.commons.lang3.*;
 
-import java.math.*;
 import java.util.*;
 
-import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.TriggerCondition.*;
 

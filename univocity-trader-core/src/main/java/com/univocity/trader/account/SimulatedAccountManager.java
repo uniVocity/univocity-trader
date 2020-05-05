@@ -9,13 +9,18 @@ import java.util.concurrent.*;
 
 public class SimulatedAccountManager extends AccountManager implements SimulatedAccountConfiguration {
 
-	private final Simulation simulation;
+	private final TradingFees tradingFees;
 	private final SimulatedClientAccount account;
 
-	public SimulatedAccountManager(SimulatedClientAccount account, AccountConfiguration<?> configuration, Simulation simulation) {
+	public SimulatedAccountManager(SimulatedClientAccount account, AccountConfiguration<?> configuration, TradingFees tradingFees) {
 		super(account, configuration);
-		this.simulation = simulation;
 		this.account = account;
+
+		if (tradingFees == null) {
+			throw new IllegalConfigurationException("Please configure trading fess");
+		}
+
+		this.tradingFees = tradingFees;
 	}
 
 	public void subtractFromFreeBalance(String symbol, final double amount) {
@@ -137,10 +142,10 @@ public class SimulatedAccountManager extends AccountManager implements Simulated
 		if (this.account.updateOpenOrders(symbol, candle)) {
 			orderLock.lock();
 			try {
-				for (int i = 0; i < pendingOrders.i; i++) {
+				for (int i = pendingOrders.i - 1; i >= 0; i--) {
 					Order order = pendingOrders.elements[i];
 					if (symbol.equals(order.getSymbol())) {
-						updateOrder(order, null);
+						updateOrder(order);
 					}
 				}
 			} finally {
@@ -152,10 +157,14 @@ public class SimulatedAccountManager extends AccountManager implements Simulated
 	}
 
 	public void notifySimulationEnd() {
-		for (int i = 0; i < this.pendingOrders.i; i++) {
-			pendingOrders.elements[i].cancel();
+		orderLock.lock();
+		try {
+			for (int i = pendingOrders.i - 1; i >= 0; i--) {
+				pendingOrders.elements[i].cancel();
+			}
+		} finally {
+			orderLock.unlock();
 		}
-
 		for (TradingManager t : this.getAllTradingManagers()) {
 			updateOpenOrders(t.getSymbol(), t.getLatestCandle());
 		}
@@ -179,10 +188,7 @@ public class SimulatedAccountManager extends AccountManager implements Simulated
 
 	@Override
 	public TradingFees getTradingFees() {
-		if (simulation.tradingFees() == null) {
-			throw new IllegalConfigurationException("Please configure trading fess");
-		}
-		return simulation.tradingFees();
+		return tradingFees;
 	}
 
 	@Override

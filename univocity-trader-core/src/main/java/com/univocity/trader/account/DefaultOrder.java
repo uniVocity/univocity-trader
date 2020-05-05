@@ -14,6 +14,7 @@ public class DefaultOrder extends OrderRequest implements Order {
 	private Order parent;
 	private double partialFillPrice = 0.0;
 	private double partialFillQuantity = 0.0;
+	private Trade trade;
 
 	public DefaultOrder(long id, String assetSymbol, String fundSymbol, Order.Side side, Trade.Side tradeSide, long time) {
 		super(assetSymbol, fundSymbol, side, tradeSide, time, null);
@@ -169,4 +170,13 @@ public class DefaultOrder extends OrderRequest implements Order {
 		return Long.compare(this.id, ((DefaultOrder) o).id);
 	}
 
+	@Override
+	public Trade getTrade() {
+		return trade;
+	}
+
+	@Override
+	public void setTrade(Trade trade) {
+		this.trade = trade;
+	}
 }

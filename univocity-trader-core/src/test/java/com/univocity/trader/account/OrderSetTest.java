@@ -92,11 +92,11 @@ public class OrderSetTest {
 		s1.removeNulls();
 		assertEquals(5, s1.size());
 
-		assertTrue(s1.contains(newOrder(1)));
-		assertTrue(s1.contains(newOrder(3)));
-		assertTrue(s1.contains(newOrder(5)));
-		assertTrue(s1.contains(newOrder(7)));
-		assertTrue(s1.contains(newOrder(9)));
+		assertTrue(s1.contains(newOrder(0)));
+		assertTrue(s1.contains(newOrder(2)));
+		assertTrue(s1.contains(newOrder(4)));
+		assertTrue(s1.contains(newOrder(6)));
+		assertTrue(s1.contains(newOrder(8)));
 
 		for (int i = 0; i < 5; i++) {
 			s1.elements[i] = null;

@@ -88,7 +88,7 @@ public class OrderExecutionLine {
 		this.trade = trade;
 		this.trader = trader;
 
-		clientId = client.getId();
+		clientId = client == null ? "N/A" : client.getId();
 		referenceCurrency = trader.referenceCurrencySymbol();
 
 		freeBalanceReferenceCurrency = Double.parseDouble(refPriceDetails.priceToString(trader.freeBalance()));

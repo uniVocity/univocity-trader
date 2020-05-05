@@ -266,4 +266,9 @@ public interface Order extends Comparable<Order> {
 		FILLED,
 		CANCELLED
 	}
+
+	Trade getTrade();
+
+	void setTrade(Trade trade);
+
 }

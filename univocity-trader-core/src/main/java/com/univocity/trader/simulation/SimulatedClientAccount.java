@@ -12,24 +12,28 @@ import java.util.concurrent.atomic.*;
 
 import static com.univocity.trader.config.Allocation.*;
 
-public final class SimulatedClientAccount implements ClientAccount {
+public class SimulatedClientAccount implements ClientAccount {
 
 	private final AtomicLong orderIdGenerator = new AtomicLong(0);
 	private Map<String, OrderSet> orders = new HashMap<>();
 	private TradingFees tradingFees;
-	private final SimulatedAccountManager account;
-	private OrderFillEmulator orderFillEmulator;
+	protected SimulatedAccountManager accountManager;
+	private final OrderFillEmulator orderFillEmulator;
 	private final int marginReservePercentage;
 
-	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, Simulation simulation) {
+	public SimulatedClientAccount(AccountConfiguration<?> accountCfg, Simulation simulationCfg) {
+		this(accountCfg, simulationCfg.orderFillEmulator(), simulationCfg.tradingFees());
+	}
+
+	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, OrderFillEmulator orderFillEmulator, TradingFees tradingFees) {
 		this.marginReservePercentage = accountConfiguration.marginReservePercentage();
-		this.account = new SimulatedAccountManager(this, accountConfiguration, simulation);
-		this.orderFillEmulator = simulation.orderFillEmulator();
+		this.accountManager = new SimulatedAccountManager(this, accountConfiguration, tradingFees);
+		this.orderFillEmulator = orderFillEmulator;
 	}
 
 	public final TradingFees getTradingFees() {
 		if (this.tradingFees == null) {
-			this.tradingFees = account.getTradingFees();
+			this.tradingFees = accountManager.getTradingFees();
 			if (this.tradingFees == null) {
 				throw new IllegalArgumentException("Trading fees cannot be null");
 			}
@@ -45,13 +49,13 @@ public final class SimulatedClientAccount implements ClientAccount {
 		double unitPrice = orderDetails.getPrice();
 		double orderAmount = orderDetails.getTotalOrderAmount();
 
-		double availableFunds = account.getAmount(fundsSymbol);
-		double availableAssets = account.getAmount(assetsSymbol);
+		double availableFunds = accountManager.getAmount(fundsSymbol);
+		double availableAssets = accountManager.getAmount(assetsSymbol);
 		if (orderDetails.isShort()) {
 			if (orderDetails.isBuy()) {
-				availableFunds = availableFunds + account.getMarginReserve(fundsSymbol, assetsSymbol);
+				availableFunds = availableFunds + accountManager.getMarginReserve(fundsSymbol, assetsSymbol);
 			} else if (orderDetails.isSell()) {
-				availableAssets = account.getShortedAmount(assetsSymbol);
+				availableAssets = accountManager.getShortedAmount(assetsSymbol);
 			}
 		}
 
@@ -80,7 +84,7 @@ public final class SimulatedClientAccount implements ClientAccount {
 
 		if (orderDetails.isBuy() && hasFundsAvailable) {
 			if (orderDetails.isLong()) {
-				account.lockAmount(fundsSymbol, orderAmount + fees);
+				accountManager.lockAmount(fundsSymbol, orderAmount + fees);
 			}
 			order = createOrder(orderDetails, quantity, unitPrice);
 
@@ -94,13 +98,13 @@ public final class SimulatedClientAccount implements ClientAccount {
 					}
 				}
 				if (availableAssets >= quantity) {
-					account.lockAmount(assetsSymbol, orderDetails.getQuantity());
+					accountManager.lockAmount(assetsSymbol, orderDetails.getQuantity());
 					order = createOrder(orderDetails, quantity, unitPrice);
 				}
 			} else if (orderDetails.isShort()) {
 				if (hasFundsAvailable) {
-					double locked = account.applyMarginReserve(orderAmount) - orderAmount;
-					account.lockAmount(fundsSymbol, locked);
+					double locked = accountManager.applyMarginReserve(orderAmount) - orderAmount;
+					accountManager.lockAmount(fundsSymbol, locked);
 					order = createOrder(orderDetails, quantity, unitPrice);
 				}
 			}
@@ -141,11 +145,11 @@ public final class SimulatedClientAccount implements ClientAccount {
 
 	@Override
 	public ConcurrentHashMap<String, Balance> updateBalances() {
-		return account.getBalances();
+		return accountManager.getBalances();
 	}
 
 	public SimulatedAccountManager getAccount() {
-		return account;
+		return accountManager;
 	}
 
 	@Override
@@ -182,15 +186,14 @@ public final class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	public final synchronized boolean updateOpenOrders(String symbol, Candle candle) {
+	public final boolean updateOpenOrders(String symbol, Candle candle) {
 		OrderSet s = orders.get(symbol);
 		if (s == null || s.isEmpty()) {
 			return false;
 		}
 //		System.out.println("-------");
 
-		boolean removed = false;
-		for (int i = 0; i < s.i; i++) {
+		for (int i = s.i - 1; i >= 0; i--) {
 			Order pendingOrder = s.elements[i];
 			DefaultOrder order = (DefaultOrder) pendingOrder;
 
@@ -217,8 +220,7 @@ public final class SimulatedClientAccount implements ClientAccount {
 			order.setFeesPaid(order.getFeesPaid() + getTradingFees().feesOnPartialFill(order));
 
 			if (order.isFinalized()) {
-				s.elements[i] = null;
-				removed = true;
+				s.remove(order);
 				if (order.getParent() != null) { //order is child of a bracket order
 					updateBalances(order, candle);
 					for (Order attached : order.getParent().getAttachments()) { //cancel all open orders
@@ -230,8 +232,6 @@ public final class SimulatedClientAccount implements ClientAccount {
 
 				List<Order> attachments = order.getAttachments();
 				if (triggeredOrder == null && attachments != null && !attachments.isEmpty()) {
-					s.removeNulls();
-					removed = false;
 					for (Order attachment : attachments) {
 						processAttachedOrder(order, (DefaultOrder) attachment, candle);
 					}
@@ -244,11 +244,6 @@ public final class SimulatedClientAccount implements ClientAccount {
 				processAttachedOrder(order, (DefaultOrder) triggeredOrder, candle);
 			}
 		}
-
-		if (removed) {
-			s.removeNulls();
-		}
-
 		return true;
 	}
 
@@ -257,7 +252,7 @@ public final class SimulatedClientAccount implements ClientAccount {
 		if (locked > 0) {
 			attached.updateTime(candle != null ? candle.openTime : parent.getTime());
 			activateOrder(attached);
-			account.waitForFill(attached);
+			accountManager.waitForFill(attached);
 			activateAndTryFill(candle, attached);
 		}
 	}
@@ -299,8 +294,8 @@ public final class SimulatedClientAccount implements ClientAccount {
 		final String assetSymbol = order.getAssetsSymbol();
 		final String fundSymbol = order.getFundsSymbol();
 
-		final Balance assets = account.getBalance(assetSymbol);
-		final Balance funds = account.getBalance(fundSymbol);
+		final Balance assets = accountManager.getBalance(assetSymbol);
+		final Balance funds = accountManager.getBalance(fundSymbol);
 
 		final double totalShorted = assets.getShorted();
 		final double currentMarginReserve = funds.getMarginReserve(assetSymbol);
@@ -321,11 +316,11 @@ public final class SimulatedClientAccount implements ClientAccount {
 		if (totalShorted > 0) {
 			assets.setShorted(totalShorted - totalCovered);
 
-			final double saleReserve = currentMarginReserve / account.marginReserveFactorPct();
+			final double saleReserve = currentMarginReserve / accountManager.marginReserveFactorPct();
 			final double accountReserve = currentMarginReserve - saleReserve;
 
 			final double close = candle != null ? candle.close : getAccount().getTraderOf(assetSymbol + fundSymbol).lastClosingPrice();
-			final double shortSalePrice = close * (currentMarginReserve / account.applyMarginReserve(totalShorted * close));
+			final double shortSalePrice = close * (currentMarginReserve / accountManager.applyMarginReserve(totalShorted * close));
 			final double profit = shortSalePrice * totalCovered - partialFillTotalPrice - tradingFees.feesOnAmount(partialFillTotalPrice, order.getType(), order.getSide());
 
 			double free = funds.getFree() + profit + accountReserve;
@@ -334,8 +329,8 @@ public final class SimulatedClientAccount implements ClientAccount {
 				funds.setFree(free);
 				funds.setMarginReserve(assetSymbol, 0.0);
 			} else {
-				final double newReserve = account.applyMarginReserve(assets.getShorted() * shortSalePrice);
-				final double newSaleReserve = newReserve / account.marginReserveFactorPct();
+				final double newReserve = accountManager.applyMarginReserve(assets.getShorted() * shortSalePrice);
+				final double newSaleReserve = newReserve / accountManager.marginReserveFactorPct();
 				final double newAccountReserve = newReserve - newSaleReserve;
 
 				free = free - newAccountReserve;
@@ -344,9 +339,9 @@ public final class SimulatedClientAccount implements ClientAccount {
 			}
 		}
 		if (remainderBought > 0) {
-			account.addToFreeBalance(assetSymbol, remainderBought);
+			accountManager.addToFreeBalance(assetSymbol, remainderBought);
 			double total = remainderBought * order.getAveragePrice();
-			account.subtractFromFreeBalance(fundSymbol, total + tradingFees.feesOnAmount(total, order.getType(), order.getSide()));
+			accountManager.subtractFromFreeBalance(fundSymbol, total + tradingFees.feesOnAmount(total, order.getType(), order.getSide()));
 
 		}
 	}
@@ -358,27 +353,27 @@ public final class SimulatedClientAccount implements ClientAccount {
 		final double lastFillTotalPrice = order.getPartialFillTotalPrice();
 
 		try {
-			synchronized (account) {
+			synchronized (accountManager) {
 				if (order.isBuy()) {
 					if (order.isLong()) {
 						if (order.getAttachments() != null) { //to be used by attached orders
-							account.addToLockedBalance(asset, order.getPartialFillQuantity());
+							accountManager.addToLockedBalance(asset, order.getPartialFillQuantity());
 						} else {
-							account.addToFreeBalance(asset, order.getPartialFillQuantity());
+							accountManager.addToFreeBalance(asset, order.getPartialFillQuantity());
 						}
 						if (order.isFinalized()) {
 							final double lockedFunds = order.getTotalOrderAmount();
 							double unspentAmount = lockedFunds - order.getTotalTraded();
 
 							if (unspentAmount != 0) {
-								account.addToFreeBalance(funds, unspentAmount);
+								accountManager.addToFreeBalance(funds, unspentAmount);
 							}
 
-							account.subtractFromLockedBalance(funds, lockedFunds);
+							accountManager.subtractFromLockedBalance(funds, lockedFunds);
 
 							double maxFees = getTradingFees().feesOnTotalOrderAmount(order);
-							account.subtractFromLockedBalance(funds, maxFees);
-							account.addToFreeBalance(funds, maxFees - order.getFeesPaid());
+							accountManager.subtractFromLockedBalance(funds, maxFees);
+							accountManager.addToFreeBalance(funds, maxFees - order.getFeesPaid());
 						}
 					} else if (order.isShort()) {
 						if (order.hasPartialFillDetails()) {
@@ -389,24 +384,24 @@ public final class SimulatedClientAccount implements ClientAccount {
 					if (order.isLong()) {
 						if (order.hasPartialFillDetails()) {
 							double fee = tradingFees.feesOnAmount(order.getPartialFillTotalPrice(), order.getType(), order.getSide());
-							account.addToFreeBalance(funds, lastFillTotalPrice - fee);
-							account.subtractFromLockedBalance(asset, order.getPartialFillQuantity());
+							accountManager.addToFreeBalance(funds, lastFillTotalPrice - fee);
+							accountManager.subtractFromLockedBalance(asset, order.getPartialFillQuantity());
 						}
 
 						if (order.isFinalized()) {
 							if (order.getParent() == null || order.getExecutedQuantity() > 0 || order.getParent().getAttachments().size() == 1 || allAttachedOrdersCancelled(order.getParent())) {
-								account.addToFreeBalance(asset, order.getRemainingQuantity());
-								account.subtractFromLockedBalance(asset, order.getRemainingQuantity());
+								accountManager.addToFreeBalance(asset, order.getRemainingQuantity());
+								accountManager.subtractFromLockedBalance(asset, order.getRemainingQuantity());
 							}
 						}
 					} else if (order.isShort()) {
 						if (order.hasPartialFillDetails()) {
 							double total = order.getPartialFillTotalPrice();
-							double totalReserve = account.applyMarginReserve(total);
+							double totalReserve = accountManager.applyMarginReserve(total);
 							double accountReserveAtCurrentPrice = totalReserve - total;
 
 							double totalFilledAtOriginalPrice = order.getPrice() * order.getPartialFillQuantity();
-							double accountReserveAtOriginalPrice = (account.applyMarginReserve(totalFilledAtOriginalPrice) - totalFilledAtOriginalPrice);
+							double accountReserveAtOriginalPrice = (accountManager.applyMarginReserve(totalFilledAtOriginalPrice) - totalFilledAtOriginalPrice);
 
 							double additionalFundsRequired = 0.0;
 
@@ -414,18 +409,18 @@ public final class SimulatedClientAccount implements ClientAccount {
 								double extra = accountReserveAtCurrentPrice - accountReserveAtOriginalPrice;
 								additionalFundsRequired += extra;
 							}
-							account.subtractFromLockedBalance(funds, accountReserveAtOriginalPrice);
-							account.addToMarginReserveBalance(funds, asset, totalReserve - additionalFundsRequired - tradingFees.feesOnPartialFill(order));
-							account.addToShortedBalance(asset, order.getPartialFillQuantity());
+							accountManager.subtractFromLockedBalance(funds, accountReserveAtOriginalPrice);
+							accountManager.addToMarginReserveBalance(funds, asset, totalReserve - additionalFundsRequired - tradingFees.feesOnPartialFill(order));
+							accountManager.addToShortedBalance(asset, order.getPartialFillQuantity());
 						}
 
 						if (order.isFinalized()) {
 							double totalTraded = order.getTotalTraded();
-							double totalReserve = account.applyMarginReserve(order.getTotalOrderAmount());
-							double unusedReserve = totalReserve - account.applyMarginReserve(totalTraded);
+							double totalReserve = accountManager.applyMarginReserve(order.getTotalOrderAmount());
+							double unusedReserve = totalReserve - accountManager.applyMarginReserve(totalTraded);
 							if (unusedReserve > 0) {
 								double unusedFunds = unusedReserve - (order.getTotalOrderAmountAtAveragePrice() - totalTraded);
-								account.releaseFromLockedBalance(funds, unusedFunds);
+								accountManager.releaseFromLockedBalance(funds, unusedFunds);
 							}
 						}
 					}

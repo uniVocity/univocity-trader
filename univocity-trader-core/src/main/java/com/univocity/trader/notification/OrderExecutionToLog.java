@@ -39,7 +39,7 @@ public class OrderExecutionToLog implements OrderListener {
 
 	protected void logDetails(Order order, Trade trade, Client client) {
 		if (log.isDebugEnabled()) {
-			OrderExecutionLine o = new OrderExecutionLine(order, trade, trade.trader(), client);
+			OrderExecutionLine o = new OrderExecutionLine(order, order.getTrade(), order.getTrade().trader(), client);
 			String type = StringUtils.rightPad(o.operation, 5);
 
 			String quantity = o.getFormattedQuantity();

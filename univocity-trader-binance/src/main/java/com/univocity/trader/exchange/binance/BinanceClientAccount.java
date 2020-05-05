@@ -208,6 +208,7 @@ class BinanceClientAccount implements ClientAccount {
 		out.setOrderId(String.valueOf(order.getOrderId()));
 		out.setType(translate(order.getType()));
 		out.setQuantity(Double.parseDouble(order.getOrigQty()));
+		out.setTrade(original.getTrade());
 		return out;
 	}
 
