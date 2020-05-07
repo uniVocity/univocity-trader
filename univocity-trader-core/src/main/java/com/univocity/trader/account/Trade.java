@@ -558,8 +558,8 @@ public final class Trade implements Comparable<Trade> {
 
 				double exitPct = qtyInExit * 100.0 / qtyInPosition;
 
-				if ((qtyInPosition - qtyInExit) * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() || exitPct > 98.0) {
-					double fractionRemaining = qtyInPosition - qtyInExit;
+				double fractionRemaining = qtyInPosition - qtyInExit;
+				if (fractionRemaining * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() || exitPct > 98.0) {
 					finalizedQuantity = qtyInPosition - fractionRemaining;
 					return true;
 				}
@@ -813,7 +813,6 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	public double quantityInPosition() {
-		//FIXME: update orders held in position!!!! it's always set to 0.
 		double pos = removeCancelledAndSumQuantities(position);
 		double exit = removeCancelledAndSumQuantities(exitOrders);
 		if (pos - exit < 0) {

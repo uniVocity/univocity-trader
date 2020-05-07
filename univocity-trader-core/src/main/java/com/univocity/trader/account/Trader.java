@@ -337,14 +337,9 @@ public final class Trader {
 			for (int i = trades.i - 1; i >= 0; i--) {
 				Trade trade = trades.elements[i];
 				if (trade.tryingToExit() && ((trade.isLong() && isLong) || (trade.isShort() && isShort))) {
-					if(isLong && tradingManager.getAssets() <= EFFECTIVELY_ZERO){
-						trade.finalizeTrade();
-						continue;
-					}
-
 					if (log.isTraceEnabled()) {
 						if (isLong) {
-							log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
+							log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, trade.quantityInPosition());
 						} else {
 							log.trace("Discarding short sell of {} @ {}: attempting to buy more", tradingManager.getSymbol(), candle.close);
 						}
