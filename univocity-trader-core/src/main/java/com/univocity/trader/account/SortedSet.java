@@ -27,6 +27,10 @@ public class SortedSet<T extends Comparable<T>> {
 	}
 
 	public boolean replace(T order) {
+		if(i == 1 && elements[0].compareTo(order) == 0){
+			elements[0] = order;
+			return true;
+		}
 		int slot = Arrays.binarySearch(elements, 0, i, order, comparator);
 		if (slot >= 0) {
 			elements[slot] = order;
@@ -88,7 +92,9 @@ public class SortedSet<T extends Comparable<T>> {
 
 	private void sort() {
 		removeNulls();
-		Arrays.sort(elements, 0, i, comparator);
+		if(i > 1) {
+			Arrays.sort(elements, 0, i, comparator);
+		}
 	}
 
 	public final int size() {

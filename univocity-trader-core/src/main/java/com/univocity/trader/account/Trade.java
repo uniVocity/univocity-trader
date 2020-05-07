@@ -321,7 +321,7 @@ public final class Trade implements Comparable<Trade> {
 	boolean orderUpdated(Order order) {
 		orderLock.lock();
 		try {
-			if(!pastOrders.contains(order)) {
+			if (!pastOrders.contains(order)) {
 				if (!(position.replace(order) || exitOrders.replace(order))) {
 					log.warn("Could not update order {} in trade {}", order, this);
 				} else {
@@ -462,6 +462,7 @@ public final class Trade implements Comparable<Trade> {
 		orderLock.lock();
 		try {
 			if (position.contains(order)) {
+				position.replace(order);
 				if (order.getExecutedQuantity() == 0) { // nothing filled, cancelled
 					position.remove(order);
 					return;
@@ -470,6 +471,7 @@ public final class Trade implements Comparable<Trade> {
 					updateAveragePrice(position);
 				}
 			} else if (exitOrders.contains(order)) {
+				exitOrders.replace(order);
 				if (isFinalized()) {
 					updateAveragePrice(exitOrders);
 					double totalSold = this.totalSpent;
@@ -549,22 +551,20 @@ public final class Trade implements Comparable<Trade> {
 				return false;
 			}
 
-			synchronized (this) {
-				double qtyInPosition = removeCancelledAndSumQuantities(position);
-				if (qtyInPosition == 0.0) {
-					return false;
-				}
-				double qtyInExit = removeCancelledAndSumQuantities(exitOrders);
-
-				double exitPct = qtyInExit * 100.0 / qtyInPosition;
-
-				double fractionRemaining = qtyInPosition - qtyInExit;
-				if (fractionRemaining * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() || exitPct > 98.0) {
-					finalizedQuantity = qtyInPosition - fractionRemaining;
-					return true;
-				}
+			double qtyInPosition = removeCancelledAndSumQuantities(position);
+			if (qtyInPosition == 0.0) {
 				return false;
 			}
+			double qtyInExit = removeCancelledAndSumQuantities(exitOrders);
+
+			double exitPct = qtyInExit * 100.0 / qtyInPosition;
+
+			double fractionRemaining = qtyInPosition - qtyInExit;
+			if (fractionRemaining * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() || exitPct > 98.0) {
+				finalizedQuantity = qtyInPosition - fractionRemaining;
+				return true;
+			}
+			return false;
 		} finally {
 			orderLock.unlock();
 		}
@@ -608,7 +608,7 @@ public final class Trade implements Comparable<Trade> {
 					return true;
 				}
 			}
-		}finally {
+		} finally {
 			orderLock.unlock();
 		}
 

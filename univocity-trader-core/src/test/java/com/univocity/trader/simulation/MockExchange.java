@@ -7,6 +7,7 @@ import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.utils.*;
 
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -16,6 +17,15 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 
 	private final Map<String, double[]> latestPrices = new ConcurrentHashMap<>();
 	boolean running = false;
+	private Map<String, List<Candle>> candles;
+
+	public MockExchange(){
+
+	}
+
+	public MockExchange(Map<String, List<Candle>> candles){
+		this.candles = candles;
+	}
 
 	@Override
 	public IncomingCandles<Candle> getLatestTicks(String symbol, TimeInterval interval) {
@@ -39,19 +49,39 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 		return new PreciseCandle(exchangeCandle);
 	}
 
+	private Candle latestCandle;
+
 	@Override
 	public void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candle> consumer) {
 		running = true;
 		String[] pairs = symbols.split(",");
 		new Thread(() -> {
 			Thread.currentThread().setName("Live stream for: " + symbols);
-			long time = 0;
+			long time = LocalDateTime.of(2010,Month.JANUARY, 1, 10, 0).toInstant(ZoneOffset.UTC).toEpochMilli();;
 			while (running) {
+				boolean empty = true;
 				for (String pair : pairs) {
-					double close = Math.random() * 10.0;
-					consumer.tickReceived(pair, new Candle(time, time + MINUTE.ms, close, close, close, close, 100));
-
+					Candle candle = null;
+					if(candles != null){
+						List<Candle> list = candles.get(pair.toUpperCase());
+						if(!list.isEmpty()){
+							latestCandle = candle = list.remove(0);
+							empty = false;
+						}
+					} else {
+						double close = Math.random() * 10.0;
+						candle = new Candle(time, time + MINUTE.ms, close, close, close, close, 100);
+						System.out.println(candle.close);
+					}
+					if(candle != null) {
+						consumer.tickReceived(pair, candle);
+					}
 				}
+
+				if(empty && candles != null){
+					running = false;
+				}
+
 				time += MINUTE.ms;
 
 				try {
@@ -81,7 +111,11 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 
 	@Override
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
-		return Math.random() * 10.0;
+		if(latestCandle == null) {
+			return Math.random() * 10.0;
+		} else {
+			return latestCandle.close;
+		}
 	}
 
 	@Override
@@ -105,8 +139,8 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 
 		private CandleRepository noop;
 
-		private Trader() {
-			super(new MockExchange(), new Configuration());
+		private Trader(Map<String, List<Candle>> candles) {
+			super(new MockExchange(candles), new Configuration());
 
 			DatabaseConfiguration cfg = new DatabaseConfiguration();
 			noop = new CandleRepository(cfg) {
@@ -127,13 +161,17 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 
 		protected AccountManager createAccountManager(ClientAccount clientAccount, SimulationAccount account) {
 			SimulatedAccountManager out = new SimulatedAccountManager((MockClientAccount) clientAccount, account, SimpleTradingFees.percentage(0.0));
-			((MockClientAccount)clientAccount).accountManager = out;
+			((MockClientAccount) clientAccount).accountManager = out;
 			out.setAmount("USDT", 100);
 			return out;
 		}
 	}
 
+	public static Trader trader(Map<String, List<Candle>> candles) {
+		return new Trader(candles);
+	}
+
 	public static Trader trader() {
-		return new Trader();
+		return new Trader(null);
 	}
 }

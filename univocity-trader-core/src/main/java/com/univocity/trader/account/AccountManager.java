@@ -688,7 +688,7 @@ public class AccountManager implements ClientAccount {
 		boolean locked = orderLock.tryLock();
 		if (locked) {
 			try {
-				if(!isSimulated()) {
+				if (!isSimulated()) {
 					if (order.isFinalized()) {
 						pendingOrders.remove(order);
 						return order;
