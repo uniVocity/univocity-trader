@@ -333,7 +333,7 @@ public class OrderFillChecker {
 		if (orderManager != null) {
 			Trader trader = account.getTraderOf(symbol + "USDT");
 			trader.latestCandle = next;
-			orderManager.prepareOrder(null, null, req, trader);
+			orderManager.prepareOrder(null, null, req, trader, null);
 		}
 
 		Order order = account.executeOrder(req);

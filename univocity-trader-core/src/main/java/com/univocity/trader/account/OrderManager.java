@@ -61,8 +61,9 @@ public interface OrderManager {
 	 * @param trader       the {@link Trader} object responsible for executing trades on a given symbol. From there you can obtain information such as the
 	 *                     latest candle received from the exchange (e.g. {@link Trader#latestCandle()}) and how much is your account worth {using @link
 	 *                     Trader#holdings()} to help you better determine the size of your order.
+	 * @param trade		   the current {@link Trade} whose position being increased or closed. Will be {@code null} if this is a new trade.
 	 */
-	void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader);
+	void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade);
 
 	/**
 	 * The time interval to wait between calls to {@link AccountManager#updateOrderStatus(Order)}, to identify if an {@link Order} has

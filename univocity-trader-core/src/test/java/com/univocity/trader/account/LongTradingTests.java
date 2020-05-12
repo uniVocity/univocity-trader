@@ -192,7 +192,7 @@ public class LongTradingTests extends OrderFillChecker {
 	public void testLongTradingWithMarketBracketOrder() {
 		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
+			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest marketSellOnLoss = order.attach(MARKET, -1.0);
 					OrderRequest takeProfit = order.attach(MARKET, 1.0);
@@ -278,7 +278,7 @@ public class LongTradingTests extends OrderFillChecker {
 	public void testLongTradingWithLimitBracketOrder() {
 		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
+			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest limitSellOnLoss = order.attach(LIMIT, -1.0);
 					OrderRequest takeProfit = order.attach(LIMIT, 1.0);
@@ -436,7 +436,7 @@ public class LongTradingTests extends OrderFillChecker {
 	public void testCancellationOfOrdersInBracket() {
 		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
+			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest limitSellOnLoss = order.attach(LIMIT, -1.0);
 					OrderRequest takeProfit = order.attach(LIMIT, 1.0);

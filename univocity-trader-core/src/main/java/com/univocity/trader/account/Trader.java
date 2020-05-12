@@ -179,19 +179,19 @@ public final class Trader {
 			if (isShort && trade.isShort()) {
 				bought |= exit(trade, candle, strategy, "Buy signal");
 			} else if (isLong && trade.isLong()) {
-				bought |= buy(LONG, candle, strategy); //increment position on existing trade
+				bought |= buy(LONG, candle, strategy, trade); //increment position on existing trade
 			}
 		}
 		if (!bought) {
 			if (isLong) {
-				buy(LONG, candle, strategy); //opens new trade. Can only go long here.
+				buy(LONG, candle, strategy, null); //opens new trade. Can only go long here.
 			}
 			if (isShort) {
 				boolean hasShortPosition = tradingManager.hasPosition(candle, false, false, true);
 				if (hasShortPosition) {
 					// Buys without having a short trade open. Might happen after starting up
 					// with short order in the account. Will generate a warning in the log.
-					buy(SHORT, candle, strategy);
+					buy(SHORT, candle, strategy, null);
 				}
 			}
 		}
@@ -375,7 +375,7 @@ public final class Trader {
 	private boolean sellShort(Trade trade, Candle candle, Strategy strategy) {
 		double amountToSpend = prepareTrade(SHORT, candle, strategy);
 		if (amountToSpend > 0) {
-			Order order = tradingManager.sell(amountToSpend / candle.close, SHORT);
+			Order order = tradingManager.sell(amountToSpend / candle.close, SHORT, trade);
 			if (order != null) {
 				processOrder(trade, order, strategy, null);
 				return true;
@@ -388,17 +388,17 @@ public final class Trader {
 	}
 
 
-	private boolean buy(Trade.Side tradeSide, Candle candle, Strategy strategy) {
+	private boolean buy(Trade.Side tradeSide, Candle candle, Strategy strategy, Trade trade) {
 		Order order = null;
 		if (tradeSide == LONG) {
 			double amountToSpend = prepareTrade(tradeSide, candle, strategy);
 			if (amountToSpend <= 0) {
 				return false;
 			}
-			order = tradingManager.buy(amountToSpend / candle.close, LONG);
+			order = tradingManager.buy(amountToSpend / candle.close, LONG, trade);
 		} else if (tradeSide == SHORT) {
 			double shortedQuantity = accountManager.getBalance(referenceCurrencySymbol(), Balance::getShorted);
-			order = tradingManager.buy(shortedQuantity, SHORT);
+			order = tradingManager.buy(shortedQuantity, SHORT, trade);
 		}
 		if (order != null) {
 			processOrder(null, order, strategy, null);
@@ -431,7 +431,7 @@ public final class Trader {
 			quantity = tradingManager.getAssets();
 		}
 
-		Order order = tradingManager.sell(quantity, trade.getSide());
+		Order order = tradingManager.sell(quantity, trade.getSide(), trade);
 		if (order != null) {
 			processOrder(trade, order, strategy, reason);
 			return true;
@@ -447,7 +447,7 @@ public final class Trader {
 				log.warn("Not enough funds in margin reserve to cover short of {} {} @ {} {} per unit. Reserve: {}, required {} {}", assetSymbol(), shortToCover, trade.lastClosingPrice(), fundSymbol(), reserveFunds, shortToCover * trade.lastClosingPrice(), fundSymbol());
 			}
 
-			Order order = tradingManager.buy(shortToCover, SHORT);
+			Order order = tradingManager.buy(shortToCover, SHORT, trade);
 			if (order != null) {
 				processOrder(trade, order, strategy, exitReason);
 				return true;
@@ -529,7 +529,7 @@ public final class Trader {
 	}
 
 	public Order submitOrder(Order.Type type, Order.Side side, Trade.Side tradeSide, double quantity) {
-		return tradingManager.getAccount().submitOrder(this, quantity, side, tradeSide, type);
+		return tradingManager.getAccount().submitOrder(this, quantity, side, tradeSide, type, null);
 	}
 
 	void processOrder(Trade trade, Order order, Strategy strategy, String reason) {

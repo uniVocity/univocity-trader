@@ -424,7 +424,7 @@ public class AccountManager implements ClientAccount {
 		return configuration.referenceCurrency();
 	}
 
-	public Order buy(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity) {
+	public Order buy(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity, Trade trade) {
 		if (lockTrading(assetSymbol)) {
 			try {
 				String symbol = assetSymbol + fundSymbol;
@@ -433,7 +433,7 @@ public class AccountManager implements ClientAccount {
 					throw new IllegalStateException("Unable to buy " + quantity + " units of unknown symbol: " + symbol);
 				}
 				if (tradeSide == SHORT) {
-					OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, SHORT, quantity, null);
+					OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, SHORT, quantity, null, trade);
 					return executeOrder(orderPreparation);
 				}
 				double maxSpend = allocateFunds(assetSymbol, tradeSide);
@@ -444,7 +444,7 @@ public class AccountManager implements ClientAccount {
 						quantity = quantity * (maxSpend / expectedCost);
 					}
 					quantity = quantity * 0.9999;
-					OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, tradeSide, quantity, null);
+					OrderRequest orderPreparation = prepareOrder(tradingManager, BUY, tradeSide, quantity, null, trade);
 					return executeOrder(orderPreparation);
 				}
 			} finally {
@@ -454,13 +454,13 @@ public class AccountManager implements ClientAccount {
 		return null;
 	}
 
-	public Order sell(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity) {
+	public Order sell(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity, Trade trade) {
 		String symbol = assetSymbol + fundSymbol;
 		TradingManager tradingManager = getTradingManagerOf(symbol);
 		if (tradingManager == null) {
 			throw new IllegalStateException("Unable to sell " + quantity + " units of unknown symbol: " + symbol);
 		}
-		OrderRequest orderPreparation = prepareOrder(tradingManager, SELL, tradeSide, quantity, null);
+		OrderRequest orderPreparation = prepareOrder(tradingManager, SELL, tradeSide, quantity, null, trade);
 		return executeOrder(orderPreparation);
 	}
 
@@ -516,7 +516,7 @@ public class AccountManager implements ClientAccount {
 		return null;
 	}
 
-	private OrderRequest prepareOrder(TradingManager tradingManager, Order.Side side, Trade.Side tradeSide, double quantity, Order resubmissionFrom) {
+	private OrderRequest prepareOrder(TradingManager tradingManager, Order.Side side, Trade.Side tradeSide, double quantity, Order resubmissionFrom, Trade trade) {
 		SymbolPriceDetails priceDetails = tradingManager.getPriceDetails();
 		long time = tradingManager.getLatestCandle().closeTime;
 		OrderRequest orderPreparation = new OrderRequest(tradingManager.getAssetSymbol(), tradingManager.getFundSymbol(), side, tradeSide, time, resubmissionFrom);
@@ -538,7 +538,7 @@ public class AccountManager implements ClientAccount {
 
 		OrderManager orderCreator = configuration.orderManager(tradingManager.getSymbol());
 		if (orderCreator != null) {
-			orderCreator.prepareOrder(priceDetails, book, orderPreparation, tradingManager.trader);
+			orderCreator.prepareOrder(priceDetails, book, orderPreparation, tradingManager.trader, trade);
 		}
 
 		if (!orderPreparation.isCancelled() && orderPreparation.getTotalOrderAmount() > (priceDetails.getMinimumOrderAmount(orderPreparation.getPrice()))) {
@@ -814,7 +814,7 @@ public class AccountManager implements ClientAccount {
 
 		tradingManager.updateOpenOrders(order.getSymbol(), tradingManager.trader.latestCandle());
 
-		OrderRequest request = prepareOrder(tradingManager, order.getSide(), order.getTradeSide(), order.getRemainingQuantity(), order);
+		OrderRequest request = prepareOrder(tradingManager, order.getSide(), order.getTradeSide(), order.getRemainingQuantity(), order, trade);
 		order = executeOrder(request);
 
 		Strategy strategy = tradingManager.getTrader().strategyOf(order);
@@ -822,8 +822,8 @@ public class AccountManager implements ClientAccount {
 		tradingManager.trader.processOrder(trade, order, strategy, trade == null ? "Order resubmission" : "Order resubmission: " + trade.exitReason());
 	}
 
-	public Order submitOrder(Trader trader, double quantity, Order.Side side, Trade.Side tradeSide, Order.Type type) {
-		OrderRequest request = prepareOrder(trader.tradingManager, side, tradeSide, quantity, null);
+	public Order submitOrder(Trader trader, double quantity, Order.Side side, Trade.Side tradeSide, Order.Type type, Trade trade) {
+		OrderRequest request = prepareOrder(trader.tradingManager, side, tradeSide, quantity, null, trade);
 		Order order = executeOrder(request);
 		trader.processOrder(null, order, null, null);
 		return order;

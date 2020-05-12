@@ -132,8 +132,8 @@ public final class TradingManager {
 		return getAccount().configuration().minimumInvestmentAmountPerTrade(assetSymbol);
 	}
 
-	public final Order buy(double quantity, Trade.Side tradeSide) {
-		return tradingAccount.buy(assetSymbol, fundSymbol, tradeSide, quantity);
+	public final Order buy(double quantity, Trade.Side tradeSide, Trade trade) {
+		return tradingAccount.buy(assetSymbol, fundSymbol, tradeSide, quantity, trade);
 	}
 
 //	public boolean switchTo(String ticker, Signal trade, String exitSymbol) {
@@ -161,15 +161,15 @@ public final class TradingManager {
 //		return false;
 //	}
 
-	public Order sell(double quantity, Trade.Side tradeSide) {
+	public Order sell(double quantity, Trade.Side tradeSide, Trade trade) {
 		if (!trader.liquidating && quantity * getLatestPrice() < minimumInvestmentAmountPerTrade()) {
 			return null;
 		}
-		return tradingAccount.sell(assetSymbol, fundSymbol, tradeSide, quantity);
+		return tradingAccount.sell(assetSymbol, fundSymbol, tradeSide, quantity, trade);
 	}
 
-	public Order sell(Trade.Side tradeSide) {
-		return sell(getAssets(), tradeSide);
+	public Order sell(Trade.Side tradeSide, Trade trade) {
+		return sell(getAssets(), tradeSide, trade);
 	}
 
 	public double getAssets() {

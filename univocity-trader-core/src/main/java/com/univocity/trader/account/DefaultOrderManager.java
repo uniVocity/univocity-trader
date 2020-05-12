@@ -22,7 +22,7 @@ public class DefaultOrderManager implements OrderManager {
 	}
 
 	@Override
-	public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
+	public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
 		double originalPrice = order.getPrice();
 
 		double availableQuantity = order.getQuantity();

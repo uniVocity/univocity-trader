@@ -45,8 +45,8 @@ public class MockExchangeTest {
 			}
 
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
-				super.prepareOrder(priceDetails, book, order, trader);
+			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
+				super.prepareOrder(priceDetails, book, order, trader, trade);
 				t[0] = trader;
 			}
 		};
@@ -59,7 +59,7 @@ public class MockExchangeTest {
 	}
 
 	@Test
-	@Ignore
+//	@Ignore
 	public void testExchangeWithRandomValues() throws Exception {
 		((Logger) getLogger(ROOT_LOGGER_NAME)).setLevel(TRACE);
 		Trader[] t = new Trader[1];

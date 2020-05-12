@@ -12,7 +12,7 @@ import static com.univocity.trader.account.Order.Type.*;
 public class ExampleOrderManager extends DefaultOrderManager {
 
 	@Override
-	public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader) {
+	public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
 		if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 			//attached orders are created with opposite side. If parent order is BUY, the following orders will be SELL orders, and vice versa.
 			OrderRequest marketSellOnLoss = order.attach(MARKET, -2.0);
