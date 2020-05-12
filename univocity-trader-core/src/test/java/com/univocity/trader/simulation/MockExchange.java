@@ -19,11 +19,11 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 	boolean running = false;
 	private Map<String, List<Candle>> candles;
 
-	public MockExchange(){
+	public MockExchange() {
 
 	}
 
-	public MockExchange(Map<String, List<Candle>> candles){
+	public MockExchange(Map<String, List<Candle>> candles) {
 		this.candles = candles;
 	}
 
@@ -57,14 +57,15 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 		String[] pairs = symbols.split(",");
 		new Thread(() -> {
 			Thread.currentThread().setName("Live stream for: " + symbols);
-			long time = LocalDateTime.of(2010,Month.JANUARY, 1, 10, 0).toInstant(ZoneOffset.UTC).toEpochMilli();;
+			long time = LocalDateTime.of(2010, Month.JANUARY, 1, 10, 0).toInstant(ZoneOffset.UTC).toEpochMilli();
+			;
 			while (running) {
 				boolean empty = true;
 				for (String pair : pairs) {
 					Candle candle = null;
-					if(candles != null){
+					if (candles != null) {
 						List<Candle> list = candles.get(pair.toUpperCase());
-						if(!list.isEmpty()){
+						if (!list.isEmpty()) {
 							latestCandle = candle = list.remove(0);
 							empty = false;
 						}
@@ -73,12 +74,12 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 						candle = new Candle(time, time + MINUTE.ms, close, close, close, close, 100);
 						System.out.println(candle.close);
 					}
-					if(candle != null) {
+					if (candle != null) {
 						consumer.tickReceived(pair, candle);
 					}
 				}
 
-				if(empty && candles != null){
+				if (empty && candles != null) {
 					running = false;
 				}
 
@@ -111,7 +112,7 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 
 	@Override
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
-		if(latestCandle == null) {
+		if (latestCandle == null) {
 			return Math.random() * 10.0;
 		} else {
 			return latestCandle.close;
@@ -160,7 +161,20 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 		}
 
 		protected AccountManager createAccountManager(ClientAccount clientAccount, SimulationAccount account) {
-			SimulatedAccountManager out = new SimulatedAccountManager((MockClientAccount) clientAccount, account, SimpleTradingFees.percentage(0.0));
+			SimulatedAccountManager out = new SimulatedAccountManager((MockClientAccount) clientAccount, account, SimpleTradingFees.percentage(0.0)) {
+				@Override
+				public void updateOpenOrders(String symbol) {
+					synchronized (orderUpdates) {
+						for (int i = orderUpdates.i - 1; i >= 0; i--) {
+							Order order = orderUpdates.elements[i];
+							if (symbol.equals(order.getSymbol())) {
+								account.updateBalances((DefaultOrder)order, getTraderOf(symbol).latestCandle);
+								updateOrder(order);
+							}
+						}
+					}
+				}
+			};
 			((MockClientAccount) clientAccount).accountManager = out;
 			out.setAmount("USDT", 100);
 			return out;

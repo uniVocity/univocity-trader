@@ -16,7 +16,17 @@ public class MockClientAccount extends SimulatedClientAccount {
 		out.setStatus(order.getStatus());
 
 		if (!order.isFinalized()) {
-			out.setExecutedQuantity(Math.min(order.getExecutedQuantity() + 30, order.getQuantity()));
+			double increment = order.getQuantity() * 0.1;
+			double fillQuantity = order.getExecutedQuantity() + increment;
+			if (fillQuantity > order.getQuantity()) {
+				fillQuantity = increment - (fillQuantity - order.getQuantity());
+			} else {
+				fillQuantity = increment;
+			}
+
+			out.setPartialFillDetails(fillQuantity, order.getPrice());
+			out.setExecutedQuantity(order.getExecutedQuantity() + fillQuantity);
+
 			if (out.getExecutedQuantity() > 0) {
 				if (out.getExecutedQuantity() < order.getQuantity()) {
 					out.setStatus(Order.Status.PARTIALLY_FILLED);

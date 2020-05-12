@@ -39,7 +39,7 @@ public class SortedSet<T extends Comparable<T>> {
 		return false;
 	}
 
-	public synchronized final void add(T order) {
+	public final void add(T order) {
 		if (i == 0) {
 			elements[i++] = order;
 		} else {
@@ -58,6 +58,9 @@ public class SortedSet<T extends Comparable<T>> {
 	}
 
 	public final T get(T order) {
+		if(i == 0){
+			return null;
+		}
 		int slot = Arrays.binarySearch(elements, 0, i, order, comparator);
 		if (slot >= 0) {
 			return (T) elements[slot];

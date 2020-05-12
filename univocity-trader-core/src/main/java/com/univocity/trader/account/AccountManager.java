@@ -1,6 +1,7 @@
 package com.univocity.trader.account;
 
 import com.univocity.trader.*;
+import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -33,7 +34,7 @@ public class AccountManager implements ClientAccount {
 	final AccountConfiguration<?> configuration;
 
 	final OrderSet pendingOrders = new OrderSet();
-	final Lock orderLock;
+	protected final OrderSet orderUpdates = new OrderSet();
 
 	private static final long BALANCE_EXPIRATION_TIME = minutes(10).ms;
 	private static final long FREQUENT_BALANCE_UPDATE_INTERVAL = seconds(15).ms;
@@ -67,7 +68,6 @@ public class AccountManager implements ClientAccount {
 
 		this.client = new ExchangeClient(this);
 
-		this.orderLock = account.isSimulated() ? new FakeLock() : new ReentrantLock();
 		this.balanceLock = account.isSimulated() ? new FakeLock() : new ReentrantLock();
 
 		if (account.marginReservePercentage() < 100) {
@@ -319,31 +319,26 @@ public class AccountManager implements ClientAccount {
 	}
 
 	public boolean waitingForFill(String assetSymbol, Order.Side side) {
-		orderLock.lock();
-		try {
-			for (int i = pendingOrders.i - 1; i >= 0; i--) {
-				Order order = pendingOrders.elements[i];
+		for (int i = pendingOrders.i - 1; i >= 0; i--) {
+			Order order = pendingOrders.elements[i];
 
-				if (order.isFinalized()) {
-					continue;
-				}
-
-				if (order.getSide() == side && order.getAssetsSymbol().equals(assetSymbol)) {
-					return true;
-				}
-				// If we want to know if there is an open order to buy BTC,
-				// and the symbol is "ADABTC", we need to invert the side as
-				// we are selling ADA to buy BTC.
-				if (side == BUY && order.isSell() && order.getFundsSymbol().equals(assetSymbol)) {
-					return true;
-
-				} else if (side == SELL && order.isBuy() && order.getFundsSymbol().equals(assetSymbol)) {
-					return true;
-				}
-
+			if (order.isFinalized()) {
+				continue;
 			}
-		} finally {
-			orderLock.unlock();
+
+			if (order.getSide() == side && order.getAssetsSymbol().equals(assetSymbol)) {
+				return true;
+			}
+			// If we want to know if there is an open order to buy BTC,
+			// and the symbol is "ADABTC", we need to invert the side as
+			// we are selling ADA to buy BTC.
+			if (side == BUY && order.isSell() && order.getFundsSymbol().equals(assetSymbol)) {
+				return true;
+
+			} else if (side == SELL && order.isBuy() && order.getFundsSymbol().equals(assetSymbol)) {
+				return true;
+			}
+
 		}
 		return false;
 	}
@@ -390,27 +385,28 @@ public class AccountManager implements ClientAccount {
 	}
 
 	private void executeUpdateBalances() {
-		balanceLock.lock();
-		try {
-			if (System.currentTimeMillis() - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL) {
-				return;
+		if (balanceLock.tryLock()) {
+			try {
+				if (System.currentTimeMillis() - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL) {
+					return;
+				}
+				Map<String, Balance> updatedBalances = account.updateBalances();
+				if (updatedBalances != null && updatedBalances != balances && !updatedBalances.isEmpty()) {
+					log.trace("Balances updated - available: " + new TreeMap<>(updatedBalances).values());
+					updatedBalances.keySet().retainAll(configuration.symbols());
+
+					this.balances.clear();
+					this.balances.putAll(updatedBalances);
+					this.balancesArray = null;
+
+
+					updatedBalances.values().removeIf(b -> b.getTotal() == 0);
+					log.debug("Balances updated - trading: " + new TreeMap<>(updatedBalances).values());
+				}
+				lastBalanceSync = System.currentTimeMillis();
+			} finally {
+				balanceLock.unlock();
 			}
-			Map<String, Balance> updatedBalances = account.updateBalances();
-			if (updatedBalances != null && updatedBalances != balances && !updatedBalances.isEmpty()) {
-				log.trace("Balances updated - available: " + new TreeMap<>(updatedBalances).values());
-				updatedBalances.keySet().retainAll(configuration.symbols());
-
-				this.balances.clear();
-				this.balances.putAll(updatedBalances);
-				this.balancesArray = null;
-
-
-				updatedBalances.values().removeIf(b -> b.getTotal() == 0);
-				log.debug("Balances updated - trading: " + new TreeMap<>(updatedBalances).values());
-			}
-			lastBalanceSync = System.currentTimeMillis();
-		} finally {
-			balanceLock.unlock();
 		}
 	}
 
@@ -482,25 +478,37 @@ public class AccountManager implements ClientAccount {
 			}
 
 			Order order = account.executeOrder(orderDetails);
-			if (order != null) {
-				switch (order.getStatus()) {
-					case NEW:
-					case PARTIALLY_FILLED:
-						logOrderStatus("Tracking pending order. ", order);
-						waitForFill(order);
-						return order;
-					case FILLED:
-						logOrderStatus("Completed order. ", order);
-						orderFinalized(null, order);
-						return order;
-					case CANCELLED:
-						logOrderStatus("Could not create order. ", order);
-						orderFinalized(null, order);
-						return null;
-				}
+			if (order != null && order.getStatus() == CANCELLED) {
+				logOrderStatus("Could not create order. ", order);
+				orderFinalized(null, order);
+				return null;
+			} else {
+				return order;
 			}
 		}
 		return null;
+	}
+
+	void initiateOrderMonitoring(Order order) {
+		if (order != null) {
+			if (order.getTrade() == null) {
+				throw new IllegalStateException("Order " + order + " does not have a valid trade associated with it.");
+			}
+			switch (order.getStatus()) {
+				case NEW, PARTIALLY_FILLED -> {
+					logOrderStatus("Tracking pending order. ", order);
+					waitForFill(order);
+				}
+				case FILLED -> {
+					logOrderStatus("Completed order. ", order);
+					orderFinalized(null, order);
+				}
+				case CANCELLED -> {
+					logOrderStatus("Could not create order. ", order);
+					orderFinalized(null, order);
+				}
+			}
+		}
 	}
 
 	@Override
@@ -646,21 +654,23 @@ public class AccountManager implements ClientAccount {
 		return account.isSimulated();
 	}
 
-	public void waitForFill(Order order) {
-		orderLock.lock();
-		try {
-			pendingOrders.add(order);
-		} finally {
-			orderLock.unlock();
+	public void removePendingOrder(Order order) {
+		pendingOrders.remove(order);
+		synchronized (orderUpdates) {
+			orderUpdates.remove(order);
 		}
+	}
+
+	public void waitForFill(Order order) {
+		pendingOrders.add(order);
 		if (isSimulated()) {
 			return;
 		}
 		new Thread(() -> {
 			Thread.currentThread().setName("Order " + order.getOrderId() + " monitor: " + order.getSide() + " " + order.getSymbol());
 			OrderManager orderManager = configuration.orderManager(order.getSymbol());
+			Order o = order;
 			while (true) {
-				Order o = order;
 				try {
 					try {
 						Thread.sleep(orderManager.getOrderUpdateFrequency().ms);
@@ -668,12 +678,22 @@ public class AccountManager implements ClientAccount {
 						Thread.currentThread().interrupt();
 					}
 
-					o = updateOrder(o);
+					if (!o.isFinalized()) {
+						o = account.updateOrderStatus(o);
+					} else {
+						o = null;
+					}
+					if (o != null) {
+						if (order.getTrade() == null) {
+							throw new IllegalStateException("Trade associated with order " + order + " can't be null");
+						}
+						synchronized (orderUpdates) {
+							orderUpdates.addOrReplace(o);
+						}
+					}
 					if (o == null || o.isFinalized()) {
 						return;
 					}
-
-
 				} catch (Exception e) {
 					log.error("Error tracking state of order " + o, e);
 					return;
@@ -682,65 +702,68 @@ public class AccountManager implements ClientAccount {
 		}).start();
 	}
 
-	public Order updateOrder(Order order) {
-		Order old = order;
-		OrderManager orderManager = configuration.orderManager(order.getSymbol());
-		boolean locked = orderLock.tryLock();
-		if (locked) {
-			try {
-				if (!isSimulated()) {
-					if (order.isFinalized()) {
-						pendingOrders.remove(order);
-						return order;
-					}
-					Order me = pendingOrders.get(order);
-					if (me != order) {
-						return me;
-					}
-				}
+	protected void updateOpenOrders(String symbol, Candle candle) {
+		updateOpenOrders(symbol);
+	}
 
-				order = account.updateOrderStatus(order);
-
-				if (order.getTrade() != null) {
-					if (!order.getTrade().orderUpdated(order)) {
-						pendingOrders.remove(old);
-						return order;
-					}
+	public void updateOpenOrders(String symbol) {
+		synchronized (orderUpdates) {
+			for (int i = orderUpdates.i - 1; i >= 0; i--) {
+				Order order = orderUpdates.elements[i];
+				if (symbol.equals(order.getSymbol())) {
+					updateOrder(order);
 				}
-				if (order.isFinalized()) {
-					logOrderStatus("Order finalized. ", order);
-					pendingOrders.remove(old);
-					orderFinalized(orderManager, order);
-					return order;
-				} else { // update order status
-					pendingOrders.addOrReplace(order);
-				}
-
-				if (old.getExecutedQuantity() != order.getExecutedQuantity() || (isSimulated() && order instanceof DefaultOrder d && d.hasPartialFillDetails())) {
-					logOrderStatus("Order updated. ", order);
-					executeUpdateBalances();
-					orderManager.updated(order, traderOf(order), this::resubmit);
-				} else {
-					logOrderStatus("Unchanged ", order);
-					orderManager.unchanged(order, traderOf(order), this::resubmit);
-				}
-
-				//order manager could have cancelled the order
-				if (order.getStatus() == CANCELLED && pendingOrders.contains(order)) {
-					cancelOrder(orderManager, order);
-				}
-			} finally {
-				orderLock.unlock();
-			}
-			return order;
-		} else {
-			orderLock.lock();
-			try {
-				return pendingOrders.get(order);
-			} finally {
-				orderLock.unlock();
 			}
 		}
+	}
+
+	public Order updateOrder(Order order) {
+		OrderManager orderManager = configuration.orderManager(order.getSymbol());
+
+		if (order.getTrade() != null) {
+			if (!order.getTrade().orderUpdated(order)) {
+				removePendingOrder(order);
+				return order;
+			}
+		}
+
+		Order update = order;
+		if (!isSimulated()) {
+			if (pendingOrders.contains(order)) {
+				order = pendingOrders.get(order);
+			}
+			synchronized (orderUpdates) {
+				update = orderUpdates.get(order);
+			}
+			if (update == null) {
+				log.warn("Lost track of order {}. Trying to cancel it.", order);
+				update = cancelOrder(order);
+			}
+		}
+
+		if (update.isFinalized()) {
+			logOrderStatus("Order finalized. ", update);
+			removePendingOrder(update);
+			orderFinalized(orderManager, update);
+			return update;
+		} else { // update order status
+			pendingOrders.addOrReplace(update);
+		}
+
+		if (update.getExecutedQuantity() != order.getExecutedQuantity() || (isSimulated() && update instanceof DefaultOrder d && d.hasPartialFillDetails())) {
+			logOrderStatus("Order updated. ", update);
+			executeUpdateBalances();
+			orderManager.updated(update, traderOf(update), this::resubmit);
+		} else {
+			logOrderStatus("Unchanged ", update);
+			orderManager.unchanged(update, traderOf(update), this::resubmit);
+		}
+
+		//order manager could have cancelled the order
+		if (update.getStatus() == CANCELLED && pendingOrders.contains(update)) {
+			cancelOrder(orderManager, update);
+		}
+		return update;
 	}
 
 	private void orderFinalized(OrderManager orderManager, Order order) {
@@ -810,65 +833,58 @@ public class AccountManager implements ClientAccount {
 		return getTraderOfSymbol(order.getSymbol());
 	}
 
-	private void cancelOrder(OrderManager orderManager, Order order) {
-		orderLock.lock();
+	private Order cancelOrder(OrderManager orderManager, Order order) {
 		try {
 			order.cancel();
 			account.cancel(order);
 		} catch (Exception e) {
 			log.error("Failed to execute cancellation of order '" + order + "' on exchange", e);
 		} finally {
-			try {
-				order = account.updateOrderStatus(order);
-				pendingOrders.remove(order);
-				orderFinalized(orderManager, order);
-				logOrderStatus("Cancellation via order manager: ", order);
-			} finally {
-				orderLock.unlock();
-			}
+			removePendingOrder(order);
+			order = account.updateOrderStatus(order);
+			orderFinalized(orderManager, order);
+			logOrderStatus("Cancellation via order manager: ", order);
 		}
+		return order;
 	}
 
-	public void cancelOrder(Order order) {
+	public Order cancelOrder(Order order) {
 		OrderManager orderManager = configuration.orderManager(order.getSymbol());
 		if (!order.isFinalized()) {
+			order.cancel();
 			order = account.updateOrderStatus(order);
 			if (!order.isFinalized()) {
-				cancelOrder(orderManager, order);
+				return cancelOrder(orderManager, order);
 			}
 		}
+		return order;
 	}
 
 	public void cancelStaleOrdersFor(Trader trader) {
-		orderLock.lock();
-		try {
-			if (pendingOrders.isEmpty()) {
-				return;
+		if (pendingOrders.isEmpty()) {
+			return;
+		}
+		for (int i = pendingOrders.i - 1; i >= 0; i--) {
+			Order order = pendingOrders.elements[i];
+			if (order.isFinalized()) {
+				continue;
 			}
-			for (int i = pendingOrders.i - 1; i >= 0; i--) {
-				Order order = pendingOrders.elements[i];
-				if (order.isFinalized()) {
-					continue;
-				}
-				OrderManager orderManager = configuration.orderManager(order.getSymbol());
-				Trader traderOfOrder = traderOf(order);
-				if (traderOfOrder == null) {
-					log.warn("Cancelling order {} as no trader found for this order", order);
-					order.cancel();
-				} else if (traderOfOrder.latestCandle() == null) {
-					log.warn("Cancelling order {} as latest candle information is available for this symbol", order);
-					order.cancel();
-				}
+			OrderManager orderManager = configuration.orderManager(order.getSymbol());
+			Trader traderOfOrder = traderOf(order);
+			if (traderOfOrder == null) {
+				log.warn("Cancelling order {} as no trader found for this order", order);
+				order.cancel();
+			} else if (traderOfOrder.latestCandle() == null) {
+				log.warn("Cancelling order {} as latest candle information is available for this symbol", order);
+				order.cancel();
+			}
 
-				if (order.isCancelled() || traderOfOrder != null && orderManager.cancelToReleaseFundsFor(order, traderOfOrder, trader)) {
-					if (order.getStatus() == CANCELLED) {
-						cancelOrder(orderManager, order);
-						return;
-					}
+			if (order.isCancelled() || traderOfOrder != null && orderManager.cancelToReleaseFundsFor(order, traderOfOrder, trader)) {
+				if (order.getStatus() == CANCELLED) {
+					cancelOrder(orderManager, order);
+					return;
 				}
 			}
-		} finally {
-			orderLock.unlock();
 		}
 	}
 

@@ -10,7 +10,7 @@ import java.util.concurrent.*;
 public class SimulatedAccountManager extends AccountManager implements SimulatedAccountConfiguration {
 
 	private final TradingFees tradingFees;
-	private final SimulatedClientAccount account;
+	protected final SimulatedClientAccount account;
 
 	public SimulatedAccountManager(SimulatedClientAccount account, AccountConfiguration<?> configuration, TradingFees tradingFees) {
 		super(account, configuration);
@@ -138,32 +138,21 @@ public class SimulatedAccountManager extends AccountManager implements Simulated
 		return this;
 	}
 
-	public boolean updateOpenOrders(String symbol, Candle candle) {
+	@Override
+	protected void updateOpenOrders(String symbol, Candle candle) {
 		if (this.account.updateOpenOrders(symbol, candle)) {
-			orderLock.lock();
-			try {
-				for (int i = pendingOrders.i - 1; i >= 0; i--) {
-					Order order = pendingOrders.elements[i];
-					if (symbol.equals(order.getSymbol())) {
-						updateOrder(order);
-					}
+			for (int i = pendingOrders.i - 1; i >= 0; i--) {
+				Order order = pendingOrders.elements[i];
+				if (symbol.equals(order.getSymbol())) {
+					updateOrder(order);
 				}
-			} finally {
-				orderLock.unlock();
 			}
-			return true;
 		}
-		return false;
 	}
 
 	public void notifySimulationEnd() {
-		orderLock.lock();
-		try {
-			for (int i = pendingOrders.i - 1; i >= 0; i--) {
-				pendingOrders.elements[i].cancel();
-			}
-		} finally {
-			orderLock.unlock();
+		for (int i = pendingOrders.i - 1; i >= 0; i--) {
+			pendingOrders.elements[i].cancel();
 		}
 		for (TradingManager t : this.getAllTradingManagers()) {
 			updateOpenOrders(t.getSymbol(), t.getLatestCandle());

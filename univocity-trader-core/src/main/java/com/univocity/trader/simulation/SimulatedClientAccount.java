@@ -186,8 +186,12 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
+	protected final OrderSet ordersOf(String symbol){
+		return orders.get(symbol);
+	}
+
 	public final boolean updateOpenOrders(String symbol, Candle candle) {
-		OrderSet s = orders.get(symbol);
+		OrderSet s = ordersOf(symbol);
 		if (s == null || s.isEmpty()) {
 			return false;
 		}
@@ -221,6 +225,7 @@ public class SimulatedClientAccount implements ClientAccount {
 
 			if (order.isFinalized()) {
 				s.remove(order);
+				accountManager.removePendingOrder(order);
 				if (order.getParent() != null) { //order is child of a bracket order
 					updateBalances(order, candle);
 					for (Order attached : order.getParent().getAttachments()) { //cancel all open orders
@@ -346,7 +351,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	private void updateBalances(DefaultOrder order, Candle candle) {
+	protected void updateBalances(DefaultOrder order, Candle candle) {
 		final String asset = order.getAssetsSymbol();
 		final String funds = order.getFundsSymbol();
 

@@ -341,9 +341,7 @@ public final class TradingManager {
 	}
 
 	public void updateOpenOrders(String symbol, Candle candle) {
-		if (tradingAccount instanceof SimulatedAccountManager account) {
-			account.updateOpenOrders(symbol, candle);
-		}
+		tradingAccount.updateOpenOrders(symbol, candle);
 	}
 
 	public int pipSize() {

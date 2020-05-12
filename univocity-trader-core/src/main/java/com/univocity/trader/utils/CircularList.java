@@ -109,7 +109,7 @@ public class CircularList {
 				out = v;
 			}
 		}
-		for (int i = len; i >= 0 && backwardCount > 0; i--, backwardCount--) {
+		for (int i = len - 1; i >= 0 && backwardCount > 0; i--, backwardCount--) {
 			double v = values[i];
 			if (v != 0.0 && (out == 0.0 || predicate.test(out, v))) {
 				out = v;

@@ -77,7 +77,6 @@ public final class TradingEngine implements Engine {
 
 		trader.latestCandle = candle;
 
-		//for simulations only - tries to fill open orders using the latest candle information loaded from history.
 		tradingManager.updateOpenOrders(trader.symbol(), candle);
 
 
