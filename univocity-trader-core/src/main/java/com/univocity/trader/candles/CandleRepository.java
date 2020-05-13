@@ -99,7 +99,10 @@ public class CandleRepository {
 		}
 
 		final BlockingQueue<Candle> queue = (BlockingQueue<Candle>) out;
-		new Thread(readingProcess).start();
+		Thread process = new Thread(readingProcess);
+		process.setDaemon(true);
+		process.start();
+
 		return new Enumeration<>() {
 			@Override
 			public boolean hasMoreElements() {
