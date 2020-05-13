@@ -277,8 +277,8 @@ public class ShortTradingTests extends OrderFillChecker {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
-					OrderRequest takeProfit = order.attach(MARKET, -1.0);
-					OrderRequest marketBuyOnLoss = order.attach(MARKET, 1.0);
+					OrderRequest takeProfit = order.attachToPercentageChange(MARKET, -1.0);
+					OrderRequest marketBuyOnLoss = order.attachToPercentageChange(MARKET, 1.0);
 				}
 			}
 		});

@@ -2,7 +2,6 @@ package com.univocity.trader.examples;
 
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.exchange.interactivebrokers.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
@@ -62,8 +61,8 @@ public class LiveForexTrader {
 		account.orderManager(new DefaultOrderManager() {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
-				order.attach(Order.Type.LIMIT, 0.25);
-				order.attach(Order.Type.MARKET, -0.15);
+				order.attachToPercentageChange(Order.Type.LIMIT, 0.25);
+				order.attachToPercentageChange(Order.Type.MARKET, -0.15);
 			}
 		});
 

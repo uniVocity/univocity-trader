@@ -257,8 +257,8 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
-					OrderRequest limitSellOnLoss = order.attach(LIMIT, -1.0);
-					OrderRequest takeProfit = order.attach(LIMIT, 1.0);
+					OrderRequest limitSellOnLoss = order.attachToPercentageChange(LIMIT, -1.0);
+					OrderRequest takeProfit = order.attachToPercentageChange(LIMIT, 1.0);
 				}
 			}
 		};
@@ -325,8 +325,8 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
-					OrderRequest limitSellOnLoss = order.attach(LIMIT, -1.0);
-					OrderRequest takeProfit = order.attach(LIMIT, 1.0);
+					OrderRequest limitSellOnLoss = order.attachToPercentageChange(LIMIT, -1.0);
+					OrderRequest takeProfit = order.attachToPercentageChange(LIMIT, 1.0);
 				}
 			}
 		};
@@ -394,8 +394,8 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
-					OrderRequest limitSellOnLoss = order.attach(LIMIT, -1.0);
-					OrderRequest takeProfit = order.attach(LIMIT, 1.0);
+					OrderRequest limitSellOnLoss = order.attachToPercentageChange(LIMIT, -1.0);
+					OrderRequest takeProfit = order.attachToPercentageChange(LIMIT, 1.0);
 				}
 			}
 		};

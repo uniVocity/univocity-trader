@@ -191,7 +191,7 @@ public class OrderRequest {
 		return active && !isCancelled();
 	}
 
-	public OrderRequest attach(Order.Type type, double change) {
+	public OrderRequest attachToPriceChange(Order.Type type, double priceChange) {
 		if (attachedRequests == null) {
 			attachedRequests = new ArrayList<>();
 		}
@@ -201,14 +201,14 @@ public class OrderRequest {
 
 		this.attachedRequests.add(attachment);
 		attachment.setQuantity(this.quantity);
-		attachment.setPrice(this.price * (1.0 + (change / 100.0)));
+		attachment.setPrice(this.price + priceChange);
 		attachment.setType(type);
 
-		if (change < 0.0) {
+		if (priceChange < 0.0) {
 			attachment.setTriggerCondition(STOP_LOSS, attachment.getPrice());
 		}
 
-		if (change >= 0.0) {
+		if (priceChange >= 0.0) {
 			attachment.setTriggerCondition(STOP_GAIN, attachment.getPrice());
 		}
 
@@ -217,5 +217,9 @@ public class OrderRequest {
 
 	protected void setAttachedOrderRequests(List<OrderRequest> attachedRequests) {
 		this.attachedRequests = attachedRequests == null ? null : new ArrayList<>(attachedRequests);
+	}
+
+	public OrderRequest attachToPercentageChange(Order.Type type, double percentageChange) {
+		return attachToPriceChange(type, this.price * (1.0 + (percentageChange / 100.0)));
 	}
 }

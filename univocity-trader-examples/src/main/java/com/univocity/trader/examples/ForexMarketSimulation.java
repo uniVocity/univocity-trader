@@ -77,8 +77,8 @@ public class ForexMarketSimulation {
 		account.orderManager(new OrderManager() {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
-				order.attach(Order.Type.LIMIT, 0.25);
-				order.attach(Order.Type.MARKET, -0.15);
+				order.attachToPriceChange(Order.Type.LIMIT, 0.025);
+				order.attachToPriceChange(Order.Type.MARKET, -0.015);
 			}
 		});
 
