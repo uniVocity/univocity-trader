@@ -38,16 +38,12 @@ public class ForexMarketSimulation {
 				.minimumInvestmentAmountPerTrade(100.0)
 				.maximumInvestmentAmountPerTrade(100.0);
 
-		boolean first[] = new boolean[]{true};
 
+		//produces random signals.
 		Strategy random = new Strategy() {
 			@Override
 			public Signal getSignal(Candle candle) {
 				double v = Math.random();
-				if(first[0]){
-					first[0] = false;
-					return Signal.BUY;
-				}
 				return v < 0.3 ? Signal.SELL : v > 0.7 ? Signal.BUY : Signal.NEUTRAL;
 			}
 
@@ -81,10 +77,6 @@ public class ForexMarketSimulation {
 		account.orderManager(new OrderManager() {
 			@Override
 			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
-				if(trade != null){
-					order.cancel();
-					return;
-				}
 				order.attach(Order.Type.LIMIT, 0.25);
 				order.attach(Order.Type.MARKET, -0.15);
 			}
