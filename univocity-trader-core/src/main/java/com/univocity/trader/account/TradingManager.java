@@ -213,12 +213,12 @@ public final class TradingManager {
 		return exited;
 	}
 
-	public boolean waitingForBuyOrderToFill() {
-		return tradingAccount.waitingForFill(assetSymbol, BUY);
+	public boolean waitingForBuyOrderToFill(Trade.Side tradeSide) {
+		return tradingAccount.waitingForFill(assetSymbol, BUY, tradeSide);
 	}
 
-	public boolean waitingForSellOrderToFill() {
-		return tradingAccount.waitingForFill(assetSymbol, SELL);
+	public boolean waitingForSellOrderToFill(Trade.Side tradeSide) {
+		return tradingAccount.waitingForFill(assetSymbol, SELL, tradeSide);
 	}
 
 	public final void updateBalances() {

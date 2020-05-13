@@ -8,7 +8,6 @@ import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
-import java.util.stream.*;
 
 public class OrderExecutionToCsv implements OrderListener {
 
@@ -55,21 +54,19 @@ public class OrderExecutionToCsv implements OrderListener {
 
 
 	private void logDetails(Order order, Client client) {
-		if(order.getTrade() != null){
+		if (order.getTrade() != null) {
 			lines.add(new OrderExecutionLine(order, order.getTrade(), order.getTrade().trader(), client));
 		}
 	}
 
 	private List<OrderExecutionLine> filterLines() {
 		Set<String> toRemove = new HashSet<>();
+		List<OrderExecutionLine> lines = new ArrayList<>(this.lines);
 		if (omitZeroTrades) {
 			lines.forEach(l -> toRemove.add(l.fillPct == 0.0 && l.status != Order.Status.NEW ? l.orderId : ""));
 		}
-
-		return lines.stream()
-				.filter(l -> (omitOrderOpening && l.status != Order.Status.NEW))
-				.filter(l -> !toRemove.contains(l.orderId))
-				.collect(Collectors.toList());
+		lines.removeIf(l -> (omitOrderOpening && l.status != Order.Status.NEW) || !toRemove.contains(l.orderId));
+		return lines;
 	}
 
 	@Override

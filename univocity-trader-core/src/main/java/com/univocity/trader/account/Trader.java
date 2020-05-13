@@ -176,7 +176,7 @@ public final class Trader {
 			if (stoppedOut.contains(trade)) {
 				continue;
 			}
-			if (isShort && trade.isShort()) {
+			if (isShort && trade.isShort() && trade.exitOnOppositeSignal()) {
 				bought |= exit(trade, candle, strategy, "Buy signal");
 			} else if (isLong && trade.isLong()) {
 				bought |= buy(LONG, candle, strategy, trade); //increment position on existing trade
@@ -219,7 +219,7 @@ public final class Trader {
 			if (isShort && trade.isShort()) {
 				noShorts = false;
 				sold |= sellShort(trade, candle, strategy);
-			} else if (isLong && trade.isLong()) {
+			} else if (isLong && trade.isLong() && trade.exitOnOppositeSignal()) {
 				noLongs = false;
 				sold |= exit(trade, candle, strategy, "Sell signal");
 			}
@@ -320,17 +320,19 @@ public final class Trader {
 			}
 		}
 
-		if ((isLong && tradingManager.waitingForBuyOrderToFill()) || (isShort && tradingManager.waitingForSellOrderToFill())) {
-			tradingManager.cancelStaleOrdersFor(side, this);
-			if ((isLong && tradingManager.waitingForBuyOrderToFill()) || (isShort && tradingManager.waitingForSellOrderToFill())) {
-				if (log.isTraceEnabled()) {
-					if (isLong) {
-						log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
-					} else {
-						log.trace("Discarding short sell of {} @ {}: got sell order waiting to be filled", tradingManager.getSymbol(), candle.close);
+		if(strategy != null && strategy.exitOnOppositeSignal()) {
+			if ((isLong && tradingManager.waitingForBuyOrderToFill(side)) || (isShort && tradingManager.waitingForSellOrderToFill(side))) {
+				tradingManager.cancelStaleOrdersFor(side, this);
+				if ((isLong && tradingManager.waitingForBuyOrderToFill(side)) || (isShort && tradingManager.waitingForSellOrderToFill(side))) {
+					if (log.isTraceEnabled()) {
+						if (isLong) {
+							log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
+						} else {
+							log.trace("Discarding short sell of {} @ {}: got sell order waiting to be filled", tradingManager.getSymbol(), candle.close);
+						}
 					}
+					return -1.0;
 				}
-				return -1.0;
 			}
 		}
 		if ((isLong && tradingManager.isBuyLocked()) || (isShort && tradingManager.isShortSellLocked())) {

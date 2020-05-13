@@ -122,6 +122,10 @@ public final class Trade implements Comparable<Trade> {
 		return side;
 	}
 
+	public boolean exitOnOppositeSignal(){
+		return openingStrategy == null || openingStrategy.exitOnOppositeSignal();
+	}
+
 	private void updateMinAndMaxPrices(Candle candle) {
 		if (max < candle.close) {
 			max = candle.close;
@@ -450,17 +454,18 @@ public final class Trade implements Comparable<Trade> {
 				double soldUnits = this.totalUnits;
 				double exitPrice = averagePrice;
 
-				updateAveragePrice(position);
+				if(totalUnits != 0) {
+					updateAveragePrice(position);
 
-				final double cost = (totalSpent * (soldUnits / this.totalUnits));
-				actualProfitLoss = totalSold - cost;
-				if (Double.isNaN(actualProfitLoss)) {
-					throw new IllegalStateException("Profit/loss amount can't be determined");
-				}
-
-				actualProfitLossPct = positivePriceChangePct(averagePrice, exitPrice);
-				if (Double.isNaN(actualProfitLossPct)) {
-					throw new IllegalStateException("Profit/loss % can't be determined");
+					final double cost = (totalSpent * (soldUnits / this.totalUnits));
+					actualProfitLoss = totalSold - cost;
+					if (Double.isNaN(actualProfitLoss)) {
+						throw new IllegalStateException("Profit/loss amount can't be determined");
+					}
+					actualProfitLossPct = positivePriceChangePct(averagePrice, exitPrice);
+					if (Double.isNaN(actualProfitLossPct)) {
+						throw new IllegalStateException("Profit/loss % can't be determined");
+					}
 				}
 				pastOrders.addAll(position);
 				position.clear();

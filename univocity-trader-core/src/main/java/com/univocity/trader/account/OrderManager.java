@@ -63,7 +63,9 @@ public interface OrderManager {
 	 *                     Trader#holdings()} to help you better determine the size of your order.
 	 * @param trade		   the current {@link Trade} whose position being increased or closed. Will be {@code null} if this is a new trade.
 	 */
-	void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade);
+	default void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade){
+
+	}
 
 	/**
 	 * The time interval to wait between calls to {@link AccountManager#updateOrderStatus(Order)}, to identify if an {@link Order} has
@@ -81,7 +83,9 @@ public interface OrderManager {
 	 * @param order  the order that you probably won't have to care about anymore.
 	 * @param trader the {@code Trader} responsible for the order
 	 */
-	void finalized(Order order, Trader trader);
+	default void finalized(Order order, Trader trader){
+
+	}
 
 	/**
 	 * Notifies that an order has been updated, meaning it got {@code PARTIALLY_FILLED}.
@@ -94,7 +98,9 @@ public interface OrderManager {
 	 *                     new order details. The resubmission request will be ignored if the order is 98% filled or more
 	 *                     (i.e. {@link Order#getFillPct()}  is greater than 98.0).
 	 */
-	void updated(Order order, Trader trader, Consumer<Order> resubmission);
+	default void updated(Order order, Trader trader, Consumer<Order> resubmission){
+
+	}
 
 	/**
 	 * Notifies that an order has not been changed since the last status check, which happened at the time defined by
@@ -109,7 +115,9 @@ public interface OrderManager {
 	 *                     new order details. The resubmission request will be ignored if the order is 98% filled or more
 	 *                     (i.e. {@link Order#getFillPct()} is greater than 98.0).
 	 */
-	void unchanged(Order order, Trader trader, Consumer<Order> resubmission);
+	default void unchanged(Order order, Trader trader, Consumer<Order> resubmission){
+
+	}
 
 	/**
 	 * Requests to cancel a given order that has not been {@code FILLED} to release funds for executing another order for another symbol.
@@ -121,6 +129,8 @@ public interface OrderManager {
 	 *
 	 * @return {@code true} if the given order can be cancelled, otherwise {@code false}.
 	 */
-	boolean cancelToReleaseFundsFor(Order order, Trader orderTrader, Trader newSymbolTrader);
+	default boolean cancelToReleaseFundsFor(Order order, Trader orderTrader, Trader newSymbolTrader){
+		return false;
+	};
 
 }

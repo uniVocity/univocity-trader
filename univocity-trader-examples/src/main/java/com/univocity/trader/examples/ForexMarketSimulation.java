@@ -1,12 +1,14 @@
 package com.univocity.trader.examples;
 
+import com.univocity.trader.*;
 import com.univocity.trader.account.*;
+import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.*;
+import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
-
-import java.time.*;
+import com.univocity.trader.strategy.*;
 
 import static com.univocity.trader.exchange.interactivebrokers.SecurityType.*;
 
@@ -26,16 +28,36 @@ public class ForexMarketSimulation {
 
 		//you can test with one or more accounts at the same time
 		Account account = simulator.configure().account();
+		account.enableShorting();
 
 		account
 				.referenceCurrency("GBP") //Balances will be calculated using the reference currency.
 				.tradeWith(FOREX, "EUR", "GBP");
 
 		account
-				.minimumInvestmentAmountPerTrade(500.0);
+				.minimumInvestmentAmountPerTrade(100.0)
+				.maximumInvestmentAmountPerTrade(100.0);
 
-		account.strategies().add(ScalpingStrategy::new);
-		account.monitors().add(ScalpingStrategyMonitor::new);
+		boolean first[] = new boolean[]{true};
+
+		Strategy random = new Strategy() {
+			@Override
+			public Signal getSignal(Candle candle) {
+				double v = Math.random();
+				if(first[0]){
+					first[0] = false;
+					return Signal.BUY;
+				}
+				return v < 0.3 ? Signal.SELL : v > 0.7 ? Signal.BUY : Signal.NEUTRAL;
+			}
+
+			@Override
+			public boolean exitOnOppositeSignal() {
+				return false;
+			}
+		};
+
+		account.strategies().add(() -> random);
 
 		account.listeners()
 				.add(new OrderExecutionToLog())
@@ -47,13 +69,26 @@ public class ForexMarketSimulation {
 				.tradingFees(SimpleTradingFees.percentage(0.0)) // NO FEE WARNING!!
 				.fillOrdersOnPriceMatch()
 				.resumeBackfill(false)
-				.simulateTo(LocalDateTime.now());
+				.simulateFrom("2019-10-10")
+				.simulateTo("2019-10-15");
 
 		simulator.symbolInformation("GBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 		simulator.symbolInformation("EURGBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 
 		//Interval of 1ms = REAL TIME TICKS
 		simulator.configure().tickInterval(TimeInterval.millis(1));
+
+		account.orderManager(new OrderManager() {
+			@Override
+			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
+				if(trade != null){
+					order.cancel();
+					return;
+				}
+				order.attach(Order.Type.LIMIT, 0.25);
+				order.attach(Order.Type.MARKET, -0.15);
+			}
+		});
 
 //		execute simulation
 		simulator.run();

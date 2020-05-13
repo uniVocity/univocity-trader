@@ -225,7 +225,7 @@ public class SimulatedClientAccount implements ClientAccount {
 
 			if (order.isFinalized()) {
 				s.remove(order);
-				accountManager.removePendingOrder(order);
+//				accountManager.removePendingOrder(order);
 				if (order.getParent() != null) { //order is child of a bracket order
 					updateBalances(order, candle);
 					for (Order attached : order.getParent().getAttachments()) { //cancel all open orders

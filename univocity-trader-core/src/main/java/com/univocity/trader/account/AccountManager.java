@@ -318,11 +318,11 @@ public class AccountManager implements ClientAccount {
 		return 0.0;
 	}
 
-	public boolean waitingForFill(String assetSymbol, Order.Side side) {
+	public boolean waitingForFill(String assetSymbol, Order.Side side, Trade.Side tradeSide) {
 		for (int i = pendingOrders.i - 1; i >= 0; i--) {
 			Order order = pendingOrders.elements[i];
 
-			if (order.isFinalized()) {
+			if (order.isFinalized() || order.getTradeSide() != tradeSide) {
 				continue;
 			}
 
@@ -348,11 +348,11 @@ public class AccountManager implements ClientAccount {
 	}
 
 	public boolean isBuyLocked(String assetSymbol) {
-		return isTradingLocked(assetSymbol) || waitingForFill(assetSymbol, BUY);
+		return isTradingLocked(assetSymbol) || waitingForFill(assetSymbol, BUY, LONG);
 	}
 
 	public boolean isShortSellLocked(String assetSymbol) {
-		return (isTradingLocked(assetSymbol) || waitingForFill(assetSymbol, SELL));
+		return (isTradingLocked(assetSymbol) || waitingForFill(assetSymbol, SELL, SHORT));
 	}
 
 	private boolean lockTrading(String assetSymbol) {
@@ -547,7 +547,7 @@ public class AccountManager implements ClientAccount {
 
 			boolean closingShort = tradeSide == SHORT && side == BUY;
 			double minimumInvestment = configuration.minimumInvestmentAmountPerTrade(orderPreparation.getAssetsSymbol());
-			double orderAmount = orderPreparation.getTotalOrderAmount();
+			double orderAmount = orderPreparation.getTotalOrderAmount() * 1.01 + getTradingFees().feesOnOrder(orderPreparation);
 
 			if ((orderAmount >= minimumInvestment || closingShort) && orderAmount > priceDetails.getMinimumOrderAmount(orderPreparation.getPrice())) {
 				return orderPreparation;
@@ -778,10 +778,18 @@ public class AccountManager implements ClientAccount {
 				trader = traderOf(order);
 			}
 			notifyFinalized(orderManager, order, trader);
-			if (order.getAttachments() != null && order.isCancelled() && order.getExecutedQuantity() == 0.0) {
-				for (Order attached : order.getAttachments()) {
-					attached.cancel();
-					notifyFinalized(orderManager, attached, trader);
+			List<Order> attachments;
+			if(order.getParent() != null){
+				attachments = order.getParent().getAttachments();
+			} else {
+				attachments = order.getAttachments();
+			}
+			if (attachments != null && order.isCancelled() && order.getExecutedQuantity() == 0.0) {
+				for (Order attached : attachments) {
+					if(attached != order) {
+						attached.cancel();
+						notifyFinalized(orderManager, attached, trader);
+					}
 				}
 			}
 		}

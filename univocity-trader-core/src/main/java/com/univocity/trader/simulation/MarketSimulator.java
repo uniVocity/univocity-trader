@@ -155,7 +155,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			for (int i = 0; i < readers.length; i++) {
 				MarketReader reader = readers[i];
 				Candle candle = reader.pending;
-				if (candle != null) {
+				if (candle != null && candle.close > 0) {
 					if (candle.openTime + 1 >= clock && candle.openTime <= clock + MINUTE.ms - 1) {
 						for (int j = 0; j < reader.engines.length; j++) {
 							reader.engines[j].process(candle, false);
