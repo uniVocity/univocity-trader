@@ -3,6 +3,7 @@ package com.univocity.trader.account;
 import org.apache.commons.lang3.*;
 
 import java.util.*;
+import java.util.function.*;
 
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.TriggerCondition.*;
@@ -191,7 +192,19 @@ public class OrderRequest {
 		return active && !isCancelled();
 	}
 
+	public OrderRequest attachToPercentageChange(Order.Type type, double percentageChange) {
+		return attach(type, () -> this.price * (1.0 + (percentageChange / 100.0)));
+	}
+
 	public OrderRequest attachToPriceChange(Order.Type type, double priceChange) {
+		return attach(type, ()->this.price + priceChange);
+	}
+
+	protected void setAttachedOrderRequests(List<OrderRequest> attachedRequests) {
+		this.attachedRequests = attachedRequests == null ? null : new ArrayList<>(attachedRequests);
+	}
+
+	private OrderRequest attach(Order.Type type, DoubleSupplier priceSupplier) {
 		if (attachedRequests == null) {
 			attachedRequests = new ArrayList<>();
 		}
@@ -201,25 +214,21 @@ public class OrderRequest {
 
 		this.attachedRequests.add(attachment);
 		attachment.setQuantity(this.quantity);
-		attachment.setPrice(this.price + priceChange);
+
+		double price = priceSupplier.getAsDouble();
+		double diff = price - this.price;
+
+		attachment.setPrice(price);
 		attachment.setType(type);
 
-		if (priceChange < 0.0) {
+		if (diff < 0.0) {
 			attachment.setTriggerCondition(STOP_LOSS, attachment.getPrice());
 		}
 
-		if (priceChange >= 0.0) {
+		if (diff >= 0.0) {
 			attachment.setTriggerCondition(STOP_GAIN, attachment.getPrice());
 		}
 
 		return attachment;
-	}
-
-	protected void setAttachedOrderRequests(List<OrderRequest> attachedRequests) {
-		this.attachedRequests = attachedRequests == null ? null : new ArrayList<>(attachedRequests);
-	}
-
-	public OrderRequest attachToPercentageChange(Order.Type type, double percentageChange) {
-		return attachToPriceChange(type, this.price * (1.0 + (percentageChange / 100.0)));
 	}
 }
