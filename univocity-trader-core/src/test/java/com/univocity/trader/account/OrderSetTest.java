@@ -11,7 +11,7 @@ public class OrderSetTest {
 	public void testModification() {
 		OrderSet p = new OrderSet();
 		for (long i = 0; i < 50; i++) {
-			p.add(newOrder(i));
+			p.addOrReplace(newOrder(i));
 			assertEquals(i + 1, p.size());
 			assertTrue(p.contains(newOrder(i)));
 		}
@@ -32,14 +32,14 @@ public class OrderSetTest {
 	public void testChangesInMiddle() {
 		OrderSet p = new OrderSet();
 		for (long i = 0; i < 10; i++) {
-			p.add(newOrder(i * 2));
+			p.addOrReplace(newOrder(i * 2));
 			assertEquals(i + 1, p.size());
 			assertTrue(p.contains(newOrder(i * 2)));
 		}
 		assertEquals(10, p.size());
 
 		assertFalse(p.contains(newOrder(5)));
-		p.add(newOrder(5));
+		p.addOrReplace(newOrder(5));
 		assertTrue(p.contains(newOrder(5)));
 
 		assertTrue(p.contains(newOrder(6)));
@@ -60,12 +60,12 @@ public class OrderSetTest {
 	public void testAddAll() {
 		OrderSet s1 = new OrderSet();
 		for (long i = 0; i < 10; i++) {
-			s1.add(newOrder(i));
+			s1.addOrReplace(newOrder(i));
 		}
 
 		OrderSet s2 = new OrderSet();
 		for (long i = 10; i < 20; i++) {
-			s2.add(newOrder(i));
+			s2.addOrReplace(newOrder(i));
 		}
 
 		OrderSet s3 = new OrderSet();
@@ -82,7 +82,7 @@ public class OrderSetTest {
 	public void testNullRemoval() {
 		OrderSet s1 = new OrderSet();
 		for (long i = 0; i < 10; i++) {
-			s1.add(newOrder(i));
+			s1.addOrReplace(newOrder(i));
 		}
 
 		for (int i = 0; i < 5; i++) {
