@@ -159,26 +159,6 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 		public CandleRepository candleRepository() {
 			return noop;
 		}
-
-		protected AccountManager createAccountManager(ClientAccount clientAccount, SimulationAccount account) {
-			SimulatedAccountManager out = new SimulatedAccountManager((MockClientAccount) clientAccount, account, SimpleTradingFees.percentage(0.0)) {
-				@Override
-				public void updateOpenOrders(String symbol) {
-					synchronized (orderUpdates) {
-						for (int i = orderUpdates.i - 1; i >= 0; i--) {
-							Order order = orderUpdates.elements[i];
-							if (symbol.equals(order.getSymbol())) {
-								account.updateBalances((DefaultOrder)order, getTraderOf(symbol).latestCandle);
-								updateOrder(order);
-							}
-						}
-					}
-				}
-			};
-			((MockClientAccount) clientAccount).accountManager = out;
-			out.setAmount("USDT", 100);
-			return out;
-		}
 	}
 
 	public static Trader trader(Map<String, List<Candle>> candles) {
