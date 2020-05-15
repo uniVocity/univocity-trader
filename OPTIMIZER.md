@@ -9,14 +9,14 @@ parameters for one or multiple indicators in your strategy.
 Once you the univocity-trader-optimizer.jar to your classpath you should be
 able to import the following package:
 
-```
+```java
 import com.univocity.trading.optimizer.*;
 ```
 
 Which allows you to create a market simulation with multiple symbols
 traded at the same time as usual:
 
-```
+```java
 Simulator simulator = Strategy.simulator();
 
 SimulationAccount account = simulator.configure().account();
@@ -45,13 +45,13 @@ of `new <IndicatorName>(args)`.
 
 For example, 
 
-```
-adx adx1hour = new adx(timeinterval.hours(1));
+```java
+ADX adx1hour = new ADX(TimeInterval.hours(1));
 ```
 
 Should become
 
-```
+```java
 ADX adx1hour = Indicators.ADX(TimeInterval.hours(1));
 ```
 
@@ -60,7 +60,7 @@ the indicators that remain the same in each simulation of the group.
 
 The number simulations to run per group can be configured with:
 
-```
+```java
 simulator.configure().groupSizePerThread(5);
 ```
 
@@ -84,14 +84,14 @@ parameters your provide.
 
 To use the optimizer, simply write:
 
-```
+```java
 ParameterOptimizer optimizer = Strategy.optimizer();
 ```
 
 The optimizer configuration allows you to provide a callback for collecting
 statistics:
 
-```
+```java
 optimizer.configure().collectStatistics(BiFunction<Parameters, Trade, T>);
 ```
 
@@ -100,7 +100,7 @@ with the parameters that were in use when processing it.
 
 For example, let's create a class named `MyStatistics`:
 
-```
+```java
 public class MyStatistics {
 		
 	public Void processEntry(Parameters parameters, Trade trade) {
@@ -124,7 +124,7 @@ public class MyStatistics {
 
 Now on your config, you can use the following:
 
-```
+```java
 MyStatistics myStatistics = new MyStatistics();
 optimizer.configure().collectStatistics(myStatistics::processEntry);
 ```
@@ -141,7 +141,7 @@ support.
 
 Let's modify the `MyStatistics` class to insert everything into a database:
 
-```
+```java
 public static class MyStatistics {
 
     public Object[] generateEntry(Parameters parameters, Trade trade) {
@@ -200,7 +200,7 @@ method will be invoked.
 
 Now you can use the following:
 
-```
+```java
 optimizer.configure().collectStatistics(myStatistics::generateEntry, myStatistics::executeBatch);
 ```
 
@@ -222,7 +222,7 @@ results for you.
 
 We could add the following method to the `MyStatistics` class:
 
-```
+```java
 public static class MyStatistics {
     
     ...
@@ -238,7 +238,7 @@ public static class MyStatistics {
 
 With that ready, we can configure the optimizer with: 
 
-```
+```java
     optimizer.configure().blacklistParameters(myStatistics::getWorstParameters);
 ```
 
@@ -248,7 +248,7 @@ With that ready, we can configure the optimizer with:
 With the statistics collection ready, we can run the optimizer with our 
 parameters: 
 
-```
+```java
 optimizer.configure().simulation().addParameters(parameters);
 optimizer.run();
 ```
@@ -259,7 +259,7 @@ Again, indicators that keep their parameters constant on each simulation run
 will be reused in groups, and each group will run on its own thread. The 
 group side and number of threads can be configured with:
 
-```
+```java
 optimizer.configure().threads(threads); //limit of threads to use
 optimizer.configure().groupSizePerThread(groupSize); //defaults to 16
 ```
