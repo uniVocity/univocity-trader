@@ -405,8 +405,8 @@ public class Utils {
 		if (content == null) {
 			return null;
 		}
-		if (content instanceof Object[] o) {
-			return restrictContent(length, Arrays.toString(o));
+		if (content instanceof Object[]) {
+			return restrictContent(length, Arrays.toString((Object[])content));
 		}
 		return restrictContent(length, String.valueOf(content));
 	}

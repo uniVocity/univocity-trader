@@ -10,8 +10,8 @@ public class ContainerUtils {
 	public static void setAllComponentsEnabled(boolean enabled, Container c) {
 		for (Component component : c.getComponents()) {
 			component.setEnabled(enabled);
-			if (component instanceof Container container) {
-				setAllComponentsEnabled(enabled, container);
+			if (component instanceof Container) {
+				setAllComponentsEnabled(enabled, (Container) component);
 			}
 		}
 	}
@@ -19,9 +19,7 @@ public class ContainerUtils {
 	public static void setAllBordersEnabled(boolean enabled, Container c, Color borderColor) {
 		setBorderEnabled(enabled, c, borderColor);
 		for (Component component : c.getComponents()) {
-			if (component instanceof Container container) {
-				setBorderEnabled(enabled, container, borderColor);
-			} else {
+			if (component instanceof Container) {
 				setBorderEnabled(enabled, component, borderColor);
 			}
 		}
@@ -31,10 +29,11 @@ public class ContainerUtils {
 		if (!enabled) {
 			borderColor = Color.GRAY;
 		}
-		if (c instanceof JComponent j) {
-			Border border = j.getBorder();
+		if (c instanceof JComponent) {
+			Border border = ((JComponent)c).getBorder();
 			if (border != null) {
-				if (border instanceof TitledBorder titledBorder) {
+				if (border instanceof TitledBorder) {
+					TitledBorder titledBorder = (TitledBorder) border;
 					titledBorder.setTitleColor(borderColor);
 					border = titledBorder.getBorder();
 				}

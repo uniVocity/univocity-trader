@@ -604,15 +604,15 @@ public final class Trade implements Comparable<Trade> {
 
 		if (exitOrders.isEmpty()) {
 			order.setTrade(this);
-			this.position.add(order);
+			this.position.addOrReplace(order);
 			List<Order> attachments = order.getAttachments();
 			if (attachments != null) {
 				for (Order attachment : order.getAttachments()) {
 					attachment.setTrade(this);
 					if (attachment.getSide() != order.getSide()) {
-						exitOrders.add(attachment);
+						exitOrders.addOrReplace(attachment);
 					} else {
-						position.add(attachment);
+						position.addOrReplace(attachment);
 					}
 				}
 			}
@@ -630,7 +630,7 @@ public final class Trade implements Comparable<Trade> {
 		if (!isPlaceholder && position.isEmpty()) {
 			throw new IllegalStateException("Trying to decrease position of an empty trade");
 		}
-		exitOrders.add(order);
+		exitOrders.addOrReplace(order);
 		order.setTrade(this);
 
 		if (this.exitReason == null) {

@@ -495,18 +495,19 @@ public class AccountManager implements ClientAccount {
 				throw new IllegalStateException("Order " + order + " does not have a valid trade associated with it.");
 			}
 			switch (order.getStatus()) {
-				case NEW, PARTIALLY_FILLED -> {
+				case NEW:
+				case PARTIALLY_FILLED:
 					logOrderStatus("Tracking pending order. ", order);
 					waitForFill(order);
-				}
-				case FILLED -> {
+					break;
+				case FILLED:
 					logOrderStatus("Completed order. ", order);
 					orderFinalized(null, order);
-				}
-				case CANCELLED -> {
+					break;
+				case CANCELLED:
 					logOrderStatus("Could not create order. ", order);
 					orderFinalized(null, order);
-				}
+					break;
 			}
 		}
 	}
@@ -662,7 +663,7 @@ public class AccountManager implements ClientAccount {
 	}
 
 	public void waitForFill(Order order) {
-		pendingOrders.add(order);
+		pendingOrders.addOrReplace(order);
 		if (isSimulated()) {
 			return;
 		}
@@ -750,7 +751,7 @@ public class AccountManager implements ClientAccount {
 			pendingOrders.addOrReplace(update);
 		}
 
-		if (update.getExecutedQuantity() != order.getExecutedQuantity() || (isSimulated() && update instanceof DefaultOrder d && d.hasPartialFillDetails())) {
+		if (update.getExecutedQuantity() != order.getExecutedQuantity() || (isSimulated() && update instanceof DefaultOrder && ((DefaultOrder) update).hasPartialFillDetails())) {
 			logOrderStatus("Order updated. ", update);
 			executeUpdateBalances();
 			orderManager.updated(update, traderOf(update), this::resubmit);
@@ -779,14 +780,14 @@ public class AccountManager implements ClientAccount {
 			}
 			notifyFinalized(orderManager, order, trader);
 			List<Order> attachments;
-			if(order.getParent() != null){
+			if (order.getParent() != null) {
 				attachments = order.getParent().getAttachments();
 			} else {
 				attachments = order.getAttachments();
 			}
 			if (attachments != null && order.isCancelled() && order.getExecutedQuantity() == 0.0) {
 				for (Order attached : attachments) {
-					if(attached != order) {
+					if (attached != order) {
 						attached.cancel();
 						notifyFinalized(orderManager, attached, trader);
 					}

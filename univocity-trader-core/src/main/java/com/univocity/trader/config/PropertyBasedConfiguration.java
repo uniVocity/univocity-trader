@@ -90,10 +90,10 @@ public class PropertyBasedConfiguration {
 		Utils.notNull(inputProperties, "Properties file input");
 		properties = new OrderedProperties();
 		try {
-			if (inputProperties instanceof InputStream is) {
-				properties.load(is);
-			} else if (inputProperties instanceof Reader reader) {
-				properties.load(reader);
+			if (inputProperties instanceof InputStream) {
+				properties.load((InputStream) inputProperties);
+			} else if (inputProperties instanceof Reader) {
+				properties.load((Reader)inputProperties);
 			}
 
 			if (log.isDebugEnabled()) {

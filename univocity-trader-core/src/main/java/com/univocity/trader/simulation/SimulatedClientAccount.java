@@ -124,8 +124,8 @@ public class SimulatedClientAccount implements ClientAccount {
 		return order;
 	}
 
-	private void activateOrder(Order order) {
-		orders.computeIfAbsent(order.getSymbol(), (s) -> new OrderSet()).add(order);
+	public void activateOrder(Order order) {
+		orders.computeIfAbsent(order.getSymbol(), (s) -> new OrderSet()).addOrReplace(order);
 	}
 
 	private DefaultOrder createOrder(OrderRequest request, double quantity, double price) {

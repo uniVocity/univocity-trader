@@ -65,8 +65,8 @@ public final class Trader {
 		this.monitors = createStrategyMonitors(allInstances);
 		List<OrderListener> tmp = new ArrayList<>();
 		for (StrategyMonitor monitor : monitors) {
-			if (monitor instanceof OrderListener l) {
-				tmp.add(l);
+			if (monitor instanceof OrderListener) {
+				tmp.add((OrderListener)monitor);
 			}
 		}
 		this.notifications = tmp.toArray(new OrderListener[0]);
@@ -545,7 +545,7 @@ public final class Trader {
 				} else if (order.isSell()) {
 					trade = processSellOrder(trade, order, strategy, reason);
 				}
-				trades.add(trade);
+				trades.addOrReplace(trade);
 				accountManager.initiateOrderMonitoring(order);
 			} finally {
 				tradingManager.updateBalances();
@@ -592,7 +592,7 @@ public final class Trader {
 		if (trade == null) {
 			if (order.isLong()) {
 				trade = new Trade(id.incrementAndGet(), order, this, strategy);
-				trades.add(trade);
+				trades.addOrReplace(trade);
 			} else if (order.isShort()) {
 				trade = Trade.createPlaceholder(-1, this, order.getTradeSide());
 				trade.decreasePosition(order, "Exit short position");
@@ -619,7 +619,7 @@ public final class Trader {
 			if (trade.isShort()) {
 				if (!trade.increasePosition(order)) {
 					trade = new Trade(id.incrementAndGet(), order, this, strategy);
-					trades.add(trade);
+					trades.addOrReplace(trade);
 				}
 			} else {
 				trade.decreasePosition(order, reason);
@@ -627,7 +627,7 @@ public final class Trader {
 		} else {
 			if (order.isShort()) {
 				trade = new Trade(id.incrementAndGet(), order, this, strategy);
-				trades.add(trade);
+				trades.addOrReplace(trade);
 			} else {
 				trade = Trade.createPlaceholder(-1, this, order.getTradeSide());
 				trade.decreasePosition(order, "Exit long position");

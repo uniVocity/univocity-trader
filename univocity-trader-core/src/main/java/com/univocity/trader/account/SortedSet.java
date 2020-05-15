@@ -13,19 +13,6 @@ public class SortedSet<T extends Comparable<T>> {
 		this.elements = initialStorage;
 	}
 
-	public final void addOrReplace(T order) {
-		if (i == 0) {
-			add(order);
-		} else {
-			int slot = Arrays.binarySearch(elements, 0, i, order, comparator);
-			if (slot >= 0) {
-				elements[slot] = order;
-			} else {
-				add(order);
-			}
-		}
-	}
-
 	public boolean replace(T order) {
 		if(i == 1 && elements[0].compareTo(order) == 0){
 			elements[0] = order;
@@ -39,7 +26,7 @@ public class SortedSet<T extends Comparable<T>> {
 		return false;
 	}
 
-	public final void add(T order) {
+	public final void addOrReplace(T order) {
 		if (i == 0) {
 			elements[i++] = order;
 		} else {

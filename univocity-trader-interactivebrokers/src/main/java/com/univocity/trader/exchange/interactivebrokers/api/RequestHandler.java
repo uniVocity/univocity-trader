@@ -70,8 +70,8 @@ class RequestHandler {
 
 	void closeOpenFeed(int requestId) {
 		IBIncomingCandles feed = activeFeeds.get(requestId);
-		if (feed instanceof LiveIBIncomingCandles live) { //live feed
-			if (!live.consumerStopped()) {
+		if (feed instanceof LiveIBIncomingCandles) { //live feed
+			if (!feed.consumerStopped()) {
 				return;
 			}
 		}

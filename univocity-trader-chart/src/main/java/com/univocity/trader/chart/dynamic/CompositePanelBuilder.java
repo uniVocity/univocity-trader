@@ -61,8 +61,8 @@ public class CompositePanelBuilder {
 		try {
 			return new CompositePanelBuilder(compositeUIController.getClass()).getPanel(compositeUIController);
 		} catch (Exception e) {
-			if (e instanceof RuntimeException r) {
-				throw r;
+			if (e instanceof RuntimeException) {
+				throw (RuntimeException) e;
 			}
 			throw new RuntimeException(e);
 		}
@@ -203,7 +203,7 @@ public class CompositePanelBuilder {
 	}
 
 	public JPanel getSubPanel(Object observedObject, List<Field> uiContainer) throws IllegalArgumentException, IllegalAccessException, SecurityException, InstantiationException, InvocationTargetException, NoSuchFieldException {
-		log.debug("Creating panel for "+ observedObject.getClass().getSimpleName());
+		log.debug("Creating panel for " + observedObject.getClass().getSimpleName());
 		JPanel out = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 
@@ -234,7 +234,7 @@ public class CompositePanelBuilder {
 
 	@SuppressWarnings("unchecked")
 	private void bindFields(Object observedObject) throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchFieldException, InstantiationException, InvocationTargetException {
-		log.debug("Looking for field to bind in "+ observedObject.getClass().getName());
+		log.debug("Looking for field to bind in " + observedObject.getClass().getName());
 
 		if (observedObject.getClass().getAnnotation(CompositeUIBound.class) != null) {
 			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), Bind.class);
@@ -295,7 +295,7 @@ public class CompositePanelBuilder {
 	}
 
 	private JPanel buildContainedPanel(Object o) throws IllegalArgumentException, SecurityException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchFieldException {
-		log.debug("Creating panel for "+ o.getClass().getSimpleName());
+		log.debug("Creating panel for " + o.getClass().getSimpleName());
 		MergedProcessorPanelBuilder builder = new MergedProcessorPanelBuilder(o.getClass());
 		List<Method> setters = builder.getSetters();
 
