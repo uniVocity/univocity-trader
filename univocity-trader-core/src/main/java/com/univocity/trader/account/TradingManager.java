@@ -316,10 +316,10 @@ public final class TradingManager {
 	}
 
 	void notifyOrderFinalized(Order order) {
-		trader.orderFinalized(order);
-		notifyOrderFinalized(order, this.notifications);
-		notifyOrderFinalized(order, trader.notifications);
-
+		if(trader.orderFinalized(order)) {
+			notifyOrderFinalized(order, this.notifications);
+			notifyOrderFinalized(order, trader.notifications);
+		}
 	}
 
 	void notifySimulationEnd() {

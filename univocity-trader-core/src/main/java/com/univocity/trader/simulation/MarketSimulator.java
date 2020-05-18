@@ -57,7 +57,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		parameters.forEach(p -> {
 			initialize();
 			executeSimulation(createEngines(p));
-			liquidateOpenPositions();
+//			liquidateOpenPositions();
 			reportResults(p);
 		});
 	}

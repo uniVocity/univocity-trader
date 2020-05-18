@@ -759,11 +759,13 @@ public final class Trader {
 		return "Trader{" + symbol() + "}";
 	}
 
-	void orderFinalized(Order order) {
+	boolean orderFinalized(Order order) {
 		Trade trade = order.getTrade();
 		if (trade != null) {
 			trade.orderFinalized(order);
+			return true;
 		}
+		return false;
 	}
 
 	void removeFinalizedTrades() {
