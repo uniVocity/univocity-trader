@@ -546,14 +546,17 @@ public final class Trader {
 					trade = processSellOrder(trade, order, strategy, reason);
 				}
 				trades.addOrReplace(trade);
-				accountManager.initiateOrderMonitoring(order);
 			} finally {
 				tradingManager.updateBalances();
 			}
 		} catch (Exception e) {
 			log.error("Error processing " + order.getSide() + " order: " + order, e);
 		} finally {
-			tradingManager.notifyOrderSubmitted(order, trade);
+			try {
+				tradingManager.notifyOrderSubmitted(order, trade);
+			} finally {
+				accountManager.initiateOrderMonitoring(order);
+			}
 		}
 	}
 

@@ -34,7 +34,7 @@ public class AccountManager implements ClientAccount {
 	final AccountConfiguration<?> configuration;
 
 	final OrderSet pendingOrders = new OrderSet();
-	protected final OrderSet orderUpdates = new OrderSet();
+	private final OrderSet orderUpdates = new OrderSet();
 
 	private static final long BALANCE_EXPIRATION_TIME = minutes(10).ms;
 	private static final long FREQUENT_BALANCE_UPDATE_INTERVAL = seconds(15).ms;
@@ -738,7 +738,7 @@ public class AccountManager implements ClientAccount {
 			}
 			if (update == null) {
 				log.warn("Lost track of order {}. Trying to cancel it.", order);
-				update = cancelOrder(order);
+				update = cancelOrder(orderManager, order);
 			}
 		}
 
@@ -858,15 +858,7 @@ public class AccountManager implements ClientAccount {
 	}
 
 	public Order cancelOrder(Order order) {
-		OrderManager orderManager = configuration.orderManager(order.getSymbol());
-		if (!order.isFinalized()) {
-			order.cancel();
-			order = account.updateOrderStatus(order);
-			if (!order.isFinalized()) {
-				return cancelOrder(orderManager, order);
-			}
-		}
-		return order;
+		return cancelOrder(configuration.orderManager(order.getSymbol()), order);
 	}
 
 	public void cancelStaleOrdersFor(Trader trader) {

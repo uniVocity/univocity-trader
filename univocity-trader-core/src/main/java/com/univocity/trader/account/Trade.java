@@ -441,6 +441,7 @@ public final class Trade implements Comparable<Trade> {
 			position.replace(order);
 			if (order.getExecutedQuantity() == 0) { // nothing filled, cancelled
 				position.remove(order);
+				pastOrders.addOrReplace(order);
 				return;
 			}
 			if (order.isBuy()) {

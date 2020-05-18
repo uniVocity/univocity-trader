@@ -42,7 +42,7 @@ public class SimulatedClientAccount implements ClientAccount {
 	}
 
 	@Override
-	public synchronized Order executeOrder(OrderRequest orderDetails) {
+	public Order executeOrder(OrderRequest orderDetails) {
 		String fundsSymbol = orderDetails.getFundsSymbol();
 		String assetsSymbol = orderDetails.getAssetsSymbol();
 		Order.Type orderType = orderDetails.getType();
@@ -186,8 +186,63 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	protected final OrderSet ordersOf(String symbol){
+	protected final OrderSet ordersOf(String symbol) {
 		return orders.get(symbol);
+	}
+
+	public final void updateOpenOrder(DefaultOrder order, Candle candle) {
+		OrderSet s = ordersOf(order.getSymbol());
+		updateOpenOrder(s, order, candle);
+	}
+
+	private final void updateOpenOrder(OrderSet s, DefaultOrder order, Candle candle) {
+		activateAndTryFill(candle, order);
+
+		Order triggeredOrder = null;
+		if (!order.isFinalized() && order.getFillPct() > 0.0) {
+			//if attached order is triggered, cancel parent and submit triggered order.
+			List<Order> attachments = order.getAttachments();
+			if (attachments != null && !attachments.isEmpty()) {
+				for (Order attachment : attachments) {
+					if (triggeredBy(order, attachment, candle)) {
+						triggeredOrder = attachment;
+						break;
+					}
+				}
+
+				if (triggeredOrder != null) {
+					order.cancel();
+				}
+			}
+		}
+
+		order.setFeesPaid(order.getFeesPaid() + getTradingFees().feesOnPartialFill(order));
+
+		if (order.isFinalized()) {
+			s.remove(order);
+//			accountManager.removePendingOrder(order);
+			if (order.getParent() != null) { //order is child of a bracket order
+				updateBalances(order, candle);
+				for (Order attached : order.getParent().getAttachments()) { //cancel all open orders
+					attached.cancel();
+				}
+			} else {
+				updateBalances(order, candle);
+			}
+
+			List<Order> attachments = order.getAttachments();
+			if (triggeredOrder == null && attachments != null && !attachments.isEmpty()) {
+				for (Order attachment : attachments) {
+					processAttachedOrder(order, (DefaultOrder) attachment, candle);
+				}
+			}
+		} else if (order.hasPartialFillDetails()) {
+			updateBalances(order, candle);
+		}
+
+		if (triggeredOrder != null && triggeredOrder.getQuantity() > 0) {
+			processAttachedOrder(order, (DefaultOrder) triggeredOrder, candle);
+		}
 	}
 
 	public final boolean updateOpenOrders(String symbol, Candle candle) {
@@ -195,59 +250,11 @@ public class SimulatedClientAccount implements ClientAccount {
 		if (s == null || s.isEmpty()) {
 			return false;
 		}
-//		System.out.println("-------");
 
 		for (int i = s.i - 1; i >= 0; i--) {
 			Order pendingOrder = s.elements[i];
 			DefaultOrder order = (DefaultOrder) pendingOrder;
-
-			activateAndTryFill(candle, order);
-
-			Order triggeredOrder = null;
-			if (!order.isFinalized() && order.getFillPct() > 0.0) {
-				//if attached order is triggered, cancel parent and submit triggered order.
-				List<Order> attachments = order.getAttachments();
-				if (attachments != null && !attachments.isEmpty()) {
-					for (Order attachment : attachments) {
-						if (triggeredBy(order, attachment, candle)) {
-							triggeredOrder = attachment;
-							break;
-						}
-					}
-
-					if (triggeredOrder != null) {
-						order.cancel();
-					}
-				}
-			}
-
-			order.setFeesPaid(order.getFeesPaid() + getTradingFees().feesOnPartialFill(order));
-
-			if (order.isFinalized()) {
-				s.remove(order);
-//				accountManager.removePendingOrder(order);
-				if (order.getParent() != null) { //order is child of a bracket order
-					updateBalances(order, candle);
-					for (Order attached : order.getParent().getAttachments()) { //cancel all open orders
-						attached.cancel();
-					}
-				} else {
-					updateBalances(order, candle);
-				}
-
-				List<Order> attachments = order.getAttachments();
-				if (triggeredOrder == null && attachments != null && !attachments.isEmpty()) {
-					for (Order attachment : attachments) {
-						processAttachedOrder(order, (DefaultOrder) attachment, candle);
-					}
-				}
-			} else if (order.hasPartialFillDetails()) {
-				updateBalances(order, candle);
-			}
-
-			if (triggeredOrder != null && triggeredOrder.getQuantity() > 0) {
-				processAttachedOrder(order, (DefaultOrder) triggeredOrder, candle);
-			}
+			updateOpenOrder(s, order, candle);
 		}
 		return true;
 	}
@@ -358,75 +365,73 @@ public class SimulatedClientAccount implements ClientAccount {
 		final double lastFillTotalPrice = order.getPartialFillTotalPrice();
 
 		try {
-			synchronized (accountManager) {
-				if (order.isBuy()) {
-					if (order.isLong()) {
-						if (order.getAttachments() != null) { //to be used by attached orders
-							accountManager.addToLockedBalance(asset, order.getPartialFillQuantity());
-						} else {
-							accountManager.addToFreeBalance(asset, order.getPartialFillQuantity());
+			if (order.isBuy()) {
+				if (order.isLong()) {
+					if (order.getAttachments() != null) { //to be used by attached orders
+						accountManager.addToLockedBalance(asset, order.getPartialFillQuantity());
+					} else {
+						accountManager.addToFreeBalance(asset, order.getPartialFillQuantity());
+					}
+					if (order.isFinalized()) {
+						final double lockedFunds = order.getTotalOrderAmount();
+						double unspentAmount = lockedFunds - order.getTotalTraded();
+
+						if (unspentAmount != 0) {
+							accountManager.addToFreeBalance(funds, unspentAmount);
 						}
-						if (order.isFinalized()) {
-							final double lockedFunds = order.getTotalOrderAmount();
-							double unspentAmount = lockedFunds - order.getTotalTraded();
 
-							if (unspentAmount != 0) {
-								accountManager.addToFreeBalance(funds, unspentAmount);
-							}
+						accountManager.subtractFromLockedBalance(funds, lockedFunds);
 
-							accountManager.subtractFromLockedBalance(funds, lockedFunds);
+						double maxFees = getTradingFees().feesOnTotalOrderAmount(order);
+						accountManager.subtractFromLockedBalance(funds, maxFees);
+						accountManager.addToFreeBalance(funds, maxFees - order.getFeesPaid());
+					}
+				} else if (order.isShort()) {
+					if (order.hasPartialFillDetails()) {
+						updateMarginReserve(order, candle);
+					}
+				}
+			} else if (order.isSell()) {
+				if (order.isLong()) {
+					if (order.hasPartialFillDetails()) {
+						double fee = tradingFees.feesOnAmount(order.getPartialFillTotalPrice(), order.getType(), order.getSide());
+						accountManager.addToFreeBalance(funds, lastFillTotalPrice - fee);
+						accountManager.subtractFromLockedBalance(asset, order.getPartialFillQuantity());
+					}
 
-							double maxFees = getTradingFees().feesOnTotalOrderAmount(order);
-							accountManager.subtractFromLockedBalance(funds, maxFees);
-							accountManager.addToFreeBalance(funds, maxFees - order.getFeesPaid());
-						}
-					} else if (order.isShort()) {
-						if (order.hasPartialFillDetails()) {
-							updateMarginReserve(order, candle);
+					if (order.isFinalized()) {
+						if (order.getParent() == null || order.getExecutedQuantity() > 0 || order.getParent().getAttachments().size() == 1 || allAttachedOrdersCancelled(order.getParent())) {
+							accountManager.addToFreeBalance(asset, order.getRemainingQuantity());
+							accountManager.subtractFromLockedBalance(asset, order.getRemainingQuantity());
 						}
 					}
-				} else if (order.isSell()) {
-					if (order.isLong()) {
-						if (order.hasPartialFillDetails()) {
-							double fee = tradingFees.feesOnAmount(order.getPartialFillTotalPrice(), order.getType(), order.getSide());
-							accountManager.addToFreeBalance(funds, lastFillTotalPrice - fee);
-							accountManager.subtractFromLockedBalance(asset, order.getPartialFillQuantity());
+				} else if (order.isShort()) {
+					if (order.hasPartialFillDetails()) {
+						double total = order.getPartialFillTotalPrice();
+						double totalReserve = accountManager.applyMarginReserve(total);
+						double accountReserveAtCurrentPrice = totalReserve - total;
+
+						double totalFilledAtOriginalPrice = order.getPrice() * order.getPartialFillQuantity();
+						double accountReserveAtOriginalPrice = (accountManager.applyMarginReserve(totalFilledAtOriginalPrice) - totalFilledAtOriginalPrice);
+
+						double additionalFundsRequired = 0.0;
+
+						if (accountReserveAtOriginalPrice < accountReserveAtCurrentPrice) {
+							double extra = accountReserveAtCurrentPrice - accountReserveAtOriginalPrice;
+							additionalFundsRequired += extra;
 						}
+						accountManager.subtractFromLockedBalance(funds, accountReserveAtOriginalPrice);
+						accountManager.addToMarginReserveBalance(funds, asset, totalReserve - additionalFundsRequired - tradingFees.feesOnPartialFill(order));
+						accountManager.addToShortedBalance(asset, order.getPartialFillQuantity());
+					}
 
-						if (order.isFinalized()) {
-							if (order.getParent() == null || order.getExecutedQuantity() > 0 || order.getParent().getAttachments().size() == 1 || allAttachedOrdersCancelled(order.getParent())) {
-								accountManager.addToFreeBalance(asset, order.getRemainingQuantity());
-								accountManager.subtractFromLockedBalance(asset, order.getRemainingQuantity());
-							}
-						}
-					} else if (order.isShort()) {
-						if (order.hasPartialFillDetails()) {
-							double total = order.getPartialFillTotalPrice();
-							double totalReserve = accountManager.applyMarginReserve(total);
-							double accountReserveAtCurrentPrice = totalReserve - total;
-
-							double totalFilledAtOriginalPrice = order.getPrice() * order.getPartialFillQuantity();
-							double accountReserveAtOriginalPrice = (accountManager.applyMarginReserve(totalFilledAtOriginalPrice) - totalFilledAtOriginalPrice);
-
-							double additionalFundsRequired = 0.0;
-
-							if (accountReserveAtOriginalPrice < accountReserveAtCurrentPrice) {
-								double extra = accountReserveAtCurrentPrice - accountReserveAtOriginalPrice;
-								additionalFundsRequired += extra;
-							}
-							accountManager.subtractFromLockedBalance(funds, accountReserveAtOriginalPrice);
-							accountManager.addToMarginReserveBalance(funds, asset, totalReserve - additionalFundsRequired - tradingFees.feesOnPartialFill(order));
-							accountManager.addToShortedBalance(asset, order.getPartialFillQuantity());
-						}
-
-						if (order.isFinalized()) {
-							double totalTraded = order.getTotalTraded();
-							double totalReserve = accountManager.applyMarginReserve(order.getTotalOrderAmount());
-							double unusedReserve = totalReserve - accountManager.applyMarginReserve(totalTraded);
-							if (unusedReserve > 0) {
-								double unusedFunds = unusedReserve - (order.getTotalOrderAmountAtAveragePrice() - totalTraded);
-								accountManager.releaseFromLockedBalance(funds, unusedFunds);
-							}
+					if (order.isFinalized()) {
+						double totalTraded = order.getTotalTraded();
+						double totalReserve = accountManager.applyMarginReserve(order.getTotalOrderAmount());
+						double unusedReserve = totalReserve - accountManager.applyMarginReserve(totalTraded);
+						if (unusedReserve > 0) {
+							double unusedFunds = unusedReserve - (order.getTotalOrderAmountAtAveragePrice() - totalTraded);
+							accountManager.releaseFromLockedBalance(funds, unusedFunds);
 						}
 					}
 				}

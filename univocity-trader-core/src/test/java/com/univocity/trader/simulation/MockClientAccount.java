@@ -2,7 +2,6 @@ package com.univocity.trader.simulation;
 
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.simulation.orderfill.*;
 
@@ -11,6 +10,7 @@ import java.util.concurrent.*;
 public class MockClientAccount implements ClientAccount {
 
 	private SimulatedClientAccount account;
+	private final OrderSet orders = new OrderSet();
 
 	private OrderFillEmulator mockOrderFill = (order, candle) -> {
 		if (!order.isFinalized()) {
@@ -44,6 +44,25 @@ public class MockClientAccount implements ClientAccount {
 
 	@Override
 	public Order updateOrderStatus(Order order) {
+		Order out;
+		synchronized (orders) {
+			out = orders.get(order);
+			if (out == null) {
+				out = order;
+			}
+		}
+		if (out != null) {
+			return copy(out);
+		}
+		return null;
+	}
+
+	@Override
+	public boolean isSimulated() {
+		return false;
+	}
+
+	private Order copy(Order order) {
 		DefaultOrder out = new DefaultOrder(((DefaultOrder) order).getInternalId(), order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), Trade.Side.LONG, order.getTime());
 		out.setStatus(order.getStatus());
 		out.setExecutedQuantity(order.getExecutedQuantity());
@@ -53,24 +72,30 @@ public class MockClientAccount implements ClientAccount {
 		out.setType(order.getType());
 		out.setQuantity(order.getQuantity());
 		out.setTrade(order.getTrade());
-
-		account.activateOrder(order);
-
 		return out;
 	}
 
 	@Override
-	public boolean isSimulated() {
-		return false;
-	}
-
-	@Override
 	public Order executeOrder(OrderRequest orderDetails) {
-		return account.executeOrder(orderDetails);
+		Order out = account.executeOrder(orderDetails);
+		if (out == null) {
+			return null;
+		}
+		synchronized (orders) {
+			orders.addOrReplace(out);
+		}
+		return out;
 	}
 
 	@Override
 	public ConcurrentHashMap<String, Balance> updateBalances() {
+		synchronized (orders) {
+			for (int i = orders.i - 1; i >= 0; i--) {
+				DefaultOrder order = (DefaultOrder) orders.elements[i];
+				account.updateOpenOrder(order, order.getTrade().latestCandle());
+			}
+		}
+
 		var tmp = account.updateBalances();
 		var out = new ConcurrentHashMap<String, Balance>();
 		tmp.forEach((k, v) -> out.put(k, v.clone()));
@@ -85,6 +110,12 @@ public class MockClientAccount implements ClientAccount {
 
 	@Override
 	public void cancel(Order order) {
-		account.cancel(order);
+		Order toCancel;
+		synchronized (orders) {
+			toCancel = orders.get(order);
+		}
+		if (toCancel != null) {
+			account.cancel(toCancel);
+		}
 	}
 }
