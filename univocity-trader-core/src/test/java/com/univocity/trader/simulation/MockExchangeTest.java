@@ -45,9 +45,9 @@ public class MockExchangeTest {
 			}
 
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
-				super.prepareOrder(priceDetails, book, order, trader, trade);
-				t[0] = trader;
+			public void prepareOrder(OrderBook book, OrderRequest order, Context context) {
+				super.prepareOrder(book, order, context);
+				t[0] = context.trader();
 			}
 		};
 		trader.configure().account().orderManager(om);

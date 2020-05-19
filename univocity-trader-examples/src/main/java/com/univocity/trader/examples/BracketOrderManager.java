@@ -8,7 +8,7 @@ import java.util.function.*;
 public class BracketOrderManager implements OrderManager {
 
 	@Override
-	public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
+	public void prepareOrder(OrderBook book, OrderRequest order, Context context) {
 
 	}
 

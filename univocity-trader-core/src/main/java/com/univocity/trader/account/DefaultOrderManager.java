@@ -22,7 +22,7 @@ public class DefaultOrderManager implements OrderManager {
 	}
 
 	@Override
-	public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
+	public void prepareOrder(OrderBook book, OrderRequest order, Context context) {
 		double originalPrice = order.getPrice();
 
 		double availableQuantity = order.getQuantity();
@@ -39,6 +39,7 @@ public class DefaultOrderManager implements OrderManager {
 				order.setPrice(ask - (spread / 2.0));
 			}
 
+			SymbolPriceDetails priceDetails = context.priceDetails();
 			log.debug("{} - spread of {}: Ask {}, Bid {}. Closed at {}. Going to {} at ${}.",
 					order.getSymbol(),
 					priceDetails.priceToString(spread),

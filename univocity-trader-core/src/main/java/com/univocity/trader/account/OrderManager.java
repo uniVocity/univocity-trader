@@ -52,18 +52,11 @@ public interface OrderManager {
 	 * available allocated funds to the instrument represented by the symbol being traded. The order request can be cancelled via
 	 * {@link OrderRequest#cancel()}
 	 *
-	 * @param priceDetails price details associated with the symbol of the given order request, which includes number of decimal digits to use
-	 *                     and minimum order quantity. Note that after this method executes, the order price and amount will be adjusted to conform
-	 *                     to the given price details. If no price details exist, this parameter will be set to {@code SymbolPriceDetails.NOOP}.
 	 * @param book         a snapshot of the current state of the order book for the traded symbol. Use {@link OrderBook#update(int)} to receive
 	 *                     a new snapshot.
 	 * @param order        the order request to be adjusted if needed
-	 * @param trader       the {@link Trader} object responsible for executing trades on a given symbol. From there you can obtain information such as the
-	 *                     latest candle received from the exchange (e.g. {@link Trader#latestCandle()}) and how much is your account worth {using @link
-	 *                     Trader#holdings()} to help you better determine the size of your order.
-	 * @param trade		   the current {@link Trade} whose position being increased or closed. Will be {@code null} if this is a new trade.
 	 */
-	default void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade){
+	default void prepareOrder(OrderBook book, OrderRequest order, Context context) {
 
 	}
 

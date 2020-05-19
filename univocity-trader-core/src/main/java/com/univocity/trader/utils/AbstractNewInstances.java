@@ -78,4 +78,8 @@ public abstract class AbstractNewInstances<T, S extends AbstractNewInstances<T, 
 			throw new IllegalStateException(e);
 		}
 	}
+
+	public boolean isEmpty() {
+		return providers.isEmpty();
+	}
 }

@@ -21,6 +21,7 @@ public final class TradingEngine implements Engine {
 		Indicators.keyBuilder = null;
 	}
 
+	private final Context context;
 	private final Trader trader;
 	private final Strategy[] strategies;
 	private final Strategy[] plainStrategies;
@@ -35,7 +36,8 @@ public final class TradingEngine implements Engine {
 
 	public TradingEngine(TradingManager tradingManager, Parameters parameters, Set<Object> allInstances) {
 		this.tradingManager = tradingManager;
-		this.trader = new Trader(tradingManager, parameters, allInstances);
+		this.context = new Context(tradingManager, parameters);
+		this.trader = new Trader(tradingManager, context, allInstances);
 
 		NewInstances<Strategy> strategies = tradingManager.getAccount().configuration().strategies();
 		this.strategies = getInstances(tradingManager.getSymbol(), parameters, strategies, "Strategy", true, allInstances);
@@ -61,6 +63,8 @@ public final class TradingEngine implements Engine {
 	}
 
 	public final void process(Candle candle, boolean initializing) {
+		context.latestCandle(candle);
+
 		for (int i = 0; i < aggregators.length; i++)
 			aggregators[i].aggregate(candle);
 
@@ -75,10 +79,7 @@ public final class TradingEngine implements Engine {
 			return;
 		}
 
-		trader.latestCandle = candle;
-
 		tradingManager.updateOpenOrders(trader.symbol(), candle);
-
 
 		for (int i = 0; i < strategies.length; i++) {
 			Strategy strategy = strategies[i];

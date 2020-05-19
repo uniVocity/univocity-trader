@@ -540,7 +540,8 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> im
 	}
 
 	public IllegalArgumentException reportUnknownSymbol(String message, String symbol) {
-		String msg = "Account '" + id + "' is not managing '" + symbol + "'. Allowed symbols are: " + StringUtils.join(symbols(), ", ") + " and " + referenceCurrency();
+		String account = StringUtils.isBlank(id) ? "" : "'" + id + "'";
+		String msg = "Account " + account + " is not managing '" + symbol + "'. Allowed symbols are: " + StringUtils.join(symbols(), ", ") + " and " + referenceCurrency();
 		if (message != null) {
 			throw new IllegalArgumentException(message + ". " + msg);
 		} else {

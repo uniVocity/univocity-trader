@@ -46,11 +46,11 @@ public class OrderFillChecker {
 		SimulatedAccountManager account = clientAccount.getAccount();
 
 		TradingManager m = new TradingManager(new SimulatedExchange(account), null, account, "ADA", "USDT", Parameters.NULL);
-		Trader trader = new Trader(m, null, new HashSet<>());
+		Trader trader = new Trader(m, new Context(m, Parameters.NULL), new HashSet<>());
 		trader.trade(new Candle(1, 2, 0.04371, 0.4380, 0.4369, CLOSE, 100.0), Signal.NEUTRAL, null);
 
 		m = new TradingManager(new SimulatedExchange(account), null, account, "BNB", "USDT", Parameters.NULL);
-		trader = new Trader(m, null, new HashSet<>());
+		trader = new Trader(m, new Context(m, Parameters.NULL), new HashSet<>());
 		trader.trade(new Candle(1, 2, 50, 50, 50, 50, 100.0), Signal.NEUTRAL, null);
 
 		account.setAmount("BNB", 1);
@@ -146,7 +146,7 @@ public class OrderFillChecker {
 		checkLongTradeStats(trade, unitPrice, maxUnitPrice, minUnitPrice);
 
 		assertEquals(quantity, trade.quantity(), DELTA);
-		SimulatedAccountManager account = (SimulatedAccountManager)trader.tradingManager.getAccount();
+		SimulatedAccountManager account = (SimulatedAccountManager) trader.tradingManager.getAccount();
 		assertEquals(0.0, account.getAmount("ADA"), DELTA);
 		assertEquals(usdBalanceBeforeTrade + receivedAfterFees, account.getAmount("USDT"), DELTA);
 	}
@@ -199,7 +199,7 @@ public class OrderFillChecker {
 		checkShortTradeStats(trade, unitPrice, maxUnitPrice, minUnitPrice);
 
 		assertEquals(quantity, trade.quantity(), DELTA);
-		SimulatedAccountManager account = (SimulatedAccountManager)trader.tradingManager.getAccount();
+		SimulatedAccountManager account = (SimulatedAccountManager) trader.tradingManager.getAccount();
 		assertEquals(0.0, account.getAmount("ADA"), DELTA);
 
 		assertEquals(0.0, account.getBalance("ADA").getFree(), DELTA);
@@ -229,7 +229,7 @@ public class OrderFillChecker {
 
 		assertEquals(totalQuantity, trade.quantity(), DELTA);
 
-		SimulatedAccountManager account = (SimulatedAccountManager)trader.tradingManager.getAccount();
+		SimulatedAccountManager account = (SimulatedAccountManager) trader.tradingManager.getAccount();
 		assertEquals(0.0, account.getAmount("ADA"), DELTA);
 		assertEquals(totalQuantity, account.getShortedAmount("ADA"), DELTA); //orders submitted to buy it all back
 		assertEquals(0.0, account.getBalance("ADA").getLocked(), DELTA);
@@ -332,8 +332,8 @@ public class OrderFillChecker {
 
 		if (orderManager != null) {
 			Trader trader = account.getTraderOf(symbol + "USDT");
-			trader.latestCandle = next;
-			orderManager.prepareOrder(null, null, req, trader, null);
+			trader.context.latestCandle = next;
+			orderManager.prepareOrder(null, req, trader.context);
 		}
 
 		Order order = account.executeOrder(req);

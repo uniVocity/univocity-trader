@@ -132,8 +132,8 @@ public final class TradingManager {
 		return getAccount().configuration().minimumInvestmentAmountPerTrade(assetSymbol);
 	}
 
-	public final Order buy(double quantity, Trade.Side tradeSide, Trade trade) {
-		return tradingAccount.buy(assetSymbol, fundSymbol, tradeSide, quantity, trade);
+	public final Order buy(double quantity, Trade.Side tradeSide, Context context) {
+		return tradingAccount.buy(assetSymbol, fundSymbol, tradeSide, quantity, context);
 	}
 
 //	public boolean switchTo(String ticker, Signal trade, String exitSymbol) {
@@ -161,15 +161,15 @@ public final class TradingManager {
 //		return false;
 //	}
 
-	public Order sell(double quantity, Trade.Side tradeSide, Trade trade) {
+	public Order sell(double quantity, Trade.Side tradeSide, Context context) {
 		if (!trader.liquidating && quantity * getLatestPrice() < minimumInvestmentAmountPerTrade()) {
 			return null;
 		}
-		return tradingAccount.sell(assetSymbol, fundSymbol, tradeSide, quantity, trade);
+		return tradingAccount.sell(assetSymbol, fundSymbol, tradeSide, quantity, context);
 	}
 
-	public Order sell(Trade.Side tradeSide, Trade trade) {
-		return sell(getAssets(), tradeSide, trade);
+	public Order sell(Trade.Side tradeSide, Context context) {
+		return sell(getAssets(), tradeSide, context);
 	}
 
 	public double getAssets() {
@@ -205,7 +205,7 @@ public final class TradingManager {
 		TradingManager[] managers = tradingAccount.getAllTradingManagers();
 		for (int i = 0; i < managers.length; i++) {
 			TradingManager manager = managers[i];
-			if (manager != this && manager.hasPosition(c, false, true, true) && manager.trader.switchTo(exitSymbol, c, manager.symbol, strategy)) {
+			if (manager != this && manager.hasPosition(c, false, true, true) && manager.trader.switchTo(exitSymbol, c, manager.symbol)) {
 				exited = true;
 				break;
 			}
@@ -316,7 +316,7 @@ public final class TradingManager {
 	}
 
 	void notifyOrderFinalized(Order order) {
-		if(trader.orderFinalized(order)) {
+		if (trader.orderFinalized(order)) {
 			notifyOrderFinalized(order, this.notifications);
 			notifyOrderFinalized(order, trader.notifications);
 		}

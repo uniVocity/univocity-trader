@@ -192,7 +192,7 @@ public class LongTradingTests extends OrderFillChecker {
 	public void testLongTradingWithMarketBracketOrder() {
 		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
+			public void prepareOrder(OrderBook book, OrderRequest order, Context context) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest marketSellOnLoss = order.attachToPercentageChange(MARKET, -1.0);
 					OrderRequest takeProfit = order.attachToPercentageChange(MARKET, 1.0);
@@ -278,7 +278,7 @@ public class LongTradingTests extends OrderFillChecker {
 	public void testLongTradingWithLimitBracketOrder() {
 		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
+			public void prepareOrder(OrderBook book, OrderRequest order, Context context) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest limitSellOnLoss = order.attachToPercentageChange(LIMIT, -1.0);
 					OrderRequest takeProfit = order.attachToPercentageChange(LIMIT, 1.0);
@@ -436,7 +436,7 @@ public class LongTradingTests extends OrderFillChecker {
 	public void testCancellationOfOrdersInBracket() {
 		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
+			public void prepareOrder(OrderBook book, OrderRequest order, Context context) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest limitSellOnLoss = order.attachToPercentageChange(LIMIT, -1.0);
 					OrderRequest takeProfit = order.attachToPercentageChange(LIMIT, 1.0);
@@ -502,7 +502,6 @@ public class LongTradingTests extends OrderFillChecker {
 		lossOrder.cancel();
 
 		tick(trader, time, 0.5);
-
 
 
 		assertEquals(79.91200800, account.getBalance("ADA").getFree(), DELTA);

@@ -14,6 +14,9 @@ public class SortedSet<T extends Comparable<T>> {
 	}
 
 	public boolean replace(T order) {
+		if(order == null){
+			return false;
+		}
 		if(i == 1 && elements[0].compareTo(order) == 0){
 			elements[0] = order;
 			return true;

@@ -122,7 +122,7 @@ public final class Trade implements Comparable<Trade> {
 		return side;
 	}
 
-	public boolean exitOnOppositeSignal(){
+	public boolean exitOnOppositeSignal() {
 		return openingStrategy == null || openingStrategy.exitOnOppositeSignal();
 	}
 
@@ -159,17 +159,20 @@ public final class Trade implements Comparable<Trade> {
 
 			if (maxChange > prevMax) {
 				for (int i = 0; i < monitors.length; i++) {
+					trader.context.strategyMonitor = monitors[i];
 					monitors[i].highestProfit(this, maxChange);
 				}
 			}
 			if (minChange < prevMin) {
 				for (int i = 0; i < monitors.length; i++) {
+					trader.context.strategyMonitor = monitors[i];
 					monitors[i].worstLoss(this, minChange);
 				}
 			}
 		}
 		if (!stopped) {
 			for (int i = 0; i < monitors.length; i++) {
+				trader.context.strategyMonitor = monitors[i];
 				String exit = monitors[i].handleStop(this, signal, strategy);
 				if (exit != null) {
 					stopped = true;
@@ -319,7 +322,9 @@ public final class Trade implements Comparable<Trade> {
 	boolean orderUpdated(Order order) {
 		if (!pastOrders.contains(order)) {
 			if (!(position.replace(order) || exitOrders.replace(order))) {
-				log.warn("Could not update order {} in trade {}", order, this);
+				if (!(order.isCancelled() && pastOrders.contains(order.getParent()))) {
+					log.warn("Could not update order {} in trade {}", order, this);
+				}
 			} else {
 				return true;
 			}
@@ -455,7 +460,7 @@ public final class Trade implements Comparable<Trade> {
 				double soldUnits = this.totalUnits;
 				double exitPrice = averagePrice;
 
-				if(totalUnits != 0) {
+				if (totalUnits != 0) {
 					updateAveragePrice(position);
 
 					final double cost = (totalSpent * (soldUnits / this.totalUnits));
@@ -585,6 +590,7 @@ public final class Trade implements Comparable<Trade> {
 
 		if (this.openingStrategy == null || strategy == null || trader.allowMixedStrategies || this.openingStrategy == strategy) {
 			for (int i = 0; i < monitors.length; i++) {
+				trader.context.strategyMonitor = monitors[i];
 				if (!monitors[i].allowExit(this)) {
 					return false;
 				}
@@ -643,6 +649,7 @@ public final class Trade implements Comparable<Trade> {
 	private void notifyOrderSubmission(Order order) {
 		updateMinAndMaxPrices(latestCandle());
 		for (int i = 0; i < monitors.length; i++) {
+			trader.context.strategyMonitor = monitors[i];
 			if (order.isSell()) {
 				monitors[i].sold(this, order);
 			} else if (order.isBuy()) {
@@ -681,6 +688,7 @@ public final class Trade implements Comparable<Trade> {
 	boolean allowTradeSwitch(String exitSymbol, Candle candle, String candleTicker) {
 		boolean canExit = monitors.length > 0;
 		for (int i = 0; i < monitors.length; i++) {
+			trader.context.strategyMonitor = monitors[i];
 			canExit &= monitors[i].allowTradeSwitch(this, exitSymbol, candle, candleTicker);
 		}
 		return canExit;

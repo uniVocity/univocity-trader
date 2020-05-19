@@ -1,6 +1,5 @@
 package com.univocity.trader.account;
 
-import com.univocity.trader.*;
 import org.junit.*;
 
 import static com.univocity.trader.account.Order.Status.*;
@@ -275,7 +274,7 @@ public class ShortTradingTests extends OrderFillChecker {
 	public void testShortTradingWithMarketBracketOrder() {
 		SimulatedAccountManager account = getSimulatedAccountManager(new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
+			public void prepareOrder(OrderBook book, OrderRequest order, Context context) {
 				if (order.isBuy() && order.isLong() || order.isSell() && order.isShort()) {
 					OrderRequest takeProfit = order.attachToPercentageChange(MARKET, -1.0);
 					OrderRequest marketBuyOnLoss = order.attachToPercentageChange(MARKET, 1.0);
@@ -461,7 +460,7 @@ public class ShortTradingTests extends OrderFillChecker {
 
 		bnb.cancel();
 		trader.tradingManager.updateOpenOrders("BNBUSDT", newTick(4, 62.0));
-		
+
 	}
 
 }

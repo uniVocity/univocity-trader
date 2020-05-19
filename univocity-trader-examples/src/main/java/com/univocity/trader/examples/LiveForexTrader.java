@@ -60,7 +60,7 @@ public class LiveForexTrader {
 		// - loss reaches 0.15% or more, exits with a market order.
 		account.orderManager(new DefaultOrderManager() {
 			@Override
-			public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Trader trader, Trade trade) {
+			public void prepareOrder(OrderBook book, OrderRequest order, Context context) {
 				order.attachToPercentageChange(Order.Type.LIMIT, 0.25);
 				order.attachToPercentageChange(Order.Type.MARKET, -0.15);
 			}
