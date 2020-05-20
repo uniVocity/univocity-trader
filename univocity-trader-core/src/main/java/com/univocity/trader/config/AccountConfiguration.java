@@ -16,7 +16,7 @@ import static com.univocity.trader.config.Utils.*;
  * Basic configuration on an account. Allows to define maximum a minimum investment amounts to one or more symbols,
  * as well as assigning {@link OrderManager}s to different symbols.
  */
-public abstract class AccountConfiguration<T extends AccountConfiguration<T>> extends TradingStrategyGroup<T> {
+public abstract class AccountConfiguration<T extends AccountConfiguration<T>> extends AbstractTradingGroup<T> {
 
 	private static final Set<String> supportedTimeZones = new TreeSet<>(List.of(TimeZone.getAvailableIDs()));
 	private static final String supportedTimezoneDescription;
@@ -33,8 +33,9 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> ex
 	private String email;
 	private TimeZone timeZone;
 
-
 	private final TreeSet<String> requiredPropertyNames = new TreeSet<>();
+	protected final Map<String, TradingGroup> tradingGroups = new HashMap<>();
+	int marginReservePercentage = 150;
 
 	protected AccountConfiguration(String id) {
 		super(id);
@@ -155,7 +156,15 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> ex
 	}
 
 	public boolean isConfigured() {
-		return StringUtils.isNoneBlank(referenceCurrency);
+		if(tradingGroups.isEmpty()) {
+			return StringUtils.isNoneBlank(referenceCurrency);
+		} else {
+			boolean configured = false;
+			for(TradingGroup group : tradingGroups.values()){
+				configured |= StringUtils.isNoneBlank(group.referenceCurrency);
+			}
+			return configured;
+		}
 	}
 
 	public String email() {
@@ -200,13 +209,28 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> ex
 
 	@Override
 	public T clone(boolean deep) {
-		return (T)super.clone(deep);
+		T out = (T) super.clone(deep);
+		this.tradingGroups.forEach((k, v) -> out.tradingGroups.put(k, (TradingGroup) v.clone(deep)));
+		return out;
 	}
 
 	@Override
 	public T clone() {
 		return (T) super.clone();
 	}
+
+	public T marginReservePercentage(int marginReservePercentage) {
+		if (marginReservePercentage < 100) {
+			throw new IllegalArgumentException("Margin reserve percentage must be at least 100%");
+		}
+		this.marginReservePercentage = marginReservePercentage;
+		return (T) this;
+	}
+
+	public int marginReservePercentage() {
+		return marginReservePercentage;
+	}
+
 
 	Set<String> getRequiredPropertyNames() {
 		requiredPropertyNames.add("reference.currency");
@@ -215,5 +239,26 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> ex
 
 	protected void addRequiredPropertyNames(String... names) {
 		Collections.addAll(requiredPropertyNames, names);
+	}
+
+	public TradingGroup tradingGroup(String id) {
+		if (StringUtils.isBlank(id)) {
+			throw new IllegalArgumentException("Trading group ID can't be empty");
+		}
+		return tradingGroups.computeIfAbsent(id, this::newTradingGroup);
+	}
+
+	private TradingGroup newTradingGroup(String id) {
+		TradingGroup out = new TradingGroup(id);
+		out.copyFrom(this);
+		return out;
+	}
+
+	public Set<String> allSymbols(){
+		Set<String> out = new TreeSet<>(symbols());
+		for (TradingGroup tradingGroup : tradingGroups.values()) {
+			out.addAll(tradingGroup.symbols());
+		}
+		return out;
 	}
 }

@@ -12,11 +12,10 @@ import java.util.function.*;
 
 import static com.univocity.trader.config.Allocation.*;
 
-public abstract class TradingStrategyGroup<T extends TradingStrategyGroup<T>> implements Cloneable {
+public abstract class AbstractTradingGroup<T extends AbstractTradingGroup<T>> implements Cloneable {
 
 	private static final OrderManager DEFAULT_ORDER_MANAGER = new DefaultOrderManager();
 	boolean shortingEnabled;
-	int marginReservePercentage = 150;
 	protected boolean parsingProperties = false;
 	protected String referenceCurrency;
 
@@ -32,7 +31,7 @@ public abstract class TradingStrategyGroup<T extends TradingStrategyGroup<T>> im
 
 	private final String id;
 
-	TradingStrategyGroup(String id){
+	AbstractTradingGroup(String id) {
 		this.id = id;
 	}
 
@@ -307,9 +306,9 @@ public abstract class TradingStrategyGroup<T extends TradingStrategyGroup<T>> im
 		return (T) this;
 	}
 
-	public TradingStrategyGroup clone(boolean deep) {
+	public AbstractTradingGroup<T> clone(boolean deep) {
 		try {
-			TradingStrategyGroup out = (TradingStrategyGroup) super.clone();
+			AbstractTradingGroup<T> out = (AbstractTradingGroup<T>) super.clone();
 			out.tradedPairs = new ConcurrentHashMap<>(tradedPairs);
 			out.strategies = strategies.clone();
 			out.monitors = monitors.clone();
@@ -327,7 +326,7 @@ public abstract class TradingStrategyGroup<T extends TradingStrategyGroup<T>> im
 	}
 
 	@Override
-	public TradingStrategyGroup clone() {
+	public AbstractTradingGroup<T> clone() {
 		return clone(false);
 	}
 
@@ -384,16 +383,12 @@ public abstract class TradingStrategyGroup<T extends TradingStrategyGroup<T>> im
 		return shortingEnabled;
 	}
 
-	public T marginReservePercentage(int marginReservePercentage) {
-		if (marginReservePercentage < 100) {
-			throw new IllegalArgumentException("Margin reserve percentage must be at least 100%");
-		}
-		this.marginReservePercentage = marginReservePercentage;
-		return (T) this;
+	void copyFrom(AbstractTradingGroup<?> o) {
+		this.shortingEnabled = o.shortingEnabled;
+		this.referenceCurrency = o.referenceCurrency;
+		o.allocations.forEach((k, v) -> this.allocations.put(k, v.clone()));
+		this.tradedPairs.putAll(o.tradedPairs);
+		this.supportedSymbols.addAll(o.supportedSymbols);
+		this.orderManagers.putAll(o.orderManagers);
 	}
-
-	public int marginReservePercentage() {
-		return marginReservePercentage;
-	}
-
 }
