@@ -135,7 +135,7 @@ public final class Trade implements Comparable<Trade> {
 		}
 	}
 
-	public String tick(Candle candle, Signal signal, Strategy strategy) {
+	public String tick(Candle candle, Strategy strategy) {
 		if (isPlaceholder) {
 			return null;
 		}
@@ -173,7 +173,7 @@ public final class Trade implements Comparable<Trade> {
 		if (!stopped) {
 			for (int i = 0; i < monitors.length; i++) {
 				trader.context.strategyMonitor = monitors[i];
-				String exit = monitors[i].handleStop(this, signal, strategy);
+				String exit = monitors[i].handleStop(this);
 				if (exit != null) {
 					stopped = true;
 					return exitReason = exit;
@@ -185,7 +185,7 @@ public final class Trade implements Comparable<Trade> {
 
 	/**
 	 * Returns a description detailing why the latest trade was closed. Typically populated from
-	 * {@link StrategyMonitor#handleStop(Trade, Signal, Strategy)} when a trade is stopped without a {@code SELL}
+	 * {@link StrategyMonitor#handleStop(Trade)} when a trade is stopped without a {@code SELL}
 	 * signal.
 	 *
 	 * @return the reason for exiting the latest trade.
@@ -775,5 +775,9 @@ public final class Trade implements Comparable<Trade> {
 
 	public boolean isEmpty() {
 		return pastOrders.i == 0 && position.i == 0 && exitOrders.i == 0;
+	}
+
+	public boolean isPlaceHolder() {
+		return isPlaceholder;
 	}
 }

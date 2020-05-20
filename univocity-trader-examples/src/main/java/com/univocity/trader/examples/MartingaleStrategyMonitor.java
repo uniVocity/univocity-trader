@@ -39,7 +39,7 @@ public class MartingaleStrategyMonitor extends StrategyMonitor {
 	}
 
 	@Override
-	public String handleStop(Trade trade, Signal signal, Strategy strategy) {
+	public String handleStop(Trade trade) {
 		if (trade.priceChangePct() > 3.0) {
 			return "take profit";
 		}

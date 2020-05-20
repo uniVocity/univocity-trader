@@ -9,10 +9,10 @@ import com.univocity.trader.indicators.*;
  * It can contain {@link Indicator}s to help deciding what to do on every tick received from the
  * {@link com.univocity.trader.Exchange}. Once a {@code BUY} is received, and no position is open,
  * {@link #discardBuy(Strategy)} will be invoked to confirm if it is a good time to buy. If it is, a position is open
- * and {@link #bought(Trade, Order)} will be called. After that, {@link #handleStop(Trade, Signal, Strategy)} will be
+ * and {@link #bought(Trade, Order)} will be called. After that, {@link #handleStop(Trade)} will be
  * invoked after every tick received from the exchange, to allow  closing the {@link Trade}.
  *
- * If {@link #handleStop(Trade, Signal, Strategy)} returns a not {@code null} value or a {@code SELL} signal is received'
+ * If {@link #handleStop(Trade)} returns a not {@code null} value or a {@code SELL} signal is received'
  * from the {@link Strategy}, {@link #allowExit(Trade)} will be invoked to confirm whether to exit the trade. If the
  * trade is closed, {@link #sold(Trade, Order)} will be invoked. During the lifetime of the trade, a few other methods
  * might be invoked:
@@ -31,6 +31,11 @@ import com.univocity.trader.indicators.*;
 public abstract class StrategyMonitor extends IndicatorGroup {
 
 	/**
+	 * Contextual information about the current trading state of a symbol.
+	 */
+	protected Context context;
+
+	/**
 	 * The object responsible for creating and managing trades.
 	 */
 	protected Trader trader;
@@ -40,15 +45,13 @@ public abstract class StrategyMonitor extends IndicatorGroup {
 	 * any {@link Signal} emitted by a {@link Strategy}
 	 *
 	 * @param trade    a group of multiple orders that control the state of a position held by the {@link #trader}
-	 * @param signal   the latest signal emitted by the given strategy
-	 * @param strategy the strategy that originated the given signal
 	 *
 	 * @return {@code null} if the trade is to remain open or a {@code String} with a message indicating the reason
 	 * for exiting the trade. This message will then be returned by
 	 * {@link Trade#exitReason()} and can be included in logs or e-mails
 	 * (as implemented in {@link com.univocity.trader.notification.OrderExecutionToEmail}).
 	 */
-	public String handleStop(Trade trade, Signal signal, Strategy strategy) {
+	public String handleStop(Trade trade) {
 		return null;
 	}
 
@@ -155,14 +158,15 @@ public abstract class StrategyMonitor extends IndicatorGroup {
 	}
 
 	/**
-	 * Assigns the trader responsible for managing {@code Trades} and {@code Orders} to this monitor.
+	 * Assigns the context associated with trading on a given symbol to this monitor.
 	 *
-	 * @param trader the object responsible for all trading decisions performed against an instrument.
+	 * @param context the object responsible for all trading information of an instrument.
 	 */
-	public void setTrader(Trader trader) {
-		if (this.trader != null) {
-			throw new IllegalStateException("Can't modify Trader once it's set");
+	public void setContext(Context context) {
+		if (this.context != null) {
+			throw new IllegalStateException("Can't modify context once it's set");
 		}
-		this.trader = trader;
+		this.context = context;
+		this.trader = context.trader();
 	}
 }

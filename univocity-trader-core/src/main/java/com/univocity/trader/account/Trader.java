@@ -121,7 +121,7 @@ public final class Trader {
 	 * <li>signal = {@code NEUTRAL}: Will simply update the statistics of any open trades.</li>
 	 * </ul>
 	 * When there is a trade open, regardless of the signal received, all strategy monitors (from
-	 * {@link #monitors()} will have their {@link StrategyMonitor#handleStop(Trade, Signal, Strategy)} method called
+	 * {@link #monitors()} will have their {@link StrategyMonitor#handleStop(Trade)} method called
 	 * to determine whether or not to exit the trade. If any one of these calls return
 	 * an exit message, the assets will be sold, {@link Trade#stopped()} will evaluate to {@code true} and {@link Trade#exitReason()}
 	 * will return the reason for exiting the trade.
@@ -151,7 +151,7 @@ public final class Trader {
 			stoppedOut.clear();
 			for (int i = trades.i - 1; i >= 0; i--) {
 				Trade trade = trades.elements[i];
-				if (trade.tick(candle, signal, strategy) != null) {
+				if (trade.tick(candle, strategy) != null) {
 					stoppedOut.add(trade);
 				}
 			}
@@ -298,7 +298,7 @@ public final class Trader {
 		StrategyMonitor[] out = monitorProvider == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters(), monitorProvider, "StrategyMonitor", false, allInstances);
 
 		for (int i = 0; i < out.length; i++) {
-			out[i].setTrader(this);
+			out[i].setContext(this.context);
 		}
 		return out;
 	}

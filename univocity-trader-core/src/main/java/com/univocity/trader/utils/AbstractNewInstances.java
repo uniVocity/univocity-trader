@@ -44,6 +44,7 @@ public abstract class AbstractNewInstances<T, S extends AbstractNewInstances<T, 
 		for (int i = 0; i < providers.size(); i++) {
 			tmp.add(providers.get(i).create(symbol, params));
 		}
+		tmp.removeIf(Objects::isNull);
 		T[] out = Arrays.copyOf(empty, tmp.size());
 		return tmp.toArray(out);
 	}
