@@ -104,7 +104,7 @@ public final class TradingManager {
 	}
 
 	public final Candle getLatestCandle() {
-		return trader.latestCandle();
+		return context.latestCandle();
 	}
 
 	public final double getLatestPrice(String assetSymbol, String fundSymbol) {
@@ -117,10 +117,6 @@ public final class TradingManager {
 
 	public final String getSymbol() {
 		return symbol;
-	}
-
-	public Map<String, double[]> getAllPrices() {
-		return exchange.getLatestPrices();
 	}
 
 	public boolean hasPosition(Candle c, boolean includeLocked, boolean includeLong, boolean includeShort) {
@@ -209,11 +205,11 @@ public final class TradingManager {
 	}
 
 	public double getTotalFundsInReferenceCurrency() {
-		return tradingAccount.getTotalFundsInReferenceCurrency(getAllPrices());
+		return tradingAccount.getTotalFundsInReferenceCurrency();
 	}
 
 	public double getTotalFundsIn(String symbol) {
-		return tradingAccount.getTotalFundsIn(symbol, getAllPrices());
+		return tradingAccount.getTotalFundsIn(symbol);
 	}
 
 	public boolean exitExistingPositions(String exitSymbol, Candle c, Strategy strategy) {

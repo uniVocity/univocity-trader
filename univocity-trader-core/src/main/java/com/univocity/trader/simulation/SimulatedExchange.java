@@ -13,7 +13,6 @@ public final class SimulatedExchange implements Exchange<Candle, SimulatedClient
 
 	private final AccountManager account;
 	private final Map<String, SymbolInformation> symbolInformation = new TreeMap<>();
-	private final Map<String, double[]> latestPrices = new HashMap<>();
 	private double[][] prices;
 
 	public SimulatedExchange(AccountManager account) {
@@ -42,23 +41,7 @@ public final class SimulatedExchange implements Exchange<Candle, SimulatedClient
 
 	@Override
 	public Map<String, double[]> getLatestPrices() {
-		TradingManager[] managers = account.getAllTradingManagers();
-
-		if (prices == null) {
-			prices = new double[managers.length][];
-			for (int i = 0; i < managers.length; i++) {
-				TradingManager manager = managers[i];
-				prices[i] = new double[]{manager.getLatestPrice()};
-				latestPrices.put(manager.getSymbol(), prices[i]);
-			}
-		} else {
-			for (int i = 0; i < managers.length; i++) {
-				TradingManager manager = managers[i];
-				prices[i][0] = manager.getLatestPrice();
-			}
-		}
-
-		return latestPrices;
+		return account.getLatestPrices();
 	}
 
 	@Override
@@ -76,27 +59,7 @@ public final class SimulatedExchange implements Exchange<Candle, SimulatedClient
 
 	@Override
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
-		String symbol = assetSymbol + fundSymbol;
-		Trader trader = account.getTraderOf(symbol);
-		if (trader == null) {
-			throw new IllegalStateException("Unknown symbol: " + symbol);
-		}
-		double price = trader.lastClosingPrice();
-		if (price == 0.0 && trader.latestCandle() == null) {
-			// case for simulations only, where we try to switch from one asset to another without selling then buying, to avoid paying fees twice.
-			Trader assetTrader = account.getTraderOf(assetSymbol + account.getReferenceCurrencySymbol());
-			if (assetTrader != null) {
-				Trader fundsTrader = account.getTraderOf(fundSymbol + account.getReferenceCurrencySymbol());
-				if (fundsTrader != null) {
-					double assetPrice = assetTrader.lastClosingPrice();
-					double fundPrice = fundsTrader.lastClosingPrice();
-					if (fundPrice != 0.0) {
-						price = assetPrice / fundPrice;
-					}
-				}
-			}
-		}
-		return price;
+		return account.getLatestPrice(assetSymbol+fundSymbol);
 	}
 
 	@Override
@@ -108,16 +71,6 @@ public final class SimulatedExchange implements Exchange<Candle, SimulatedClient
 	public void closeLiveStream() throws Exception {
 		throw new UnsupportedOperationException();
 	}
-
-//	public void setMainTradeSymbols(String... mainTradeSymbols) {
-//		Collections.addAll(this.mainTradeSymbols, mainTradeSymbols);
-//	}
-
-//	@Override
-//	public boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol) {
-//		return mainTradeSymbols.contains(currentAssetSymbol) || mainTradeSymbols.contains(targetAssetSymbol);
-//	}
-
 
 	@Override
 	public ClientAccount connectToAccount(SimulatedClientConfiguration clientConfiguration) {

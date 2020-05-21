@@ -18,11 +18,13 @@ public class Context {
 	StrategyMonitor strategyMonitor;
 	String exitReason;
 	Parameters parameters;
+	double[] latestPrice;
 
 	public Context(TradingManager tradingManager, Parameters parameters) {
 		this.symbol = tradingManager.getSymbol();
 		this.priceDetails = tradingManager.getPriceDetails();
 		this.parameters = parameters;
+		this.latestPrice = tradingManager.getAccount().latestPrices.get(symbol);
 	}
 
 	public final String symbol() {
@@ -89,6 +91,7 @@ public class Context {
 	public final void latestCandle(Candle latestCandle) {
 		if (latestCandle != null) {
 			this.latestCandle = latestCandle;
+			this.latestPrice[0] = latestCandle.close;
 		}
 	}
 

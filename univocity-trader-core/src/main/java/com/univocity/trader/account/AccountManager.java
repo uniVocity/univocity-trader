@@ -41,6 +41,9 @@ public class AccountManager implements ClientAccount {
 	final double marginReserveFactorPct;
 	private final int accountHash;
 
+	final Map<String, double[]> latestPrices = new HashMap<>();
+	private static final double[] DEFAULT = new double[]{-1.0};
+
 	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration) {
 		if (StringUtils.isBlank(configuration.referenceCurrency())) {
 			throw new IllegalConfigurationException("Please configure the reference currency symbol");
@@ -180,11 +183,11 @@ public class AccountManager implements ClientAccount {
 	}
 
 
-	public double getTotalFundsInReferenceCurrency(Map<String, double[]> allPrices) {
-		return getTotalFundsIn(configuration.referenceCurrency(), allPrices);
+	public double getTotalFundsInReferenceCurrency() {
+		return getTotalFundsIn(configuration.referenceCurrency());
 	}
 
-	public double getTotalFundsIn(String currency, Map<String, double[]> allPrices) {
+	public double getTotalFundsIn(String currency) {
 		final Balance[] tmp;
 		balanceLock.lock();
 		double total = 0.0;
@@ -208,7 +211,7 @@ public class AccountManager implements ClientAccount {
 					double shortedQuantity = getBalance(shorted, Balance::getShorted);
 					double originalShortedPrice = marginWithoutReserve / shortedQuantity;
 					double totalInvestmentOnShort = shortedQuantity * originalShortedPrice;
-					double totalAtCurrentPrice = multiplyWithLatestPrice(shortedQuantity, shorted, symbol, allPrices);
+					double totalAtCurrentPrice = multiplyWithLatestPrice(shortedQuantity, shorted, symbol);
 					double shortProfitLoss = totalInvestmentOnShort - totalAtCurrentPrice;
 
 					total += accountBalanceForMargin + shortProfitLoss;
@@ -217,7 +220,7 @@ public class AccountManager implements ClientAccount {
 				if (currency.equals(symbol)) {
 					total += quantity;
 				} else {
-					total += multiplyWithLatestPrice(quantity, symbol, currency, allPrices);
+					total += multiplyWithLatestPrice(quantity, symbol, currency);
 				}
 			}
 		} finally {
@@ -226,14 +229,16 @@ public class AccountManager implements ClientAccount {
 		return total;
 	}
 
-	private static final double[] DEFAULT = new double[]{-1.0};
+	public double getLatestPrice(String symbol){
+		return latestPrices.getOrDefault(symbol, DEFAULT)[0];
+	}
 
-	private double multiplyWithLatestPrice(double quantity, String symbol, String currency, Map<String, double[]> allPrices) {
-		double price = allPrices.getOrDefault(symbol + currency, DEFAULT)[0];
+	private double multiplyWithLatestPrice(double quantity, String symbol, String currency) {
+		double price = getLatestPrice(symbol + currency);
 		if (price > 0.0) {
 			return quantity * price;
 		} else {
-			price = allPrices.getOrDefault(currency + symbol, DEFAULT)[0];
+			price = getLatestPrice(currency + symbol);
 			if (price > 0.0) {
 				return quantity / price;
 			}
@@ -413,8 +418,14 @@ public class AccountManager implements ClientAccount {
 			String assetSymbol = e.getValue()[0].intern();
 			String fundSymbol = e.getValue()[1].intern();
 
+			latestPrices.put(e.getKey(), new double[1]);
+
 			TradingManager tradingManager = new TradingManager(group, exchange, priceDetails, this, assetSymbol, fundSymbol, parameters);
 			out.add(tradingManager);
 		}
+	}
+
+	public Map<String,double[]> getLatestPrices() {
+		return latestPrices;
 	}
 }

@@ -66,7 +66,7 @@ public class SimulatedClientAccount implements ClientAccount {
 			double maxAmount = orderAmount - fees;
 			double price = orderDetails.getPrice();
 			if (price <= EFFECTIVELY_ZERO) {
-				price = getAccount().getTraderOf(orderDetails.getSymbol()).lastClosingPrice();
+				price = getAccount().getLatestPrice(orderDetails.getSymbol());
 			}
 			quantity = (maxAmount / price) * 0.9999;
 			orderDetails.setQuantity(quantity);
@@ -331,7 +331,7 @@ public class SimulatedClientAccount implements ClientAccount {
 			final double saleReserve = currentMarginReserve / accountManager.marginReserveFactorPct();
 			final double accountReserve = currentMarginReserve - saleReserve;
 
-			final double close = candle != null ? candle.close : getAccount().getTraderOf(assetSymbol + fundSymbol).lastClosingPrice();
+			final double close = candle != null ? candle.close : getAccount().getLatestPrice(assetSymbol + fundSymbol);
 			final double shortSalePrice = close * (currentMarginReserve / accountManager.applyMarginReserve(totalShorted * close));
 			final double profit = shortSalePrice * totalCovered - partialFillTotalPrice - tradingFees.feesOnAmount(partialFillTotalPrice, order.getType(), order.getSide());
 

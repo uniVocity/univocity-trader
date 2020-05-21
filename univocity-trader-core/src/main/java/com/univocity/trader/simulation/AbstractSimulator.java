@@ -33,7 +33,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 			this.accounts = new SimulatedAccountManager[accountConfigs.size()];
 			int i = 0;
 			for (A accountConfig : accountConfigs) {
-				this.accounts[i++] = (SimulatedAccountManager) createAccountInstance(accountConfig).getAccount();
+				this.accounts[i++] = createAccountInstance(accountConfig).getAccount();
 			}
 		}
 		return accounts;
@@ -86,18 +86,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 				throw new IllegalStateException("Cannot execute simulation without initial funds to trade with");
 			}
 		}
-	}
-
-//	public A account() {
-//		return configuration.account();
-//	}
-//
-//	public A account(String accountId) {
-//		return configuration.account(accountId);
-//	}
-
-	public final Map<String, String[]> allPairs() {
-		return populateAllPairs();
+		populateAllPairs();
 	}
 
 	protected Map<String, String[]> getAllPairs() {
