@@ -43,23 +43,22 @@ public final class Trader {
 	private final List<Trade> stoppedOut = new ArrayList<>();
 	private final AtomicLong id;
 	boolean liquidating = false;
-	final Context context;
+	public final Context context;
 
 	/**
 	 * Creates a new trader for a given symbol. For internal use only.
 	 *
 	 * @param tradingManager the object responsible for managing the entire trading workflow of a symbol
-	 * @param context        a context object with information about the state of the symbol being traded
 	 * @param allInstances   all known instances of {@link StrategyMonitor} that have been created so far, used
 	 *                       to validate no single {@link StrategyMonitor} instance is shared among different
 	 *                       {@code Trader} instances.
 	 */
-	public Trader(TradingManager tradingManager, Context context, Set<Object> allInstances) {
+	public Trader(TradingManager tradingManager, Set<Object> allInstances) {
 		this.id = tradingManager.getAccount().getTradeIdGenerator();
 		this.tradingManager = tradingManager;
 		this.tradingManager.trader = this;
 
-		this.context = context;
+		this.context = tradingManager.context;
 		this.context.trader = this;
 
 		this.monitors = createStrategyMonitors(allInstances);
@@ -393,9 +392,9 @@ public final class Trader {
 	private boolean sellShort() {
 		double amountToSpend = prepareTrade(SHORT);
 		if (amountToSpend > 0) {
-			Order order = tradingManager.sell(amountToSpend / context.latestCandle.close, SHORT, context);
+			Order order = tradingManager.sell(amountToSpend / context.latestCandle.close, SHORT);
 			if (order != null) {
-				processOrder(order, context);
+				processOrder(order);
 				return true;
 			}
 			if (log.isTraceEnabled()) {
@@ -413,13 +412,13 @@ public final class Trader {
 			if (amountToSpend <= 0) {
 				return false;
 			}
-			order = tradingManager.buy(amountToSpend / context.latestCandle.close, LONG, context);
+			order = tradingManager.buy(amountToSpend / context.latestCandle.close, LONG);
 		} else if (tradeSide == SHORT) {
 			double shortedQuantity = accountManager.getBalance(referenceCurrencySymbol(), Balance::getShorted);
-			order = tradingManager.buy(shortedQuantity, SHORT, context);
+			order = tradingManager.buy(shortedQuantity, SHORT);
 		}
 		if (order != null) {
-			processOrder(order, context);
+			processOrder(order);
 			return true;
 		}
 		if (log.isTraceEnabled()) {
@@ -450,9 +449,9 @@ public final class Trader {
 			quantity = tradingManager.getAssets();
 		}
 
-		Order order = tradingManager.sell(quantity, trade.getSide(), context);
+		Order order = tradingManager.sell(quantity, trade.getSide());
 		if (order != null) {
-			processOrder(order, context);
+			processOrder(order);
 			return true;
 		}
 		return false;
@@ -467,9 +466,9 @@ public final class Trader {
 				log.warn("Not enough funds in margin reserve to cover short of {} {} @ {} {} per unit. Reserve: {}, required {} {}", assetSymbol(), shortToCover, trade.lastClosingPrice(), fundSymbol(), reserveFunds, shortToCover * trade.lastClosingPrice(), fundSymbol());
 			}
 
-			Order order = tradingManager.buy(shortToCover, SHORT, context);
+			Order order = tradingManager.buy(shortToCover, SHORT);
 			if (order != null) {
-				processOrder(order, context);
+				processOrder(order);
 				return true;
 			}
 		}
@@ -553,10 +552,10 @@ public final class Trader {
 	}
 
 	public Order submitOrder(Order.Type type, Order.Side side, Trade.Side tradeSide, double quantity) {
-		return tradingManager.getAccount().submitOrder(this, quantity, side, tradeSide, type);
+		return tradingManager.submitOrder(this, quantity, side, tradeSide, type);
 	}
 
-	void processOrder(Order order, Context context) {
+	void processOrder(Order order) {
 		if (order == null || (order.isCancelled() && order.getFillPct() == 0.0)) {
 			return;
 		}
@@ -564,9 +563,9 @@ public final class Trader {
 			try {
 				context.trade = null;
 				if (order.isBuy()) {
-					context.trade = processBuyOrder(order, context);
+					context.trade = processBuyOrder(order);
 				} else if (order.isSell()) {
-					context.trade = processSellOrder(order, context);
+					context.trade = processSellOrder(order);
 				}
 			} finally {
 				tradingManager.updateBalances();
@@ -577,7 +576,7 @@ public final class Trader {
 			try {
 				tradingManager.notifyOrderSubmitted(order, context.trade);
 			} finally {
-				accountManager.initiateOrderMonitoring(order);
+				tradingManager.initiateOrderMonitoring(order);
 			}
 		}
 	}
@@ -594,7 +593,7 @@ public final class Trader {
 		}
 	}
 
-	private Trade processBuyOrder(Order order, Context context) {
+	private Trade processBuyOrder(Order order) {
 		Trade trade = null;
 		for (int i = trades.i - 1; i >= 0; i--) {
 			Trade t = trades.elements[i];
@@ -629,7 +628,7 @@ public final class Trader {
 	}
 
 
-	private Trade processSellOrder(Order order, Context context) {
+	private Trade processSellOrder(Order order) {
 		Trade trade = context.trade;
 		if (trade == null) {
 			for (int i = trades.i - 1; i >= 0; i--) {
