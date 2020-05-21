@@ -62,46 +62,26 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		});
 	}
 
-	protected TradingManager createTradingManager(AccountManager accountManager, String assetSymbol, String fundSymbol, Parameters parameters) {
-		SimulatedExchange exchange = new SimulatedExchange(accountManager);
-		exchange.setSymbolInformation(this.symbolInformation);
-		SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol());
-
-		return new TradingManager(exchange, symbolPriceDetails, accountManager, assetSymbol, fundSymbol, parameters);
-	}
-
-	protected Map<String, Engine[]> createEngines(Parameters parameters) {
+	protected final Map<String, Engine[]> createEngines(Parameters parameters) {
 		Set<Object> allInstances = new HashSet<>();
-		Map<String, Engine[]> symbolHandlers = new HashMap<>();
 
-		getAllPairs().forEach((symbol, pair) -> {
-			String assetSymbol = pair[0];
-			String fundSymbol = pair[1];
+		Map<String, List<Engine>> tmp = new HashMap<>();
 
-			if (assetSymbol.equals(fundSymbol)) {
-				return;
-			}
+		for (AccountManager account : accounts()) {
+			SimulatedExchange exchange = new SimulatedExchange(account);
+			TradingManager[] tradingManagers = account.createTradingManagers(exchange, null, parameters);
 
-			List<AccountManager> accountsTradingSymbol = new ArrayList<>();
-			for (AccountManager account : accounts()) {
-				if (account.configuration().symbolPairs().keySet().contains(symbol)) {
-					accountsTradingSymbol.add(account);
-				}
-			}
-
-			Engine[] engines = new Engine[accountsTradingSymbol.size()];
-			for (int i = 0; i < engines.length; i++) {
-				TradingManager tradingManager = createTradingManager(accounts()[i], assetSymbol, fundSymbol, parameters);
+			for (TradingManager tradingManager : tradingManagers) {
 				Engine engine = new TradingEngine(tradingManager, parameters, allInstances);
-				engines[i] = engine;
+				tmp.computeIfAbsent(engine.getSymbol(), s -> new ArrayList<>()).add(engine);
 			}
-
-			if (engines.length > 0) {
-				symbolHandlers.put(symbol, engines);
-			}
-		});
+		}
 
 		allInstances.clear();
+
+		Map<String, Engine[]> symbolHandlers = new HashMap<>();
+		tmp.forEach((k, v) -> symbolHandlers.put(k, v.toArray(Engine[]::new)));
+
 		return symbolHandlers;
 	}
 

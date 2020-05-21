@@ -47,7 +47,7 @@ public final class TradingManager {
 	final OrderSet orderUpdates = new OrderSet();
 	final Context context;
 
-	public TradingManager(AbstractTradingGroup<?> configuration, Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, String assetSymbol, String fundSymbol, Parameters params) {
+	TradingManager(AbstractTradingGroup<?> configuration, Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, String assetSymbol, String fundSymbol, Parameters params) {
 		if (exchange == null) {
 			throw new IllegalArgumentException("Exchange implementation cannot be null");
 		}

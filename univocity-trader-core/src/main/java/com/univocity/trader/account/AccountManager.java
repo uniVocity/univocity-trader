@@ -2,6 +2,8 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.notification.*;
+import com.univocity.trader.simulation.*;
 import com.univocity.trader.utils.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
@@ -240,7 +242,6 @@ public class AccountManager implements ClientAccount {
 	}
 
 
-
 	@Override
 	public String toString() {
 		StringBuilder out = new StringBuilder();
@@ -340,13 +341,12 @@ public class AccountManager implements ClientAccount {
 	}
 
 
-
 	@Override
 	public final boolean isSimulated() {
 		return account.isSimulated();
 	}
 
-	public String accountId(){
+	public String accountId() {
 		return configuration.id();
 	}
 
@@ -384,5 +384,37 @@ public class AccountManager implements ClientAccount {
 
 	public Map<String, String[]> getAllSymbolPairs() {
 		return configuration.getAllSymbolPairs();
+	}
+
+	public TradingManager[] createTradingManagers(Exchange exchange, OrderExecutionToEmail emailNotifier, Parameters parameters) {
+		List<TradingManager> out = new ArrayList<>();
+
+		initialize(out, configuration, exchange, emailNotifier, parameters);
+		configuration.tradingGroups().forEach(g -> initialize(out, g, exchange, emailNotifier, parameters));
+
+		if(out.isEmpty()){
+			throw new IllegalStateException("Account has not been configured to trade.");
+		}
+
+		return out.toArray(TradingManager[]::new);
+	}
+
+	private void initialize(List<TradingManager> out, AbstractTradingGroup<?> group, Exchange exchange, OrderExecutionToEmail emailNotifier, Parameters parameters) {
+		if (!group.isConfigured()) {
+			return;
+		}
+		if (emailNotifier != null) {
+			group.listeners().add(emailNotifier);
+		}
+
+		SymbolPriceDetails priceDetails = new SymbolPriceDetails(exchange, getReferenceCurrencySymbol());
+
+		for (Map.Entry<String, String[]> e : group.symbolPairs().entrySet()) {
+			String assetSymbol = e.getValue()[0].intern();
+			String fundSymbol = e.getValue()[1].intern();
+
+			TradingManager tradingManager = new TradingManager(group, exchange, priceDetails, this, assetSymbol, fundSymbol, parameters);
+			out.add(tradingManager);
+		}
 	}
 }

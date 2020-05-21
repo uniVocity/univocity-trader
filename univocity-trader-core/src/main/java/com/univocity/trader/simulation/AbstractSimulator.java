@@ -78,9 +78,6 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 			account.resetBalances();
 			double[] total = new double[]{0};
 			simulation.initialAmounts().forEach((symbol, amount) -> {
-				if (symbol.equals("")) {
-					symbol = account.configuration().referenceCurrency();
-				}
 				account.setAmount(symbol, amount);
 				total[0] += amount;
 			});
@@ -113,7 +110,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 	private Map<String, String[]> populateAllPairs() {
 		TreeMap<String, String[]> out = new TreeMap<>();
 		for (SimulatedAccountManager account : accounts()) {
-			out.putAll(account.configuration().symbolPairs());
+			out.putAll(account.getAllSymbolPairs());
 		}
 		return out;
 	}
@@ -124,10 +121,6 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 			out.add(account.getReferenceCurrencySymbol());
 		}
 		return out;
-	}
-
-	protected final Collection<String[]> getTradePairs() {
-		return getAllPairs().values();
 	}
 
 	public final C configure() {
