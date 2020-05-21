@@ -226,7 +226,8 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 
 			exchange.openLiveStream(allClientPairs, tickInterval, new TickConsumer<T>() {
 				@Override
-				public void tickReceived(String symbol, T tick) {
+				public void tickReceived(String s, T tick) {
+					String symbol = s.trim().toUpperCase();
 					long now = System.currentTimeMillis();
 					symbols.put(symbol, now);
 					clients.forEach(c -> c.processCandle(symbol, tick, false));

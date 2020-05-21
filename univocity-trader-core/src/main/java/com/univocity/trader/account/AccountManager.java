@@ -43,6 +43,7 @@ public class AccountManager implements ClientAccount {
 
 	final Map<String, double[]> latestPrices = new HashMap<>();
 	private static final double[] DEFAULT = new double[]{-1.0};
+	private Map<String, TradingManager[]> tradingManagers;
 
 	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration) {
 		if (StringUtils.isBlank(configuration.referenceCurrency())) {
@@ -229,7 +230,7 @@ public class AccountManager implements ClientAccount {
 		return total;
 	}
 
-	public double getLatestPrice(String symbol){
+	public double getLatestPrice(String symbol) {
 		return latestPrices.getOrDefault(symbol, DEFAULT)[0];
 	}
 
@@ -391,20 +392,24 @@ public class AccountManager implements ClientAccount {
 		return configuration.getAllSymbolPairs();
 	}
 
-	public TradingManager[] createTradingManagers(Exchange exchange, OrderExecutionToEmail emailNotifier, Parameters parameters) {
-		List<TradingManager> out = new ArrayList<>();
+	public void createTradingManagers(Exchange exchange, OrderExecutionToEmail emailNotifier, Parameters parameters) {
+		if (this.tradingManagers != null) {
+			throw new IllegalStateException("Can't create additional trading managers for this account.");
+		}
+		Map<String, List<TradingManager>> tmp = new HashMap<>();
 
-		initialize(out, configuration, exchange, emailNotifier, parameters);
-		configuration.tradingGroups().forEach(g -> initialize(out, g, exchange, emailNotifier, parameters));
+		initialize(tmp, configuration, exchange, emailNotifier, parameters);
+		configuration.tradingGroups().forEach(g -> initialize(tmp, g, exchange, emailNotifier, parameters));
 
-		if(out.isEmpty()){
+		if (tmp.isEmpty()) {
 			throw new IllegalStateException("Account has not been configured to trade.");
 		}
 
-		return out.toArray(TradingManager[]::new);
+		this.tradingManagers = new HashMap<>();
+		tmp.forEach((k, v) -> tradingManagers.put(k, v.toArray(TradingManager[]::new)));
 	}
 
-	private void initialize(List<TradingManager> out, AbstractTradingGroup<?> group, Exchange exchange, OrderExecutionToEmail emailNotifier, Parameters parameters) {
+	private void initialize(Map<String, List<TradingManager>> out, AbstractTradingGroup<?> group, Exchange exchange, OrderExecutionToEmail emailNotifier, Parameters parameters) {
 		if (!group.isConfigured()) {
 			return;
 		}
@@ -421,11 +426,39 @@ public class AccountManager implements ClientAccount {
 			latestPrices.put(e.getKey(), new double[1]);
 
 			TradingManager tradingManager = new TradingManager(group, exchange, priceDetails, this, assetSymbol, fundSymbol, parameters);
-			out.add(tradingManager);
+			out.computeIfAbsent(e.getKey(), s -> new ArrayList<>()).add(tradingManager);
 		}
 	}
 
-	public Map<String,double[]> getLatestPrices() {
+	public Map<String, double[]> getLatestPrices() {
 		return latestPrices;
+	}
+
+	public <T> T getFromFirstTradingManager(Function<TradingManager, T> f) {
+		if (tradingManagers == null) {
+			throw new IllegalStateException("No trading managers created for this account");
+		}
+
+		for (Map.Entry<String, TradingManager[]> entry : tradingManagers.entrySet()) {
+			TradingManager[] v = entry.getValue();
+			for (int i = 0; i < v.length; i++) {
+				T out = f.apply(v[i]);
+				if (out != null) {
+					return out;
+				}
+			}
+		}
+		return null;
+	}
+
+	public void forEachTradingManager(Consumer<TradingManager> consumer) {
+		if (tradingManagers == null) {
+			throw new IllegalStateException("No trading managers created for this account");
+		}
+		tradingManagers.forEach((k, v) -> {
+			for (int i = 0; i < v.length; i++) {
+				consumer.accept(v[i]);
+			}
+		});
 	}
 }

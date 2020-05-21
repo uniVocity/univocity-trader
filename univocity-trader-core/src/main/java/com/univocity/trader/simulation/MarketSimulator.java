@@ -69,12 +69,12 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 		for (AccountManager account : accounts()) {
 			SimulatedExchange exchange = new SimulatedExchange(account);
-			TradingManager[] tradingManagers = account.createTradingManagers(exchange, null, parameters);
+			account.createTradingManagers(exchange, null, parameters);
 
-			for (TradingManager tradingManager : tradingManagers) {
+			account.forEachTradingManager(tradingManager -> {
 				Engine engine = new TradingEngine(tradingManager, parameters, allInstances);
 				tmp.computeIfAbsent(engine.getSymbol(), s -> new ArrayList<>()).add(engine);
-			}
+			});
 		}
 
 		allInstances.clear();
@@ -187,10 +187,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 	protected void liquidateOpenPositions() {
 		for (AccountManager account : accounts()) {
-			TradingManager[] managers = account.getAllTradingManagers();
-			for (int i = 0; i < managers.length; i++) {
-				managers[i].getTrader().liquidateOpenPositions();
-			}
+			account.forEachTradingManager(t -> t.getTrader().liquidateOpenPositions());
 		}
 	}
 
@@ -213,10 +210,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		System.out.print(account.toString());
 		System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
 
-		TradingManager managers[] = account.getAllTradingManagers();
-		for (int i = 0; i < managers.length; i++) {
-			managers[i].getTrader().notifySimulationEnd();
-		}
+		account.forEachTradingManager(t -> t.getTrader().notifySimulationEnd());
 	}
 
 

@@ -8,13 +8,14 @@ import com.univocity.trader.strategy.*;
 
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 public final class Client<T> {
 
 	private CandleRepository candleRepository;
 	private Exchange<T, ?> exchange;
 
-	private final List<CandleProcessor<T>> candleProcessors = new ArrayList<>();
+	private final Map<String, CandleProcessor<T>[]> candleProcessors = new ConcurrentHashMap<>();
 
 	private final AccountManager accountManager;
 	private OrderExecutionToEmail emailNotifier;
@@ -49,14 +50,19 @@ public final class Client<T> {
 		emailNotifier = mailSender != null ? new OrderExecutionToEmail(mailSender) : null;
 
 		Set<Object> allInstances = new HashSet<>();
-		TradingManager[] tradingManagers = accountManager.createTradingManagers(exchange, emailNotifier, Parameters.NULL);
-		for (TradingManager tradingManager : tradingManagers) {
+		accountManager.createTradingManagers(exchange, emailNotifier, Parameters.NULL);
+
+		Map<String, List<CandleProcessor<T>>> tmp = new HashMap<>();
+
+		accountManager.forEachTradingManager(tradingManager -> {
 			Engine engine = new TradingEngine(tradingManager, allInstances);
-			CandleProcessor<T> processor = new CandleProcessor<T>(candleRepository, engine, exchange);
-			candleProcessors.add(processor);
-		}
+			CandleProcessor<T> processor = new CandleProcessor<>(candleRepository, engine, exchange);
+			tmp.computeIfAbsent(engine.getSymbol(), s -> new ArrayList<>()).add(processor);
+		});
 
 		allInstances.clear();
+
+		tmp.forEach((k, v) -> candleProcessors.put(k, v.toArray(CandleProcessor[]::new)));
 	}
 
 	void reset() {
@@ -77,11 +83,17 @@ public final class Client<T> {
 	}
 
 	public void processCandle(String symbol, Candle candle, boolean initializing) {
-		candleProcessors.forEach(c -> c.processCandle(symbol, candle, initializing));
+		CandleProcessor<T>[] processors = candleProcessors.get(symbol);
+		for (int i = 0; i < processors.length; i++) {
+			processors[i].processCandle(candle, initializing);
+		}
 	}
 
 	public void processCandle(String symbol, T candle, boolean initializing) {
-		candleProcessors.forEach(c -> c.processCandle(symbol, candle, initializing));
+		CandleProcessor<T>[] processors = candleProcessors.get(symbol);
+		for (int i = 0; i < processors.length; i++) {
+			processors[i].processCandle(candle, initializing);
+		}
 	}
 
 	public Map<String, String[]> getAllSymbolPairs() {

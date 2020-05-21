@@ -14,7 +14,6 @@ import org.slf4j.*;
 import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.*;
 
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
@@ -39,10 +38,13 @@ public final class TradingManager {
 	private final SymbolPriceDetails priceDetails;
 	private final SymbolPriceDetails referencePriceDetails;
 	private final AbstractTradingGroup<?> configuration;
-	final Map<String, Trader> traders = new ConcurrentHashMap<>();
-	final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
-	TradingManager[] tradingManagers;
+	private final OrderManager orderManager;
+//	final Map<String, Trader> traders = new ConcurrentHashMap<>();
+//	final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
+//	TradingManager[] tradingManagers;
+
 	final Map<Integer, long[]> fundAllocationCache = new ConcurrentHashMap<>();
+
 	final OrderSet pendingOrders = new OrderSet();
 	final OrderSet orderUpdates = new OrderSet();
 	final Context context;
@@ -78,9 +80,9 @@ public final class TradingManager {
 		this.priceDetails = priceDetails.switchToSymbol(symbol);
 		this.referencePriceDetails = priceDetails.switchToSymbol(getReferenceCurrencySymbol());
 		this.configuration = configuration;
+		this.orderManager = configuration.orderManager(symbol);
 		this.context = new Context(this, params);
 	}
-
 
 
 	public SymbolPriceDetails getPriceDetails() {
@@ -212,17 +214,13 @@ public final class TradingManager {
 		return tradingAccount.getTotalFundsIn(symbol);
 	}
 
-	public boolean exitExistingPositions(String exitSymbol, Candle c, Strategy strategy) {
-		boolean exited = false;
-		TradingManager[] managers = getAllTradingManagers();
-		for (int i = 0; i < managers.length; i++) {
-			TradingManager manager = managers[i];
+	public boolean exitExistingPositions(String exitSymbol, Candle c) {
+		return tradingAccount.getFromFirstTradingManager(manager -> {
 			if (manager != this && manager.hasPosition(c, false, true, true) && manager.trader.switchTo(exitSymbol, c, manager.symbol)) {
-				exited = true;
-				break;
+				return manager;
 			}
-		}
-		return exited;
+			return null;
+		}) != null;
 	}
 
 	public boolean waitingForBuyOrderToFill(Trade.Side tradeSide) {
@@ -258,34 +256,25 @@ public final class TradingManager {
 	}
 
 	public void cancelStaleOrdersFor(Trade.Side side, Trader trader) {
-		if (pendingOrders.isEmpty()) {
-			return;
-		}
-		for (int i = pendingOrders.i - 1; i >= 0; i--) {
-			Order order = pendingOrders.elements[i];
-			if (order.isFinalized()) {
-				continue;
-			}
-			OrderManager orderManager = configuration.orderManager(order.getSymbol());
-			Trader traderOfOrder = traderOf(order);
-			if (traderOfOrder == null) {
-				log.warn("Cancelling order {} as no trader found for this order", order);
-				order.cancel();
-			} else if (traderOfOrder.latestCandle() == null) {
-				log.warn("Cancelling order {} as latest candle information is available for this symbol", order);
-				order.cancel();
-			}
-
-			if (order.isCancelled() || traderOfOrder != null && orderManager.cancelToReleaseFundsFor(order, traderOfOrder, trader)) {
-				if (order.getStatus() == CANCELLED) {
-					cancelOrder(orderManager, order);
-					return;
+		tradingAccount.forEachTradingManager(tradingManager -> {
+			if (!tradingManager.symbol.equals(this.symbol)) {
+				for (int i = pendingOrders.i - 1; i >= 0; i--) {
+					Order order = pendingOrders.elements[i];
+					if (order.isFinalized()) {
+						continue;
+					}
+					if (tradingManager.orderManager.cancelToReleaseFundsFor(order, tradingManager.trader, trader)) {
+						if (order.getStatus() == CANCELLED) {
+							tradingManager.cancelOrder(order);
+							return;
+						}
+					}
 				}
 			}
-		}
+		});
 	}
 
-	private Order cancelOrder(OrderManager orderManager, Order order) {
+	Order cancelOrder(Order order) {
 		try {
 			order.cancel();
 			tradingAccount.cancel(order);
@@ -294,15 +283,13 @@ public final class TradingManager {
 		} finally {
 			removePendingOrder(order);
 			order = tradingAccount.updateOrderStatus(order);
-			orderFinalized(orderManager, order);
+			orderFinalized(order);
 			logOrderStatus("Cancellation via order manager: ", order);
 		}
 		return order;
 	}
 
 	public Order updateOrder(Order order) {
-		OrderManager orderManager = configuration.orderManager(order.getSymbol());
-
 		if (order.getTrade() != null) {
 			if (!order.getTrade().orderUpdated(order)) {
 				removePendingOrder(order);
@@ -320,14 +307,14 @@ public final class TradingManager {
 			}
 			if (update == null) {
 				log.warn("Lost track of order {}. Trying to cancel it.", order);
-				update = cancelOrder(orderManager, order);
+				update = cancelOrder(order);
 			}
 		}
 
 		if (update.isFinalized()) {
 			logOrderStatus("Order finalized. ", update);
 			removePendingOrder(update);
-			orderFinalized(orderManager, update);
+			orderFinalized(update);
 			return update;
 		} else { // update order status
 			pendingOrders.addOrReplace(update);
@@ -336,22 +323,17 @@ public final class TradingManager {
 		if (update.getExecutedQuantity() != order.getExecutedQuantity() || (tradingAccount.isSimulated() && update instanceof DefaultOrder && ((DefaultOrder) update).hasPartialFillDetails())) {
 			logOrderStatus("Order updated. ", update);
 			tradingAccount.executeUpdateBalances();
-			orderManager.updated(update, traderOf(update), this::resubmit);
+			orderManager.updated(update, trader, this::resubmit);
 		} else {
 			logOrderStatus("Unchanged ", update);
-			orderManager.unchanged(update, traderOf(update), this::resubmit);
+			orderManager.unchanged(update, trader, this::resubmit);
 		}
 
 		//order manager could have cancelled the order
 		if (update.getStatus() == CANCELLED && pendingOrders.contains(update)) {
-			cancelOrder(orderManager, update);
+			cancelOrder(update);
 		}
 		return update;
-	}
-
-
-	public Order cancelOrder(Order order) {
-		return cancelOrder(configuration.orderManager(order.getSymbol()), order);
 	}
 
 	public Order submitOrder(Trader trader, double quantity, Order.Side side, Trade.Side tradeSide, Order.Type type) {
@@ -365,18 +347,14 @@ public final class TradingManager {
 		if (tradingAccount.lockTrading(assetSymbol)) {
 			try {
 				String symbol = assetSymbol + fundSymbol;
-				TradingManager tradingManager = getTradingManagerOf(symbol);
-				if (tradingManager == null) {
-					throw new IllegalStateException("Unable to buy " + quantity + " units of unknown symbol: " + symbol);
-				}
 				if (tradeSide == SHORT) {
 					OrderRequest orderPreparation = prepareOrder(BUY, SHORT, quantity, null);
 					return tradingAccount.executeOrder(orderPreparation);
 				}
-				double maxSpend = tradingManager.allocateFunds(assetSymbol, tradeSide);
+				double maxSpend = allocateFunds(assetSymbol, tradeSide);
 				if (maxSpend > 0) {
 					maxSpend = getTradingFees().takeFee(maxSpend, Order.Type.MARKET, BUY);
-					double expectedCost = quantity * tradingManager.getLatestPrice();
+					double expectedCost = quantity * getLatestPrice();
 					if (expectedCost > maxSpend) {
 						quantity = quantity * (maxSpend / expectedCost);
 					}
@@ -392,11 +370,6 @@ public final class TradingManager {
 	}
 
 	public Order sell(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity) {
-		String symbol = assetSymbol + fundSymbol;
-		TradingManager tradingManager = getTradingManagerOf(symbol);
-		if (tradingManager == null) {
-			throw new IllegalStateException("Unable to sell " + quantity + " units of unknown symbol: " + symbol);
-		}
 		OrderRequest orderPreparation = prepareOrder(SELL, tradeSide, quantity, null);
 		return tradingAccount.executeOrder(orderPreparation);
 	}
@@ -411,8 +384,7 @@ public final class TradingManager {
 			return;
 		}
 
-		OrderManager orderManager = configuration.orderManager(order.getSymbol());
-		cancelOrder(orderManager, order);
+		cancelOrder(order);
 
 		Trade trade = order.getTrade();
 		Context context = trader.context;
@@ -449,10 +421,7 @@ public final class TradingManager {
 		OrderBook book = tradingAccount.getOrderBook(getSymbol(), 0);
 
 
-		OrderManager orderCreator = configuration.orderManager(getSymbol());
-		if (orderCreator != null) {
-			orderCreator.prepareOrder(book, orderPreparation, context);
-		}
+		orderManager.prepareOrder(book, orderPreparation, context);
 		SymbolPriceDetails priceDetails = context.priceDetails();
 		if (!orderPreparation.isCancelled() && orderPreparation.getTotalOrderAmount() > (priceDetails.getMinimumOrderAmount(orderPreparation.getPrice()))) {
 			orderPreparation.setPrice(orderPreparation.getPrice());
@@ -569,79 +538,11 @@ public final class TradingManager {
 		return tradingAccount.getBalanceSnapshot();
 	}
 
-	TradingManager getTradingManagerOf(String symbol) {
-		return allTradingManagers.get(symbol);
-	}
-
-	public Trader getTraderOf(String symbol) {
-		return traders.computeIfAbsent(symbol, (s) -> {
-			TradingManager tradingManager = getTradingManagerOf(symbol);
-			if (tradingManager == null) {
-				return null;
-			}
-			return tradingManager.trader;
-		});
-	}
-
-	void register(TradingManager tradingManager) {
-		this.allTradingManagers.put(tradingManager.getSymbol(), tradingManager);
-	}
-
-	private Trader getTraderOfSymbol(String symbol) {
-		TradingManager a = allTradingManagers.get(symbol);
-		if (a != null) {
-			return a.trader;
-		}
-		return null;
-	}
-
-	public TradingManager[] getAllTradingManagers() {
-		if (tradingManagers == null) {
-			if (allTradingManagers.isEmpty()) {
-				throw new IllegalStateException("Can't calculate total funds in account '" + configuration.id() + "'. Available symbols are: " + configuration.symbols());
-			}
-			this.tradingManagers = allTradingManagers.values().toArray(new TradingManager[0]);
-		}
-		return tradingManagers;
-	}
-
-	private Trader findTrader(String assetSymbol, String fundSymbol) {
-		Trader trader = getTraderOf(assetSymbol + fundSymbol);
-		if (trader != null) {
-			return trader;
-		}
-
-		for (String[] pair : getTradedPairs()) {
-			if (assetSymbol.equals(pair[0])) {
-				trader = getTraderOf(pair[0] + pair[1]);
-				if (trader != null) {
-					return trader;
-				}
-			}
-		}
-		return null;
-	}
-
-
 	public final double allocateFunds(String assetSymbol, Trade.Side tradeSide) {
 		return tradingAccount.allocateFunds(assetSymbol, getReferenceCurrencySymbol(), tradeSide, this);
 	}
 
 	double executeAllocateFunds(String assetSymbol, String fundSymbol, Trade.Side tradeSide) {
-		TradingManager tradingManager = getTradingManagerOf(assetSymbol + fundSymbol);
-		if (tradingManager == null) {
-			Trader trader = getTraderOf(assetSymbol + configuration.referenceCurrency());
-			if (trader == null) {
-				trader = findTrader(assetSymbol, fundSymbol);
-			}
-			if (trader != null) {
-				tradingManager = trader.tradingManager;
-				fundSymbol = tradingManager.getFundSymbol();
-			} else {
-				throw new IllegalStateException("Unable to allocate funds to buy " + assetSymbol + ". Unknown symbol: " + assetSymbol + fundSymbol + ". Trading with " + getTradedSymbols());
-			}
-		}
-
 		double minimumInvestment = configuration.minimumInvestmentAmountPerTrade(assetSymbol);
 		double percentage = configuration.maximumInvestmentPercentagePerAsset(assetSymbol) / 100.0;
 		double maxAmount = configuration.maximumInvestmentAmountPerAsset(assetSymbol);
@@ -657,7 +558,7 @@ public final class TradingManager {
 
 		double allocated = tradingAccount.getAmount(assetSymbol);
 		double shorted = tradingAccount.getShortedAmount(assetSymbol);
-		double unitPrice = tradingManager.getLatestPrice();
+		double unitPrice = getLatestPrice();
 		allocated = allocated * unitPrice;
 		shorted = shorted * unitPrice;
 
@@ -686,38 +587,11 @@ public final class TradingManager {
 		return out;
 	}
 
-	public Collection<String[]> getTradedPairs() {
-		return configuration.tradedWithPairs();
-	}
-
-	public Collection<String> getTradedAssetSymbols() {
-		return configuration.tradedWithPairs().stream().map(p -> p[0]).collect(Collectors.toList());
-	}
-
-	public Collection<String> getTradedSymbols() {
-		return configuration.tradedWithPairs().stream().map(p -> p[0] + p[1]).collect(Collectors.toList());
-	}
-
-	public Collection<String> getTradedFundSymbols() {
-		return configuration.tradedWithPairs().stream().map(p -> p[1]).collect(Collectors.toList());
-	}
-
-	private Trader traderOf(Order order) {
-		return getTraderOfSymbol(order.getSymbol());
-	}
-
-	void orderFinalized(OrderManager orderManager, Order order) {
-		orderManager = orderManager == null ? configuration.orderManager(order.getSymbol()) : orderManager;
+	void orderFinalized(Order order) {
 		try {
 			tradingAccount.executeUpdateBalances();
 		} finally {
-			Trader trader;
-			if (order.getTrade() != null) {
-				trader = order.getTrade().trader();
-			} else {
-				trader = traderOf(order);
-			}
-			notifyFinalized(orderManager, order, trader);
+			notifyFinalized(order, trader);
 			List<Order> attachments;
 			if (order.getParent() != null) {
 				attachments = order.getParent().getAttachments();
@@ -728,18 +602,18 @@ public final class TradingManager {
 				for (Order attached : attachments) {
 					if (attached != order) {
 						attached.cancel();
-						notifyFinalized(orderManager, attached, trader);
+						notifyFinalized(attached, trader);
 					}
 				}
 			}
 		}
 	}
 
-	private void notifyFinalized(OrderManager orderManager, Order order, Trader trader) {
+	private void notifyFinalized(Order order, Trader trader) {
 		try {
 			orderManager.finalized(order, trader);
 		} finally {
-			getTradingManagerOf(order.getSymbol()).notifyOrderFinalized(order);
+			notifyOrderFinalized(order);
 		}
 	}
 
@@ -756,11 +630,11 @@ public final class TradingManager {
 					break;
 				case FILLED:
 					logOrderStatus("Completed order. ", order);
-					orderFinalized(null, order);
+					orderFinalized(order);
 					break;
 				case CANCELLED:
 					logOrderStatus("Could not create order. ", order);
-					orderFinalized(null, order);
+					orderFinalized(order);
 					break;
 			}
 		}
@@ -780,7 +654,6 @@ public final class TradingManager {
 		}
 		new Thread(() -> {
 			Thread.currentThread().setName("Order " + order.getOrderId() + " monitor: " + order.getSide() + " " + order.getSymbol());
-			OrderManager orderManager = configuration.orderManager(order.getSymbol());
 			Order o = order;
 			while (true) {
 				try {

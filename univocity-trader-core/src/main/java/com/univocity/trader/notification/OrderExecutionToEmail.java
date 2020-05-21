@@ -111,7 +111,7 @@ public class OrderExecutionToEmail implements OrderListener {
 			} else {
 				title += " @ " + f.priceToString(order.getPrice()) + " (" + trade.formattedPriceChangePct(order.getPrice()) + ")" + timeShort;
 				details = "Sold " + qty + " " + assetSymbol + " " + typeDescription + " when price reached " + f.priceToString(trader.lastClosingPrice()) + " " + fundSymbol + timeLong + ".";
-				if(trade.exitReason() != null) {
+				if (trade.exitReason() != null) {
 					details += "\nExit reason: " + trade.exitReason();
 				}
 				details += "\nOrder status: " + order.getStatus();
@@ -186,13 +186,13 @@ public class OrderExecutionToEmail implements OrderListener {
 					msg.append(", worth ~").append(f.switchToSymbol(trader.assetSymbol() + referenceCurrencySymbol).priceToString(worth)).append(" ").append(next.getFundSymbol());
 
 					Set<Trade> trades = trader.trades();
-					if(!trades.isEmpty()){
+					if (!trades.isEmpty()) {
 						String indent = ". ";
-						if(trades.size() > 1){
+						if (trades.size() > 1) {
 							msg.append(". Trades:");
 							indent = ".\n\t\t + ";
 						}
-						for(Trade trade : trades) {
+						for (Trade trade : trades) {
 							msg.append(indent);
 							if (trade.averagePrice() > 0) {
 								msg.append("Paid ").append(f.priceToString(trade.averagePrice()));
@@ -228,10 +228,7 @@ public class OrderExecutionToEmail implements OrderListener {
 			}
 		}
 		if (visited.size() <= 1) {
-			TradingManager[] managers =  tradingManager.getAllTradingManagers();
-			for (int i = 0; i < managers.length; i++) {
-				printTotalBalances(balances, visited, msg, total, managers[i]);
-			}
+			tradingManager.getAccount().forEachTradingManager(tradingManager -> printTotalBalances(balances, visited, msg, total, tradingManager));
 		}
 	}
 

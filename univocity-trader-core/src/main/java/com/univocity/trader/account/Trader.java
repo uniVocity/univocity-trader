@@ -367,7 +367,7 @@ public final class Trader {
 			tradingManager.cancelStaleOrdersFor(side, this);
 			amountToSpend = tradingManager.allocateFunds(side);
 			if (amountToSpend <= minimum) {
-				if (tradingManager.exitExistingPositions(tradingManager.assetSymbol, context.latestCandle, strategy)) {
+				if (tradingManager.exitExistingPositions(tradingManager.assetSymbol, context.latestCandle)) {
 					tradingManager.updateBalances();
 					return amountToSpend;
 				} else if (!tradingManager.getAccount().isSimulated()) {

@@ -290,6 +290,8 @@ public abstract class AbstractTradingGroup<T extends AbstractTradingGroup<T>> im
 	}
 
 	public T tradeWithPair(String assetSymbol, String fundSymbol) {
+		assetSymbol = assetSymbol.trim().toUpperCase();
+		fundSymbol = fundSymbol.trim().toUpperCase();
 		tradedPairs.put(assetSymbol + fundSymbol, new String[]{assetSymbol, fundSymbol});
 		supportedSymbols.add(assetSymbol);
 		supportedSymbols.add(fundSymbol);
