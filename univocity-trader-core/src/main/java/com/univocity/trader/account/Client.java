@@ -2,7 +2,6 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.config.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.strategy.*;
@@ -12,13 +11,13 @@ import java.util.*;
 
 public final class Client<T> {
 
-	private TradingManager root;
 	private CandleRepository candleRepository;
 	private Exchange<T, ?> exchange;
 
 	private final List<CandleProcessor<T>> candleProcessors = new ArrayList<>();
 
 	private final AccountManager accountManager;
+	private OrderExecutionToEmail emailNotifier;
 
 	public Client(AccountManager accountManager) {
 		this.accountManager = accountManager;
@@ -46,54 +45,35 @@ public final class Client<T> {
 		}
 		this.candleRepository = candleRepository;
 		this.exchange = exchange;
-		final SymbolPriceDetails priceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol()); //loads price information from exchange
 
-		OrderExecutionToEmail emailNotifier = mailSender != null ? new OrderExecutionToEmail(mailSender) : null;
+		emailNotifier = mailSender != null ? new OrderExecutionToEmail(mailSender) : null;
 
 		Set<Object> allInstances = new HashSet<>();
-		initialize(accountManager.configuration, emailNotifier, priceDetails, allInstances);
-		accountManager.configuration.tradingGroups().forEach(g -> initialize(g, emailNotifier, priceDetails, allInstances));
-		allInstances.clear();
-	}
-
-	private void initialize(AbstractTradingGroup<?> group, OrderExecutionToEmail emailNotifier, SymbolPriceDetails priceDetails, Set<Object> allInstances) {
-		if (!group.isConfigured()) {
-			return;
-		}
-		if (emailNotifier != null) {
-			group.listeners().add(emailNotifier);
-		}
-
-		for (Map.Entry<String, String[]> e : group.symbolPairs().entrySet()) {
-			String assetSymbol = e.getValue()[0].intern();
-			String fundSymbol = e.getValue()[1].intern();
-
-			TradingManager tradingManager = new TradingManager(group, exchange, priceDetails, accountManager, assetSymbol, fundSymbol, Parameters.NULL);
-			if (root == null) {
-				root = tradingManager;
-			}
-
+		TradingManager[] tradingManagers = accountManager.createTradingManagers(exchange, emailNotifier, Parameters.NULL);
+		for (TradingManager tradingManager : tradingManagers) {
 			Engine engine = new TradingEngine(tradingManager, allInstances);
-
 			CandleProcessor<T> processor = new CandleProcessor<T>(candleRepository, engine, exchange);
 			candleProcessors.add(processor);
 		}
+
+		allInstances.clear();
 	}
 
 	void reset() {
 		if (candleRepository != null && exchange != null) {
 			candleProcessors.clear();
-			root = null;
 			initialize(candleRepository, exchange, null);
 		}
 	}
 
 	public void sendBalanceEmail(String title) {
-		root.sendBalanceEmail(title, this);
+		if (emailNotifier != null) {
+			emailNotifier.sendBalanceEmail(title, this);
+		}
 	}
 
 	public void updateBalances() {
-		root.updateBalances();
+		accountManager.updateBalances();
 	}
 
 	public void processCandle(String symbol, Candle candle, boolean initializing) {
