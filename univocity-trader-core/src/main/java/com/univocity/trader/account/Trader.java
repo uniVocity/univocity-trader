@@ -293,7 +293,7 @@ public final class Trader {
 	}
 
 	private StrategyMonitor[] createStrategyMonitors(Set<Object> allInstances) {
-		NewInstances<StrategyMonitor> monitorProvider = tradingManager.getAccount().configuration().monitors();
+		NewInstances<StrategyMonitor> monitorProvider = tradingManager.monitors();
 		StrategyMonitor[] out = monitorProvider == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters(), monitorProvider, "StrategyMonitor", false, allInstances);
 
 		for (int i = 0; i < out.length; i++) {

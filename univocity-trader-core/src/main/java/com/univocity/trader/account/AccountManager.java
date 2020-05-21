@@ -1,15 +1,11 @@
 package com.univocity.trader.account;
 
 import com.univocity.trader.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
-import com.univocity.trader.indicators.base.*;
-import com.univocity.trader.strategy.*;
 import com.univocity.trader.utils.*;
 import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
-import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -17,9 +13,7 @@ import java.util.concurrent.locks.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
-import static com.univocity.trader.account.Trade.Side.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 public class AccountManager implements ClientAccount {
@@ -39,7 +33,7 @@ public class AccountManager implements ClientAccount {
 	Balance[] balancesArray;
 	private final Lock balanceLock;
 
-	final ExchangeClient client;
+	final Client client;
 	private final ClientAccount account;
 	final double marginReserveFactor;
 	final double marginReserveFactorPct;
@@ -59,7 +53,7 @@ public class AccountManager implements ClientAccount {
 		this.marginReserveFactor = account.marginReservePercentage() / 100.0;
 		this.marginReserveFactorPct = marginReserveFactor;
 
-		this.client = new ExchangeClient(this);
+		this.client = new Client(this);
 
 		this.balanceLock = account.isSimulated() ? new FakeLock() : new ReentrantLock();
 
@@ -68,7 +62,7 @@ public class AccountManager implements ClientAccount {
 		}
 	}
 
-	public ExchangeClient getClient() {
+	public Client getClient() {
 		return client;
 	}
 
@@ -352,12 +346,12 @@ public class AccountManager implements ClientAccount {
 		return account.isSimulated();
 	}
 
-	public AccountConfiguration<?> configuration() {
-		return configuration;
+	public String accountId(){
+		return configuration.id();
 	}
 
 	public boolean canShortSell() {
-		return configuration().shortingEnabled();
+		return configuration.shortingEnabled();
 	}
 
 	public final double marginReserveFactorPct() {
@@ -378,5 +372,17 @@ public class AccountManager implements ClientAccount {
 		} finally {
 			balanceLock.unlock();
 		}
+	}
+
+	public String email() {
+		return configuration.email();
+	}
+
+	public TimeZone timeZone() {
+		return configuration.timeZone();
+	}
+
+	public Map<String, String[]> getAllSymbolPairs() {
+		return configuration.getAllSymbolPairs();
 	}
 }

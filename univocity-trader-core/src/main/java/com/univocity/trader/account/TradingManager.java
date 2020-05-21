@@ -34,11 +34,11 @@ public final class TradingManager {
 	protected Trader trader;
 	private Exchange<?, ?> exchange;
 	private final OrderListener[] notifications;
-	private final ExchangeClient client;
+	private final Client client;
 	private OrderExecutionToEmail emailNotifier;
 	private final SymbolPriceDetails priceDetails;
 	private final SymbolPriceDetails referencePriceDetails;
-	private final TradingGroup configuration;
+	private final AbstractTradingGroup<?> configuration;
 	final Map<String, Trader> traders = new ConcurrentHashMap<>();
 	final Map<String, TradingManager> allTradingManagers = new ConcurrentHashMap<>();
 	TradingManager[] tradingManagers;
@@ -47,7 +47,7 @@ public final class TradingManager {
 	final OrderSet orderUpdates = new OrderSet();
 	final Context context;
 
-	public TradingManager(TradingGroup configuration, Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, String assetSymbol, String fundSymbol, Parameters params) {
+	public TradingManager(AbstractTradingGroup<?> configuration, Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, String assetSymbol, String fundSymbol, Parameters params) {
 		if (exchange == null) {
 			throw new IllegalArgumentException("Exchange implementation cannot be null");
 		}
@@ -70,10 +70,9 @@ public final class TradingManager {
 		this.fundSymbol = fundSymbol.intern();
 		this.symbol = (assetSymbol + fundSymbol).intern();
 
-		Instances<OrderListener> listenerProvider = client.getOrderListeners();
+		Instances<OrderListener> listenerProvider = configuration.listeners();
 		this.notifications = listenerProvider != null ? listenerProvider.create(symbol, params) : new OrderListener[0];
-		client.registerTradingManager(this);
-		tradingAccount = client.getAccountManager();
+		this.tradingAccount = client.getAccountManager();
 		this.emailNotifier = getEmailNotifier();
 
 		this.priceDetails = priceDetails.switchToSymbol(symbol);
@@ -146,7 +145,7 @@ public final class TradingManager {
 	}
 
 	double minimumInvestmentAmountPerTrade() {
-		return getAccount().configuration().minimumInvestmentAmountPerTrade(assetSymbol);
+		return configuration.minimumInvestmentAmountPerTrade(assetSymbol);
 	}
 
 	public final Order buy(double quantity, Trade.Side tradeSide) {
@@ -479,7 +478,7 @@ public final class TradingManager {
 		return tradingAccount.getTradingFees();
 	}
 
-	public void sendBalanceEmail(String title, ExchangeClient client) {
+	public void sendBalanceEmail(String title, Client client) {
 		getEmailNotifier().sendBalanceEmail(title, client);
 	}
 
@@ -891,5 +890,13 @@ public final class TradingManager {
 					BigDecimal.valueOf(order.getTotalOrderAmount()).setScale(8, RoundingMode.FLOOR).toPlainString(),
 					order.getFundsSymbol());
 		}
+	}
+
+	public NewInstances<Strategy> strategies() {
+		return configuration.strategies();
+	}
+
+	public NewInstances<StrategyMonitor> monitors() {
+		return configuration.monitors();
 	}
 }

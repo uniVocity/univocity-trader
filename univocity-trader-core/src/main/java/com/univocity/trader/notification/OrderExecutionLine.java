@@ -2,10 +2,7 @@ package com.univocity.trader.notification;
 
 import com.univocity.parsers.annotations.Parsed;
 import com.univocity.trader.SymbolPriceDetails;
-import com.univocity.trader.account.Balance;
-import com.univocity.trader.account.Order;
-import com.univocity.trader.account.Trade;
-import com.univocity.trader.account.Trader;
+import com.univocity.trader.account.*;
 import com.univocity.trader.indicators.base.TimeInterval;
 
 import java.sql.Timestamp;

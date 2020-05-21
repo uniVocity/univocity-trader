@@ -391,4 +391,9 @@ public abstract class AbstractTradingGroup<T extends AbstractTradingGroup<T>> im
 		this.supportedSymbols.addAll(o.supportedSymbols);
 		this.orderManagers.putAll(o.orderManagers);
 	}
+
+	public boolean isConfigured() {
+		return StringUtils.isNoneBlank(referenceCurrency) && !symbols().isEmpty() && !strategies().isEmpty();
+	}
+
 }

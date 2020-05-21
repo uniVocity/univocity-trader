@@ -155,13 +155,14 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> ex
 		parseGroupSetting(properties, propertyName, f, consumer);
 	}
 
+	@Override
 	public boolean isConfigured() {
 		if(tradingGroups.isEmpty()) {
-			return StringUtils.isNoneBlank(referenceCurrency);
+			return super.isConfigured();
 		} else {
 			boolean configured = false;
 			for(TradingGroup group : tradingGroups.values()){
-				configured |= StringUtils.isNoneBlank(group.referenceCurrency);
+				configured |= group.isConfigured();
 			}
 			return configured;
 		}
@@ -248,17 +249,22 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> ex
 		return tradingGroups.computeIfAbsent(id, this::newTradingGroup);
 	}
 
+	public Collection<TradingGroup> tradingGroups(){
+		return Collections.unmodifiableCollection(tradingGroups.values());
+	}
+
 	private TradingGroup newTradingGroup(String id) {
 		TradingGroup out = new TradingGroup(id);
 		out.copyFrom(this);
 		return out;
 	}
 
-	public Set<String> allSymbols(){
-		Set<String> out = new TreeSet<>(symbols());
+	public Map<String, String[]> getAllSymbolPairs(){
+		Map<String, String[]> out = new TreeMap<>();
 		for (TradingGroup tradingGroup : tradingGroups.values()) {
-			out.addAll(tradingGroup.symbols());
+			out.putAll(tradingGroup.symbolPairs());
 		}
+		out.putAll(symbolPairs());
 		return out;
 	}
 }

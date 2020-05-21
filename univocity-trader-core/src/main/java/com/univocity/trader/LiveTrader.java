@@ -24,7 +24,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 
 	private static final Logger log = LoggerFactory.getLogger(LiveTrader.class);
 
-	private List<ExchangeClient<T>> clients = new ArrayList<>();
+	private List<Client<T>> clients = new ArrayList<>();
 
 	private String allClientPairs;
 	private final Map<String, Long> symbols = new ConcurrentHashMap<>();
@@ -48,7 +48,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 					if (now - lastHour > HOUR.ms) {
 						lastHour = System.currentTimeMillis();
 						log.info("Updating balances");
-						clients.forEach(ExchangeClient::updateBalances);
+						clients.forEach(Client::updateBalances);
 					}
 
 					int[] count = new int[]{0};
@@ -128,16 +128,16 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		if (clients.isEmpty()) {
 			for (var account : configuration.accounts()) {
 				ClientAccount clientAccount = exchange.connectToAccount(account);
-				var client = new ExchangeClient<T>(createAccountManager(clientAccount, account));
+				var client = new Client<T>(createAccountManager(clientAccount, account));
 				clients.add(client);
 			}
 		}
 
 		if (allPairs == null) {
 			allPairs = new TreeMap<>();
-			for (ExchangeClient client : clients) {
+			for (Client client : clients) {
 				client.initialize(candleRepository(), exchange, mailSender());
-				allPairs.putAll(client.getSymbolPairs());
+				allPairs.putAll(client.getAllSymbolPairs());
 			}
 		}
 

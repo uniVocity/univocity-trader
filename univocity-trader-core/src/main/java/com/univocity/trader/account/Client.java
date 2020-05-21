@@ -2,15 +2,15 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.config.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.strategy.*;
-import com.univocity.trader.utils.*;
 
 import java.time.*;
 import java.util.*;
 
-public final class ExchangeClient<T> implements Client {
+public final class Client<T> {
 
 	private TradingManager root;
 	private CandleRepository candleRepository;
@@ -20,57 +20,64 @@ public final class ExchangeClient<T> implements Client {
 
 	private final AccountManager accountManager;
 
-	public ExchangeClient(AccountManager accountManager) {
+	public Client(AccountManager accountManager) {
 		this.accountManager = accountManager;
 	}
 
 	public String getId() {
-		return accountManager.configuration().id();
+		return accountManager.accountId();
 	}
 
-	void registerTradingManager(TradingManager tradingManager) {
-		accountManager.register(tradingManager);
+	public String getEmail() {
+		return accountManager.email();
+	}
+
+	public ZoneId getTimezone() {
+		return accountManager.timeZone().toZoneId();
 	}
 
 	AccountManager getAccountManager() {
 		return accountManager;
 	}
 
-	Instances<OrderListener> getOrderListeners() {
-		return accountManager.configuration().listeners();
-	}
-
 	public void initialize(CandleRepository candleRepository, Exchange<T, ?> exchange, SmtpMailSender mailSender) {
-		if (accountManager.configuration().symbolPairs().isEmpty()) {
-			throw new IllegalStateException("No trade symbols defined for client " + accountManager.configuration().id());
+		if (accountManager.getAllSymbolPairs().isEmpty()) {
+			throw new IllegalStateException("No trade symbols defined for client " + accountManager.accountId());
 		}
 		this.candleRepository = candleRepository;
 		this.exchange = exchange;
 		final SymbolPriceDetails priceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol()); //loads price information from exchange
 
-		Set<TradingManager> all = new HashSet<>();
-
-		if (mailSender != null) {
-			accountManager.configuration().listeners().add(new OrderExecutionToEmail(mailSender));
-		}
+		OrderExecutionToEmail emailNotifier = mailSender != null ? new OrderExecutionToEmail(mailSender) : null;
 
 		Set<Object> allInstances = new HashSet<>();
-		for (Map.Entry<String, String[]> e : accountManager.configuration().symbolPairs().entrySet()) {
+		initialize(accountManager.configuration, emailNotifier, priceDetails, allInstances);
+		accountManager.configuration.tradingGroups().forEach(g -> initialize(g, emailNotifier, priceDetails, allInstances));
+		allInstances.clear();
+	}
+
+	private void initialize(AbstractTradingGroup<?> group, OrderExecutionToEmail emailNotifier, SymbolPriceDetails priceDetails, Set<Object> allInstances) {
+		if (!group.isConfigured()) {
+			return;
+		}
+		if (emailNotifier != null) {
+			group.listeners().add(emailNotifier);
+		}
+
+		for (Map.Entry<String, String[]> e : group.symbolPairs().entrySet()) {
 			String assetSymbol = e.getValue()[0].intern();
 			String fundSymbol = e.getValue()[1].intern();
 
-			TradingManager tradingManager = new TradingManager(exchange, priceDetails, accountManager, assetSymbol, fundSymbol, Parameters.NULL);
+			TradingManager tradingManager = new TradingManager(group, exchange, priceDetails, accountManager, assetSymbol, fundSymbol, Parameters.NULL);
 			if (root == null) {
 				root = tradingManager;
 			}
-			all.add(tradingManager);
 
 			Engine engine = new TradingEngine(tradingManager, allInstances);
 
 			CandleProcessor<T> processor = new CandleProcessor<T>(candleRepository, engine, exchange);
 			candleProcessors.add(processor);
 		}
-		allInstances.clear();
 	}
 
 	void reset() {
@@ -97,15 +104,7 @@ public final class ExchangeClient<T> implements Client {
 		candleProcessors.forEach(c -> c.processCandle(symbol, candle, initializing));
 	}
 
-	public String getEmail() {
-		return accountManager.configuration().email();
-	}
-
-	public ZoneId getTimezone() {
-		return accountManager.configuration().timeZone().toZoneId();
-	}
-
-	public Map<String, String[]> getSymbolPairs() {
-		return accountManager.configuration().symbolPairs();
+	public Map<String, String[]> getAllSymbolPairs() {
+		return accountManager.getAllSymbolPairs();
 	}
 }
