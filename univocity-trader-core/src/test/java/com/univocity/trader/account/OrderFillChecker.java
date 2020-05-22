@@ -342,7 +342,7 @@ public class OrderFillChecker {
 
 		Order order = account.executeOrder(req);
 		if (order != null) {
-			order.setTrade(Trade.createPlaceholder(-1, trader, tradeSide));
+			trader.processOrder(order);
 		}
 		return order;
 	}
@@ -351,4 +351,11 @@ public class OrderFillChecker {
 		trader.context.latestCandle(candle);
 		trader.tradingManager.updateOpenOrders();
 	}
+
+	Order executeOrder(Trader trader, OrderRequest or) {
+		Order order = trader.tradingManager.getAccount().executeOrder(or);
+		trader.processOrder(order);
+		return order;
+	}
+
 }

@@ -183,7 +183,7 @@ public class ShortTradingTests extends OrderFillChecker {
 		OrderRequest or = new OrderRequest("ADA", "USDT", Order.Side.SELL, SHORT, 2, null);
 		or.setQuantity(quantity1);
 		or.setTriggerCondition(Order.TriggerCondition.STOP_LOSS, 0.9);
-		Order o = account.executeOrder(or);
+		Order o = executeOrder(trader, or);
 
 		updateOpenOrders(trader, newTick(3, 1.5));
 		assertEquals(Order.Status.NEW, o.getStatus());
@@ -245,7 +245,7 @@ public class ShortTradingTests extends OrderFillChecker {
 		OrderRequest or = new OrderRequest("ADA", "USDT", Order.Side.BUY, SHORT, 2, null);
 		or.setQuantity(quantity1);
 		or.setTriggerCondition(Order.TriggerCondition.STOP_GAIN, 1.2);
-		Order o = account.executeOrder(or);
+		Order o = executeOrder(trader, or);
 
 		updateOpenOrders(trader, newTick(3, 0.8999));
 		assertEquals(Order.Status.NEW, o.getStatus());
@@ -427,13 +427,14 @@ public class ShortTradingTests extends OrderFillChecker {
 		OrderRequest or = new OrderRequest("ADA", "USDT", Order.Side.SELL, SHORT, 2, null);
 		or.setQuantity(quantity1);
 		or.setTriggerCondition(Order.TriggerCondition.STOP_LOSS, 0.9);
-		Order o = account.executeOrder(or);
+		Order o = executeOrder(trader, or);
 
 		//"eats" free balance by locking it up.
 		or = new OrderRequest("BNB", "USDT", Order.Side.BUY, LONG, 3, null);
 		or.setQuantity(1);
 		or.setPrice(61.0);
-		Order bnb = account.executeOrder(or);
+		Trader bnbTrader = account.tradingManagers.get("BNBUSDT")[0].trader;
+		Order bnb = executeOrder(bnbTrader, or);
 
 		updateOpenOrders(trader, newTick(3, 1.5));
 		assertEquals(Order.Status.NEW, o.getStatus());

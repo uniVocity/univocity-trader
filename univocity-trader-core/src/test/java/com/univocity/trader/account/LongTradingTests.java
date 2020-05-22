@@ -115,7 +115,7 @@ public class LongTradingTests extends OrderFillChecker {
 		OrderRequest or = new OrderRequest("ADA", "USDT", Order.Side.SELL, LONG, 2, null);
 		or.setQuantity(quantity1);
 		or.setTriggerCondition(Order.TriggerCondition.STOP_LOSS, 0.9);
-		Order o = account.executeOrder(or);
+		Order o = executeOrder(trader, or);
 
 		updateOpenOrders(trader, newTick(3, 1.5));
 		assertEquals(Order.Status.NEW, o.getStatus());
@@ -164,7 +164,7 @@ public class LongTradingTests extends OrderFillChecker {
 		OrderRequest or = new OrderRequest("ADA", "USDT", Order.Side.BUY, LONG, 2, null);
 		or.setQuantity(quantity1);
 		or.setTriggerCondition(Order.TriggerCondition.STOP_GAIN, 1.2);
-		Order o = account.executeOrder(or);
+		Order o = executeOrder(trader, or);
 
 		updateOpenOrders(trader, newTick(3, 0.8999));
 		assertEquals(Order.Status.NEW, o.getStatus());
@@ -395,6 +395,7 @@ public class LongTradingTests extends OrderFillChecker {
 		cancelOrder(account, order, time++);
 
 		order = submitOrder(account, Order.Side.BUY, LONG, time++, 4.0);
+		assertNotNull(order);
 		assertEquals(99.98990001, account.getBalance("USDT").getLocked(), DELTA);
 		executeOrder(account, order, time);
 
