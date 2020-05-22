@@ -127,39 +127,26 @@ public class SimulatedAccountManager extends AccountManager implements Simulated
 		this.balances.clear();
 		this.balancesArray = null;
 
-		fundAllocationCache.clear();
-		pendingOrders.clear();
-
-		traders.clear();
-		allTradingManagers.clear();
+		latestPrices.clear();
+		tradingManagers.clear();
 		tradingManagers = null;
 
 		client.reset();
 		return this;
 	}
 
-	@Override
-	protected void updateOpenOrders(String symbol, Candle candle) {
-		if (this.account.updateOpenOrders(symbol, candle)) {
-			for (int i = pendingOrders.i - 1; i >= 0; i--) {
-				Order order = pendingOrders.elements[i];
-				if (symbol.equals(order.getSymbol())) {
-					updateOrder(order);
-				}
-			}
+	protected void updateOpenOrders(String symbol) {
+		TradingManager[] tradingManagers = this.tradingManagers.get(symbol);
+		for(int i = 0; i < tradingManagers.length;i++){
+			tradingManagers[i].orderTracker.updateOpenOrders();
 		}
 	}
 
 	public void notifySimulationEnd() {
-		for (int i = pendingOrders.i - 1; i >= 0; i--) {
-			pendingOrders.elements[i].cancel();
-		}
-		for (TradingManager t : this.getAllTradingManagers()) {
-			updateOpenOrders(t.getSymbol(), t.getLatestCandle());
-		}
-
+		forEachTradingManager(t -> t.orderTracker.cancelAllOrders());
+		forEachTradingManager(t -> t.orderTracker.updateOpenOrders());
 		balances.clear();
-		pendingOrders.clear();
+		forEachTradingManager(t -> t.orderTracker.clear());
 	}
 
 	public AccountManager lockAmount(String symbol, double amount) {

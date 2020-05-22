@@ -15,7 +15,6 @@ import static com.univocity.trader.config.Allocation.*;
 public class SimulatedClientAccount implements ClientAccount {
 
 	private final AtomicLong orderIdGenerator = new AtomicLong(0);
-	private Map<String, OrderSet> orders = new HashMap<>();
 	private TradingFees tradingFees;
 	protected SimulatedAccountManager accountManager;
 	private final OrderFillEmulator orderFillEmulator;
@@ -111,7 +110,6 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 
 		if (order != null) {
-			activateOrder(order);
 			List<OrderRequest> attachments = orderDetails.attachedOrderRequests();
 			if (attachments != null) {
 				for (OrderRequest attachment : attachments) {
@@ -122,10 +120,6 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 
 		return order;
-	}
-
-	public void activateOrder(Order order) {
-		orders.computeIfAbsent(order.getSymbol(), (s) -> new OrderSet()).addOrReplace(order);
 	}
 
 	private DefaultOrder createOrder(OrderRequest request, double quantity, double price) {
@@ -158,14 +152,9 @@ public class SimulatedClientAccount implements ClientAccount {
 	}
 
 	@Override
-	public Order updateOrderStatus(Order order) {
-		return order;
-	}
-
-	@Override
 	public void cancel(Order order) {
 		order.cancel();
-		updateOpenOrders(order.getSymbol(), null);
+		updateOpenOrder((DefaultOrder) order);
 	}
 
 	@Override
@@ -186,16 +175,14 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	protected final OrderSet ordersOf(String symbol) {
-		return orders.get(symbol);
+	@Override
+	public Order updateOrderStatus(Order order) {
+		updateOpenOrder((DefaultOrder) order);
+		return order;
 	}
 
-	public final void updateOpenOrder(DefaultOrder order, Candle candle) {
-		OrderSet s = ordersOf(order.getSymbol());
-		updateOpenOrder(s, order, candle);
-	}
 
-	private final void updateOpenOrder(OrderSet s, DefaultOrder order, Candle candle) {
+	private final void updateOpenOrder(DefaultOrder order) {
 		activateAndTryFill(candle, order);
 
 		Order triggeredOrder = null;
@@ -245,25 +232,10 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	public final boolean updateOpenOrders(String symbol, Candle candle) {
-		OrderSet s = ordersOf(symbol);
-		if (s == null || s.isEmpty()) {
-			return false;
-		}
-
-		for (int i = s.i - 1; i >= 0; i--) {
-			Order pendingOrder = s.elements[i];
-			DefaultOrder order = (DefaultOrder) pendingOrder;
-			updateOpenOrder(s, order, candle);
-		}
-		return true;
-	}
-
 	private void processAttachedOrder(DefaultOrder parent, DefaultOrder attached, Candle candle) {
 		double locked = parent.getExecutedQuantity();
 		if (locked > 0) {
 			attached.updateTime(candle != null ? candle.openTime : parent.getTime());
-			activateOrder(attached);
 			accountManager.waitForFill(attached);
 			activateAndTryFill(candle, attached);
 		}
@@ -287,7 +259,7 @@ public class SimulatedClientAccount implements ClientAccount {
 			triggerPrice = (attachment.getTriggerPrice() != 0.0) ? attachment.getTriggerPrice() : attachment.getPrice();
 			trigger = attachment.getTriggerCondition();
 		}
-		if (triggerPrice == null) {
+		if (triggerPrice == 0.0) {
 			return false;
 		}
 
@@ -358,7 +330,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	protected void updateBalances(DefaultOrder order, Candle candle) {
+	private void updateBalances(DefaultOrder order, Candle candle) {
 		final String asset = order.getAssetsSymbol();
 		final String funds = order.getFundsSymbol();
 

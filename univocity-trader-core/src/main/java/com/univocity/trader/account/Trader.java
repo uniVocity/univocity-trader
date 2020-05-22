@@ -573,11 +573,7 @@ public final class Trader {
 		} catch (Exception e) {
 			log.error("Error processing " + order.getSide() + " order: " + order, e);
 		} finally {
-			try {
-				tradingManager.notifyOrderSubmitted(order, context.trade);
-			} finally {
-				tradingManager.initiateOrderMonitoring(order);
-			}
+			tradingManager.notifyOrderSubmitted(order, context.trade);
 		}
 	}
 

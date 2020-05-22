@@ -43,7 +43,7 @@ public class AccountManager implements ClientAccount {
 
 	final Map<String, double[]> latestPrices = new HashMap<>();
 	private static final double[] DEFAULT = new double[]{-1.0};
-	private Map<String, TradingManager[]> tradingManagers;
+	Map<String, TradingManager[]> tradingManagers;
 
 	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration) {
 		if (StringUtils.isBlank(configuration.referenceCurrency())) {
