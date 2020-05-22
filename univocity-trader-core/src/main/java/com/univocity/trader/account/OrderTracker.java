@@ -12,9 +12,7 @@ public final class OrderTracker {
 
 	private static final Logger log = LoggerFactory.getLogger(OrderTracker.class);
 
-	final OrderSet pendingOrders = new OrderSet();
-	final OrderSet orderUpdates = new OrderSet();
-
+	private final OrderSet pendingOrders = new OrderSet();
 	private final TradingManager tradingManager;
 	private final AccountManager account;
 	private final OrderManager orderManager;
@@ -29,16 +27,19 @@ public final class OrderTracker {
 
 
 	public void waitForFill(Order order) {
-		if(order.isFinalized()){
+		if (order.isFinalized()) {
 			return;
 		}
-		pendingOrders.addOrReplace(order);
+		synchronized (pendingOrders) {
+			pendingOrders.addOrReplace(order);
+		}
 		if (account.isSimulated()) {
 			return;
 		}
 		new Thread(() -> {
 			Thread.currentThread().setName("Order " + order.getOrderId() + " monitor: " + order.getSide() + " " + order.getSymbol());
 			Order o = order;
+			Order updated = order;
 			while (true) {
 				try {
 					try {
@@ -48,21 +49,14 @@ public final class OrderTracker {
 					}
 
 					if (!o.isFinalized()) {
-						o = tradingManager.getAccount().updateOrderStatus(o);
-					} else {
-						o = null;
+						updated = account.updateOrderStatus(o);
 					}
-					if (o != null) {
-						if (order.getTrade() == null) {
-							throw new IllegalStateException("Trade associated with order " + order + " can't be null");
-						}
-						synchronized (orderUpdates) {
-							orderUpdates.addOrReplace(o);
-						}
-					}
-					if (o == null || o.isFinalized()) {
+
+					processOrderUpdate(o, updated);
+					if (o.isFinalized()) {
 						return;
 					}
+					o = updated;
 				} catch (Exception e) {
 					log.error("Error tracking state of order " + o, e);
 					return;
@@ -72,26 +66,27 @@ public final class OrderTracker {
 	}
 
 	public boolean waitingForFill(String assetSymbol, Order.Side side, Trade.Side tradeSide) {
-		for (int i = pendingOrders.i - 1; i >= 0; i--) {
-			Order order = pendingOrders.elements[i];
+		synchronized (pendingOrders) {
+			for (int i = pendingOrders.i - 1; i >= 0; i--) {
+				Order order = pendingOrders.elements[i];
 
-			if (order.isFinalized() || order.getTradeSide() != tradeSide) {
-				continue;
+				if (order.isFinalized() || order.getTradeSide() != tradeSide) {
+					continue;
+				}
+
+				if (order.getSide() == side && order.getAssetsSymbol().equals(assetSymbol)) {
+					return true;
+				}
+				// If we want to know if there is an open order to buy BTC,
+				// and the symbol is "ADABTC", we need to invert the side as
+				// we are selling ADA to buy BTC.
+				if (side == BUY && order.isSell() && order.getFundsSymbol().equals(assetSymbol)) {
+					return true;
+
+				} else if (side == SELL && order.isBuy() && order.getFundsSymbol().equals(assetSymbol)) {
+					return true;
+				}
 			}
-
-			if (order.getSide() == side && order.getAssetsSymbol().equals(assetSymbol)) {
-				return true;
-			}
-			// If we want to know if there is an open order to buy BTC,
-			// and the symbol is "ADABTC", we need to invert the side as
-			// we are selling ADA to buy BTC.
-			if (side == BUY && order.isSell() && order.getFundsSymbol().equals(assetSymbol)) {
-				return true;
-
-			} else if (side == SELL && order.isBuy() && order.getFundsSymbol().equals(assetSymbol)) {
-				return true;
-			}
-
 		}
 		return false;
 	}
@@ -150,69 +145,37 @@ public final class OrderTracker {
 	}
 
 	public void removePendingOrder(Order order) {
-		pendingOrders.remove(order);
-		synchronized (orderUpdates) {
-			orderUpdates.remove(order);
+		synchronized (pendingOrders) {
+			pendingOrders.remove(order);
 		}
 	}
-
 
 	public void updateOpenOrders() {
-		synchronized (orderUpdates) {
-			for (int i = orderUpdates.i - 1; i >= 0; i--) {
-				Order order = orderUpdates.elements[i];
-				updateOrder(order);
+		if (account.isSimulated()) {
+			for (int i = pendingOrders.i - 1; i >= 0; i--) {
+				Order order = pendingOrders.elements[i];
+				Order update = account.updateOrderStatus(order);
+				processOrderUpdate(order, update);
 			}
 		}
 	}
 
-	Order cancelOrder(Order order) {
-		try {
-			order.cancel();
-			account.cancel(order);
-		} catch (Exception e) {
-			log.error("Failed to execute cancellation of order '" + order + "' on exchange", e);
-		} finally {
+	private void processOrderUpdate(Order order, Order update) {
+		if (!order.getTrade().orderUpdated(order)) {
 			removePendingOrder(order);
-			order = account.updateOrderStatus(order);
-			orderFinalized(order);
-			logOrderStatus("Cancellation via order manager: ", order);
-		}
-		return order;
-	}
-
-	public Order updateOrder(Order order) {
-		if (order.getTrade() != null) {
-			if (!order.getTrade().orderUpdated(order)) {
-				removePendingOrder(order);
-				return order;
-			}
-		}
-
-		Order update = order;
-		if (!account.isSimulated()) {
-			if (pendingOrders.contains(order)) {
-				order = pendingOrders.get(order);
-			}
-			synchronized (orderUpdates) {
-				update = orderUpdates.get(order);
-			}
-			if (update == null) {
-				log.warn("Lost track of order {}. Trying to cancel it.", order);
-				update = cancelOrder(order);
-			}
+			return;
 		}
 
 		if (update.isFinalized()) {
 			logOrderStatus("Order finalized. ", update);
 			removePendingOrder(update);
 			orderFinalized(update);
-			return update;
+			return;
 		} else { // update order status
 			pendingOrders.addOrReplace(update);
 		}
 
-		if (update.getExecutedQuantity() != order.getExecutedQuantity() || (account.isSimulated() && update instanceof DefaultOrder && ((DefaultOrder) update).hasPartialFillDetails())) {
+		if ((account.isSimulated() && update instanceof DefaultOrder && ((DefaultOrder) update).hasPartialFillDetails()) || update.getExecutedQuantity() != order.getExecutedQuantity()) {
 			logOrderStatus("Order updated. ", update);
 			account.executeUpdateBalances();
 			orderManager.updated(update, trader, tradingManager::resubmit);
@@ -225,7 +188,28 @@ public final class OrderTracker {
 		if (update.getStatus() == CANCELLED && pendingOrders.contains(update)) {
 			cancelOrder(update);
 		}
-		return update;
+	}
+
+
+	Order cancelOrder(Order order) {
+		synchronized (pendingOrders) {
+			if (!pendingOrders.contains(order)) {
+				return order;
+			}
+		}
+
+		try {
+			order.cancel();
+			account.cancel(order);
+		} catch (Exception e) {
+			log.error("Failed to execute cancellation of order '" + order + "' on exchange", e);
+		} finally {
+			removePendingOrder(order);
+			order = account.updateOrderStatus(order);
+			orderFinalized(order);
+			logOrderStatus("Cancellation via order manager: ", order);
+		}
+		return order;
 	}
 
 	public void cancelStaleOrdersFor(Trade.Side side, Trader trader) {
@@ -248,19 +232,18 @@ public final class OrderTracker {
 	}
 
 	public void cancelAllOrders() {
-		synchronized (orderUpdates) {
+		synchronized (pendingOrders) {
 			for (int i = pendingOrders.i - 1; i >= 0; i--) {
 				Order order = pendingOrders.elements[i];
 				order.cancel();
-				orderUpdates.addOrReplace(order);
+				processOrderUpdate(order, order);
 			}
 		}
 	}
 
 	public void clear() {
-		pendingOrders.clear();
-		synchronized (orderUpdates) {
-			orderUpdates.clear();
+		synchronized (pendingOrders) {
+			pendingOrders.clear();
 		}
 	}
 }

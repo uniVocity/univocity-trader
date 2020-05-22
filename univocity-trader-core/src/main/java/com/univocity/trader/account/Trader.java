@@ -45,23 +45,14 @@ public final class Trader {
 	boolean liquidating = false;
 	public final Context context;
 
-	/**
-	 * Creates a new trader for a given symbol. For internal use only.
-	 *
-	 * @param tradingManager the object responsible for managing the entire trading workflow of a symbol
-	 * @param allInstances   all known instances of {@link StrategyMonitor} that have been created so far, used
-	 *                       to validate no single {@link StrategyMonitor} instance is shared among different
-	 *                       {@code Trader} instances.
-	 */
-	public Trader(TradingManager tradingManager, Set<Object> allInstances) {
+	Trader(TradingManager tradingManager, StrategyMonitor[] strategyMonitors) {
 		this.id = tradingManager.getAccount().getTradeIdGenerator();
 		this.tradingManager = tradingManager;
-		this.tradingManager.trader = this;
 
 		this.context = tradingManager.context;
 		this.context.trader = this;
 
-		this.monitors = createStrategyMonitors(allInstances);
+		this.monitors = strategyMonitors;
 		List<OrderListener> tmp = new ArrayList<>();
 		for (StrategyMonitor monitor : monitors) {
 			if (monitor instanceof OrderListener) {
@@ -132,11 +123,7 @@ public final class Trader {
 	 * @return a signal indicating the action taken by this {@code Trader}, i.e. {@code BUY} if it bought assets,
 	 */
 	public void trade(Candle candle, Signal signal, Strategy strategy) {
-		if (candle == null) {
-			throw new IllegalArgumentException("Candle of " + symbol() + " can't be null");
-		}
-
-		context.latestCandle = candle;
+		context.latestCandle(candle);
 		context.signal = signal;
 		context.strategy = strategy;
 		context.strategyMonitor = null;
@@ -286,20 +273,6 @@ public final class Trader {
 		}
 		return false;
 
-	}
-
-	StrategyMonitor[] createStrategyMonitors() {
-		return createStrategyMonitors(new HashSet<>());
-	}
-
-	private StrategyMonitor[] createStrategyMonitors(Set<Object> allInstances) {
-		NewInstances<StrategyMonitor> monitorProvider = tradingManager.monitors();
-		StrategyMonitor[] out = monitorProvider == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters(), monitorProvider, "StrategyMonitor", false, allInstances);
-
-		for (int i = 0; i < out.length; i++) {
-			out[i].setContext(this.context);
-		}
-		return out;
 	}
 
 	boolean isLong(Strategy strategy) {

@@ -67,7 +67,7 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 
 	@Override
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
-		return new Double(0);
+		return 0;
 	}
 
 	@Override

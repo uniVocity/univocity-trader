@@ -6,7 +6,6 @@ import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.simulation.*;
 
-import java.util.*;
 import java.util.function.*;
 
 import static junit.framework.TestCase.*;
@@ -34,7 +33,8 @@ public class OrderFillChecker {
 				.referenceCurrency("USDT")
 				.tradeWithPair("ADA", "BNB")
 				.tradeWith("ADA", "BNB")
-				.enableShorting();
+				.enableShorting()
+				.strategies().add(() -> candle -> Signal.NEUTRAL);
 
 		if (orderManager != null) {
 			accountCfg.orderManager(orderManager);
@@ -44,13 +44,14 @@ public class OrderFillChecker {
 
 		SimulatedClientAccount clientAccount = new SimulatedClientAccount(accountCfg, configuration.simulation());
 		SimulatedAccountManager account = clientAccount.getAccount();
+		account.createTradingManagers(new SimulatedExchange(account), null, Parameters.NULL);
 
-		TradingManager m = new TradingManager(accountCfg, new SimulatedExchange(account), null, account, "ADA", "USDT", Parameters.NULL);
-		Trader trader = new Trader(m, new HashSet<>());
+		TradingManager m = account.tradingManagers.get("ADAUSDT")[0];
+		Trader trader = m.trader;
 		trader.trade(new Candle(1, 2, 0.04371, 0.4380, 0.4369, CLOSE, 100.0), Signal.NEUTRAL, null);
 
-		m = new TradingManager(accountCfg, new SimulatedExchange(account), null, account, "BNB", "USDT", Parameters.NULL);
-		trader = new Trader(m, new HashSet<>());
+		m = account.tradingManagers.get("BNBUSDT")[0];
+		trader = m.trader;
 		trader.trade(new Candle(1, 2, 50, 50, 50, 50, 100.0), Signal.NEUTRAL, null);
 
 		account.setAmount("BNB", 1);
@@ -295,6 +296,7 @@ public class OrderFillChecker {
 	}
 
 	void executeOrder(SimulatedAccountManager account, Order order, double price, long time) {
+		assertNotNull(order);
 		order.getTrade().trader().context.latestCandle(newTick(time, price));
 		order.getTrade().trader().tradingManager.updateOpenOrders();
 	}
@@ -332,18 +334,20 @@ public class OrderFillChecker {
 		req.setQuantity(units);
 		req.setPrice(price);
 
+		Trader trader = account.tradingManagers.get(symbol + "USDT")[0].trader;
 		if (orderManager != null) {
-			Trader trader = account.tradingManagers.get(symbol + "USDT")[0].trader;
 			trader.context.latestCandle = next;
 			orderManager.prepareOrder(null, req, trader.context);
 		}
 
 		Order order = account.executeOrder(req);
-
+		if (order != null) {
+			order.setTrade(Trade.createPlaceholder(-1, trader, tradeSide));
+		}
 		return order;
 	}
 
-	void updateOpenOrders(Trader trader, Candle candle){
+	void updateOpenOrders(Trader trader, Candle candle) {
 		trader.context.latestCandle(candle);
 		trader.tradingManager.updateOpenOrders();
 	}

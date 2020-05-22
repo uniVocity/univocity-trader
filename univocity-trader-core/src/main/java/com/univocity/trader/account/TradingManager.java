@@ -18,6 +18,7 @@ import java.util.concurrent.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Trade.Side.*;
 import static com.univocity.trader.config.Allocation.*;
+import static com.univocity.trader.utils.AbstractNewInstances.*;
 
 public final class TradingManager {
 
@@ -29,7 +30,7 @@ public final class TradingManager {
 	final String assetSymbol;
 	final String fundSymbol;
 	private final AccountManager tradingAccount;
-	protected Trader trader;
+	protected final Trader trader;
 	private Exchange<?, ?> exchange;
 	private final OrderListener[] notifications;
 	private final Client client;
@@ -44,7 +45,7 @@ public final class TradingManager {
 
 	final Context context;
 
-	TradingManager(AbstractTradingGroup<?> configuration, Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, String assetSymbol, String fundSymbol, Parameters params) {
+	TradingManager(AbstractTradingGroup<?> configuration, Exchange exchange, SymbolPriceDetails priceDetails, AccountManager account, String assetSymbol, String fundSymbol, Parameters params, Set<Object> allInstances) {
 		if (exchange == null) {
 			throw new IllegalArgumentException("Exchange implementation cannot be null");
 		}
@@ -76,8 +77,19 @@ public final class TradingManager {
 		this.referencePriceDetails = priceDetails.switchToSymbol(getReferenceCurrencySymbol());
 		this.configuration = configuration;
 		this.orderManager = configuration.orderManager(symbol);
-		this.orderTracker = new OrderTracker(this);
 		this.context = new Context(this, params);
+		this.trader = new Trader(this, createStrategyMonitors(allInstances, params));
+		this.orderTracker = new OrderTracker(this);
+	}
+
+	private StrategyMonitor[] createStrategyMonitors(Set<Object> allInstances, Parameters parameters) {
+		NewInstances<StrategyMonitor> monitorProvider = monitors();
+		StrategyMonitor[] out = monitorProvider == null ? new StrategyMonitor[0] : getInstances(getSymbol(), parameters, monitorProvider, "StrategyMonitor", false, allInstances);
+
+		for (int i = 0; i < out.length; i++) {
+			out[i].setContext(this.context);
+		}
+		return out;
 	}
 
 
@@ -220,7 +232,8 @@ public final class TradingManager {
 
 	public Order submitOrder(Trader trader, double quantity, Order.Side side, Trade.Side tradeSide, Order.Type type) {
 		OrderRequest request = prepareOrder(side, tradeSide, quantity, null);
-		Order order = tradingAccount.executeOrder(request);
+		request.setType(type);
+		Order order = executeOrder(request);
 		trader.processOrder(order);
 		return order;
 	}
@@ -230,7 +243,7 @@ public final class TradingManager {
 			try {
 				if (tradeSide == SHORT) {
 					OrderRequest orderPreparation = prepareOrder(BUY, SHORT, quantity, null);
-					return tradingAccount.executeOrder(orderPreparation);
+					return executeOrder(orderPreparation);
 				}
 				double maxSpend = allocateFunds(tradeSide);
 				if (maxSpend > 0) {
@@ -241,7 +254,7 @@ public final class TradingManager {
 					}
 					quantity = quantity * 0.9999;
 					OrderRequest orderPreparation = prepareOrder(BUY, tradeSide, quantity, null);
-					return tradingAccount.executeOrder(orderPreparation);
+					return executeOrder(orderPreparation);
 				}
 			} finally {
 				tradingAccount.unlockTrading(assetSymbol);
@@ -252,7 +265,7 @@ public final class TradingManager {
 
 	public Order sell(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity) {
 		OrderRequest orderPreparation = prepareOrder(SELL, tradeSide, quantity, null);
-		return tradingAccount.executeOrder(orderPreparation);
+		return executeOrder(orderPreparation);
 	}
 
 	void resubmit(Order order) {
@@ -273,7 +286,7 @@ public final class TradingManager {
 		orderTracker.updateOpenOrders();
 
 		OrderRequest request = prepareOrder(order.getSide(), order.getTradeSide(), order.getRemainingQuantity(), order);
-		order = tradingAccount.executeOrder(request);
+		order = executeOrder(request);
 
 		Strategy strategy = getTrader().strategyOf(order);
 
@@ -281,6 +294,10 @@ public final class TradingManager {
 		context.strategy = strategy;
 		context.exitReason = trade == null ? "Order resubmission" : "Order resubmission: " + trade.exitReason();
 		trader.processOrder(order);
+	}
+
+	private Order executeOrder(OrderRequest request){
+		return tradingAccount.executeOrder(request);
 	}
 
 	private OrderRequest prepareOrder(Order.Side side, Trade.Side tradeSide, double quantity, Order resubmissionFrom) {

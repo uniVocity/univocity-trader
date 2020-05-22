@@ -35,7 +35,7 @@ public final class TradingEngine implements Engine {
 
 	public TradingEngine(TradingManager tradingManager, Parameters parameters, Set<Object> allInstances) {
 		this.tradingManager = tradingManager;
-		this.trader = new Trader(tradingManager, allInstances);
+		this.trader = tradingManager.getTrader();
 
 		NewInstances<Strategy> strategies = tradingManager.strategies();
 		this.strategies = getInstances(tradingManager.getSymbol(), parameters, strategies, "Strategy", true, allInstances);

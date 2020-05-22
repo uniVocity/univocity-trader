@@ -398,8 +398,10 @@ public class AccountManager implements ClientAccount {
 		}
 		Map<String, List<TradingManager>> tmp = new HashMap<>();
 
-		initialize(tmp, configuration, exchange, emailNotifier, parameters);
-		configuration.tradingGroups().forEach(g -> initialize(tmp, g, exchange, emailNotifier, parameters));
+		Set<Object> allInstances = new HashSet<>();
+		initialize(tmp, configuration, exchange, emailNotifier, parameters, allInstances);
+		configuration.tradingGroups().forEach(g -> initialize(tmp, g, exchange, emailNotifier, parameters, allInstances));
+		allInstances.clear();
 
 		if (tmp.isEmpty()) {
 			throw new IllegalStateException("Account has not been configured to trade.");
@@ -407,9 +409,10 @@ public class AccountManager implements ClientAccount {
 
 		this.tradingManagers = new HashMap<>();
 		tmp.forEach((k, v) -> tradingManagers.put(k, v.toArray(TradingManager[]::new)));
+
 	}
 
-	private void initialize(Map<String, List<TradingManager>> out, AbstractTradingGroup<?> group, Exchange exchange, OrderExecutionToEmail emailNotifier, Parameters parameters) {
+	private void initialize(Map<String, List<TradingManager>> out, AbstractTradingGroup<?> group, Exchange exchange, OrderExecutionToEmail emailNotifier, Parameters parameters, Set<Object> allInstances) {
 		if (!group.isConfigured()) {
 			return;
 		}
@@ -425,7 +428,7 @@ public class AccountManager implements ClientAccount {
 
 			latestPrices.put(e.getKey(), new double[1]);
 
-			TradingManager tradingManager = new TradingManager(group, exchange, priceDetails, this, assetSymbol, fundSymbol, parameters);
+			TradingManager tradingManager = new TradingManager(group, exchange, priceDetails, this, assetSymbol, fundSymbol, parameters, allInstances);
 			out.computeIfAbsent(e.getKey(), s -> new ArrayList<>()).add(tradingManager);
 		}
 	}
