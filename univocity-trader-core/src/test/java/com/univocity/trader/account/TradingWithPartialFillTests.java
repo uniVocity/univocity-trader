@@ -26,8 +26,8 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
-		Trader trader = account.getTraderOf("ADAUSDT");
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		tradeOnPrice(trader, 1, 1.0, BUY);
 		final Trade trade = trader.trades().iterator().next();
@@ -55,8 +55,8 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
-		Trader trader = account.getTraderOf("ADAUSDT");
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		tradeOnPrice(trader, 1, 1.0, BUY);
 		final Trade trade = trader.trades().iterator().next();
@@ -68,7 +68,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(39.995960004, account.getBalance("USDT").getLocked(), DELTA);
 		assertEquals(6.956004, order.getRemainingQuantity(), DELTA);
 
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(2, 0.5)); //next tick should fill 6.956004 units at $0.5
+		updateOpenOrders(trader,  newTick(2, 0.5)); //next tick should fill 6.956004 units at $0.5
 
 		assertTrue(order.isFinalized());
 		assertEquals(100.0, order.getFillPct());
@@ -95,14 +95,14 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
-		Trader trader = account.getTraderOf("ADAUSDT");
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		tradeOnPrice(trader, ++time, 1.0, BUY);
 
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(++time, 0.5)); //next tick should fill 6.956004 units at $0.5
+		updateOpenOrders(trader,  newTick(++time, 0.5)); //next tick should fill 6.956004 units at $0.5
 		tradeOnPrice(trader, ++time, 0.8, BUY);
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(++time, 0.6)); //next tick should fill 6.956004 units at $0.4
+		updateOpenOrders(trader,  newTick(++time, 0.6)); //next tick should fill 6.956004 units at $0.4
 
 		Balance ada = account.getBalance("ADA");
 		Balance usdt = account.getBalance("USDT");
@@ -131,14 +131,14 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(balance + subtractFees(33), usdt.getFree(), DELTA);
 		assertEquals(0.0, usdt.getLocked(), DELTA);
 
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(++time, 2.0)); //fills another 33 units
+		updateOpenOrders(trader,  newTick(++time, 2.0)); //fills another 33 units
 		assertEquals(quantity - 66, order.getRemainingQuantity(), DELTA);
 		assertEquals(quantity - 66, ada.getLocked(), DELTA);
 		assertEquals(0.0, ada.getFree(), DELTA);
 		assertEquals(balance + subtractFees(33) + subtractFees(33 * 2.0), usdt.getFree(), DELTA);
 		assertEquals(0.0, usdt.getLocked(), DELTA);
 
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(++time, 1.5)); //fills rest of the order
+		updateOpenOrders(trader,  newTick(++time, 1.5)); //fills rest of the order
 		assertEquals(0, order.getRemainingQuantity(), DELTA);
 		assertEquals(0, ada.getLocked(), DELTA);
 		assertEquals(0.0, ada.getFree(), DELTA);
@@ -155,14 +155,14 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
-		Trader trader = account.getTraderOf("ADAUSDT");
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		tradeOnPrice(trader, ++time, 1.0, BUY);
 
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(++time, 0.5)); //next tick should fill 6.956004 units at $0.5
+		updateOpenOrders(trader,  newTick(++time, 0.5)); //next tick should fill 6.956004 units at $0.5
 		tradeOnPrice(trader, ++time, 0.8, BUY);
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(++time, 0.6)); //next tick should fill 6.956004 units at $0.4
+		updateOpenOrders(trader,  newTick(++time, 0.6)); //next tick should fill 6.956004 units at $0.4
 
 		Balance ada = account.getBalance("ADA");
 		Balance usdt = account.getBalance("USDT");
@@ -191,7 +191,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(balance + subtractFees(33), usdt.getFree(), DELTA);
 		assertEquals(0.0, usdt.getLocked(), DELTA);
 
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(++time, 2.0)); //fills another 33 units
+		updateOpenOrders(trader,  newTick(++time, 2.0)); //fills another 33 units
 		assertEquals(quantity - 66, order.getRemainingQuantity(), DELTA);
 		assertEquals(quantity - 66, ada.getLocked(), DELTA);
 		assertEquals(0.0, ada.getFree(), DELTA);
@@ -199,7 +199,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(0.0, usdt.getLocked(), DELTA);
 
 		order.cancel();
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(++time, 1.5));
+		updateOpenOrders(trader,  newTick(++time, 1.5));
 		assertEquals(quantity - 66, order.getRemainingQuantity(), DELTA);
 		assertEquals(0.0, ada.getLocked(), DELTA);
 		assertEquals(quantity - 66, ada.getFree(), DELTA);
@@ -216,8 +216,8 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
-		Trader trader = account.getTraderOf("ADAUSDT");
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		Balance ada = account.getBalance("ADA");
 		Balance usdt = account.getBalance("USDT");
@@ -279,7 +279,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(33.0, account.getBalance("ADA").getLocked(), DELTA);
 
 		//fills another 33 ada
-		tick(account.getTraderOf("ADAUSDT"), time++, 0.5);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, time++, 0.5);
 
 		assertEquals(99.98990001, account.getBalance("USDT").getLocked(), DELTA);
 		assertEquals(0.01009999, account.getBalance("USDT").getFree(), DELTA);
@@ -300,7 +300,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(66.0, account.getBalance("ADA").getLocked(), DELTA);
 
 		//sell some of the ADA, 33 units available to sell only.
-		tick(account.getTraderOf("ADAUSDT"), time++, 0.6);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, time++, 0.6);
 
 		assertEquals(0.0, account.getBalance("USDT").getLocked(), DELTA);
 		assertEquals(100 - order.getTotalTraded() - order.getFeesPaid() + subtractFees(33 * 0.6), account.getBalance("USDT").getFree(), DELTA);
@@ -347,7 +347,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(33.0, account.getBalance("ADA").getLocked(), DELTA);
 
 		//fills another 33 ada
-		tick(account.getTraderOf("ADAUSDT"), time++, 0.5);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, time++, 0.5);
 
 		assertEquals(99.98990001, account.getBalance("USDT").getLocked(), DELTA);
 		assertEquals(0.01009999, account.getBalance("USDT").getFree(), DELTA);
@@ -370,7 +370,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		double price = 0.5 * 0.99; //loss of 1%
 
 		//sell some of the ADA, 33 units available to sell only.
-		tick(account.getTraderOf("ADAUSDT"), time++, price);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, time++, price);
 
 		assertEquals(0.0, account.getBalance("USDT").getLocked(), DELTA);
 		assertEquals(100 - order.getTotalTraded() - order.getFeesPaid() + subtractFees(33 * price), account.getBalance("USDT").getFree(), DELTA);
@@ -418,7 +418,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(33.0, account.getBalance("ADA").getShorted(), DELTA);
 
 		//fills another 33 ada
-		tick(account.getTraderOf("ADAUSDT"), time++, 0.5);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, time++, 0.5);
 
 		assertEquals((66 * 0.5) + (66 * 0.5 / 2.0) - feesOn(66 * 0.5), account.getBalance("USDT").getMarginReserve("ADA"), DELTA); //proceeds + 50% reserve
 		assertEquals(49.945005 - (66 * 0.5 / 2.0), account.getBalance("USDT").getLocked(), DELTA);  //50% of traded amount moved from locked to margin reserve
@@ -447,7 +447,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(66.0, account.getBalance("ADA").getShorted(), DELTA);
 
 		//buy some of the ADA back using bracket order, 33 units available to buy only.
-		tick(account.getTraderOf("ADAUSDT"), time++, 0.4);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, time++, 0.4);
 
 		assertEquals(0.0, account.getBalance("ADA").getFree(), DELTA);
 		assertEquals(0.0, account.getBalance("ADA").getLocked(), DELTA);
@@ -483,19 +483,19 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration()
+		account.configuration
 				.minimumInvestmentAmountPerTrade(10.0);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		double reservedBalance = account.getMarginReserve("USDT", "ADA");
 
 		//fills short order
 		tradeOnPrice(trader, 1, 0.9, SELL);
-		tick(account.getTraderOf("ADAUSDT"), 10, 0.9);
-		tick(account.getTraderOf("ADAUSDT"), 11, 0.9);
-		tick(account.getTraderOf("ADAUSDT"), 12, 0.9);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, 10, 0.9);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, 11, 0.9);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, 12, 0.9);
 
 		Trade trade = trader.trades().iterator().next();
 		double quantity1 = checkTradeAfterShortSell(usdBalance, reservedBalance, trade, 100.0, 0.0, 0.9, 0.9, 0.9);
@@ -541,7 +541,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(newMargin, account.getMarginReserve("USDT", "ADA"), DELTA);
 
 		//Another partial fill
-		tick(account.getTraderOf("ADAUSDT"), 20, 1.2);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, 20, 1.2);
 		quantityAfterCover = quantityAfterCover - 33.0;
 		assertEquals(quantityAfterCover, account.getShortedAmount("ADA"), DELTA);
 		profitLoss = 66 * adjustedShortPrice - 66 * 1.2 - feesOn(66 * 1.2);
@@ -552,7 +552,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(newMargin, account.getMarginReserve("USDT", "ADA"), DELTA);
 
 		//Another partial fill
-		tick(account.getTraderOf("ADAUSDT"), 21, 1.2);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, 21, 1.2);
 		quantityAfterCover = quantityAfterCover - 33.0;
 		assertEquals(quantityAfterCover, account.getShortedAmount("ADA"), DELTA);
 		profitLoss = 99 * adjustedShortPrice - 99 * 1.2 - feesOn(99 * 1.2);
@@ -563,7 +563,7 @@ public class TradingWithPartialFillTests extends OrderFillChecker {
 		assertEquals(newMargin, account.getMarginReserve("USDT", "ADA"), DELTA);
 
 		//Last partial fill
-		tick(account.getTraderOf("ADAUSDT"), 22, 1.2);
+		tick(account.tradingManagers.get("ADAUSDT")[0].trader, 22, 1.2);
 		quantityAfterCover = 0;
 		assertEquals(quantityAfterCover, account.getShortedAmount("ADA"), DELTA);
 		profitLoss = 110.98889999999989 * adjustedShortPrice - 110.98889999999989 * 1.2 - feesOn(110.98889999999989 * 1.2);

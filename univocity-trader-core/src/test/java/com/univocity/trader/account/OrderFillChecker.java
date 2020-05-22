@@ -45,12 +45,12 @@ public class OrderFillChecker {
 		SimulatedClientAccount clientAccount = new SimulatedClientAccount(accountCfg, configuration.simulation());
 		SimulatedAccountManager account = clientAccount.getAccount();
 
-		TradingManager m = new TradingManager(new SimulatedExchange(account), null, account, "ADA", "USDT", Parameters.NULL);
-		Trader trader = new Trader(m, new Context(m, Parameters.NULL), new HashSet<>());
+		TradingManager m = new TradingManager(accountCfg, new SimulatedExchange(account), null, account, "ADA", "USDT", Parameters.NULL);
+		Trader trader = new Trader(m, new HashSet<>());
 		trader.trade(new Candle(1, 2, 0.04371, 0.4380, 0.4369, CLOSE, 100.0), Signal.NEUTRAL, null);
 
-		m = new TradingManager(new SimulatedExchange(account), null, account, "BNB", "USDT", Parameters.NULL);
-		trader = new Trader(m, new Context(m, Parameters.NULL), new HashSet<>());
+		m = new TradingManager(accountCfg, new SimulatedExchange(account), null, account, "BNB", "USDT", Parameters.NULL);
+		trader = new Trader(m, new HashSet<>());
 		trader.trade(new Candle(1, 2, 50, 50, 50, 50, 100.0), Signal.NEUTRAL, null);
 
 		account.setAmount("BNB", 1);
@@ -72,7 +72,8 @@ public class OrderFillChecker {
 
 	Candle tick(Trader trader, long time, double price) {
 		Candle out = newTick(time + 1, price);
-		trader.tradingManager.updateOpenOrders(trader.symbol(), out);
+		trader.context.latestCandle(out);
+		trader.tradingManager.updateOpenOrders();
 		return out;
 	}
 
@@ -294,8 +295,8 @@ public class OrderFillChecker {
 	}
 
 	void executeOrder(SimulatedAccountManager account, Order order, double price, long time) {
-		Trader trader = account.getTraderOf(order.getSymbol());
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(time, price));
+		order.getTrade().trader().context.latestCandle(newTick(time, price));
+		order.getTrade().trader().tradingManager.updateOpenOrders();
 	}
 
 	void cancelOrder(SimulatedAccountManager account, Order order, long time) {
@@ -303,9 +304,10 @@ public class OrderFillChecker {
 	}
 
 	void cancelOrder(SimulatedAccountManager account, Order order, double price, long time) {
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = order.getTrade().trader();
 		order.cancel();
-		trader.tradingManager.updateOpenOrders(trader.symbol(), newTick(time, price));
+		order.getTrade().trader().context.latestCandle(newTick(time, price));
+		trader.tradingManager.updateOpenOrders();
 	}
 
 	void assertNoChangeInFunds(SimulatedAccountManager account, String symbol, String marginSymbol, double initialBalance) {
@@ -331,7 +333,7 @@ public class OrderFillChecker {
 		req.setPrice(price);
 
 		if (orderManager != null) {
-			Trader trader = account.getTraderOf(symbol + "USDT");
+			Trader trader = account.tradingManagers.get(symbol + "USDT")[0].trader;
 			trader.context.latestCandle = next;
 			orderManager.prepareOrder(null, req, trader.context);
 		}
@@ -339,5 +341,10 @@ public class OrderFillChecker {
 		Order order = account.executeOrder(req);
 
 		return order;
+	}
+
+	void updateOpenOrders(Trader trader, Candle candle){
+		trader.context.latestCandle(candle);
+		trader.tradingManager.updateOpenOrders();
 	}
 }

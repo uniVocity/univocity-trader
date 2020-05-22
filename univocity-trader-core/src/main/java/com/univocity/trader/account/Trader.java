@@ -412,10 +412,10 @@ public final class Trader {
 			if (amountToSpend <= 0) {
 				return false;
 			}
-			order = tradingManager.buy(amountToSpend / context.latestCandle.close, LONG);
+			order = tradingManager.buy(LONG,amountToSpend / context.latestCandle.close);
 		} else if (tradeSide == SHORT) {
 			double shortedQuantity = accountManager.getBalance(referenceCurrencySymbol(), Balance::getShorted);
-			order = tradingManager.buy(shortedQuantity, SHORT);
+			order = tradingManager.buy(SHORT, shortedQuantity);
 		}
 		if (order != null) {
 			processOrder(order);
@@ -466,7 +466,7 @@ public final class Trader {
 				log.warn("Not enough funds in margin reserve to cover short of {} {} @ {} {} per unit. Reserve: {}, required {} {}", assetSymbol(), shortToCover, trade.lastClosingPrice(), fundSymbol(), reserveFunds, shortToCover * trade.lastClosingPrice(), fundSymbol());
 			}
 
-			Order order = tradingManager.buy(shortToCover, SHORT);
+			Order order = tradingManager.buy(SHORT, shortToCover);
 			if (order != null) {
 				processOrder(order);
 				return true;

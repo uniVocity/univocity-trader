@@ -29,6 +29,9 @@ public final class OrderTracker {
 
 
 	public void waitForFill(Order order) {
+		if(order.isFinalized()){
+			return;
+		}
 		pendingOrders.addOrReplace(order);
 		if (account.isSimulated()) {
 			return;

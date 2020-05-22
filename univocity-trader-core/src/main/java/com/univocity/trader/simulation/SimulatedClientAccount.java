@@ -183,6 +183,7 @@ public class SimulatedClientAccount implements ClientAccount {
 
 
 	private final void updateOpenOrder(DefaultOrder order) {
+		Candle candle = order.getTrade().latestCandle();
 		activateAndTryFill(candle, order);
 
 		Order triggeredOrder = null;
@@ -206,8 +207,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		order.setFeesPaid(order.getFeesPaid() + getTradingFees().feesOnPartialFill(order));
 
 		if (order.isFinalized()) {
-			s.remove(order);
-//			accountManager.removePendingOrder(order);
+			order.getTrade().trader().tradingManager.removePendingOrder(order);
 			if (order.getParent() != null) { //order is child of a bracket order
 				updateBalances(order, candle);
 				for (Order attached : order.getParent().getAttachments()) { //cancel all open orders
@@ -236,7 +236,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		double locked = parent.getExecutedQuantity();
 		if (locked > 0) {
 			attached.updateTime(candle != null ? candle.openTime : parent.getTime());
-			accountManager.waitForFill(attached);
+			parent.getTrade().trader().tradingManager.waitForFill(attached);
 			activateAndTryFill(candle, attached);
 		}
 	}

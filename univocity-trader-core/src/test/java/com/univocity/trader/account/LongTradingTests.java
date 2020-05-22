@@ -22,7 +22,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 		account.setAmount("USDT", initialBalance);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, 1, 1.0, BUY);
@@ -59,9 +59,9 @@ public class LongTradingTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, 1, 1.0, BUY);
@@ -98,9 +98,9 @@ public class LongTradingTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, 1, 1.0, BUY);
@@ -117,17 +117,17 @@ public class LongTradingTests extends OrderFillChecker {
 		or.setTriggerCondition(Order.TriggerCondition.STOP_LOSS, 0.9);
 		Order o = account.executeOrder(or);
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(3, 1.5));
+		updateOpenOrders(trader, newTick(3, 1.5));
 		assertEquals(Order.Status.NEW, o.getStatus());
 		assertFalse(o.isActive());
 		assertEquals(usdBalance, account.getAmount("USDT"), DELTA);
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(4, 0.8999));
+		updateOpenOrders(trader, newTick(4, 0.8999));
 		assertEquals(Order.Status.NEW, o.getStatus());
 		assertTrue(o.isActive());
 		assertEquals(usdBalance, account.getAmount("USDT"), DELTA);
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(4, 0.92));
+		updateOpenOrders(trader, newTick(4, 0.92));
 		assertEquals(FILLED, o.getStatus());
 		assertTrue(o.isActive());
 		assertEquals(0.0, account.getAmount("ADA"), DELTA);
@@ -142,9 +142,9 @@ public class LongTradingTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, 1, 1.0, BUY);
@@ -166,19 +166,19 @@ public class LongTradingTests extends OrderFillChecker {
 		or.setTriggerCondition(Order.TriggerCondition.STOP_GAIN, 1.2);
 		Order o = account.executeOrder(or);
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(3, 0.8999));
+		updateOpenOrders(trader, newTick(3, 0.8999));
 		assertEquals(Order.Status.NEW, o.getStatus());
 		assertFalse(o.isActive());
 		assertEquals(usdBalance - (addFees(o.getTotalOrderAmount())), account.getAmount("USDT"), DELTA);
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(4, 1.5));
+		updateOpenOrders(trader, newTick(4, 1.5));
 		assertTrue(o.isActive());
 		assertEquals(Order.Status.NEW, o.getStatus()); //can't fill because price is too high and we want to pay 1.2
 		assertEquals(usdBalance - addFees(o.getTotalOrderAmount()), account.getAmount("USDT"), DELTA);
 
 
 		double previousUsdBalance = usdBalance;
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(5, 0.8));
+		updateOpenOrders(trader, newTick(5, 0.8));
 		assertTrue(o.isActive());
 		assertEquals(FILLED, o.getStatus());
 
@@ -205,7 +205,7 @@ public class LongTradingTests extends OrderFillChecker {
 		double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
 
 		initialBalance = testLongMarketBracketOrder(account, initialBalance, 1.0, -0.1, 10);
 		initialBalance = testLongMarketBracketOrder(account, initialBalance, 1.0, -0.1, 20);
@@ -215,7 +215,7 @@ public class LongTradingTests extends OrderFillChecker {
 	}
 
 	double testLongMarketBracketOrder(SimulatedAccountManager account, double initialBalance, double unitPrice, double priceIncrement, long time) {
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, ++time, unitPrice, BUY);
@@ -252,8 +252,8 @@ public class LongTradingTests extends OrderFillChecker {
 
 		unitPrice = unitPrice + priceIncrement;
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(++time, unitPrice)); //this finalizes all orders
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(++time, unitPrice)); //so this should not do anything
+		updateOpenOrders(trader, newTick(++time, unitPrice)); //this finalizes all orders
+		updateOpenOrders(trader, newTick(++time, unitPrice)); //so this should not do anything
 
 		assertEquals(0.0, account.getBalance("ADA").getLocked(), DELTA);
 		assertEquals(0.0, account.getBalance("ADA").getFree(), DELTA);
@@ -291,7 +291,7 @@ public class LongTradingTests extends OrderFillChecker {
 		double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
 
 		initialBalance = testLongLimitBracketOrder(account, initialBalance, 1.0, -0.1, 10);
 		initialBalance = testLongLimitBracketOrder(account, initialBalance, 1.0, -0.1, 20);
@@ -301,7 +301,7 @@ public class LongTradingTests extends OrderFillChecker {
 	}
 
 	double testLongLimitBracketOrder(SimulatedAccountManager account, double initialBalance, double unitPrice, double priceIncrement, long time) {
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, ++time, unitPrice, BUY);
@@ -338,7 +338,7 @@ public class LongTradingTests extends OrderFillChecker {
 		assertEquals(parent, profitOrder.getParent());
 		assertEquals(parent, lossOrder.getParent());
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(++time, unitPrice + priceIncrement)); //price increment goes way beyond limit
+		updateOpenOrders(trader, newTick(++time, unitPrice + priceIncrement)); //price increment goes way beyond limit
 
 		double currentBalance = account.getAmount("USDT");
 
@@ -352,7 +352,7 @@ public class LongTradingTests extends OrderFillChecker {
 
 			unitPrice = unitPrice * 0.995;  //decrease 0.5% to allow limit order to fill
 
-			trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(++time, unitPrice)); //price increment is now in range.
+			updateOpenOrders(trader, newTick(++time, unitPrice)); //price increment is now in range.
 
 			assertEquals(FILLED, lossOrder.getStatus());
 			assertEquals(CANCELLED, profitOrder.getStatus());
@@ -451,9 +451,9 @@ public class LongTradingTests extends OrderFillChecker {
 		double unitPrice = 0.5;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, ++time, unitPrice, BUY);

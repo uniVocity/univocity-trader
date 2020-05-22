@@ -22,11 +22,11 @@ public class ShortTradingTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration()
+		account.configuration
 				.maximumInvestmentAmountPerTrade(MAX)
 				.minimumInvestmentAmountPerTrade(10.0);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		double reservedBalance = account.getMarginReserve("USDT", "ADA");
@@ -80,10 +80,10 @@ public class ShortTradingTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration()
+		account.configuration
 				.minimumInvestmentAmountPerTrade(10.0);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		assertEquals(150.0, trader.holdings());
 
@@ -161,9 +161,9 @@ public class ShortTradingTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, 1, 1.0, SELL);
@@ -185,16 +185,16 @@ public class ShortTradingTests extends OrderFillChecker {
 		or.setTriggerCondition(Order.TriggerCondition.STOP_LOSS, 0.9);
 		Order o = account.executeOrder(or);
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(3, 1.5));
+		updateOpenOrders(trader, newTick(3, 1.5));
 		assertEquals(Order.Status.NEW, o.getStatus());
 		assertFalse(o.isActive());
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(4, 0.8999));
+		updateOpenOrders(trader, newTick(4, 0.8999));
 		assertEquals(Order.Status.NEW, o.getStatus());
 		assertTrue(o.isActive());
 
 		//triggers another short sell at 0.92 (amount on trigger is set to 0.9, and locked balance is based on that 0.9 figure)
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(4, 0.92));
+		updateOpenOrders(trader, newTick(4, 0.92));
 		assertEquals(Order.Status.FILLED, o.getStatus());
 		assertTrue(o.isActive());
 
@@ -226,9 +226,9 @@ public class ShortTradingTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double shortUnitPrice = 1.0;
 		double usdBalance = account.getAmount("USDT");
@@ -247,19 +247,19 @@ public class ShortTradingTests extends OrderFillChecker {
 		or.setTriggerCondition(Order.TriggerCondition.STOP_GAIN, 1.2);
 		Order o = account.executeOrder(or);
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(3, 0.8999));
+		updateOpenOrders(trader, newTick(3, 0.8999));
 		assertEquals(Order.Status.NEW, o.getStatus());
 		assertFalse(o.isActive());
 
 		usdBalance = account.getAmount("USDT");
 		checkBalancesAfterShort(initialBalance, usdBalance, 40.0, shortUnitPrice);
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(4, 1.5));
+		updateOpenOrders(trader, newTick(4, 1.5));
 		assertTrue(o.isActive());
 		assertEquals(Order.Status.NEW, o.getStatus()); //can't fill because price is too high and we want to pay 1.2
 
 		double previousUsdBalance = usdBalance;
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(5, 0.8));
+		updateOpenOrders(trader, newTick(5, 0.8));
 		assertTrue(o.isActive());
 		assertEquals(FILLED, o.getStatus());
 
@@ -287,7 +287,7 @@ public class ShortTradingTests extends OrderFillChecker {
 		double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
 
 		initialBalance = testShortBracketOrder(account, initialBalance, 1.0, -0.1, 10);
 		initialBalance = testShortBracketOrder(account, initialBalance, 1.0, -0.1, 20);
@@ -297,7 +297,7 @@ public class ShortTradingTests extends OrderFillChecker {
 	}
 
 	private double testShortBracketOrder(SimulatedAccountManager account, double initialBalance, final double unitPrice, double priceIncrement, long time) {
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		double marginReserve = account.getMarginReserve("USDT", "ADA");
@@ -334,8 +334,8 @@ public class ShortTradingTests extends OrderFillChecker {
 
 		double newUnitPrice = unitPrice + priceIncrement;
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(++time, newUnitPrice)); //this finalizes all orders
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(++time, newUnitPrice)); //so this should not do anything
+		updateOpenOrders(trader, newTick(++time, newUnitPrice));//this finalizes all orders
+		updateOpenOrders(trader, newTick(++time, newUnitPrice)); //so this should not do anything
 
 		assertEquals(0.0, account.getBalance("ADA").getLocked(), DELTA);
 		assertEquals(0.0, account.getBalance("ADA").getFree(), DELTA);
@@ -406,9 +406,9 @@ public class ShortTradingTests extends OrderFillChecker {
 		final double initialBalance = 100;
 
 		account.setAmount("USDT", initialBalance);
-		account.configuration().maximumInvestmentAmountPerTrade(MAX);
+		account.configuration.maximumInvestmentAmountPerTrade(MAX);
 
-		Trader trader = account.getTraderOf("ADAUSDT");
+		Trader trader = account.tradingManagers.get("ADAUSDT")[0].trader;
 
 		double usdBalance = account.getAmount("USDT");
 		tradeOnPrice(trader, 1, 1.0, SELL);
@@ -435,21 +435,21 @@ public class ShortTradingTests extends OrderFillChecker {
 		or.setPrice(61.0);
 		Order bnb = account.executeOrder(or);
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(3, 1.5));
+		updateOpenOrders(trader, newTick(3, 1.5));
 		assertEquals(Order.Status.NEW, o.getStatus());
 		assertFalse(o.isActive());
 
 		//won't fill BNB purchase order
-		trader.tradingManager.updateOpenOrders("BNBUSDT", newTick(3, 62.0));
+		updateOpenOrders(trader, newTick(3, 62.0));
 		assertEquals(Order.Status.NEW, bnb.getStatus());
 
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(4, 0.8999));
+		updateOpenOrders(trader, newTick(4, 0.8999));
 		assertEquals(Order.Status.NEW, o.getStatus());
 		assertTrue(o.isActive());
 
 		//triggers another short sell at 1.0 (amount on trigger is set to 0.9, and locked balance is based on that 0.9 figure)
 		//uses part of locked balance
-		trader.tradingManager.updateOpenOrders("ADAUSDT", newTick(4, 1.0));
+		updateOpenOrders(trader, newTick(4, 1.0));
 		assertEquals(Order.Status.FILLED, o.getStatus());
 		assertTrue(o.isActive());
 
@@ -459,7 +459,7 @@ public class ShortTradingTests extends OrderFillChecker {
 		assertEquals(assetsAt1_0, assetsAt0_90, DELTA);
 
 		bnb.cancel();
-		trader.tradingManager.updateOpenOrders("BNBUSDT", newTick(4, 62.0));
+		updateOpenOrders(trader, newTick(4, 62.0));
 
 	}
 

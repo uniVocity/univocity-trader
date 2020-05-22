@@ -142,35 +142,6 @@ public final class TradingManager {
 		return configuration.minimumInvestmentAmountPerTrade(assetSymbol);
 	}
 
-	public final Order buy(double quantity, Trade.Side tradeSide) {
-		return buy(assetSymbol, fundSymbol, tradeSide, quantity);
-	}
-
-//	public boolean switchTo(String ticker, Signal trade, String exitSymbol) {
-//		String targetSymbol = exitSymbol + fundSymbol;
-//		double targetUnitPrice = getLatestPrice(exitSymbol, fundSymbol);
-//		if (targetUnitPrice <= 0.0) {
-//			return false;
-//		}
-//
-//		final Trader purchaseTrader = getTraderOf(targetSymbol);
-//		if (trader != null) {
-//			double quantityToSell = tradingAccount.allocateFunds(exitSymbol, assetSymbol);
-//			double saleUnitPrice = trader.getLastClosingPrice();
-//			double saleAmount = quantityToSell * saleUnitPrice;
-//			double quantityToBuy = saleAmount / targetUnitPrice;
-//
-//			trader.setExitReason("Switching from " + ticker + " to " + targetSymbol);
-//
-//			if (trade == SELL) {
-//				return processOrder(trader, tradingAccount.sell(assetSymbol, exitSymbol, quantityToSell));
-//			} else {
-//				return processOrder(purchaseTrader, tradingAccount.buy(exitSymbol, assetSymbol, quantityToBuy));
-//			}
-//		}
-//		return false;
-//	}
-
 	public Order sell(double quantity, Trade.Side tradeSide) {
 		if (!trader.liquidating && quantity * getLatestPrice() < minimumInvestmentAmountPerTrade()) {
 			return null;
@@ -196,10 +167,6 @@ public final class TradingManager {
 
 	public double getCash() {
 		return tradingAccount.getAmount(fundSymbol);
-	}
-
-	public double allocateFunds(Trade.Side tradeSide) {
-		return allocateFunds(assetSymbol, tradeSide);
 	}
 
 	public double getTotalFundsInReferenceCurrency() {
@@ -258,15 +225,14 @@ public final class TradingManager {
 		return order;
 	}
 
-	public Order buy(String assetSymbol, String fundSymbol, Trade.Side tradeSide, double quantity) {
+	public Order buy(Trade.Side tradeSide, double quantity) {
 		if (tradingAccount.lockTrading(assetSymbol)) {
 			try {
-				String symbol = assetSymbol + fundSymbol;
 				if (tradeSide == SHORT) {
 					OrderRequest orderPreparation = prepareOrder(BUY, SHORT, quantity, null);
 					return tradingAccount.executeOrder(orderPreparation);
 				}
-				double maxSpend = allocateFunds(assetSymbol, tradeSide);
+				double maxSpend = allocateFunds(tradeSide);
 				if (maxSpend > 0) {
 					maxSpend = getTradingFees().takeFee(maxSpend, Order.Type.MARKET, BUY);
 					double expectedCost = quantity * getLatestPrice();
@@ -457,7 +423,7 @@ public final class TradingManager {
 		return tradingAccount.getBalanceSnapshot();
 	}
 
-	public final double allocateFunds(String assetSymbol, Trade.Side tradeSide) {
+	public final double allocateFunds(Trade.Side tradeSide) {
 		return tradingAccount.allocateFunds(assetSymbol, getReferenceCurrencySymbol(), tradeSide, this);
 	}
 
@@ -562,5 +528,13 @@ public final class TradingManager {
 
 	public void updateOpenOrders() {
 		orderTracker.updateOpenOrders();
+	}
+
+	public void waitForFill(Order order){
+		orderTracker.waitForFill(order);
+	}
+
+	public void removePendingOrder(DefaultOrder order) {
+		orderTracker.removePendingOrder(order);
 	}
 }

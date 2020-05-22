@@ -10,7 +10,6 @@ import java.util.concurrent.*;
 public class MockClientAccount implements ClientAccount {
 
 	private SimulatedClientAccount account;
-	private final OrderSet orders = new OrderSet();
 
 	private OrderFillEmulator mockOrderFill = (order, candle) -> {
 		if (!order.isFinalized()) {
@@ -44,17 +43,7 @@ public class MockClientAccount implements ClientAccount {
 
 	@Override
 	public Order updateOrderStatus(Order order) {
-		Order out;
-		synchronized (orders) {
-			out = orders.get(order);
-			if (out == null) {
-				out = order;
-			}
-		}
-		if (out != null) {
-			return copy(out);
-		}
-		return null;
+		return copy(account.updateOrderStatus(order));
 	}
 
 	@Override
@@ -63,6 +52,9 @@ public class MockClientAccount implements ClientAccount {
 	}
 
 	private Order copy(Order order) {
+		if(order == null){
+			return null;
+		}
 		DefaultOrder out = new DefaultOrder(((DefaultOrder) order).getInternalId(), order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), Trade.Side.LONG, order.getTime());
 		out.setStatus(order.getStatus());
 		out.setExecutedQuantity(order.getExecutedQuantity());
@@ -77,24 +69,12 @@ public class MockClientAccount implements ClientAccount {
 
 	@Override
 	public Order executeOrder(OrderRequest orderDetails) {
-		Order out = account.executeOrder(orderDetails);
-		if (out == null) {
-			return null;
-		}
-		synchronized (orders) {
-			orders.addOrReplace(out);
-		}
-		return out;
+		return account.executeOrder(orderDetails);
 	}
 
 	@Override
 	public ConcurrentHashMap<String, Balance> updateBalances() {
-		synchronized (orders) {
-			for (int i = orders.i - 1; i >= 0; i--) {
-				DefaultOrder order = (DefaultOrder) orders.elements[i];
-				account.updateOpenOrder(order, order.getTrade().latestCandle());
-			}
-		}
+		account.accountManager.forEachTradingManager(TradingManager::updateOpenOrders);
 
 		var tmp = account.updateBalances();
 		var out = new ConcurrentHashMap<String, Balance>();
@@ -110,12 +90,6 @@ public class MockClientAccount implements ClientAccount {
 
 	@Override
 	public void cancel(Order order) {
-		Order toCancel;
-		synchronized (orders) {
-			toCancel = orders.get(order);
-		}
-		if (toCancel != null) {
-			account.cancel(toCancel);
-		}
+		account.cancel(order);
 	}
 }
