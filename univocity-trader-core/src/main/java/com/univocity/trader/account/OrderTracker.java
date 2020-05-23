@@ -161,11 +161,6 @@ public final class OrderTracker {
 	}
 
 	private void processOrderUpdate(Order order, Order update) {
-		if (!order.getTrade().orderUpdated(order)) {
-			removePendingOrder(order);
-			return;
-		}
-
 		if (update.isFinalized()) {
 			logOrderStatus("Order finalized. ", update);
 			removePendingOrder(update);
@@ -206,7 +201,6 @@ public final class OrderTracker {
 			log.error("Failed to execute cancellation of order '" + order + "' on exchange", e);
 		} finally {
 			removePendingOrder(order);
-//			order = account.updateOrderStatus(order);
 			orderFinalized(order);
 			logOrderStatus("Cancellation via order manager: ", order);
 		}
@@ -246,5 +240,13 @@ public final class OrderTracker {
 		synchronized (pendingOrders) {
 			pendingOrders.clear();
 		}
+	}
+
+	public Order getOrder(Order order) {
+		Order latestUpdate;
+		synchronized (pendingOrders) {
+			latestUpdate = pendingOrders.get(order);
+		}
+		return latestUpdate == null ? order : latestUpdate;
 	}
 }

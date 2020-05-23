@@ -40,8 +40,7 @@ public final class Trade implements Comparable<Trade> {
 	private String exitReason;
 	private double averagePrice = 0.0;
 	protected final OrderSet position = new OrderSet();
-	private final OrderSet exitOrders = new OrderSet();
-	private final OrderSet pastOrders = new OrderSet();
+	final OrderSet exitOrders = new OrderSet();
 
 	//these two are used internally only to calculate
 	// average prices with fees taken into account.
@@ -99,8 +98,9 @@ public final class Trade implements Comparable<Trade> {
 		try {
 			if (!exitOrders.isEmpty()) {
 				for (int i = exitOrders.i - 1; i >= 0; i--) {
-					if (!exitOrders.elements[i].isFinalized()) {
-						trader.tradingManager.cancelOrder(exitOrders.elements[i]);
+					Order order = trader.getOrder(exitOrders.elements[i]);
+					if (!order.isFinalized()) {
+						trader.tradingManager.cancelOrder(order);
 					}
 				}
 			}
@@ -318,20 +318,6 @@ public final class Trade implements Comparable<Trade> {
 		return 0;
 	}
 
-	boolean orderUpdated(Order order) {
-		if (!pastOrders.contains(order)) {
-			if (!(position.replace(order) || exitOrders.replace(order))) {
-				if (!(order.isCancelled() && pastOrders.contains(order.getParent()))) {
-					log.warn("Could not update order {} in trade {}", order, this);
-				}
-			} else {
-				return true;
-			}
-		}
-		return false;
-	}
-
-
 	private void updateAveragePrice(OrderSet orders) {
 		if (isPlaceholder) {
 			return;
@@ -342,7 +328,7 @@ public final class Trade implements Comparable<Trade> {
 		totalSpent = 0.0;
 		totalUnits = 0.0;
 		for (int i = orders.i - 1; i >= 0; i--) {
-			Order order = orders.elements[i];
+			Order order = trader.getOrder(orders.elements[i]);
 			double fees = order.getFeesPaid();
 			totalSpent += order.getTotalTraded() + (order.isBuy() ? fees : -fees);
 			totalUnits += order.getExecutedQuantity();
@@ -433,8 +419,15 @@ public final class Trade implements Comparable<Trade> {
 		return stopped;
 	}
 
-	public Collection<Order> position() {
-		return position.asList();
+	public List<Order> position() {
+		return updateOrders(position.asList());
+	}
+
+	private List<Order> updateOrders(List<Order> out){
+		for (int i = 0; i < out.size(); i++) {
+			out.set(i, trader.getOrder(out.get(i)));
+		}
+		return out;
 	}
 
 	void orderFinalized(Order order) {
@@ -442,10 +435,8 @@ public final class Trade implements Comparable<Trade> {
 			return;
 		}
 		if (position.contains(order)) {
-			position.replace(order);
 			if (order.getExecutedQuantity() == 0) { // nothing filled, cancelled
 				position.remove(order);
-				pastOrders.addOrReplace(order);
 				return;
 			}
 			if (order.isBuy()) {
@@ -472,9 +463,7 @@ public final class Trade implements Comparable<Trade> {
 						throw new IllegalStateException("Profit/loss % can't be determined");
 					}
 				}
-				pastOrders.addAll(position);
 				position.clear();
-				pastOrders.addAll(exitOrders);
 				exitOrders.clear();
 			} else {
 				double totalSold = order.getTotalTraded();
@@ -497,7 +486,7 @@ public final class Trade implements Comparable<Trade> {
 		double total = 0;
 
 		for (int i = orders.i - 1; i >= 0; i--) {
-			Order order = orders.elements[i];
+			Order order = trader.getOrder(orders.elements[i]);
 			if (order.isCancelled() && order.getExecutedQuantity() == 0) {
 				orders.remove(order);
 			} else {
@@ -571,7 +560,8 @@ public final class Trade implements Comparable<Trade> {
 		}
 
 		for (int i = exitOrders.i - 1; i >= 0; i--) {
-			if (!exitOrders.elements[i].isFinalized()) {
+			Order order = trader.getOrder(exitOrders.elements[i]);
+			if (!order.isFinalized()) {
 				return true;
 			}
 		}
@@ -657,19 +647,6 @@ public final class Trade implements Comparable<Trade> {
 		}
 	}
 
-	public boolean hasOrder(Order order) {
-		if ((order.isBuy() && order.isLong()) || (order.isSell() && order.isShort())) {
-			if (position.contains(order) || order.getParentOrderId() != null && exitOrders.contains(order.getParent())) {
-				return true;
-			}
-		} else if ((order.isSell() && isLong()) || (order.isShort() && order.isBuy()) || isPlaceholder) {
-			if (exitOrders.contains(order) || order.getParentOrderId() != null && position.contains(order.getParent())) {
-				return true;
-			}
-		}
-		return pastOrders.contains(order) || order.getParentOrderId() != null && pastOrders.contains(order.getParent());
-	}
-
 	/**
 	 * Returns all {@link StrategyMonitor} instances built in the constructor of this class, which will be used by
 	 * an {@link Engine} that processes candles for the symbol traded by this {@code Trader}
@@ -701,8 +678,8 @@ public final class Trade implements Comparable<Trade> {
 		return trader;
 	}
 
-	public Collection<Order> exitOrders() {
-		return exitOrders.asList();
+	public List<Order> exitOrders() {
+		return updateOrders(exitOrders.asList());
 	}
 
 	@Override
@@ -760,9 +737,10 @@ public final class Trade implements Comparable<Trade> {
 
 	public void liquidate() {
 		ImmediateFillEmulator immediateFill = new ImmediateFillEmulator();
-		for (Order order : exitOrders()) {
+		for (int i = exitOrders.i - 1; i >= 0; i--) {
+			Order order = trader.getOrder(exitOrders.elements[i]);
 			if (!order.isFinalized()) {
-				immediateFill.fillOrder((Order) order, latestCandle());
+				immediateFill.fillOrder(order, latestCandle());
 				trader.tradingManager.notifyOrderFinalized(order);
 			}
 		}
@@ -773,7 +751,7 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	public boolean isEmpty() {
-		return pastOrders.i == 0 && position.i == 0 && exitOrders.i == 0;
+		return position.i == 0 && exitOrders.i == 0;
 	}
 
 	public boolean isPlaceHolder() {

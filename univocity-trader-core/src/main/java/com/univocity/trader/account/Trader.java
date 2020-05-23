@@ -244,7 +244,8 @@ public final class Trader {
 		if (trade.canExit(context.strategy)) {
 			boolean notEmptyBeforeCancellations = !trade.isEmpty();
 			for (int i = trade.position.i - 1; i >= 0; i--) {
-				trade.position.elements[i] = tradingManager.cancelOrder(trade.position.elements[i]);
+				Order order = getOrder(trade.position.elements[i]);
+				tradingManager.cancelOrder(order);
 			}
 			if (notEmptyBeforeCancellations && trade.isEmpty()) {
 				return false;
@@ -269,7 +270,7 @@ public final class Trader {
 
 			if (trade.isLong()) {
 				return sellAssets();
-			} else if (trade.isShort() && trade.exitOrders().isEmpty()) {
+			} else if (trade.isShort() && trade.exitOrders.isEmpty()) {
 				return closeShort();
 			}
 		}
@@ -460,7 +461,10 @@ public final class Trader {
 	private void cancelOpenBuyOrders(Trade trade, Strategy strategy) {
 		if (trade.canExit(strategy)) {
 			for (int i = trade.position.i - 1; i >= 0; i--) {
-				tradingManager.cancelOrder(trade.position.elements[i]);
+				Order order = getOrder(trade.position.elements[i]);
+				if(!order.isFinalized()) {
+					tradingManager.cancelOrder(order);
+				}
 			}
 		}
 	}
@@ -777,12 +781,7 @@ public final class Trader {
 
 	public Strategy strategyOf(Order order) {
 		if (!allowMixedStrategies) {
-			for (int i = trades.i - 1; i >= 0; i--) {
-				Trade trade = trades.elements[i];
-				if (trade.hasOrder(order)) {
-					return trade.openingStrategy();
-				}
-			}
+			return order.getTrade().openingStrategy();
 		}
 		return null;
 	}
@@ -799,6 +798,10 @@ public final class Trader {
 
 	public Set<Trade> trades() {
 		return trades.asSet();
+	}
+
+	Order getOrder(Order id){
+		return tradingManager.orderTracker.getOrder(id);
 	}
 
 	public int pipSize() {
