@@ -168,7 +168,7 @@ public class Order extends OrderRequest implements Comparable<Order> {
 
 	@Override
 	public int compareTo(Order o) {
-		return Long.compare(this.id, ((Order) o).id);
+		return Long.compare(this.id, o.id);
 	}
 
 	public Trade getTrade() {

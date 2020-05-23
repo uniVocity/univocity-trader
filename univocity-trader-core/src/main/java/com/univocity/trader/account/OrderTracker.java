@@ -175,7 +175,7 @@ public final class OrderTracker {
 			pendingOrders.addOrReplace(update);
 		}
 
-		if ((account.isSimulated() && update instanceof Order && ((Order) update).hasPartialFillDetails()) || update.getExecutedQuantity() != order.getExecutedQuantity()) {
+		if ((account.isSimulated() && update.hasPartialFillDetails()) || update.getExecutedQuantity() != order.getExecutedQuantity()) {
 			logOrderStatus("Order updated. ", update);
 			account.executeUpdateBalances();
 			orderManager.updated(update, trader, tradingManager::resubmit);

@@ -154,7 +154,7 @@ public class SimulatedClientAccount implements ClientAccount {
 	@Override
 	public void cancel(Order order) {
 		order.cancel();
-		updateOpenOrder((Order) order);
+		updateOpenOrder(order);
 	}
 
 	@Override
@@ -177,7 +177,7 @@ public class SimulatedClientAccount implements ClientAccount {
 
 	@Override
 	public Order updateOrderStatus(Order order) {
-		updateOpenOrder((Order) order);
+		updateOpenOrder(order);
 		return order;
 	}
 
@@ -220,7 +220,7 @@ public class SimulatedClientAccount implements ClientAccount {
 			List<Order> attachments = order.getAttachments();
 			if (triggeredOrder == null && attachments != null && !attachments.isEmpty()) {
 				for (Order attachment : attachments) {
-					processAttachedOrder(order, (Order) attachment, candle);
+					processAttachedOrder(order, attachment, candle);
 				}
 			}
 		} else if (order.hasPartialFillDetails()) {
@@ -228,7 +228,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 
 		if (triggeredOrder != null && triggeredOrder.getQuantity() > 0) {
-			processAttachedOrder(order, (Order) triggeredOrder, candle);
+			processAttachedOrder(order, triggeredOrder, candle);
 		}
 	}
 
