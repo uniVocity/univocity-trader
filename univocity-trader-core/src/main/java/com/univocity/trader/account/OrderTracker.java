@@ -210,14 +210,14 @@ public final class OrderTracker {
 	public void cancelStaleOrdersFor(Trade.Side side, Trader trader) {
 		account.forEachTradingManager(tradingManager -> {
 			if (!tradingManager.symbol.equals(this.tradingManager.symbol)) {
-				for (int i = pendingOrders.i - 1; i >= 0; i--) {
-					Order order = pendingOrders.elements[i];
+				for (int i = tradingManager.orderTracker.pendingOrders.i - 1; i >= 0; i--) {
+					Order order = tradingManager.orderTracker.pendingOrders.elements[i];
 					if (order.isFinalized()) {
 						continue;
 					}
 					if (tradingManager.orderManager.cancelToReleaseFundsFor(order, tradingManager.trader, trader)) {
 						if (order.getStatus() == CANCELLED) {
-							cancelOrder(order);
+							tradingManager.orderTracker.cancelOrder(order);
 							return;
 						}
 					}
