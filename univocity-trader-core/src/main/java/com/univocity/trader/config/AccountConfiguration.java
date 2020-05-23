@@ -157,11 +157,11 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> ex
 
 	@Override
 	public boolean isConfigured() {
-		if(tradingGroups.isEmpty()) {
+		if (tradingGroups.isEmpty()) {
 			return super.isConfigured();
 		} else {
 			boolean configured = false;
-			for(TradingGroup group : tradingGroups.values()){
+			for (TradingGroup group : tradingGroups.values()) {
 				configured |= group.isConfigured();
 			}
 			return configured;
@@ -249,7 +249,7 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> ex
 		return tradingGroups.computeIfAbsent(id, this::newTradingGroup);
 	}
 
-	public Collection<TradingGroup> tradingGroups(){
+	public Collection<TradingGroup> tradingGroups() {
 		return Collections.unmodifiableCollection(tradingGroups.values());
 	}
 
@@ -259,7 +259,18 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> ex
 		return out;
 	}
 
-	public Map<String, String[]> getAllSymbolPairs(){
+	@Override
+	public Set<String> symbols() {
+		if(supportedSymbols.isEmpty()){
+			supportedSymbols.addAll(super.symbols());
+			for (TradingGroup tradingGroup : tradingGroups.values()) {
+				supportedSymbols.addAll(tradingGroup.symbols());
+			}
+		}
+		return supportedSymbols;
+	}
+
+	public Map<String, String[]> getAllSymbolPairs() {
 		Map<String, String[]> out = new TreeMap<>();
 		for (TradingGroup tradingGroup : tradingGroups.values()) {
 			out.putAll(tradingGroup.symbolPairs());

@@ -47,9 +47,9 @@ public class AccountManager implements ClientAccount {
 
 	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration) {
 		if (StringUtils.isBlank(configuration.referenceCurrency())) {
-			throw new IllegalConfigurationException("Please configure the reference currency symbol");
+			throw new IllegalConfigurationException("Please configure the reference currency symbol for the account");
 		}
-		if (configuration.symbolPairs().isEmpty()) {
+		if (configuration.getAllSymbolPairs().isEmpty()) {
 			throw new IllegalConfigurationException("Please configure traded symbol pairs");
 		}
 		this.accountHash = configuration.id().hashCode();
@@ -266,9 +266,6 @@ public class AccountManager implements ClientAccount {
 	void executeUpdateBalances() {
 		if (balanceLock.tryLock()) {
 			try {
-				if (System.currentTimeMillis() - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL) {
-					return;
-				}
 				Map<String, Balance> updatedBalances = account.updateBalances();
 				if (updatedBalances != null && updatedBalances != balances && !updatedBalances.isEmpty()) {
 					log.trace("Balances updated - available: " + new TreeMap<>(updatedBalances).values());

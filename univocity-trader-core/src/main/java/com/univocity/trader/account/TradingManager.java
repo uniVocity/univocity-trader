@@ -78,17 +78,20 @@ public final class TradingManager {
 		this.configuration = configuration;
 		this.orderManager = configuration.orderManager(symbol);
 		this.context = new Context(this, params);
-		this.trader = new Trader(this, createStrategyMonitors(allInstances, params));
+
+		StrategyMonitor[] monitors = createStrategyMonitors(allInstances, params);
+
+		this.trader = new Trader(this, monitors);
 		this.orderTracker = new OrderTracker(this);
+
+		for (int i = 0; i < monitors.length; i++) {
+			monitors[i].setContext(this.context);
+		}
 	}
 
 	private StrategyMonitor[] createStrategyMonitors(Set<Object> allInstances, Parameters parameters) {
 		NewInstances<StrategyMonitor> monitorProvider = monitors();
 		StrategyMonitor[] out = monitorProvider == null ? new StrategyMonitor[0] : getInstances(getSymbol(), parameters, monitorProvider, "StrategyMonitor", false, allInstances);
-
-		for (int i = 0; i < out.length; i++) {
-			out[i].setContext(this.context);
-		}
 		return out;
 	}
 
@@ -535,8 +538,8 @@ public final class TradingManager {
 		return configuration.monitors();
 	}
 
-	void cancelOrder(Order order) {
-		orderTracker.cancelOrder(order);
+	Order cancelOrder(Order order) {
+		return orderTracker.cancelOrder(order);
 	}
 
 	public void cancelStaleOrdersFor(Trade.Side side, Trader trader) {

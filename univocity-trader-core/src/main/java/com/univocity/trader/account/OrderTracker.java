@@ -196,6 +196,7 @@ public final class OrderTracker {
 			if (!pendingOrders.contains(order)) {
 				return order;
 			}
+			order = pendingOrders.get(order);
 		}
 
 		try {

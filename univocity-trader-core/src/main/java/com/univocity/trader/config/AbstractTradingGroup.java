@@ -357,13 +357,9 @@ public abstract class AbstractTradingGroup<T extends AbstractTradingGroup<T>> im
 //		return out;
 //	}
 
-	public IllegalArgumentException reportUnknownSymbol(String symbol) {
-		throw reportUnknownSymbol(null, symbol);
-	}
-
 	public IllegalArgumentException reportUnknownSymbol(String message, String symbol) {
-		String account = StringUtils.isBlank(id) ? "" : "'" + id + "'";
-		String msg = "Account " + account + " is not managing '" + symbol + "'. Allowed symbols are: " + StringUtils.join(symbols(), ", ") + " and " + referenceCurrency();
+		String account = StringUtils.isBlank(id) ? " " : " '" + id + "' ";
+		String msg = "Account" + account + "is not managing '" + symbol + "'. Allowed symbols are: " + StringUtils.join(symbols(), ", ") + " and " + referenceCurrency();
 		if (message != null) {
 			throw new IllegalArgumentException(message + ". " + msg);
 		} else {

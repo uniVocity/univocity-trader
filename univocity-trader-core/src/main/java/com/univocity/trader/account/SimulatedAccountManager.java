@@ -1,7 +1,6 @@
 package com.univocity.trader.account;
 
 import com.univocity.trader.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.simulation.*;
 
@@ -115,6 +114,9 @@ public class SimulatedAccountManager extends AccountManager implements Simulated
 
 	@Override
 	public SimulatedAccountManager setAmount(String symbol, double amount) {
+//		if("".equals(symbol)){
+//			symbol = getReferenceCurrencySymbol();
+//		}
 		if (configuration.isSymbolSupported(symbol)) {
 			balances.put(symbol, new Balance(this, symbol, amount));
 			this.balancesArray = null;
@@ -128,8 +130,10 @@ public class SimulatedAccountManager extends AccountManager implements Simulated
 		this.balancesArray = null;
 
 		latestPrices.clear();
-		tradingManagers.clear();
-		tradingManagers = null;
+		if (tradingManagers != null) {
+			tradingManagers.clear();
+			tradingManagers = null;
+		}
 
 		client.reset();
 		return this;
@@ -137,7 +141,7 @@ public class SimulatedAccountManager extends AccountManager implements Simulated
 
 	protected void updateOpenOrders(String symbol) {
 		TradingManager[] tradingManagers = this.tradingManagers.get(symbol);
-		for(int i = 0; i < tradingManagers.length;i++){
+		for (int i = 0; i < tradingManagers.length; i++) {
 			tradingManagers[i].orderTracker.updateOpenOrders();
 		}
 	}

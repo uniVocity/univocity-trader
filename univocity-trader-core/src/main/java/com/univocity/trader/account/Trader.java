@@ -244,7 +244,7 @@ public final class Trader {
 		if (trade.canExit(context.strategy)) {
 			boolean notEmptyBeforeCancellations = !trade.isEmpty();
 			for (int i = trade.position.i - 1; i >= 0; i--) {
-				tradingManager.cancelOrder(trade.position.elements[i]);
+				trade.position.elements[i] = tradingManager.cancelOrder(trade.position.elements[i]);
 			}
 			if (notEmptyBeforeCancellations && trade.isEmpty()) {
 				return false;

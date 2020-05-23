@@ -9,7 +9,7 @@ import java.util.concurrent.*;
 
 public class MockClientAccount implements ClientAccount {
 
-	private SimulatedClientAccount account;
+	private final SimulatedClientAccount account;
 
 	private OrderFillEmulator mockOrderFill = (order, candle) -> {
 		if (!order.isFinalized()) {
@@ -39,11 +39,14 @@ public class MockClientAccount implements ClientAccount {
 	public MockClientAccount(AccountConfiguration<?> accountConfiguration) {
 		account = new SimulatedClientAccount(accountConfiguration, mockOrderFill, SimpleTradingFees.percentage(0.0));
 		account.accountManager.setAmount("USDT", 100);
+		account.accountManager.createTradingManagers(new SimulatedExchange(account.accountManager), null, Parameters.NULL);
 	}
 
 	@Override
 	public Order updateOrderStatus(Order order) {
-		return copy(account.updateOrderStatus(order));
+		synchronized (account) {
+			return copy(account.updateOrderStatus(order));
+		}
 	}
 
 	@Override
@@ -52,7 +55,7 @@ public class MockClientAccount implements ClientAccount {
 	}
 
 	private Order copy(Order order) {
-		if(order == null){
+		if (order == null) {
 			return null;
 		}
 		DefaultOrder out = new DefaultOrder(((DefaultOrder) order).getInternalId(), order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), Trade.Side.LONG, order.getTime());
@@ -69,18 +72,22 @@ public class MockClientAccount implements ClientAccount {
 
 	@Override
 	public Order executeOrder(OrderRequest orderDetails) {
-		return account.executeOrder(orderDetails);
+		synchronized (account) {
+			return account.executeOrder(orderDetails);
+		}
 	}
 
 	@Override
 	public ConcurrentHashMap<String, Balance> updateBalances() {
-		account.accountManager.forEachTradingManager(TradingManager::updateOpenOrders);
+		synchronized (account) {
+			account.accountManager.forEachTradingManager(TradingManager::updateOpenOrders);
 
-		var tmp = account.updateBalances();
-		var out = new ConcurrentHashMap<String, Balance>();
-		tmp.forEach((k, v) -> out.put(k, v.clone()));
+			var tmp = account.updateBalances();
+			var out = new ConcurrentHashMap<String, Balance>();
+			tmp.forEach((k, v) -> out.put(k, v.clone()));
 
-		return out;
+			return out;
+		}
 	}
 
 	@Override
@@ -90,6 +97,8 @@ public class MockClientAccount implements ClientAccount {
 
 	@Override
 	public void cancel(Order order) {
-		account.cancel(order);
+		synchronized (account) {
+			account.cancel(order);
+		}
 	}
 }
