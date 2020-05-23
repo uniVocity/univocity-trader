@@ -1,6 +1,5 @@
 package com.univocity.trader.account;
 
-import com.univocity.trader.*;
 import org.junit.*;
 
 import static com.univocity.trader.account.Order.Status.*;

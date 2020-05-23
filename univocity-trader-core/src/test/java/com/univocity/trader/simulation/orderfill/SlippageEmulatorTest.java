@@ -4,7 +4,6 @@ import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import org.junit.*;
 
-import java.math.*;
 import java.util.concurrent.atomic.*;
 
 import static com.univocity.trader.account.Order.Side.*;
@@ -16,12 +15,12 @@ public class SlippageEmulatorTest {
 	private static final SlippageEmulator emulator = new SlippageEmulator();
 	private static AtomicLong id = new AtomicLong(0);
 
-	private void tryFill(DefaultOrder order, Candle candle) {
+	private void tryFill(Order order, Candle candle) {
 		emulator.fillOrder(order, candle);
 	}
 
-	static DefaultOrder newOrder(Order.Type type, Order.Side side, double price, double quantity) {
-		DefaultOrder order = new DefaultOrder(id.incrementAndGet(), "BTC", "USDT", side, Trade.Side.LONG, System.currentTimeMillis());
+	static Order newOrder(Order.Type type, Order.Side side, double price, double quantity) {
+		Order order = new Order(id.incrementAndGet(), "BTC", "USDT", side, Trade.Side.LONG, System.currentTimeMillis());
 		order.setType(type);
 
 		order.setPrice(price);
@@ -33,7 +32,7 @@ public class SlippageEmulatorTest {
 
 	@Test
 	public void testFillLimitBuy() {
-		DefaultOrder order = newOrder(LIMIT, BUY, 10_000, 1);
+		Order order = newOrder(LIMIT, BUY, 10_000, 1);
 
 		tryFill(order, new Candle(1, 2, 10_000, 10_015, 9_999, 10_000, 100.5));
 		assertEquals(1.0, order.getExecutedQuantity(), 0.00001);
@@ -102,7 +101,7 @@ public class SlippageEmulatorTest {
 
 	@Test
 	public void testFillLimitSell() {
-		DefaultOrder order = newOrder(LIMIT, SELL, 10_000, 1);
+		Order order = newOrder(LIMIT, SELL, 10_000, 1);
 
 		tryFill(order, new Candle(1, 2, 10_000, 10_015, 9_999, 10_000, 100.5));
 		assertEquals(1.0, order.getExecutedQuantity(), 0.00001);
@@ -171,7 +170,7 @@ public class SlippageEmulatorTest {
 
 	@Test
 	public void testFillMarketBuy() {
-		DefaultOrder order = newOrder(MARKET, BUY, 10_000, 1);
+		Order order = newOrder(MARKET, BUY, 10_000, 1);
 
 		tryFill(order, new Candle(1, 2, 10_000, 10_015, 9_999, 10_000, 100.5));
 		assertEquals(1.0, order.getExecutedQuantity(), 0.00001);
@@ -232,7 +231,7 @@ public class SlippageEmulatorTest {
 
 	@Test
 	public void testFillMarketSell() {
-		DefaultOrder order = newOrder(MARKET, SELL, 10_000, 1);
+		Order order = newOrder(MARKET, SELL, 10_000, 1);
 
 		tryFill(order, new Candle(1, 2, 10_000, 10_015, 9_999, 10_000, 100.5));
 		assertEquals(1.0, order.getExecutedQuantity(), 0.00001);

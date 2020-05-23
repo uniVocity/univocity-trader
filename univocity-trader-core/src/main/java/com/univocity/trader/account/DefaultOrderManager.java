@@ -1,11 +1,9 @@
 package com.univocity.trader.account;
 
 import com.univocity.trader.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import org.slf4j.*;
 
-import java.math.*;
 import java.util.function.*;
 
 public class DefaultOrderManager implements OrderManager {

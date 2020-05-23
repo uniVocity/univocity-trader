@@ -250,6 +250,8 @@ public final class Trader {
 				return false;
 			}
 
+			//tradingManager.getAccount().executeUpdateBalances();
+
 			if (!tradingManager.hasPosition(context.latestCandle, false, trade.isLong(), trade.isShort())) {
 				if (tradingManager.hasPosition(context.latestCandle, true, trade.isLong(), trade.isShort())) {
 					if (log.isTraceEnabled()) {

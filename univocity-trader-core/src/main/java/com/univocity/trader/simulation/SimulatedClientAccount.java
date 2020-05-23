@@ -79,7 +79,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 
 
-		DefaultOrder order = null;
+		Order order = null;
 
 		if (orderDetails.isBuy() && hasFundsAvailable) {
 			if (orderDetails.isLong()) {
@@ -113,7 +113,7 @@ public class SimulatedClientAccount implements ClientAccount {
 			List<OrderRequest> attachments = orderDetails.attachedOrderRequests();
 			if (attachments != null) {
 				for (OrderRequest attachment : attachments) {
-					DefaultOrder child = createOrder(attachment, attachment.getQuantity(), attachment.getPrice());
+					Order child = createOrder(attachment, attachment.getQuantity(), attachment.getPrice());
 					child.setParent(order);
 				}
 			}
@@ -122,13 +122,13 @@ public class SimulatedClientAccount implements ClientAccount {
 		return order;
 	}
 
-	private DefaultOrder createOrder(OrderRequest request, double quantity, double price) {
-		DefaultOrder out = new DefaultOrder(orderIdGenerator.incrementAndGet(), request);
+	private Order createOrder(OrderRequest request, double quantity, double price) {
+		Order out = new Order(orderIdGenerator.incrementAndGet(), request);
 		initializeOrder(out, price, quantity, request);
 		return out;
 	}
 
-	private void initializeOrder(DefaultOrder out, double price, double quantity, OrderRequest request) {
+	private void initializeOrder(Order out, double price, double quantity, OrderRequest request) {
 		out.setTriggerCondition(request.getTriggerCondition(), request.getTriggerPrice());
 		out.setPrice(price);
 		out.setQuantity(quantity);
@@ -154,7 +154,7 @@ public class SimulatedClientAccount implements ClientAccount {
 	@Override
 	public void cancel(Order order) {
 		order.cancel();
-		updateOpenOrder((DefaultOrder) order);
+		updateOpenOrder((Order) order);
 	}
 
 	@Override
@@ -162,7 +162,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		return true;
 	}
 
-	private void activateAndTryFill(Candle candle, DefaultOrder order) {
+	private void activateAndTryFill(Candle candle, Order order) {
 		if (candle != null && order != null && !order.isCancelled()) {
 			if (!order.isActive()) {
 				if (triggeredBy(order, null, candle)) {
@@ -177,12 +177,12 @@ public class SimulatedClientAccount implements ClientAccount {
 
 	@Override
 	public Order updateOrderStatus(Order order) {
-		updateOpenOrder((DefaultOrder) order);
+		updateOpenOrder((Order) order);
 		return order;
 	}
 
 
-	private final void updateOpenOrder(DefaultOrder order) {
+	private final void updateOpenOrder(Order order) {
 		Candle candle = order.getTrade().latestCandle();
 		activateAndTryFill(candle, order);
 
@@ -220,7 +220,7 @@ public class SimulatedClientAccount implements ClientAccount {
 			List<Order> attachments = order.getAttachments();
 			if (triggeredOrder == null && attachments != null && !attachments.isEmpty()) {
 				for (Order attachment : attachments) {
-					processAttachedOrder(order, (DefaultOrder) attachment, candle);
+					processAttachedOrder(order, (Order) attachment, candle);
 				}
 			}
 		} else if (order.hasPartialFillDetails()) {
@@ -228,11 +228,11 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 
 		if (triggeredOrder != null && triggeredOrder.getQuantity() > 0) {
-			processAttachedOrder(order, (DefaultOrder) triggeredOrder, candle);
+			processAttachedOrder(order, (Order) triggeredOrder, candle);
 		}
 	}
 
-	private void processAttachedOrder(DefaultOrder parent, DefaultOrder attached, Candle candle) {
+	private void processAttachedOrder(Order parent, Order attached, Candle candle) {
 		double locked = parent.getExecutedQuantity();
 		if (locked > 0) {
 			attached.updateTime(candle != null ? candle.openTime : parent.getTime());
@@ -274,7 +274,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		return false;
 	}
 
-	private void updateMarginReserve(DefaultOrder order, Candle candle) {
+	private void updateMarginReserve(Order order, Candle candle) {
 		final String assetSymbol = order.getAssetsSymbol();
 		final String fundSymbol = order.getFundsSymbol();
 
@@ -330,7 +330,7 @@ public class SimulatedClientAccount implements ClientAccount {
 		}
 	}
 
-	private void updateBalances(DefaultOrder order, Candle candle) {
+	private void updateBalances(Order order, Candle candle) {
 		final String asset = order.getAssetsSymbol();
 		final String funds = order.getFundsSymbol();
 

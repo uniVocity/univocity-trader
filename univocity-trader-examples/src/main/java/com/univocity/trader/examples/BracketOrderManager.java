@@ -1,6 +1,5 @@
 package com.univocity.trader.examples;
 
-import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 
 import java.util.function.*;

@@ -1,7 +1,6 @@
 package com.univocity.trader.examples;
 
 import com.univocity.trader.account.*;
-import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 import org.slf4j.*;

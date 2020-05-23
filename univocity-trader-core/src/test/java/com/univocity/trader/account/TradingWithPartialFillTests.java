@@ -1,6 +1,5 @@
 package com.univocity.trader.account;
 
-import com.univocity.trader.*;
 import com.univocity.trader.config.*;
 import org.junit.*;
 

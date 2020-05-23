@@ -3,8 +3,6 @@ package com.univocity.trader.simulation.orderfill;
 import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 
-import java.math.*;
-
 /**
  * An immediate fill {@link OrderFillEmulator}.
  *
@@ -15,7 +13,7 @@ import java.math.*;
 public final class ImmediateFillEmulator implements OrderFillEmulator {
 
 	@Override
-	public void fillOrder(DefaultOrder order, Candle candle) {
+	public void fillOrder(Order order, Candle candle) {
 		if (!order.isFinalized()) {
 			order.setStatus(Order.Status.FILLED);
 			order.setExecutedQuantity(order.getQuantity());

@@ -2,7 +2,6 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
-import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.simulation.orderfill.*;
 import com.univocity.trader.strategy.*;
@@ -763,7 +762,7 @@ public final class Trade implements Comparable<Trade> {
 		ImmediateFillEmulator immediateFill = new ImmediateFillEmulator();
 		for (Order order : exitOrders()) {
 			if (!order.isFinalized()) {
-				immediateFill.fillOrder((DefaultOrder) order, latestCandle());
+				immediateFill.fillOrder((Order) order, latestCandle());
 				trader.tradingManager.notifyOrderFinalized(order);
 			}
 		}

@@ -178,7 +178,7 @@ public class OrderRequest {
 	public final void setTriggerCondition(Order.TriggerCondition triggerCondition, Double triggerPrice) {
 		this.triggerCondition = triggerCondition;
 		this.triggerPrice = triggerPrice;
-		this.active = !(triggerCondition != Order.TriggerCondition.NONE && triggerPrice != 0.0);
+		this.active = !(triggerCondition != NONE && triggerPrice != 0.0);
 		if (this.price == 0.0 && triggerPrice != 0.0) {
 			this.price = triggerPrice;
 		}

@@ -16,7 +16,7 @@ public class PriceMatchEmulatorTest {
 
 	@Test
 	public void fillLimitSellOrders() {
-		DefaultOrder sell = newOrder(LIMIT, SELL, 1.0, 1.0);
+		Order sell = newOrder(LIMIT, SELL, 1.0, 1.0);
 
 		e.fillOrder(sell, new Candle(1, 1, 0.9, 0.9, 0.9, 0.9, 1.0));
 		assertEquals(NEW, sell.getStatus());
@@ -28,7 +28,7 @@ public class PriceMatchEmulatorTest {
 
 	@Test
 	public void fillLimitBuyOrders(){
-		DefaultOrder buy = newOrder(LIMIT, BUY, 1.0, 1.0);
+		Order buy = newOrder(LIMIT, BUY, 1.0, 1.0);
 
 		e.fillOrder(buy, new Candle(1, 1, 1.1, 1.1, 1.1, 1.1, 1.0));
 		assertEquals(NEW, buy.getStatus());
@@ -41,7 +41,7 @@ public class PriceMatchEmulatorTest {
 
 	@Test
 	public void fillMarketSellOrders() {
-		DefaultOrder sell = newOrder(MARKET, SELL, 1.0, 1.0);
+		Order sell = newOrder(MARKET, SELL, 1.0, 1.0);
 
 		e.fillOrder(sell, new Candle(1, 1, 0.9, 0.9, 0.9, 0.9, 1.0));
 		assertEquals(FILLED, sell.getStatus());
@@ -50,7 +50,7 @@ public class PriceMatchEmulatorTest {
 
 	@Test
 	public void fillMarketBuyOrders(){
-		DefaultOrder buy = newOrder(MARKET, BUY, 1.0, 1.0);
+		Order buy = newOrder(MARKET, BUY, 1.0, 1.0);
 
 		e.fillOrder(buy, new Candle(1, 1, 1.1, 1.1, 1.1, 1.1, 1.0));
 		assertEquals(FILLED, buy.getStatus());

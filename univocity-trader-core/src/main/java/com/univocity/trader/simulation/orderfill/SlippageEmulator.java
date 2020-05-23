@@ -62,7 +62,7 @@ import com.univocity.trader.config.*;
 public final  class SlippageEmulator implements OrderFillEmulator {
 
 	@Override
-	public void fillOrder(DefaultOrder order, Candle candle) {
+	public void fillOrder(Order order, Candle candle) {
 		if (order.isFinalized()) {
 			return;
 		}
@@ -175,7 +175,7 @@ public final  class SlippageEmulator implements OrderFillEmulator {
 		}
 	}
 
-	private void updatePrice(DefaultOrder order, double price, double tradedVolume) {
+	private void updatePrice(Order order, double price, double tradedVolume) {
 		if (tradedVolume == 0) {
 			return;
 		}

@@ -26,7 +26,7 @@ import static com.univocity.trader.account.Order.Type.*;
 public  final class PriceMatchEmulator implements OrderFillEmulator {
 
 	@Override
-	public void fillOrder(DefaultOrder order, Candle candle) {
+	public void fillOrder(Order order, Candle candle) {
 		if (order.getType() == LIMIT) {
 			if ((order.getSide() == BUY && order.getPrice() >= candle.low)
 					|| (order.getSide() == SELL && order.getPrice() <= candle.high)) {

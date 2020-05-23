@@ -11,6 +11,6 @@ import com.univocity.trader.candles.*;
 public final class NoFillEmulator implements OrderFillEmulator {
 
 	@Override
-	public void fillOrder(DefaultOrder order, Candle candle) {
+	public void fillOrder(Order order, Candle candle) {
 	}
 }

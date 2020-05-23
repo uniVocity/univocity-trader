@@ -195,7 +195,7 @@ public class ShortTradingTests extends OrderFillChecker {
 
 		//triggers another short sell at 0.92 (amount on trigger is set to 0.9, and locked balance is based on that 0.9 figure)
 		updateOpenOrders(trader, newTick(4, 0.92));
-		assertEquals(Order.Status.FILLED, o.getStatus());
+		assertEquals(FILLED, o.getStatus());
 		assertTrue(o.isActive());
 
 		double assetsAt0_90 = account.getShortedAmount("ADA") - assetsAt1_0;
@@ -451,7 +451,7 @@ public class ShortTradingTests extends OrderFillChecker {
 		//triggers another short sell at 1.0 (amount on trigger is set to 0.9, and locked balance is based on that 0.9 figure)
 		//uses part of locked balance
 		updateOpenOrders(trader, newTick(4, 1.0));
-		assertEquals(Order.Status.FILLED, o.getStatus());
+		assertEquals(FILLED, o.getStatus());
 		assertTrue(o.isActive());
 
 		double assetsAt0_90 = account.getShortedAmount("ADA") - assetsAt1_0;

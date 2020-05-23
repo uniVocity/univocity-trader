@@ -1,6 +1,5 @@
 package com.univocity.trader.examples;
 
-import com.univocity.trader.*;
 import com.univocity.trader.account.*;
 
 import static com.univocity.trader.account.Order.Type.*;

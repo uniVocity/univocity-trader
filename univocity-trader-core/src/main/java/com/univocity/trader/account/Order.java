@@ -9,135 +9,213 @@ import static com.univocity.trader.account.Order.Status.*;
 import static com.univocity.trader.account.Order.TriggerCondition.*;
 import static com.univocity.trader.candles.Candle.*;
 
-public interface Order extends Comparable<Order> {
+public class Order extends OrderRequest implements Comparable<Order> {
 
-	String getAssetsSymbol();
+	private final long id;
+	private String orderId;
+	private double executedQuantity = 0.0;
+	private Status status;
+	private double feesPaid = 0.0;
+	private double averagePrice = 0.0;
+	private List<Order> attachments;
+	private Order parent;
+	private double partialFillPrice = 0.0;
+	private double partialFillQuantity = 0.0;
+	private Trade trade;
 
-	String getFundsSymbol();
-
-	default String getSymbol() {
-		return getAssetsSymbol() + getFundsSymbol();
+	public Order(long id, String assetSymbol, String fundSymbol, Side side, Trade.Side tradeSide, long time) {
+		super(assetSymbol, fundSymbol, side, tradeSide, time, null);
+		this.id = id;
+		this.orderId = String.valueOf(id);
 	}
 
-	default long getTimeElapsed() {
+	public Order(long id, OrderRequest request) {
+		this(id, request.getAssetsSymbol(), request.getFundsSymbol(), request.getSide(), request.getTradeSide(), request.getTime());
+	}
+
+	public void setParent(Order parent) {
+		this.parent = parent;
+		if (parent.attachments == null) {
+			parent.attachments = new ArrayList<>();
+		}
+		parent.attachments.add(this);
+	}
+
+	public String getOrderId() {
+		return orderId;
+	}
+
+	public void setOrderId(String orderId) {
+		this.orderId = orderId;
+	}
+
+	public double getExecutedQuantity() {
+		return executedQuantity;
+	}
+
+	public double getTotalOrderAmountAtAveragePrice() {
+		if (averagePrice == 0) {
+			return getPrice() * getQuantity();
+		}
+		return averagePrice * getQuantity();
+	}
+
+	public void setExecutedQuantity(double executedQuantity) {
+		this.executedQuantity = executedQuantity;
+	}
+
+	@Override
+	public void setPrice(double price) {
+		super.setPrice(price);
+	}
+
+	@Override
+	public void setQuantity(double quantity) {
+		super.setQuantity(quantity);
+	}
+
+	public Status getStatus() {
+		return status;
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
+	}
+
+	public void cancel() {
+		if (this.status != Status.FILLED) {
+			this.status = Status.CANCELLED;
+		}
+	}
+
+	public boolean isCancelled() {
+		return this.status == Status.CANCELLED;
+	}
+
+	public double getFeesPaid() {
+		return feesPaid;
+	}
+
+	public void setFeesPaid(double feesPaid) {
+		this.feesPaid = feesPaid;
+	}
+
+	@Override
+	public String toString() {
+		return print(0);
+	}
+
+	public void setAveragePrice(double averagePrice) {
+		this.averagePrice = averagePrice;
+	}
+
+	public final double getAveragePrice() {
+		return averagePrice;
+	}
+
+	public final List<Order> getAttachments() {
+		return attachments == null ? null : Collections.unmodifiableList(attachments);
+	}
+
+	public final Order getParent() {
+		return parent;
+	}
+
+	public final String getParentOrderId() {
+		return parent == null ? "" : parent.getOrderId();
+	}
+
+	public double getQuantity() { //TODO: check this implementation in live trading.
+		double out = super.getQuantity();
+		if (parent != null && parent.isFinalized()) {
+			double p = parent.getExecutedQuantity();
+			if (out > p || p == 0) {
+				return p;
+			}
+		}
+		return out;
+	}
+
+	public boolean hasPartialFillDetails() {
+		return partialFillQuantity != 0.0 && partialFillQuantity > 0;
+	}
+
+	public void clearPartialFillDetails() {
+		partialFillQuantity = 0.0;
+		partialFillPrice = 0.0;
+	}
+
+	public double getPartialFillTotalPrice() {
+		return partialFillQuantity * partialFillPrice;
+	}
+
+	public double getPartialFillPrice() {
+		return partialFillPrice;
+	}
+
+	public double getPartialFillQuantity() {
+		return partialFillQuantity;
+	}
+
+	public void setPartialFillDetails(double filledQuantity, double fillPrice) {
+		this.partialFillPrice = fillPrice;
+		this.partialFillQuantity = filledQuantity;
+	}
+
+	public long getInternalId() {
+		return id;
+	}
+
+	@Override
+	public int compareTo(Order o) {
+		return Long.compare(this.id, ((Order) o).id);
+	}
+
+	public Trade getTrade() {
+		return trade;
+	}
+
+	public void setTrade(Trade trade) {
+		this.trade = trade;
+	}
+
+	public long getTimeElapsed() {
 		return System.currentTimeMillis() - getTime();
 	}
 
-	default long getTimeElapsed(long latestClose) {
+	public long getTimeElapsed(long latestClose) {
 		return latestClose - getTime();
 	}
 
-	default String getFormattedTimeElapsed() {
+	public String getFormattedTimeElapsed() {
 		return TimeInterval.getFormattedDuration(getTimeElapsed());
 	}
 
-	default String getFormattedTimeElapsed(long latestClose) {
+	public String getFormattedTimeElapsed(long latestClose) {
 		return TimeInterval.getFormattedDuration(getTimeElapsed(latestClose));
 	}
 
-	String getOrderId();
-
-	double getPrice();
-
-	double getAveragePrice();
-
-	double getQuantity();
-
-	double getExecutedQuantity();
-
-	double getFeesPaid();
-
-	Order.Side getSide();
-
-	Trade.Side getTradeSide();
-
-	Type getType();
-
-	TriggerCondition getTriggerCondition();
-
-	double getTriggerPrice();
-
-	boolean isActive();
-
-	long getTime();
-
-	Status getStatus();
-
-	void cancel();
-
-	default Order getParent() {
-		return null;
-	}
-
-	default List<Order> getAttachments() {
-		return Collections.emptyList();
-	}
-
-	default boolean isCancelled() {
-		return getStatus() == Status.CANCELLED;
-	}
-
-	default double getRemainingQuantity() {
+	public double getRemainingQuantity() {
 		return getQuantity() - getExecutedQuantity();
 	}
 
-	default double getTotalTraded() {
+	public double getTotalTraded() {
 		return getExecutedQuantity() * getAveragePrice();
 	}
 
-	default double getTotalOrderAmount() {
-		return getQuantity() * getPrice();
-	}
-
-	default boolean isFinalized() {
+	public boolean isFinalized() {
 		return getStatus() == FILLED || getStatus() == Status.CANCELLED;
 	}
 
-	default String getParentOrderId() {
-		return getParent() == null ? "" : getParent().getOrderId();
-	}
-
-	default boolean isBuy() {
-		return getSide() == Side.BUY;
-	}
-
-	default boolean isLongBuy() {
-		return isLong() && isBuy();
-	}
-
-	default boolean isLongSell() {
-		return isLong() && isSell();
-	}
-
-	default boolean isShortSell() {
-		return isShort() && isSell();
-	}
-
-	default boolean isShortCover() {
-		return isShort() && isBuy();
-	}
-
-	default boolean isSell() {
-		return getSide() == Side.SELL;
-	}
-
-	default boolean isMarket() {
+	public boolean isMarket() {
 		return getType() == Type.MARKET;
 	}
 
-	default boolean isLimit() {
+	public boolean isLimit() {
 		return getType() == Type.LIMIT;
 	}
 
-	default boolean isShort() {
-		return getTradeSide() == Trade.Side.SHORT;
-	}
-
-	default boolean isLong() {
-		return getTradeSide() == Trade.Side.LONG;
-	}
-
-	default String print(long latestClose) {
+	public String print(long latestClose) {
 		StringBuilder description = new StringBuilder();
 
 		description.append(getStatus()).append(' ');
@@ -206,7 +284,7 @@ public interface Order extends Comparable<Order> {
 		return description.toString();
 	}
 
-	default String getFormattedFillPct() {
+	public String getFormattedFillPct() {
 		String out = CHANGE_FORMAT.get().format(getFillPct() / 100.0);
 		//adjust display of mostly filled order so it's less confusing.
 		if (getStatus() != FILLED && out.equals("100.00%")) {
@@ -215,14 +293,14 @@ public interface Order extends Comparable<Order> {
 		return out;
 	}
 
-	default double getFillPct() {
+	public double getFillPct() {
 		if (getQuantity() == 0.0) {
 			return 0.0;
 		}
 		return getExecutedQuantity() / getQuantity() * 100.0;
 	}
 
-	default String sideDescription() {
+	public String sideDescription() {
 		if (isShort()) {
 			if (isSell()) {
 				return "SHORT";
@@ -233,22 +311,17 @@ public interface Order extends Comparable<Order> {
 		return getSide().toString();
 	}
 
-	@Override
-	default int compareTo(Order o) {
-		return this.getOrderId().compareTo(o.getOrderId());
-	}
-
-	enum Side {
+	public enum Side {
 		BUY,
 		SELL
 	}
 
-	enum Type {
+	public enum Type {
 		LIMIT,
 		MARKET
 	}
 
-	enum TriggerCondition {
+	public enum TriggerCondition {
 		NONE(""),
 		STOP_LOSS("SL"),
 		STOP_GAIN("SG");
@@ -260,15 +333,10 @@ public interface Order extends Comparable<Order> {
 		}
 	}
 
-	enum Status {
+	public enum Status {
 		NEW,
 		PARTIALLY_FILLED,
 		FILLED,
 		CANCELLED
 	}
-
-	Trade getTrade();
-
-	void setTrade(Trade trade);
-
 }

@@ -121,7 +121,7 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	private Order translate(OrderRequest preparation, OrderDetails response) {
-		DefaultOrder out = new DefaultOrder(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), Trade.Side.LONG, response.getTime());
+		Order out = new Order(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), Trade.Side.LONG, response.getTime());
 
 		out.setPrice(Double.parseDouble(response.getPrice()));
 		out.setAveragePrice(Double.parseDouble(response.getPrice()));
@@ -200,7 +200,7 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	private Order translate(Order original, com.univocity.trader.exchange.binance.api.client.domain.account.Order order) {
-		DefaultOrder out = new DefaultOrder(((DefaultOrder)original).getInternalId(), original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), Trade.Side.LONG, order.getTime());
+		Order out = new Order(((Order)original).getInternalId(), original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), Trade.Side.LONG, order.getTime());
 		out.setStatus(translate(order.getStatus()));
 		out.setExecutedQuantity(Double.parseDouble(order.getExecutedQty()));
 		out.setAveragePrice(Double.parseDouble(order.getPrice()));

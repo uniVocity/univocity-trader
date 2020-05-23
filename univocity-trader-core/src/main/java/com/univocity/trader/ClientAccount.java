@@ -46,11 +46,11 @@ public interface ClientAccount {
 	 * If no changes occurred after polling the exchange for an update on the status of the order, {@link OrderManager#unchanged(Order)}
 	 * will be called.
 	 *
-	 * An {@link Order} can be cancelled at any time after from the {@link OrderManager} by invoking {@link Order#cancel()}
+	 * An {@link Order } can be cancelled at any time after from the {@link OrderManager} by invoking {@link Order#cancel()}
 	 *
 	 * @param orderDetails details of the order: buy/sell quantities of some instrument for a given unit price
 	 *
-	 * @return an {@link Order} with the current status of the order: e.g. filled, executed quantity and price, etc.
+	 * @return an {@link Order } with the current status of the order: e.g. filled, executed quantity and price, etc.
 	 */
 	Order executeOrder(OrderRequest orderDetails);
 

@@ -58,7 +58,7 @@ public class MockClientAccount implements ClientAccount {
 		if (order == null) {
 			return null;
 		}
-		DefaultOrder out = new DefaultOrder(((DefaultOrder) order).getInternalId(), order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), Trade.Side.LONG, order.getTime());
+		Order out = new Order(((Order) order).getInternalId(), order.getAssetsSymbol(), order.getFundsSymbol(), order.getSide(), Trade.Side.LONG, order.getTime());
 		out.setStatus(order.getStatus());
 		out.setExecutedQuantity(order.getExecutedQuantity());
 		out.setAveragePrice(order.getPrice());

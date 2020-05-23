@@ -105,8 +105,8 @@ public class OrderSetTest {
 		assertTrue(s1.isEmpty());
 	}
 
-	private DefaultOrder newOrder(long orderId) {
-		DefaultOrder out = new DefaultOrder(orderId,"a", "b", Order.Side.BUY, Trade.Side.LONG, 0) {
+	private Order newOrder(long orderId) {
+		Order out = new Order(orderId,"a", "b", Order.Side.BUY, Trade.Side.LONG, 0) {
 			@Override
 			public int compareTo(Order o) {
 				return StringUtils.leftPad(this.getOrderId(), 2, '0').compareTo(StringUtils.leftPad(o.getOrderId(), 2, '0'));

@@ -68,7 +68,7 @@ public interface TradingFees {
 	 *
 	 * @return the fee amount for the current partial fill value traded through this order.
 	 */
-	default double feesOnPartialFill(DefaultOrder order) {
+	default double feesOnPartialFill(Order order) {
 		final double amount = order.getPartialFillTotalPrice();
 		if (amount == 0.0) {
 			return 0.0;

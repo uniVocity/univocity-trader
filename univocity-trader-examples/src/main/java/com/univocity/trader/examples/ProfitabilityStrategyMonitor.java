@@ -6,7 +6,6 @@ import org.slf4j.*;
 
 import com.univocity.trader.*;
 import com.univocity.trader.account.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.strategy.*;
 
 public class ProfitabilityStrategyMonitor extends StrategyMonitor {

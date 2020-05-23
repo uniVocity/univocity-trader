@@ -114,9 +114,9 @@ public class SimulatedAccountManager extends AccountManager implements Simulated
 
 	@Override
 	public SimulatedAccountManager setAmount(String symbol, double amount) {
-//		if("".equals(symbol)){
-//			symbol = getReferenceCurrencySymbol();
-//		}
+		if("".equals(symbol)){
+			symbol = getReferenceCurrencySymbol();
+		}
 		if (configuration.isSymbolSupported(symbol)) {
 			balances.put(symbol, new Balance(this, symbol, amount));
 			this.balancesArray = null;

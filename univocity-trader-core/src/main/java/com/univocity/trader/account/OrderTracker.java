@@ -175,7 +175,7 @@ public final class OrderTracker {
 			pendingOrders.addOrReplace(update);
 		}
 
-		if ((account.isSimulated() && update instanceof DefaultOrder && ((DefaultOrder) update).hasPartialFillDetails()) || update.getExecutedQuantity() != order.getExecutedQuantity()) {
+		if ((account.isSimulated() && update instanceof Order && ((Order) update).hasPartialFillDetails()) || update.getExecutedQuantity() != order.getExecutedQuantity()) {
 			logOrderStatus("Order updated. ", update);
 			account.executeUpdateBalances();
 			orderManager.updated(update, trader, tradingManager::resubmit);
@@ -206,7 +206,7 @@ public final class OrderTracker {
 			log.error("Failed to execute cancellation of order '" + order + "' on exchange", e);
 		} finally {
 			removePendingOrder(order);
-			order = account.updateOrderStatus(order);
+//			order = account.updateOrderStatus(order);
 			orderFinalized(order);
 			logOrderStatus("Cancellation via order manager: ", order);
 		}

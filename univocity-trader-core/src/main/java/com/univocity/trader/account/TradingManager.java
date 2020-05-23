@@ -554,7 +554,7 @@ public final class TradingManager {
 		orderTracker.waitForFill(order);
 	}
 
-	public void removePendingOrder(DefaultOrder order) {
+	public void removePendingOrder(Order order) {
 		orderTracker.removePendingOrder(order);
 	}
 }
