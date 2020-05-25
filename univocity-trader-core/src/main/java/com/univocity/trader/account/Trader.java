@@ -7,7 +7,6 @@ import com.univocity.trader.indicators.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.strategy.*;
-import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import java.util.*;
@@ -15,7 +14,6 @@ import java.util.concurrent.atomic.*;
 
 import static com.univocity.trader.account.Trade.Side.*;
 import static com.univocity.trader.indicators.Signal.*;
-import static com.univocity.trader.utils.NewInstances.*;
 
 /**
  * A {@code Trader} is responsible for the lifecycle of a trade (or multiple) and provides all information
@@ -244,8 +242,10 @@ public final class Trader {
 		if (trade.canExit(context.strategy)) {
 			boolean notEmptyBeforeCancellations = !trade.isEmpty();
 			for (int i = trade.position.i - 1; i >= 0; i--) {
-				Order order = getOrder(trade.position.elements[i]);
-				tradingManager.cancelOrder(order);
+				Order order = getOrder(trade.position, i);
+				if (!order.isFinalized()) {
+					tradingManager.cancelOrder(order);
+				}
 			}
 			if (notEmptyBeforeCancellations && trade.isEmpty()) {
 				return false;
@@ -388,7 +388,7 @@ public final class Trader {
 			if (amountToSpend <= 0) {
 				return false;
 			}
-			order = tradingManager.buy(LONG,amountToSpend / context.latestCandle.close);
+			order = tradingManager.buy(LONG, amountToSpend / context.latestCandle.close);
 		} else if (tradeSide == SHORT) {
 			double shortedQuantity = accountManager.getBalance(referenceCurrencySymbol(), Balance::getShorted);
 			order = tradingManager.buy(SHORT, shortedQuantity);
@@ -461,8 +461,8 @@ public final class Trader {
 	private void cancelOpenBuyOrders(Trade trade, Strategy strategy) {
 		if (trade.canExit(strategy)) {
 			for (int i = trade.position.i - 1; i >= 0; i--) {
-				Order order = getOrder(trade.position.elements[i]);
-				if(!order.isFinalized()) {
+				Order order = getOrder(trade.position, i);
+				if (!order.isFinalized()) {
 					tradingManager.cancelOrder(order);
 				}
 			}
@@ -800,8 +800,8 @@ public final class Trader {
 		return trades.asSet();
 	}
 
-	Order getOrder(Order id){
-		return tradingManager.orderTracker.getOrder(id);
+	Order getOrder(OrderSet set, int i) {
+		return set.elements[i] = tradingManager.orderTracker.getOrder(set.elements[i]);
 	}
 
 	public int pipSize() {

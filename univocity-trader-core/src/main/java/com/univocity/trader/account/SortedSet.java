@@ -113,14 +113,6 @@ public class SortedSet<T extends Comparable<T>> {
 		i = n;
 	}
 
-	public final List<T> asList() {
-		ArrayList<T> out = new ArrayList<>(i);
-		for (int i = this.i - 1; i >= 0; i--) {
-			out.add(elements[i]);
-		}
-		return out;
-	}
-
 	public final Set<T> asSet() {
 		Set<T> out = new TreeSet<>();
 		for (int i = 0; i < this.i; i++) {

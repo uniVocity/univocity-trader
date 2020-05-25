@@ -98,7 +98,7 @@ public final class Trade implements Comparable<Trade> {
 		try {
 			if (!exitOrders.isEmpty()) {
 				for (int i = exitOrders.i - 1; i >= 0; i--) {
-					Order order = trader.getOrder(exitOrders.elements[i]);
+					Order order = trader.getOrder(exitOrders, i);
 					if (!order.isFinalized()) {
 						trader.tradingManager.cancelOrder(order);
 					}
@@ -328,7 +328,7 @@ public final class Trade implements Comparable<Trade> {
 		totalSpent = 0.0;
 		totalUnits = 0.0;
 		for (int i = orders.i - 1; i >= 0; i--) {
-			Order order = trader.getOrder(orders.elements[i]);
+			Order order = trader.getOrder(orders, i);
 			double fees = order.getFeesPaid();
 			totalSpent += order.getTotalTraded() + (order.isBuy() ? fees : -fees);
 			totalUnits += order.getExecutedQuantity();
@@ -420,12 +420,13 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	public List<Order> position() {
-		return updateOrders(position.asList());
+		return updateOrders(position);
 	}
 
-	private List<Order> updateOrders(List<Order> out){
-		for (int i = 0; i < out.size(); i++) {
-			out.set(i, trader.getOrder(out.get(i)));
+	private List<Order> updateOrders(OrderSet orders){
+		List<Order> out = new ArrayList<>(orders.size());
+		for (int i = orders.i - 1; i >= 0; i--) {
+			out.add(trader.getOrder(orders, i));
 		}
 		return out;
 	}
@@ -486,7 +487,7 @@ public final class Trade implements Comparable<Trade> {
 		double total = 0;
 
 		for (int i = orders.i - 1; i >= 0; i--) {
-			Order order = trader.getOrder(orders.elements[i]);
+			Order order = trader.getOrder(orders, i);
 			if (order.isCancelled() && order.getExecutedQuantity() == 0) {
 				orders.remove(order);
 			} else {
@@ -560,7 +561,7 @@ public final class Trade implements Comparable<Trade> {
 		}
 
 		for (int i = exitOrders.i - 1; i >= 0; i--) {
-			Order order = trader.getOrder(exitOrders.elements[i]);
+			Order order = trader.getOrder(exitOrders, i);
 			if (!order.isFinalized()) {
 				return true;
 			}
@@ -679,7 +680,7 @@ public final class Trade implements Comparable<Trade> {
 	}
 
 	public List<Order> exitOrders() {
-		return updateOrders(exitOrders.asList());
+		return updateOrders(exitOrders);
 	}
 
 	@Override
@@ -738,7 +739,7 @@ public final class Trade implements Comparable<Trade> {
 	public void liquidate() {
 		ImmediateFillEmulator immediateFill = new ImmediateFillEmulator();
 		for (int i = exitOrders.i - 1; i >= 0; i--) {
-			Order order = trader.getOrder(exitOrders.elements[i]);
+			Order order = trader.getOrder(exitOrders, i);
 			if (!order.isFinalized()) {
 				immediateFill.fillOrder(order, latestCandle());
 				trader.tradingManager.notifyOrderFinalized(order);

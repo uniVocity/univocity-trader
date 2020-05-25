@@ -538,8 +538,8 @@ public final class TradingManager {
 		return configuration.monitors();
 	}
 
-	Order cancelOrder(Order order) {
-		return orderTracker.cancelOrder(order);
+	void cancelOrder(Order order) {
+		orderTracker.cancelOrder(order);
 	}
 
 	public void cancelStaleOrdersFor(Trade.Side side, Trader trader) {
@@ -552,9 +552,5 @@ public final class TradingManager {
 
 	public void waitForFill(Order order){
 		orderTracker.waitForFill(order);
-	}
-
-	public void removePendingOrder(Order order) {
-		orderTracker.removePendingOrder(order);
 	}
 }

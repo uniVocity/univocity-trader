@@ -22,6 +22,7 @@ public class Order extends OrderRequest implements Comparable<Order> {
 	private double partialFillPrice = 0.0;
 	private double partialFillQuantity = 0.0;
 	private Trade trade;
+	public boolean processed = false;
 
 	public Order(long id, String assetSymbol, String fundSymbol, Side side, Trade.Side tradeSide, long time) {
 		super(assetSymbol, fundSymbol, side, tradeSide, time, null);

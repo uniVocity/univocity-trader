@@ -13,6 +13,7 @@ public final class OrderTracker {
 	private static final Logger log = LoggerFactory.getLogger(OrderTracker.class);
 
 	private final OrderSet pendingOrders = new OrderSet();
+	private final OrderSet finalizedOrders = new OrderSet();
 	private final TradingManager tradingManager;
 	private final AccountManager account;
 	private final OrderManager orderManager;
@@ -39,7 +40,7 @@ public final class OrderTracker {
 		new Thread(() -> {
 			Thread.currentThread().setName("Order " + order.getOrderId() + " monitor: " + order.getSide() + " " + order.getSymbol());
 			Order o = order;
-			Order updated = order;
+			Order updated;
 			while (true) {
 				try {
 					try {
@@ -48,10 +49,7 @@ public final class OrderTracker {
 						Thread.currentThread().interrupt();
 					}
 
-					if (!o.isFinalized()) {
-						updated = account.updateOrderStatus(o);
-					}
-
+					updated = account.updateOrderStatus(o);
 					processOrderUpdate(o, updated);
 					if (o.isFinalized()) {
 						return;
@@ -91,7 +89,14 @@ public final class OrderTracker {
 		return false;
 	}
 
-	void orderFinalized(Order order) {
+	private void orderFinalized(Order order) {
+		synchronized (finalizedOrders) {
+			synchronized (pendingOrders) {
+				finalizedOrders.addOrReplace(order);
+				pendingOrders.remove(order);
+			}
+		}
+
 		try {
 			account.executeUpdateBalances();
 		} finally {
@@ -144,16 +149,15 @@ public final class OrderTracker {
 		}
 	}
 
-	public void removePendingOrder(Order order) {
-		synchronized (pendingOrders) {
-			pendingOrders.remove(order);
-		}
-	}
-
 	public void updateOpenOrders() {
-		if (account.isSimulated()) {
-			for (int i = pendingOrders.i - 1; i >= 0; i--) {
-				Order order = pendingOrders.elements[i];
+		if (account.isSimulated() && !pendingOrders.isEmpty()) {
+			Order[] pending = pendingOrders.elements;
+			final int start = pendingOrders.i;
+			for (int i = start - 1; i >= 0; i--) {
+				Order order = pending[i];
+				if (order.getParent() != null && order.getParent().getAttachments().size() > 1) {
+					pending = pending.clone();
+				}
 				Order update = account.updateOrderStatus(order);
 				processOrderUpdate(order, update);
 			}
@@ -163,11 +167,13 @@ public final class OrderTracker {
 	private void processOrderUpdate(Order order, Order update) {
 		if (update.isFinalized()) {
 			logOrderStatus("Order finalized. ", update);
-			removePendingOrder(update);
 			orderFinalized(update);
 			return;
-		} else { // update order status
-			pendingOrders.addOrReplace(update);
+		} else {
+			// update order status
+			synchronized (pendingOrders) {
+				pendingOrders.addOrReplace(update);
+			}
 		}
 
 		if ((account.isSimulated() && update.hasPartialFillDetails()) || update.getExecutedQuantity() != order.getExecutedQuantity()) {
@@ -180,18 +186,26 @@ public final class OrderTracker {
 		}
 
 		//order manager could have cancelled the order
-		if (update.getStatus() == CANCELLED && pendingOrders.contains(update)) {
-			cancelOrder(update);
+		if (update.getStatus() == CANCELLED) {
+			cancelOrder(update, true);
 		}
 	}
 
+	void cancelOrder(Order order) {
+		cancelOrder(order, false);
+	}
 
-	Order cancelOrder(Order order) {
+	void cancelOrder(Order order, boolean tryForceAccountCancellation) {
+		Order update;
 		synchronized (pendingOrders) {
-			if (!pendingOrders.contains(order)) {
-				return order;
-			}
-			order = pendingOrders.get(order);
+			update = pendingOrders.get(order);
+		}
+
+		if (!tryForceAccountCancellation && (update == null || update.isFinalized())) {
+			return;
+		}
+		if (update != null) {
+			order = update;
 		}
 
 		try {
@@ -200,30 +214,33 @@ public final class OrderTracker {
 		} catch (Exception e) {
 			log.error("Failed to execute cancellation of order '" + order + "' on exchange", e);
 		} finally {
-			removePendingOrder(order);
 			orderFinalized(order);
 			logOrderStatus("Cancellation via order manager: ", order);
 		}
-		return order;
 	}
 
 	public void cancelStaleOrdersFor(Trade.Side side, Trader trader) {
 		account.forEachTradingManager(tradingManager -> {
 			if (!tradingManager.symbol.equals(this.tradingManager.symbol)) {
-				for (int i = tradingManager.orderTracker.pendingOrders.i - 1; i >= 0; i--) {
-					Order order = tradingManager.orderTracker.pendingOrders.elements[i];
-					if (order.isFinalized()) {
-						continue;
-					}
-					if (tradingManager.orderManager.cancelToReleaseFundsFor(order, tradingManager.trader, trader)) {
-						if (order.getStatus() == CANCELLED) {
-							tradingManager.orderTracker.cancelOrder(order);
-							return;
-						}
-					}
-				}
+				tradingManager.orderTracker.executeCancelStaleOrdersFor(side, trader);
 			}
 		});
+	}
+
+	void executeCancelStaleOrdersFor(Trade.Side side, Trader trader) {
+		List<Order> ordersToCancel = new ArrayList<>(1);
+		synchronized (pendingOrders) {
+			for (int i = pendingOrders.i - 1; i >= 0; i--) {
+				Order order = pendingOrders.elements[i];
+				if (order.isFinalized()) {
+					continue;
+				}
+				if (tradingManager.orderManager.cancelToReleaseFundsFor(order, tradingManager.trader, trader)) {
+					ordersToCancel.add(order);
+				}
+			}
+		}
+		ordersToCancel.forEach(this::cancelOrder);
 	}
 
 	public void cancelAllOrders() {
@@ -246,7 +263,23 @@ public final class OrderTracker {
 		Order latestUpdate;
 		synchronized (pendingOrders) {
 			latestUpdate = pendingOrders.get(order);
+			if (latestUpdate != null && latestUpdate.isFinalized()) {
+				synchronized (finalizedOrders) {
+					finalizedOrders.addOrReplace(order);
+					pendingOrders.remove(order);
+				}
+			}
 		}
+
+		if (latestUpdate == null) {
+			synchronized (finalizedOrders) {
+				latestUpdate = finalizedOrders.get(order);
+				if (latestUpdate != null) {
+					finalizedOrders.remove(order);
+				}
+			}
+		}
+
 		return latestUpdate == null ? order : latestUpdate;
 	}
 }
