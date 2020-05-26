@@ -227,6 +227,9 @@ public final class Trader {
 			if (isLong && noLongs) {
 				boolean hasLongPosition = tradingManager.hasPosition(context.latestCandle, false, true, false);
 				if (hasLongPosition) {
+					if(accountManager.hasOtherOpenTrades(tradingManager)) {
+						return; //another trading group is managing trades for this symbol.
+					}
 					// Sell without having a trade open. Might happen after starting up
 					// with assets in the account. Will generate a warning in the log.
 					context.trade = Trade.createPlaceholder(-1, this, LONG);
@@ -798,6 +801,10 @@ public final class Trader {
 
 	public Set<Trade> trades() {
 		return trades.asSet();
+	}
+
+	public boolean hasOpenTrades(){
+		return !trades.isEmpty();
 	}
 
 	Order getOrder(OrderSet set, int i) {

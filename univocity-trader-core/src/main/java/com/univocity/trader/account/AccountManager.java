@@ -466,4 +466,16 @@ public class AccountManager implements ClientAccount {
 			}
 		});
 	}
+
+	boolean hasOtherOpenTrades(TradingManager tradingManager) {
+		TradingManager[] tradingManagers = this.tradingManagers.get(tradingManager.symbol);
+		for (int i = 0; i < tradingManagers.length; i++) {
+			if (tradingManagers[i] != tradingManager) {
+				if (tradingManagers[i].trader.hasOpenTrades()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

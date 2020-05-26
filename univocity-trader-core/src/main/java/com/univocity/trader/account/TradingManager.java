@@ -150,6 +150,11 @@ public final class TradingManager {
 		if (includeShort && !includeLong) {
 			return positionValue > EFFECTIVELY_ZERO;
 		}
+
+		if(positionValue > minimumInvestmentAmountPerTrade() / 2.0){
+			return true; //ensure trade that is near or at the minimum amount is not exited without a stop/exit signal.
+		}
+
 		return positionValue > minimum && positionValue > minimumInvestmentAmountPerTrade();
 	}
 
