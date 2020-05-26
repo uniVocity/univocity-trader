@@ -423,7 +423,7 @@ public final class Trade implements Comparable<Trade> {
 		return updateOrders(position);
 	}
 
-	private List<Order> updateOrders(OrderSet orders){
+	private List<Order> updateOrders(OrderSet orders) {
 		List<Order> out = new ArrayList<>(orders.size());
 		for (int i = orders.i - 1; i >= 0; i--) {
 			out.add(trader.getOrder(orders, i));
@@ -517,9 +517,12 @@ public final class Trade implements Comparable<Trade> {
 		if (qtyInPosition == 0.0) {
 			return false;
 		}
-		double qtyInExit = removeCancelledAndSumQuantities(exitOrders);
 
+		double qtyInExit = removeCancelledAndSumQuantities(exitOrders);
 		double exitPct = qtyInExit * 100.0 / qtyInPosition;
+		if (exitPct < 98) {
+			return false;
+		}
 
 		double fractionRemaining = qtyInPosition - qtyInExit;
 		if (fractionRemaining * lastClosingPrice() < trader.tradingManager.minimumInvestmentAmountPerTrade() || exitPct > 98.0) {

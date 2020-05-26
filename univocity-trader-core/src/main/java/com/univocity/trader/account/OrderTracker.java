@@ -90,10 +90,12 @@ public final class OrderTracker {
 	}
 
 	private void orderFinalized(Order order) {
-		synchronized (finalizedOrders) {
-			synchronized (pendingOrders) {
-				finalizedOrders.addOrReplace(order);
-				pendingOrders.remove(order);
+		synchronized (pendingOrders) {
+			pendingOrders.remove(order);
+			if (order.getExecutedQuantity() != 0) {
+				synchronized (finalizedOrders) {
+					finalizedOrders.addOrReplace(order);
+				}
 			}
 		}
 
@@ -116,6 +118,7 @@ public final class OrderTracker {
 				}
 			}
 		}
+
 	}
 
 	private void notifyFinalized(Order order, Trader trader) {
@@ -150,16 +153,15 @@ public final class OrderTracker {
 	}
 
 	public void updateOpenOrders() {
-		if (account.isSimulated() && !pendingOrders.isEmpty()) {
-			Order[] pending = pendingOrders.elements;
-			final int start = pendingOrders.i;
-			for (int i = start - 1; i >= 0; i--) {
-				Order order = pending[i];
-				if (order.getParent() != null && order.getParent().getAttachments().size() > 1) {
-					pending = pending.clone();
+		synchronized (pendingOrders) {
+			if (account.isSimulated() && !pendingOrders.isEmpty()) {
+				Order[] pending = pendingOrders.elements.length > 1 ? pendingOrders.elements.clone() : pendingOrders.elements;
+				final int start = pendingOrders.i;
+				for (int i = start - 1; i >= 0; i--) {
+					Order order = pending[i];
+					Order update = account.updateOrderStatus(order);
+					processOrderUpdate(order, update);
 				}
-				Order update = account.updateOrderStatus(order);
-				processOrderUpdate(order, update);
 			}
 		}
 	}

@@ -227,7 +227,7 @@ public final class Trader {
 			if (isLong && noLongs) {
 				boolean hasLongPosition = tradingManager.hasPosition(context.latestCandle, false, true, false);
 				if (hasLongPosition) {
-					if(accountManager.hasOtherOpenTrades(tradingManager)) {
+					if (accountManager.hasOtherOpenTrades(tradingManager)) {
 						return; //another trading group is managing trades for this symbol.
 					}
 					// Sell without having a trade open. Might happen after starting up
@@ -771,12 +771,10 @@ public final class Trader {
 
 	void removeFinalizedTrades() {
 		if (!trades.isEmpty()) {
-			synchronized (trades) { //keep synchronized here for simulations when the lock is disabled
-				for (int i = trades.i - 1; i >= 0; i--) {
-					Trade trade = trades.elements[i];
-					if (trade.isFinalized()) {
-						trades.remove(trade);
-					}
+			for (int i = trades.i - 1; i >= 0; i--) {
+				Trade trade = trades.elements[i];
+				if (trade.isFinalized()) {
+					trades.remove(trade);
 				}
 			}
 		}
@@ -803,7 +801,7 @@ public final class Trader {
 		return trades.asSet();
 	}
 
-	public boolean hasOpenTrades(){
+	public boolean hasOpenTrades() {
 		return !trades.isEmpty();
 	}
 
