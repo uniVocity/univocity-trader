@@ -44,7 +44,8 @@ public class OrderFillChecker {
 
 		SimulatedClientAccount clientAccount = new SimulatedClientAccount(accountCfg, configuration.simulation());
 		SimulatedAccountManager account = clientAccount.getAccount();
-		account.createTradingManagers(new SimulatedExchange(account), null, Parameters.NULL);
+		SimulatedExchange exchange = new SimulatedExchange(account);
+		account.getAllSymbolPairs().keySet().forEach(s -> account.createTradingManager(s, exchange, null, Parameters.NULL));
 
 		TradingManager m = account.tradingManagers.get("ADAUSDT")[0];
 		Trader trader = m.trader;

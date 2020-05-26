@@ -50,7 +50,7 @@ public final class Client<T> {
 		emailNotifier = mailSender != null ? new OrderExecutionToEmail(mailSender) : null;
 
 		Set<Object> allInstances = new HashSet<>();
-		accountManager.createTradingManagers(exchange, emailNotifier, Parameters.NULL);
+		accountManager.getAllSymbolPairs().keySet().forEach(s -> accountManager.createTradingManager(s, exchange, emailNotifier, Parameters.NULL));
 
 		Map<String, List<CandleProcessor<T>>> tmp = new HashMap<>();
 

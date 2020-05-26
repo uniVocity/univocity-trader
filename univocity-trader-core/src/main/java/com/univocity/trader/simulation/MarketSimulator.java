@@ -69,7 +69,10 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 		for (AccountManager account : accounts()) {
 			SimulatedExchange exchange = new SimulatedExchange(account);
-			account.createTradingManagers(exchange, null, parameters);
+
+			for(String symbol : account.getAllSymbolPairs().keySet()){
+				account.createTradingManager(symbol, exchange, null, parameters);
+			}
 
 			account.forEachTradingManager(tradingManager -> {
 				Engine engine = new TradingEngine(tradingManager, parameters, allInstances);
