@@ -3,6 +3,7 @@ package com.univocity.trader.chart;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.gui.*;
+import com.univocity.trader.chart.gui.time.*;
 import com.univocity.trader.config.*;
 import org.slf4j.*;
 
@@ -10,7 +11,6 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.time.*;
-import java.time.temporal.*;
 import java.util.List;
 import java.util.*;
 
@@ -24,6 +24,10 @@ public class SymbolSelector extends JPanel {
 	private final CandleRepository candleRepository;
 	private final CandleHistory candleHistory;
 
+	private DateEditPanel chartStart;
+	private DateEditPanel chartEnd;
+	private JButton btLoad;
+
 	public SymbolSelector(CandleRepository candleRepository, CandleHistory candleHistory) {
 		this.candleRepository = candleRepository;
 		this.candleHistory = candleHistory;
@@ -31,18 +35,28 @@ public class SymbolSelector extends JPanel {
 		this.setLayout(new GridBagLayout());
 
 		GridBagConstraints c = new GridBagConstraints();
-		c.gridx = 0;
 		c.gridy = 0;
-		c.fill = GridBagConstraints.BOTH;
-		c.insets = new Insets(5, 5, 5, 5);
-		this.add(new JLabel("Symbol"), c);
+		this.add(getChartStart(), c);
+
+		c.gridy = 1;
+		this.add(getChartEnd(), c);
 
 		c.gridx = 1;
-		c.weightx = 1;
-		c.insets = new Insets(5, 0, 5, 5);
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(5, 5, 5, 5);
 		this.add(getCmbSymbols(), c);
 
-		this.setBorder(new TitledBorder("Symbol data"));
+		c.gridy = 1;
+		this.add(btLoad(), c);
+	}
+
+	private JButton btLoad(){
+		if(btLoad == null){
+			btLoad = new JButton("Load");
+			btLoad.addActionListener((e) -> SwingUtilities.invokeLater(this::loadCandles));
+		}
+		return btLoad;
 	}
 
 	public String getSymbol() {
@@ -85,22 +99,20 @@ public class SymbolSelector extends JPanel {
 			cmbSymbols = new JComboBox<>(cmbSymbolsModel);
 			cmbSymbols.setEditable(true);
 			cmbSymbols.setSelectedIndex(-1);
-			cmbSymbols.addActionListener((e) -> SwingUtilities.invokeLater(this::loadCandles));
+			cmbSymbols.addActionListener((e) -> btLoad.setEnabled(true));
 		}
 		return cmbSymbols;
 	}
 
 	private void loadCandles() {
+		btLoad.setEnabled(false);
 		String symbol = validateSymbol();
 		if (symbol == null) {
 			return;
 		}
 
 		try {
-			Instant from = Instant.now().minus(30, ChronoUnit.DAYS);
-			Instant to = Instant.now().minus(30, ChronoUnit.DAYS).plus(12, ChronoUnit.DAYS);
-
-			List<Candle> candles = Collections.list(candleRepository.iterate(symbol, from, to, true));
+			List<Candle> candles = Collections.list(candleRepository.iterate(symbol, getChartStart().getCommittedValue(), getChartEnd().getCommittedValue(), true));
 			if (candles.size() == 0) {
 				WindowUtils.displayWarning(this, "No history data available for symbol " + symbol);
 			}
@@ -118,6 +130,25 @@ public class SymbolSelector extends JPanel {
 		}
 
 		return symbol;
+	}
+
+	private DateEditPanel getChartStart() {
+		if (chartStart == null) {
+			chartStart = new DateEditPanel(LocalDateTime.now().minusDays(30));
+			chartStart.setBorder(new TitledBorder("From"));
+			chartStart.addDateEditPanelListener(e -> btLoad().setEnabled(true));
+
+		}
+		return chartStart;
+	}
+
+	private DateEditPanel getChartEnd() {
+		if (chartEnd == null) {
+			chartEnd = new DateEditPanel(LocalDateTime.now());
+			chartEnd.setBorder(new TitledBorder("To"));
+			chartStart.addDateEditPanelListener(e -> btLoad().setEnabled(true));
+		}
+		return chartEnd;
 	}
 
 	public static void main(String... args) {

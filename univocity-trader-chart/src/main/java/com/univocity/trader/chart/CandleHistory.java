@@ -58,7 +58,7 @@ public class CandleHistory implements Iterable<Candle> {
 		notifyUpdateListeners();
 	}
 
-	public void setCandles(List<Candle> candles){
+	public void setCandles(List<Candle> candles) {
 		this.candles.clear();
 		this.candles.addAll(candles);
 		notifyUpdateListeners();
@@ -72,11 +72,38 @@ public class CandleHistory implements Iterable<Candle> {
 		return new CandleHistoryView(this);
 	}
 
-	public Candle getFirst(){
+	public Candle getFirst() {
 		return get(0);
 	}
 
 	public Candle getLast() {
 		return get(size() - 1);
 	}
+
+	public Candle getAtTime(long time) {
+		if (time < getFirst().openTime) {
+			return getFirst();
+		} else if (time > getLast().closeTime) {
+			return getLast();
+		}
+
+		Candle key = new Candle(time, time, 0, 0, 0, 0, 0);
+		int position = Collections.binarySearch(candles, key, timeSearch);
+		if (position >= 0) {
+			return candles.get(position);
+		}
+		return null;
+	}
+
+	private static final Comparator<Candle> timeSearch = (o1, o2) -> {
+		if (o1.openTime >= o2.openTime) {
+			if (o1.closeTime <= o2.closeTime) {
+				return 0;
+			} else {
+				return 1;
+			}
+		} else {
+			return -1;
+		}
+	};
 }
