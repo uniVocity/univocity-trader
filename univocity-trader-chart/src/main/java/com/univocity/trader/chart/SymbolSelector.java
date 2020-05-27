@@ -48,12 +48,13 @@ public class SymbolSelector extends JPanel {
 		this.add(getCmbSymbols(), c);
 
 		c.gridy = 1;
-		this.add(btLoad(), c);
+		this.add(getBtLoad(), c);
 	}
 
-	private JButton btLoad(){
+	private JButton getBtLoad(){
 		if(btLoad == null){
 			btLoad = new JButton("Load");
+			btLoad.setEnabled(false);
 			btLoad.addActionListener((e) -> SwingUtilities.invokeLater(this::loadCandles));
 		}
 		return btLoad;
@@ -136,7 +137,7 @@ public class SymbolSelector extends JPanel {
 		if (chartStart == null) {
 			chartStart = new DateEditPanel(LocalDateTime.now().minusDays(30));
 			chartStart.setBorder(new TitledBorder("From"));
-			chartStart.addDateEditPanelListener(e -> btLoad().setEnabled(true));
+			chartStart.addDateEditPanelListener(e -> getBtLoad().setEnabled(true));
 
 		}
 		return chartStart;
@@ -146,7 +147,7 @@ public class SymbolSelector extends JPanel {
 		if (chartEnd == null) {
 			chartEnd = new DateEditPanel(LocalDateTime.now());
 			chartEnd.setBorder(new TitledBorder("To"));
-			chartStart.addDateEditPanelListener(e -> btLoad().setEnabled(true));
+			chartStart.addDateEditPanelListener(e -> getBtLoad().setEnabled(true));
 		}
 		return chartEnd;
 	}

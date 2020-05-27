@@ -29,6 +29,9 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 		}
 
 		double columnWidth = Math.round(chart.getHorizontalIncrement() * 20.0);
+		if(columnWidth == 0){
+			columnWidth = 20;
+		}
 
 		double increments = width / columnWidth;
 

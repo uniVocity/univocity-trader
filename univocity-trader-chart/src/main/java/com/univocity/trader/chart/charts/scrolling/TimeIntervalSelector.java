@@ -224,6 +224,10 @@ public class TimeIntervalSelector extends ChartCanvas {
 			endHandle.candle = last;
 		}
 
+		if (candleHistory.size() > 1000) {
+			startHandle.candle = candleHistory.get(candleHistory.size() - 1000);
+		}
+
 		//looking at most recent history, update view
 		if (endHandle.candle == chart.candleHistory.getLast() && endHandle.candle != last) {
 			endHandle.candle = last;
