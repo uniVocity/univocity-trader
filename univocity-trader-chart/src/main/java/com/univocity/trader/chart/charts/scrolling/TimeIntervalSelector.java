@@ -211,7 +211,7 @@ public class TimeIntervalSelector extends ChartCanvas {
 		g.fillRect(start, 0, end, getHeight());
 	}
 
-	public void dataUpdated() {
+	public void dataUpdated(CandleHistory.UpdateType updateType) {
 		this.dataUpdated = true;
 
 		Candle first = candleHistory.getFirst();
@@ -224,8 +224,10 @@ public class TimeIntervalSelector extends ChartCanvas {
 			endHandle.candle = last;
 		}
 
-		if (candleHistory.size() > 1000) {
-			startHandle.candle = candleHistory.get(candleHistory.size() - 1000);
+		if(updateType == CandleHistory.UpdateType.NEW_HISTORY) {
+			if (candleHistory.size() > 1000) {
+				startHandle.candle = candleHistory.get(candleHistory.size() - 1000);
+			}
 		}
 
 		//looking at most recent history, update view

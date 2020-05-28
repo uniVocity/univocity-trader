@@ -3,16 +3,21 @@ package com.univocity.trader.chart;
 import com.univocity.trader.candles.*;
 
 import java.util.*;
+import java.util.function.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
 public class CandleHistory implements Iterable<Candle> {
 
-	private List<Candle> candles = new ArrayList<>(1000);
-	private final List<Runnable> dataUpdateListeners = new ArrayList<>();
+	private final List<Candle> candles = new ArrayList<>(1000);
+	private final List<Consumer<UpdateType>> dataUpdateListeners = new ArrayList<>();
 
-	public void addDataUpdateListener(Runnable r) {
+	public enum UpdateType {
+		NEW_HISTORY, INCREMENT, SELECTION
+	}
+
+	public void addDataUpdateListener(Consumer<UpdateType> r) {
 		dataUpdateListeners.add(r);
 	}
 
@@ -45,7 +50,7 @@ public class CandleHistory implements Iterable<Candle> {
 
 	public void addAll(Collection<Candle> candles) {
 		if (this.candles.addAll(candles)) {
-			notifyUpdateListeners();
+			notifyUpdateListeners(UpdateType.INCREMENT);
 		}
 	}
 
@@ -55,17 +60,17 @@ public class CandleHistory implements Iterable<Candle> {
 
 	public void add(Candle candle) {
 		candles.add(candle);
-		notifyUpdateListeners();
+		notifyUpdateListeners(UpdateType.INCREMENT);
 	}
 
 	public void setCandles(List<Candle> candles) {
 		this.candles.clear();
 		this.candles.addAll(candles);
-		notifyUpdateListeners();
+		notifyUpdateListeners(UpdateType.NEW_HISTORY);
 	}
 
-	public void notifyUpdateListeners() {
-		dataUpdateListeners.forEach(Runnable::run);
+	public void notifyUpdateListeners(UpdateType updateType) {
+		dataUpdateListeners.forEach(c->c.accept(updateType));
 	}
 
 	public CandleHistoryView newView() {

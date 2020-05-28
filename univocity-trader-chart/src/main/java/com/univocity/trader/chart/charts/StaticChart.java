@@ -145,7 +145,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		}
 	}
 
-	private void dataUpdated() {
+	private void dataUpdated(CandleHistory.UpdateType type) {
 		canvas.updateScroll();
 		onScrollPositionUpdate(-1);
 	}

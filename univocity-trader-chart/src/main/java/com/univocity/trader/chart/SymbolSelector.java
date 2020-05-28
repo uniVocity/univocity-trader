@@ -101,6 +101,7 @@ public class SymbolSelector extends JPanel {
 			cmbSymbols.setEditable(true);
 			cmbSymbols.setSelectedIndex(-1);
 			cmbSymbols.addActionListener((e) -> btLoad.setEnabled(true));
+			cmbSymbols.addActionListener((e) -> fillAvailableDates());
 		}
 		return cmbSymbols;
 	}
@@ -147,9 +148,18 @@ public class SymbolSelector extends JPanel {
 		if (chartEnd == null) {
 			chartEnd = new DateEditPanel(LocalDateTime.now());
 			chartEnd.setBorder(new TitledBorder("To"));
-			chartStart.addDateEditPanelListener(e -> getBtLoad().setEnabled(true));
+			chartEnd.addDateEditPanelListener(e -> getBtLoad().setEnabled(true));
 		}
 		return chartEnd;
+	}
+
+	private void fillAvailableDates(){
+		String symbol = validateSymbol();
+		Candle first = candleRepository.firstCandle(symbol);
+		Candle last = candleRepository.lastCandle(symbol);
+
+		getChartStart().setValue(first.openTime);
+		getChartEnd().setValue(last.closeTime);
 	}
 
 	public static void main(String... args) {
