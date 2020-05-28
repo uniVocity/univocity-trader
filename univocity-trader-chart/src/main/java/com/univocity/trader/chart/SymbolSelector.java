@@ -139,6 +139,8 @@ public class SymbolSelector extends JPanel {
 			chartStart = new DateEditPanel(LocalDateTime.now().minusDays(30));
 			chartStart.setBorder(new TitledBorder("From"));
 			chartStart.addDateEditPanelListener(e -> getBtLoad().setEnabled(true));
+			chartStart.setEnabled(false);
+			getChartEnd().addDateEditPanelListener(e -> chartStart.setMaximumValue(e.getNewDate()));
 
 		}
 		return chartStart;
@@ -149,17 +151,30 @@ public class SymbolSelector extends JPanel {
 			chartEnd = new DateEditPanel(LocalDateTime.now());
 			chartEnd.setBorder(new TitledBorder("To"));
 			chartEnd.addDateEditPanelListener(e -> getBtLoad().setEnabled(true));
+			chartEnd.setEnabled(false);
+			getChartStart().addDateEditPanelListener(e -> chartEnd.setMinimumValue(e.getNewDate()));
 		}
 		return chartEnd;
 	}
 
 	private void fillAvailableDates(){
 		String symbol = validateSymbol();
-		Candle first = candleRepository.firstCandle(symbol);
-		Candle last = candleRepository.lastCandle(symbol);
+		setDateSelectionEnabled(symbol != null);
+		if(symbol != null) {
+			Candle first = candleRepository.firstCandle(symbol);
+			Candle last = candleRepository.lastCandle(symbol);
 
-		getChartStart().setMinimumValue(first.openTime);
-		getChartEnd().setMaximumValue(last.closeTime);
+			getChartStart().setMinimumValue(first.openTime);
+			getChartEnd().setMaximumValue(last.closeTime);
+
+			getChartStart().setValue(first.openTime);
+			getChartEnd().setValue(last.closeTime);
+		}
+	}
+
+	private void setDateSelectionEnabled(boolean enabled){
+		getChartStart().setEnabled(enabled);
+		getChartEnd().setEnabled(enabled);
 	}
 
 	public static void main(String... args) {

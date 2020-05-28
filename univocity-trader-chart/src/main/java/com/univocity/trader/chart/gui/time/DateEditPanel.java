@@ -42,7 +42,7 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 
 	private final Dimension visible = new Dimension(16, 16);
 	private final Dimension invisible = new Dimension(0, visible.height);
-	private List<Component[]> allSpinnerButtons = new ArrayList<>();
+	private final List<Component[]> allSpinnerButtons = new ArrayList<>();
 
 	private final ChangeListener changeListener = e -> {
 		if (value.compareTo(updateEditingValue()) != 0) {
@@ -234,14 +234,16 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 				MouseAdapter enter = new MouseAdapter() {
 					@Override
 					public void mouseEntered(MouseEvent e) {
-						allSpinnerButtons.forEach(p -> {
-							p[0].setVisible(p[0] == buttons[0]);
-							p[1].setVisible(p[1] == buttons[1]);
-							p[0].setPreferredSize(p[0] == buttons[0] ? visible : invisible);
-							p[1].setPreferredSize(p[1] == buttons[1] ? visible : invisible);
-						});
-						spacerLeft.setPreferredSize(invisible);
-						spacerRight.setPreferredSize(invisible);
+						if (DateEditPanel.this.isEnabled()) {
+							allSpinnerButtons.forEach(p -> {
+								p[0].setVisible(p[0] == buttons[0]);
+								p[1].setVisible(p[1] == buttons[1]);
+								p[0].setPreferredSize(p[0] == buttons[0] ? visible : invisible);
+								p[1].setPreferredSize(p[1] == buttons[1] ? visible : invisible);
+							});
+							spacerLeft.setPreferredSize(invisible);
+							spacerRight.setPreferredSize(invisible);
+						}
 					}
 				};
 
@@ -480,7 +482,7 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 		setMaximumValue(toCalendar(max));
 	}
 
-	private void setMaximumValue(Calendar max) {
+	public void setMaximumValue(Calendar max) {
 		if (minimumValue != null && max.before(minimumValue)) {
 			throw new IllegalArgumentException("Maximum value should come after minimum value");
 		}
@@ -509,7 +511,7 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 		setMinimumValue(toCalendar(min));
 	}
 
-	void setMinimumValue(Calendar min) {
+	public void setMinimumValue(Calendar min) {
 		if (maximumValue != null && min.after(maximumValue)) {
 			throw new IllegalArgumentException("Minimum value should come before maximum value");
 		}
