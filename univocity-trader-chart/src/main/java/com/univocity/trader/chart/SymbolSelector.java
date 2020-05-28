@@ -158,8 +158,8 @@ public class SymbolSelector extends JPanel {
 		Candle first = candleRepository.firstCandle(symbol);
 		Candle last = candleRepository.lastCandle(symbol);
 
-		getChartStart().setValue(first.openTime);
-		getChartEnd().setValue(last.closeTime);
+		getChartStart().setMinimumValue(first.openTime);
+		getChartEnd().setMaximumValue(last.closeTime);
 	}
 
 	public static void main(String... args) {

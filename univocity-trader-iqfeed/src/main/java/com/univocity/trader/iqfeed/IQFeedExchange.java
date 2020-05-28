@@ -121,19 +121,6 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 	}
 	// TODO: add callback for connection login via IQFeed
 
-	@Override
-	public Candle generateCandle(IQFeedCandle c) {
-		return new Candle(
-				c.getOpenTime(),
-				c.getCloseTime(),
-				c.getOpen(),
-				c.getHigh(),
-				c.getLow(),
-				c.getClose(),
-				c.getVolume()
-		);
-	}
-
 	public PreciseCandle generatePreciseCandle(IQFeedCandle c) {
 		return new PreciseCandle(
 				c.getOpenTime(),

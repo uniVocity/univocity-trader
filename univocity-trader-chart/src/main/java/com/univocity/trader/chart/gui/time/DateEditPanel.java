@@ -472,6 +472,10 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 		}
 	}
 
+	public void setMaximumValue(long max) {
+		setMaximumValue(toCalendar(max));
+	}
+
 	public void setMaximumValue(LocalDateTime max) {
 		setMaximumValue(toCalendar(max));
 	}
@@ -487,8 +491,18 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 		}
 	}
 
+	private static Calendar toCalendar(long time) {
+		Calendar c = Calendar.getInstance();
+		c.setTimeInMillis(time);
+		return c;
+	}
+
 	private static Calendar toCalendar(LocalDateTime dateTime) {
 		return dateTime == null ? null : GregorianCalendar.from(ZonedDateTime.of(dateTime, ZoneId.systemDefault()));
+	}
+
+	public void setMinimumValue(long min) {
+		setMinimumValue(toCalendar(min));
 	}
 
 	public void setMinimumValue(LocalDateTime min) {

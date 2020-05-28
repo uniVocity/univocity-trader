@@ -86,11 +86,6 @@ class IB implements Exchange<Candle, Account> {
 	}
 
 	@Override
-	public Candle generateCandle(Candle exchangeCandle) {
-		return exchangeCandle;
-	}
-
-	@Override
 	public PreciseCandle generatePreciseCandle(Candle exchangeCandle) {
 		return new PreciseCandle(exchangeCandle);
 	}
