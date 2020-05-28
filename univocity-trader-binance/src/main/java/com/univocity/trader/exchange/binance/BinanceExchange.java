@@ -71,19 +71,6 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	}
 
 	@Override
-	public Candle generateCandle(Candlestick exchangeCandle) {
-		return new Candle(
-				exchangeCandle.getOpenTime(),
-				exchangeCandle.getCloseTime(),
-				Double.parseDouble(exchangeCandle.getOpen()),
-				Double.parseDouble(exchangeCandle.getHigh()),
-				Double.parseDouble(exchangeCandle.getLow()),
-				Double.parseDouble(exchangeCandle.getClose()),
-				Double.parseDouble(exchangeCandle.getVolume())
-		);
-	}
-
-	@Override
 	public PreciseCandle generatePreciseCandle(Candlestick exchangeCandle) {
 		return new PreciseCandle(
 				exchangeCandle.getOpenTime(),

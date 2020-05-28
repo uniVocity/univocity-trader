@@ -2,21 +2,22 @@ package com.univocity.trader.candles;
 
 import com.univocity.trader.*;
 import com.univocity.trader.strategy.*;
-import org.apache.commons.lang3.*;
 import org.slf4j.*;
 
-public final  class CandleProcessor<T> {
+public final class CandleProcessor<T> {
 
 	private static final Logger log = LoggerFactory.getLogger(CandleProcessor.class);
 
 	private final Engine consumer;
 	private final Exchange exchange;
 	private final CandleRepository candleRepository;
+	private final boolean processFullCandlesOnly;
 
-	public CandleProcessor(CandleRepository candleRepository, Engine consumer, Exchange<T, ?> exchange) {
+	public CandleProcessor(CandleRepository candleRepository, Engine consumer, Exchange<T, ?> exchange, boolean processFullCandlesOnly) {
 		this.candleRepository = candleRepository;
 		this.consumer = consumer;
 		this.exchange = exchange;
+		this.processFullCandlesOnly = processFullCandlesOnly;
 	}
 
 	public void processCandle(Candle candle, boolean initializing) {
@@ -34,7 +35,18 @@ public final  class CandleProcessor<T> {
 				if (!candleRepository.addToHistory(consumer.getSymbol(), tick, initializing)) {  //already processed, skip.
 					return;
 				}
-				Candle candle = exchange.generateCandle(realTimeTick);
+
+				Candle candle;
+				if (processFullCandlesOnly && !initializing) {
+					PreciseCandle fullCandle = candleRepository.lastFullCandle(consumer.getSymbol());
+					if (fullCandle == null) {
+						return;
+					} else {
+						candle = new Candle(fullCandle);
+					}
+				} else {
+					candle = new Candle(tick);
+				}
 
 				processCandle(candle, initializing);
 			}
@@ -42,7 +54,5 @@ public final  class CandleProcessor<T> {
 			log.error("Error processing event:" + realTimeTick, e);
 		}
 	}
-
-
 }
 

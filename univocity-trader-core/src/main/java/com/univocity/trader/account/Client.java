@@ -56,7 +56,7 @@ public final class Client<T> {
 
 		accountManager.forEachTradingManager(tradingManager -> {
 			Engine engine = new TradingEngine(tradingManager, allInstances);
-			CandleProcessor<T> processor = new CandleProcessor<>(candleRepository, engine, exchange);
+			CandleProcessor<T> processor = new CandleProcessor<>(candleRepository, engine, exchange, tradingManager.processFullCandlesOnly());
 			tmp.computeIfAbsent(engine.getSymbol(), s -> new ArrayList<>()).add(processor);
 		});
 

@@ -558,4 +558,8 @@ public final class TradingManager {
 	public void waitForFill(Order order){
 		orderTracker.waitForFill(order);
 	}
+
+	public boolean processFullCandlesOnly() {
+		return configuration.processFullCandlesOnly();
+	}
 }

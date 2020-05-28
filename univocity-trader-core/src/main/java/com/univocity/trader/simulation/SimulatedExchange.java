@@ -30,11 +30,6 @@ public final class SimulatedExchange implements Exchange<Candle, SimulatedClient
 	}
 
 	@Override
-	public Candle generateCandle(Candle exchangeCandle) {
-		return exchangeCandle;
-	}
-
-	@Override
 	public PreciseCandle generatePreciseCandle(Candle exchangeCandle) {
 		throw new UnsupportedOperationException();
 	}

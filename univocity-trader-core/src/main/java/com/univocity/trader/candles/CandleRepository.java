@@ -53,26 +53,28 @@ public class CandleRepository {
 		return ps;
 	}
 
-	private final ConcurrentHashMap<String, long[]> recentCandles = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, PreciseCandle> processingCandles = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, PreciseCandle> fullCandles = new ConcurrentHashMap<>();
 
 	public boolean addToHistory(String symbol, PreciseCandle tick, boolean initializing) {
 		candleCounts.clear();
 		try {
-			long[] times = recentCandles.get(symbol);
-			if (times != null && times[0] == tick.openTime && times[1] == tick.closeTime) {
-				return false; //duplicate, skip
+			PreciseCandle processingCandle = processingCandles.get(symbol);
+			if (processingCandle != null && processingCandle.openTime == tick.openTime && processingCandle.closeTime == tick.closeTime) {
+				processingCandles.put(symbol, tick); //saving update of latest candle
+				return true;
 			} else {
-				if (times == null) {
-					times = new long[2];
-					recentCandles.put(symbol, times);
+				try {
+					if (processingCandle != null) { //save fully populated candle
+						if (db().execute(INSERT, (PreparedStatementCallback<Integer>) ps -> prepareInsert(ps, symbol, processingCandle).executeUpdate()) == 0) {
+							log.warn("Could not persist " + symbol + " Tick: " + processingCandle);
+							return false;
+						}
+						fullCandles.put(symbol, processingCandle);
+					}
+				} finally {
+					processingCandles.put(symbol, tick);
 				}
-				times[0] = tick.openTime;
-				times[1] = tick.closeTime;
-			}
-
-			if (db().execute(INSERT, (PreparedStatementCallback<Integer>) ps -> prepareInsert(ps, symbol, tick).executeUpdate()) == 0) {
-				log.warn("Could not persist " + symbol + " Tick: " + tick);
-				return false;
 			}
 		} catch (Exception ex) {
 			if (ex.getMessage().contains("Duplicate entry")) {
@@ -149,11 +151,11 @@ public class CandleRepository {
 				boolean retry = false;
 				do {
 					count = 0;
-					if(retry){
+					if (retry) {
 						try {
 							log.info("Waiting 5 seconds before retrying to read candles of {}", symbol);
 							Thread.sleep(5_000);
-						}catch (InterruptedException e){
+						} catch (InterruptedException e) {
 							Thread.currentThread().interrupt();
 						}
 					}
@@ -342,8 +344,20 @@ public class CandleRepository {
 	}
 
 	public Candle lastCandle(String symbol) {
+		return loadCandle(symbol, "DESC");
+	}
+
+	public Candle firstCandle(String symbol) {
+		return loadCandle(symbol, "ASC");
+	}
+
+	private Candle loadCandle(String symbol, String ordering) {
 		String query = buildCandleQuery(symbol);
-		query += " ORDER BY close_time DESC LIMIT 1";
+		query += " ORDER BY close_time " + ordering + " LIMIT 1";
 		return db().queryForObject(query, CANDLE_MAPPER);
+	}
+
+	public PreciseCandle lastFullCandle(String symbol) {
+		return fullCandles.remove(symbol);
 	}
 }

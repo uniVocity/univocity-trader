@@ -27,6 +27,10 @@ public final class Candle implements Comparable<Candle>, Cloneable {
 		this(openTime, closeTime, open, high, low, close, volume, false);
 	}
 
+	public Candle(PreciseCandle c){
+		this(c.openTime, c.closeTime, c.open.doubleValue(), c.high.doubleValue(), c.low.doubleValue(), c.close.doubleValue(), c.volume.doubleValue());
+	}
+
 	private Candle(long openTime, long closeTime, double open, double high, double low, double close, double volume, boolean merged) {
 		this.openTime = openTime;
 		this.closeTime = closeTime;

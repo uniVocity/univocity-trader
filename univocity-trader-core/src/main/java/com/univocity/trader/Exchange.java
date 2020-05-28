@@ -18,8 +18,7 @@ import java.util.concurrent.*;
  * An {@code Exchange} implementation provides information about available instruments and their prices in a live
  * trading broker or exchange.
  *
- * @param <T> the {@code Exchange}-specific candle/tick type, which will be converted to a {@link Candle} via
- *            {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
+ * @param <T> the {@code Exchange}-specific candle/tick type, which will be converted to a {@link Candle} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
  *            for storage.
  *
  * @see Candle
@@ -41,8 +40,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *                 (typically with open and close time, open and close prices, highest and lowest prices, and traded volume).
 	 *                 Not every bit of information is required, but at least the closing price and the close time should be provided.
 	 *
-	 * @return the recent {@code Exchange}-specific candles/ticks, which will be converted to a {@link Candle} via
-	 * {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
+	 * @return the recent {@code Exchange}-specific candles/ticks, which will be converted to a {@link Candle} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
 	 * for storage.
 	 */
 	IncomingCandles<T> getLatestTicks(String symbol, TimeInterval interval);
@@ -63,22 +61,10 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 * @param startTime the starting time (in milliseconds) of the historical data to be returned.
 	 * @param endTime   the end time (in milliseconds) of the historical data to be returned.
 	 *
-	 * @return candles with historical {@code Exchange}-specific candles/ticks, for the given period (or less), which will be converted to a {@link Candle} via
-	 * {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
+	 * @return candles with historical {@code Exchange}-specific candles/ticks, for the given period (or less), which will be converted to a {@link Candle} vi     * for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
 	 * for storage.
 	 */
 	IncomingCandles<T> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime);
-
-	/**
-	 * Converts an {@code Exchange}-specific candle/tick to a {@link Candle} that is used by the framework for fast in-memory calculations.
-	 *
-	 * At least the closing price and open/close times in the returned {@link Candle} should be populated.
-	 *
-	 * @param exchangeCandle the {@code Exchange}-specific candle/tick details whose data need to be converted into a {@link Candle}.
-	 *
-	 * @return a {@link Candle} populated with all details available from the given exchange-specific candle
-	 */
-	Candle generateCandle(T exchangeCandle);
 
 	/**
 	 * Converts an {@code Exchange}-specific candle/tick to a {@link PreciseCandle} that is used by the framework for database storage with
@@ -170,8 +156,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *                 (typically with open and close time, open and close prices, highest and lowest prices, and traded volume).
 	 *                 Not every bit of information is required, but at least the closing price and the close time should be provided.
 	 *
-	 * @return the {@code Exchange}-specific candle/tick type, which will be converted to a {@link Candle} via
-	 * {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
+	 * @return the {@code Exchange}-specific candle/tick type, which will be converted to a {@link Candle} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
 	 * for storage.
 	 */
 	default T getLatestTick(String symbol, TimeInterval interval) {

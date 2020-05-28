@@ -17,6 +17,8 @@ public abstract class AbstractTradingGroup<T extends AbstractTradingGroup<T>> im
 	private static final OrderManager DEFAULT_ORDER_MANAGER = new DefaultOrderManager();
 	boolean shortingEnabled;
 	protected boolean parsingProperties = false;
+
+	protected boolean processFullCandlesOnly = false;
 	protected String referenceCurrency;
 
 	protected NewInstances<Strategy> strategies = new NewInstances<>(new Strategy[0]);
@@ -394,4 +396,12 @@ public abstract class AbstractTradingGroup<T extends AbstractTradingGroup<T>> im
 		return StringUtils.isNoneBlank(referenceCurrency) && !symbols().isEmpty() && !strategies().isEmpty();
 	}
 
+	public T processFullCandlesOnly(boolean processFullCandlesOnly) {
+		this.processFullCandlesOnly = processFullCandlesOnly;
+		return (T) this;
+	}
+
+	public boolean processFullCandlesOnly() {
+		return processFullCandlesOnly;
+	}
 }
