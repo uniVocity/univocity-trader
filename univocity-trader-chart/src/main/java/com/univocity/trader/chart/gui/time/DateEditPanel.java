@@ -10,6 +10,7 @@ import javax.swing.plaf.basic.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.time.*;
+import java.util.List;
 import java.util.*;
 
 import static java.util.Calendar.*;
@@ -26,7 +27,8 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 	protected JSpinner txtMonth;
 	protected JSpinner txtSecond;
 	protected JSpinner txtYear;
-	private JPanel spacer;
+	private JPanel spacerRight;
+	private JPanel spacerLeft;
 
 	private Calendar maximumValue;
 	private Calendar minimumValue;
@@ -40,6 +42,7 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 
 	private final Dimension visible = new Dimension(16, 16);
 	private final Dimension invisible = new Dimension(0, visible.height);
+	private List<Component[]> allSpinnerButtons = new ArrayList<>();
 
 	private final ChangeListener changeListener = e -> {
 		if (value.compareTo(updateEditingValue()) != 0) {
@@ -85,21 +88,25 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 		txtSecond = createSpinner(date.get(SECOND), 0, 59, " s");
 
 		setLayout(new FlowLayout(CENTER, 0, 0));
+
+		add(spacerLeft = addSpacer());
 		add(txtDay);
 		add(txtMonth);
 		add(txtYear);
-
 		add(txtHour);
 		add(txtMinute);
 		add(txtSecond);
-
-		spacer = new JPanel();
-		spacer.setPreferredSize(visible);
-		add(spacer);
+		add(spacerRight = addSpacer());
 
 		ChangeListener maxDayChangeListener = e -> adjustDayMaxValue();
 		txtYear.addChangeListener(maxDayChangeListener);
 		txtMonth.addChangeListener(maxDayChangeListener);
+	}
+
+	private JPanel addSpacer() {
+		JPanel spacer = new JPanel();
+		spacer.setPreferredSize(visible);
+		return spacer;
 	}
 
 	public void dispatchEvent() {
@@ -194,7 +201,21 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 		JFormattedTextField editor = ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField();
 
 		spinner.setUI(new BasicSpinnerUI() {
-			private Component[] buttons = new Component[2];
+			private final Component[] buttons = new Component[2];
+
+			{
+				allSpinnerButtons.add(buttons);
+			}
+
+			@Override
+			public void installUI(JComponent c) {
+				super.installUI(c);
+				c.removeAll();
+				c.setLayout(new BorderLayout());
+				c.add(createNextButton(), BorderLayout.EAST);
+				c.add(createPreviousButton(), BorderLayout.WEST);
+				c.add(createEditor(), BorderLayout.CENTER);
+			}
 
 			private Component newButton(String lbl) {
 				JButton out = new JButton(lbl);
@@ -213,21 +234,24 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 				MouseAdapter enter = new MouseAdapter() {
 					@Override
 					public void mouseEntered(MouseEvent e) {
-						spacer.setPreferredSize(invisible);
-						buttons[0].setVisible(true);
-						buttons[0].setPreferredSize(visible);
-
-						buttons[1].setVisible(true);
-						buttons[1].setPreferredSize(visible);
+						allSpinnerButtons.forEach(p -> {
+							p[0].setVisible(p[0] == buttons[0]);
+							p[1].setVisible(p[1] == buttons[1]);
+							p[0].setPreferredSize(p[0] == buttons[0] ? visible : invisible);
+							p[1].setPreferredSize(p[1] == buttons[1] ? visible : invisible);
+						});
+						spacerLeft.setPreferredSize(invisible);
+						spacerRight.setPreferredSize(invisible);
 					}
 				};
 
 				MouseAdapter exit = new MouseAdapter() {
 					@Override
 					public void mouseExited(MouseEvent e) {
-						spacer.setPreferredSize(visible);
 						out.setVisible(false);
 						out.setPreferredSize(invisible);
+						spacerRight.setPreferredSize(visible);
+						spacerLeft.setPreferredSize(visible);
 					}
 				};
 
