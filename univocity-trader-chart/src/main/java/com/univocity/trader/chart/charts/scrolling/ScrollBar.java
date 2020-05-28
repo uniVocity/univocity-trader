@@ -100,7 +100,7 @@ public class ScrollBar extends MouseAdapter {
 	}
 
 	public int getBoundaryLeft() {
-		return (int) Math.round(scrollHandle.getPosition() * scrollStep);
+		return getBoundaryRight() - canvas.getWidth();
 	}
 
 	@Override

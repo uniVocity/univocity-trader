@@ -107,7 +107,9 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 		paintImage();
 
-		g.drawImage(image, 0, 0, getWidth(), getHeight(), getBoundaryLeft(), 0, getBoundaryRight(), getHeight(), null);
+		int imgTo = getBoundaryRight();
+		int imgFrom = imgTo - getWidth();
+		g.drawImage(image, 0, 0, getWidth(), getHeight(), imgFrom, 0, imgTo, getHeight(), null);
 
 		lastPaint = System.currentTimeMillis();
 	}
@@ -157,6 +159,8 @@ public abstract class StaticChart<C extends BasicChartController> {
 	private void updateEdgeValues() {
 		maximum = 0;
 		minimum = Integer.MAX_VALUE;
+
+		onScrollPositionUpdate();
 
 		for (Candle c : candleHistory) {
 			updateEdgeValues(c);
@@ -221,7 +225,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 	}
 
 	private int getXCoordinate(int currentPosition) {
-		return (int) (currentPosition * horizontalIncrement);
+		return (int) Math.round(currentPosition * horizontalIncrement);
 	}
 
 	private int getLogarithmicYCoordinate(double value) {

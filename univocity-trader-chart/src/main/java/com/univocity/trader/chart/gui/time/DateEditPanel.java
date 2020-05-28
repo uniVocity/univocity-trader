@@ -27,8 +27,8 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 	protected JSpinner txtMonth;
 	protected JSpinner txtSecond;
 	protected JSpinner txtYear;
-	private JPanel spacerRight;
-	private JPanel spacerLeft;
+	private JButton btToStart;
+	private JButton btToEnd;
 
 	private Calendar maximumValue;
 	private Calendar minimumValue;
@@ -70,11 +70,6 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 		this(toCalendar(localDateTime));
 	}
 
-	private JLabel newLabel(String text) {
-		JLabel out = new JLabel(text, SwingConstants.RIGHT);
-		return out;
-	}
-
 	private DateEditPanel(Calendar date) {
 		this.value = date;
 
@@ -87,26 +82,45 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 		txtMinute = createSpinner(date.get(MINUTE), 0, 59, " m");
 		txtSecond = createSpinner(date.get(SECOND), 0, 59, " s");
 
-		setLayout(new FlowLayout(CENTER, 0, 0));
+		setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
 
-		add(spacerLeft = addSpacer());
+		add(getBtToStart());
 		add(txtDay);
 		add(txtMonth);
 		add(txtYear);
 		add(txtHour);
 		add(txtMinute);
 		add(txtSecond);
-		add(spacerRight = addSpacer());
+		add(getBtToEnd());
 
 		ChangeListener maxDayChangeListener = e -> adjustDayMaxValue();
 		txtYear.addChangeListener(maxDayChangeListener);
 		txtMonth.addChangeListener(maxDayChangeListener);
 	}
 
-	private JPanel addSpacer() {
-		JPanel spacer = new JPanel();
-		spacer.setPreferredSize(visible);
-		return spacer;
+	private JButton newButton(String label){
+		JButton out = new JButton(label);
+		out.setMargin(new Insets(0, 0, 0, 0));
+		out.setBorder(new LineBorder(new JSpinner().getBackground(), 1));
+		out.setPreferredSize(visible);
+		return out;
+	}
+
+	private JButton getBtToStart() {
+		if(btToStart == null){
+			btToStart = newButton("<");
+			btToStart.addActionListener(e->setValue(minimumValue));
+		}
+
+		return btToStart;
+	}
+
+	private JButton getBtToEnd() {
+		if(btToEnd == null){
+			btToEnd = newButton(">");
+			btToEnd.addActionListener(e->setValue(maximumValue));
+		}
+		return btToEnd;
 	}
 
 	public void dispatchEvent() {
@@ -207,18 +221,18 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 				allSpinnerButtons.add(buttons);
 			}
 
-			@Override
-			public void installUI(JComponent c) {
-				super.installUI(c);
-				c.removeAll();
-				c.setLayout(new BorderLayout());
-				c.add(createNextButton(), BorderLayout.EAST);
-				c.add(createPreviousButton(), BorderLayout.WEST);
-				c.add(createEditor(), BorderLayout.CENTER);
-			}
+//			@Override
+//			public void installUI(JComponent c) {
+//				super.installUI(c);
+//				c.removeAll();
+//				c.setLayout(new BorderLayout());
+//				c.add(createNextButton(), BorderLayout.EAST);
+//				c.add(createPreviousButton(), BorderLayout.WEST);
+//				c.add(createEditor(), BorderLayout.CENTER);
+//			}
 
-			private Component newButton(String lbl) {
-				JButton out = new JButton(lbl);
+			private Component newSpinnerButton(String lbl) {
+				JButton out = newButton(lbl);
 				out.setVisible(false);
 				out.setMargin(new Insets(0, 0, 0, 0));
 				out.setBorder(new LineBorder(spinner.getBackground(), 1));
@@ -241,8 +255,8 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 								p[0].setPreferredSize(p[0] == buttons[0] ? visible : invisible);
 								p[1].setPreferredSize(p[1] == buttons[1] ? visible : invisible);
 							});
-							spacerLeft.setPreferredSize(invisible);
-							spacerRight.setPreferredSize(invisible);
+							getBtToStart().setPreferredSize(invisible);
+							getBtToEnd().setPreferredSize(invisible);
 						}
 					}
 				};
@@ -252,8 +266,8 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 					public void mouseExited(MouseEvent e) {
 						out.setVisible(false);
 						out.setPreferredSize(invisible);
-						spacerRight.setPreferredSize(visible);
-						spacerLeft.setPreferredSize(visible);
+						getBtToEnd().setPreferredSize(visible);
+						getBtToStart().setPreferredSize(visible);
 					}
 				};
 
@@ -264,11 +278,11 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 			}
 
 			protected Component createNextButton() {
-				return buttons[0] = newButton("+");
+				return buttons[0] = newSpinnerButton("+");
 			}
 
 			protected Component createPreviousButton() {
-				return buttons[1] = newButton("-");
+				return buttons[1] = newSpinnerButton("-");
 			}
 		});
 
@@ -421,6 +435,8 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 	}
 
 	public void setEnabled(boolean enabled, int... fields) {
+		getBtToEnd().setEnabled(enabled);
+		getBtToStart().setEnabled(enabled);
 		for (int field : fields) {
 			switch (field) {
 				case YEAR:
@@ -463,7 +479,7 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 		this.listenerList.add(DateEditPanelListener.class, listener);
 	}
 
-	public void remiveDateEditPanelListener(DateEditPanelListener listener) {
+	public void removeDateEditPanelListener(DateEditPanelListener listener) {
 		this.listenerList.remove(DateEditPanelListener.class, listener);
 	}
 
@@ -483,10 +499,6 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 	}
 
 	public void setMaximumValue(Calendar max) {
-		if (minimumValue != null && max.before(minimumValue)) {
-			throw new IllegalArgumentException("Maximum value should come after minimum value");
-		}
-
 		this.maximumValue = max;
 		if (updateEditingValue().after(max)) {
 			this.setValue(max);
@@ -512,10 +524,6 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 	}
 
 	public void setMinimumValue(Calendar min) {
-		if (maximumValue != null && min.after(maximumValue)) {
-			throw new IllegalArgumentException("Minimum value should come before maximum value");
-		}
-
 		this.minimumValue = min;
 		if (updateEditingValue().before(min)) {
 			this.setValue(min);
