@@ -16,8 +16,11 @@ public class BarChart extends BasicChart<BarChartController> {
 	@Override
 	protected void draw(Graphics2D g, int width) {
 		for (int i = 0; i < candleHistory.size(); i++) {
-			Point location = createCandleCoordinate(i);
 			Candle candle = candleHistory.get(i);
+			if(candle == null){
+				return;
+			}
+			Point location = createCandleCoordinate(i);
 			drawBar(getLineColor(candle), candle, location, g);
 		}
 

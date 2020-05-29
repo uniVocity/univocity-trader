@@ -3,7 +3,6 @@ package com.univocity.trader.chart.charts;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
-import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.painter.Painter;
 
 import javax.swing.*;
@@ -155,9 +154,14 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 		onScrollPositionUpdate();
 
-		for (Candle c : candleHistory) {
-			updateEdgeValues(c);
+		for (int i = 0; i < candleHistory.size(); i++) {
+			Candle candle = candleHistory.get(i);
+			if(candle == null){
+				return;
+			}
+			updateEdgeValues(candle);
 		}
+
 		updateIncrements();
 
 		// avoids touching upper and lower limits of the chart
@@ -173,7 +177,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 	}
 
 	private void updateEdgeValues(Candle candle) {
-		if ((firstVisibleCandle != null && candle.openTime < firstVisibleCandle.openTime) || (lastVisibleCandle != null && candle.closeTime > lastVisibleCandle.closeTime)) {
+		if (candle == null || (firstVisibleCandle != null && candle.openTime < firstVisibleCandle.openTime) || (lastVisibleCandle != null && candle.closeTime > lastVisibleCandle.closeTime)) {
 			return;
 		}
 
@@ -284,11 +288,11 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 	protected Point createCandleCoordinate(int candleIndex) {
 		Candle candle = candleHistory.get(candleIndex);
-
 		Point p = new Point();
-		p.x = getXCoordinate(candleIndex);
-		p.y = getYCoordinate(getCentralValue(candle));
-
+		if (candle != null) {
+			p.x = getXCoordinate(candleIndex);
+			p.y = getYCoordinate(getCentralValue(candle));
+		}
 		return p;
 	}
 
