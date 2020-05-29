@@ -3,6 +3,7 @@ package com.univocity.trader.chart;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.gui.*;
+import com.univocity.trader.chart.gui.components.*;
 import com.univocity.trader.chart.gui.time.*;
 import com.univocity.trader.config.*;
 import org.slf4j.*;
@@ -24,6 +25,7 @@ public class SymbolSelector extends JPanel {
 	private final CandleRepository candleRepository;
 	private final CandleHistory candleHistory;
 
+	private DisabledGlassPane glassPane;
 	private DateEditPanel chartStart;
 	private DateEditPanel chartEnd;
 	private JButton btLoad;
@@ -51,13 +53,25 @@ public class SymbolSelector extends JPanel {
 		this.add(getBtLoad(), c);
 	}
 
-	private JButton getBtLoad(){
-		if(btLoad == null){
+	private JButton getBtLoad() {
+		if (btLoad == null) {
 			btLoad = new JButton("Load");
 			btLoad.setEnabled(false);
-			btLoad.addActionListener((e) -> SwingUtilities.invokeLater(this::loadCandles));
+			btLoad.addActionListener((e) -> SwingUtilities.invokeLater(this::executeLoadCandles));
 		}
 		return btLoad;
+	}
+
+	private void executeLoadCandles() {
+		Thread thread = new Thread(() -> {
+			try {
+				glassPane.activate("Loading " + getSymbol() + " candles...");
+				loadCandles();
+			} finally {
+				glassPane.deactivate();
+			}
+		});
+		thread.start();
 	}
 
 	public String getSymbol() {
@@ -114,11 +128,15 @@ public class SymbolSelector extends JPanel {
 		}
 
 		try {
-			List<Candle> candles = Collections.list(candleRepository.iterate(symbol, getChartStart().getCommittedValue(), getChartEnd().getCommittedValue(), true));
+			List<Candle> candles = Collections.list(candleRepository.iterate(symbol, getChartStart().getCommittedValue(), getChartEnd().getCommittedValue(), false));
+			while (!candles.isEmpty() && candles.get(candles.size() - 1) == null) {
+				candles.remove(candles.size() - 1);
+			}
 			if (candles.size() == 0) {
 				WindowUtils.displayWarning(this, "No history data available for symbol " + symbol);
 			}
 			candleHistory.setCandles(candles);
+
 		} catch (Exception ex) {
 			log.error("Error loading data for symbol " + symbol, ex);
 			WindowUtils.displayError(this, "Error loading data for symbol " + symbol);
@@ -157,10 +175,10 @@ public class SymbolSelector extends JPanel {
 		return chartEnd;
 	}
 
-	private void fillAvailableDates(){
+	private void fillAvailableDates() {
 		String symbol = validateSymbol();
 		setDateSelectionEnabled(symbol != null);
-		if(symbol != null) {
+		if (symbol != null) {
 			Candle first = candleRepository.firstCandle(symbol);
 			Candle last = candleRepository.lastCandle(symbol);
 
@@ -172,9 +190,18 @@ public class SymbolSelector extends JPanel {
 		}
 	}
 
-	private void setDateSelectionEnabled(boolean enabled){
+	private void setDateSelectionEnabled(boolean enabled) {
 		getChartStart().setEnabled(enabled);
 		getChartEnd().setEnabled(enabled);
+	}
+
+	public DisabledGlassPane getGlassPane() {
+		if (glassPane == null) {
+			glassPane = new DisabledGlassPane();
+			glassPane.setBackground(new Color(125, 125, 125, 125));
+			glassPane.setForeground(Color.BLUE);
+		}
+		return glassPane;
 	}
 
 	public static void main(String... args) {

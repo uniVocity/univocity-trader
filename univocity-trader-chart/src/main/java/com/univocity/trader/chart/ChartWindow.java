@@ -6,13 +6,10 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.ruler.*;
 import com.univocity.trader.chart.charts.scrolling.*;
-import com.univocity.trader.chart.gui.time.*;
 import com.univocity.trader.config.*;
 
 import javax.swing.*;
-import javax.swing.border.*;
 import java.awt.*;
-import java.time.*;
 
 public class ChartWindow extends JFrame {
 
@@ -26,7 +23,6 @@ public class ChartWindow extends JFrame {
 	private ValueRuler valueRuler;
 	private TimeRuler timeRuler;
 	private SymbolSelector symbolSelector;
-
 
 	public ChartWindow() {
 		this.setLayout(new BorderLayout());
@@ -54,6 +50,7 @@ public class ChartWindow extends JFrame {
 			CandleRepository candleRepository = new CandleRepository(databaseConfiguration);
 
 			symbolSelector = new SymbolSelector(candleRepository, getCandleHistory());
+			setGlassPane(symbolSelector.getGlassPane());
 		}
 		return symbolSelector;
 	}

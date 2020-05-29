@@ -272,8 +272,8 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 				};
 
 				editor.addMouseListener(enter);
-				spinner.addMouseListener(exit);
 				out.addMouseListener(enter);
+				spinner.addMouseListener(exit);
 				return out;
 			}
 

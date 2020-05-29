@@ -35,8 +35,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 	private BufferedImage image;
 	private long lastPaint;
-	private boolean firstRun = true; //repaint on first run to use correct font sizes (first run computes them, second uses them to lay out things correctly).
-
 	public final ChartCanvas canvas;
 
 	private int height = -1;
@@ -93,11 +91,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 		runPainters(ig, Painter.Z.BACK, width);
 		draw(ig, width);
 		runPainters(ig, Painter.Z.FRONT, width);
-
-		if (firstRun) {
-			firstRun = false;
-			invokeRepaint();
-		}
 	}
 
 	public final void paintComponent(Graphics2D g) {

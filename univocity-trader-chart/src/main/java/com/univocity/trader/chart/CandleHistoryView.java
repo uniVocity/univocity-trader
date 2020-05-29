@@ -127,6 +127,6 @@ public class CandleHistoryView implements Iterable<Candle> {
 	}
 
 	public Candle getLast() {
-		return history.get(start + size()-1);
+		return history.get(start + size() - 1);
 	}
 }
