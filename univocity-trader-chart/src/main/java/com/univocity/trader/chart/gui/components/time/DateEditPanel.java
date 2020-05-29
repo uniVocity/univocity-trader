@@ -220,15 +220,25 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 				allSpinnerButtons.add(buttons);
 			}
 
-//			@Override
-//			public void installUI(JComponent c) {
-//				super.installUI(c);
-//				c.removeAll();
-//				c.setLayout(new BorderLayout());
-//				c.add(createNextButton(), BorderLayout.EAST);
-//				c.add(createPreviousButton(), BorderLayout.WEST);
-//				c.add(createEditor(), BorderLayout.CENTER);
-//			}
+			@Override
+			public void installUI(JComponent c) {
+				super.installUI(c);
+				c.removeAll();
+				c.setLayout(new BorderLayout());
+				c.add(createNextButton(), BorderLayout.EAST);
+				c.add(createPreviousButton(), BorderLayout.WEST);
+				c.add(createEditor(), BorderLayout.CENTER);
+			}
+
+			@Override
+			protected Component createNextButton() {
+				return buttons[0] = newSpinnerButton("+");
+			}
+
+			@Override
+			protected Component createPreviousButton() {
+				return buttons[1] = newSpinnerButton("-");
+			}
 
 			private Component newSpinnerButton(String lbl) {
 				JButton out = newButton(lbl);
@@ -249,10 +259,12 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 					public void mouseEntered(MouseEvent e) {
 						if (DateEditPanel.this.isEnabled()) {
 							allSpinnerButtons.forEach(p -> {
-								p[0].setVisible(p[0] == buttons[0]);
-								p[1].setVisible(p[1] == buttons[1]);
-								p[0].setPreferredSize(p[0] == buttons[0] ? visible : invisible);
-								p[1].setPreferredSize(p[1] == buttons[1] ? visible : invisible);
+								boolean show0 = p[0] == buttons[0] && buttons[0].isEnabled();
+								boolean show1 = p[1] == buttons[1] && buttons[1].isEnabled();
+								p[0].setVisible(show0);
+								p[1].setVisible(show1);
+								p[0].setPreferredSize(show0 ? visible : invisible);
+								p[1].setPreferredSize(show1 ? visible : invisible);
 							});
 							getBtToStart().setPreferredSize(invisible);
 							getBtToEnd().setPreferredSize(invisible);
@@ -274,14 +286,6 @@ public class DateEditPanel extends JPanel implements EventDispatcher {
 				out.addMouseListener(enter);
 				spinner.addMouseListener(exit);
 				return out;
-			}
-
-			protected Component createNextButton() {
-				return buttons[0] = newSpinnerButton("+");
-			}
-
-			protected Component createPreviousButton() {
-				return buttons[1] = newSpinnerButton("-");
 			}
 		});
 

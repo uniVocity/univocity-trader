@@ -46,7 +46,7 @@ public class SymbolSelector extends JPanel {
 
 		GridBagConstraints c = new GridBagConstraints();
 
-		c.gridy = 0;
+		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
 		this.add(getCmbSymbols(), c);
 
@@ -61,10 +61,10 @@ public class SymbolSelector extends JPanel {
 
 		c.gridx = 0;
 		c.gridy = 1;
-		c.gridwidth = 4;
+		c.gridwidth = 2;
 		this.add(getChartStart(), c);
 
-		c.gridy = 2;
+		c.gridx = 2;
 		this.add(getChartEnd(), c);
 	}
 
@@ -90,8 +90,8 @@ public class SymbolSelector extends JPanel {
 	}
 
 	public String getSymbol() {
-		String symbol = (String) cmbSymbols.getSelectedItem();
-		if (cmbSymbols.getSelectedIndex() == -1) {
+		String symbol = (String) getCmbSymbols().getSelectedItem();
+		if (getCmbSymbols().getSelectedIndex() == -1) {
 			if (symbol != null) {
 				symbol = symbol.trim();
 			}
@@ -143,10 +143,29 @@ public class SymbolSelector extends JPanel {
 		}
 
 		try {
-			List<Candle> candles = Collections.list(candleRepository.iterate(symbol, getChartStart().getCommittedValue(), getChartEnd().getCommittedValue(), false));
-			while (!candles.isEmpty() && candles.get(candles.size() - 1) == null) {
-				candles.remove(candles.size() - 1);
+			TimeInterval interval = getInterval();
+			Instant from = getChartStart().getCommittedValue();
+			Instant to = getChartEnd().getCommittedValue();
+
+			Aggregator aggregator = new Aggregator("").getInstance(interval);
+
+			long count = candleRepository.countCandles(symbol, from, to);
+			List<Candle> candles = new ArrayList<>((int) count);
+
+			Enumeration<Candle> data = candleRepository.iterate(symbol, from, to, false);
+			while (data.hasMoreElements()) {
+				Candle candle = data.nextElement();
+				if (candle != null) {
+					aggregator.aggregate(candle);
+					if ((candle = aggregator.getFull()) != null) {
+						candles.add(candle);
+					}
+				}
 			}
+			if (aggregator.getPartial() != null) {
+				candles.add(aggregator.getPartial());
+			}
+
 			if (candles.size() == 0) {
 				WindowUtils.displayWarning(this, "No history data available for symbol " + symbol);
 			}
@@ -171,7 +190,7 @@ public class SymbolSelector extends JPanel {
 		if (chartStart == null) {
 			chartStart = new DateEditPanel(LocalDateTime.now().minusDays(30));
 			chartStart.setBorder(new TitledBorder("From"));
-			chartStart.addDateEditPanelListener(e -> getBtLoad().setEnabled(true));
+			chartStart.addDateEditPanelListener(e -> enableBtLoad());
 			chartStart.setEnabled(false);
 			chartStart.setInferLeastPossibleValue(true);
 			getChartEnd().addDateEditPanelListener(e -> chartStart.setMaximumValue(e.getNewDate()));
@@ -183,7 +202,7 @@ public class SymbolSelector extends JPanel {
 		if (chartEnd == null) {
 			chartEnd = new DateEditPanel(LocalDateTime.now());
 			chartEnd.setBorder(new TitledBorder("To"));
-			chartEnd.addDateEditPanelListener(e -> getBtLoad().setEnabled(true));
+			chartEnd.addDateEditPanelListener(e -> enableBtLoad());
 			chartEnd.setEnabled(false);
 			chartEnd.setInferLeastPossibleValue(false);
 			getChartStart().addDateEditPanelListener(e -> chartEnd.setMinimumValue(e.getNewDate()));
@@ -203,6 +222,8 @@ public class SymbolSelector extends JPanel {
 
 			getChartStart().setValue(first.openTime);
 			getChartEnd().setValue(last.closeTime);
+
+			updateDateFields();
 		}
 	}
 
@@ -220,24 +241,23 @@ public class SymbolSelector extends JPanel {
 		return glassPane;
 	}
 
-	private void changeDateFormats() {
-		TimeIntervalType timeInterval = (TimeIntervalType) this.cmbUnitType.getSelectedItem();
-		try {
+	private void updateDateFields() {
+		if (getChartStart().isEnabled() && getChartEnd().isEnabled()) {
+			TimeIntervalType timeInterval = (TimeIntervalType) this.cmbUnitType.getSelectedItem();
 			getChartStart().setEnabled(false, DateEditPanel.ALL_FIELDS);
 			getChartEnd().setEnabled(false, DateEditPanel.ALL_FIELDS);
 			getChartStart().setEnabled(true, getEnabledFields(timeInterval));
 			getChartEnd().setEnabled(true, getEnabledFields(timeInterval));
-		} catch (Exception e) {
-			log.error("error", e);
 		}
 	}
 
-	private JComboBox getCmbUnitType() {
+	private JComboBox<TimeIntervalType> getCmbUnitType() {
 		if (cmbUnitType == null) {
 			cmbUnitType = new JComboBox<>();
 			cmbUnitType.setModel(new DefaultComboBoxModel<>(TimeIntervalType.values()));
 			cmbUnitType.setSelectedItem(TimeIntervalType.DAY);
-			cmbUnitType.addItemListener(evt -> changeDateFormats());
+			cmbUnitType.addActionListener((e) -> btLoad.setEnabled(true));
+			cmbUnitType.addItemListener(evt -> updateDateFields());
 		}
 		return cmbUnitType;
 	}
@@ -260,15 +280,20 @@ public class SymbolSelector extends JPanel {
 	private JSpinner getTxtUnits() {
 		if (txtUnits == null) {
 			txtUnits = new JSpinner();
-			SpinnerNumberWrapModel model = new SpinnerNumberWrapModel(txtUnits, 1, 1, 9999, 1);
+			SpinnerNumberWrapModel model = new SpinnerNumberWrapModel(txtUnits, 1, 1, 999999, 1);
 			txtUnits.setModel(model);
+			txtUnits.addChangeListener(e -> enableBtLoad());
 		}
 		return txtUnits;
 	}
 
+	private void enableBtLoad() {
+		getBtLoad().setEnabled(getSymbol() != null && getInterval() != null);
+	}
+
 	public TimeInterval getInterval() {
-		Integer units = (Integer) txtUnits.getValue();
-		TimeIntervalType type = (TimeIntervalType) cmbUnitType.getSelectedItem();
+		Integer units = (Integer) getTxtUnits().getValue();
+		TimeIntervalType type = (TimeIntervalType) getCmbUnitType().getSelectedItem();
 		return type.toTimeInterval(units);
 	}
 
