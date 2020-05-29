@@ -1,10 +1,13 @@
-package com.univocity.trader.chart.gui.time;
+package com.univocity.trader.chart.gui.components.time;
+
+import com.univocity.trader.indicators.base.*;
 
 import java.util.*;
 
 public enum TimeIntervalType {
 
-	SECOND(Calendar.SECOND), MINUTE(Calendar.MINUTE), HOUR(Calendar.HOUR_OF_DAY), DAY(Calendar.DAY_OF_MONTH), WEEK(Calendar.WEEK_OF_YEAR), MONTH(Calendar.MONTH), ;
+	SECOND(Calendar.SECOND), MINUTE(Calendar.MINUTE), HOUR(Calendar.HOUR_OF_DAY), DAY(Calendar.DAY_OF_MONTH), WEEK(Calendar.WEEK_OF_YEAR), MONTH(Calendar.MONTH),
+	;
 
 	private final int calendarField;
 
@@ -21,7 +24,7 @@ public enum TimeIntervalType {
 	}
 
 	public String toString() {
-		String str = super.toString().toLowerCase();
+		String str = super.toString().toLowerCase() + "s";
 		return Character.toUpperCase(str.charAt(0)) + str.substring(1);
 	}
 
@@ -96,7 +99,7 @@ public enum TimeIntervalType {
 		return -1;
 	}
 
-	public void clear(Calendar  calendar) {
+	public void clear(Calendar calendar) {
 		switch (this) {
 			case WEEK:
 				calendar.set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY);
@@ -114,6 +117,23 @@ public enum TimeIntervalType {
 				calendar.clear(Calendar.SECOND);
 			case SECOND:
 				calendar.clear(Calendar.MILLISECOND);
+		}
+	}
+
+	public TimeInterval toTimeInterval(int units) {
+		switch (this) {
+			case WEEK:
+				return TimeInterval.weeks(units);
+			case DAY:
+				return TimeInterval.days(units);
+			case HOUR:
+				return TimeInterval.hours(units);
+			case MINUTE:
+				return TimeInterval.minutes(units);
+			case SECOND:
+				return TimeInterval.seconds(units);
+			default:
+				throw new UnsupportedOperationException("Can't convert units to " + this.toString());
 		}
 	}
 }

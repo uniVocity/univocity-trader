@@ -4,8 +4,9 @@ package com.univocity.trader.chart;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.gui.*;
 import com.univocity.trader.chart.gui.components.*;
-import com.univocity.trader.chart.gui.time.*;
+import com.univocity.trader.chart.gui.components.time.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.indicators.base.*;
 import org.slf4j.*;
 
 import javax.swing.*;
@@ -18,6 +19,13 @@ import java.util.*;
 public class SymbolSelector extends JPanel {
 
 	private static final Logger log = LoggerFactory.getLogger(SymbolSelector.class);
+
+	private static final int[] YYYY_MM_DD_FIELDS = Arrays.copyOfRange(DateEditPanel.ALL_FIELDS, 0, 3);
+	private static final int[] YYYY_MM_DD_HH_FIELDS = Arrays.copyOfRange(DateEditPanel.ALL_FIELDS, 0, 4);
+	private static final int[] YYYY_MM_DD_HH_MM_FIELDS = Arrays.copyOfRange(DateEditPanel.ALL_FIELDS, 0, 5);
+	private static final int[] YYYY_MM_FIELDS = Arrays.copyOfRange(DateEditPanel.ALL_FIELDS, 0, 2);
+	private JComboBox<TimeIntervalType> cmbUnitType;
+	private JSpinner txtUnits;
 
 	private JComboBox<String> cmbSymbols;
 	private DefaultComboBoxModel<String> cmbSymbolsModel;
@@ -37,20 +45,27 @@ public class SymbolSelector extends JPanel {
 		this.setLayout(new GridBagLayout());
 
 		GridBagConstraints c = new GridBagConstraints();
-		c.gridy = 0;
-		this.add(getChartStart(), c);
 
-		c.gridy = 1;
-		this.add(getChartEnd(), c);
-
-		c.gridx = 1;
 		c.gridy = 0;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(5, 5, 5, 5);
+		c.gridx = 0;
 		this.add(getCmbSymbols(), c);
 
-		c.gridy = 1;
+		c.gridx = 1;
+		this.add(getTxtUnits(), c);
+
+		c.gridx = 2;
+		this.add(getCmbUnitType(), c);
+
+		c.gridx = 3;
 		this.add(getBtLoad(), c);
+
+		c.gridx = 0;
+		c.gridy = 1;
+		c.gridwidth = 4;
+		this.add(getChartStart(), c);
+
+		c.gridy = 2;
+		this.add(getChartEnd(), c);
 	}
 
 	private JButton getBtLoad() {
@@ -158,8 +173,8 @@ public class SymbolSelector extends JPanel {
 			chartStart.setBorder(new TitledBorder("From"));
 			chartStart.addDateEditPanelListener(e -> getBtLoad().setEnabled(true));
 			chartStart.setEnabled(false);
+			chartStart.setInferLeastPossibleValue(true);
 			getChartEnd().addDateEditPanelListener(e -> chartStart.setMaximumValue(e.getNewDate()));
-
 		}
 		return chartStart;
 	}
@@ -170,6 +185,7 @@ public class SymbolSelector extends JPanel {
 			chartEnd.setBorder(new TitledBorder("To"));
 			chartEnd.addDateEditPanelListener(e -> getBtLoad().setEnabled(true));
 			chartEnd.setEnabled(false);
+			chartEnd.setInferLeastPossibleValue(false);
 			getChartStart().addDateEditPanelListener(e -> chartEnd.setMinimumValue(e.getNewDate()));
 		}
 		return chartEnd;
@@ -203,6 +219,59 @@ public class SymbolSelector extends JPanel {
 		}
 		return glassPane;
 	}
+
+	private void changeDateFormats() {
+		TimeIntervalType timeInterval = (TimeIntervalType) this.cmbUnitType.getSelectedItem();
+		try {
+			getChartStart().setEnabled(false, DateEditPanel.ALL_FIELDS);
+			getChartEnd().setEnabled(false, DateEditPanel.ALL_FIELDS);
+			getChartStart().setEnabled(true, getEnabledFields(timeInterval));
+			getChartEnd().setEnabled(true, getEnabledFields(timeInterval));
+		} catch (Exception e) {
+			log.error("error", e);
+		}
+	}
+
+	private JComboBox getCmbUnitType() {
+		if (cmbUnitType == null) {
+			cmbUnitType = new JComboBox<>();
+			cmbUnitType.setModel(new DefaultComboBoxModel<>(TimeIntervalType.values()));
+			cmbUnitType.setSelectedItem(TimeIntervalType.DAY);
+			cmbUnitType.addItemListener(evt -> changeDateFormats());
+		}
+		return cmbUnitType;
+	}
+
+	private int[] getEnabledFields(TimeIntervalType timeInterval) {
+		switch (timeInterval) {
+			case MONTH:
+				return YYYY_MM_FIELDS;
+			case HOUR:
+				return YYYY_MM_DD_HH_FIELDS;
+			case MINUTE:
+				return YYYY_MM_DD_HH_MM_FIELDS;
+			case SECOND:
+				return DateEditPanel.ALL_FIELDS;
+			default:
+				return YYYY_MM_DD_FIELDS;
+		}
+	}
+
+	private JSpinner getTxtUnits() {
+		if (txtUnits == null) {
+			txtUnits = new JSpinner();
+			SpinnerNumberWrapModel model = new SpinnerNumberWrapModel(txtUnits, 1, 1, 9999, 1);
+			txtUnits.setModel(model);
+		}
+		return txtUnits;
+	}
+
+	public TimeInterval getInterval() {
+		Integer units = (Integer) txtUnits.getValue();
+		TimeIntervalType type = (TimeIntervalType) cmbUnitType.getSelectedItem();
+		return type.toTimeInterval(units);
+	}
+
 
 	public static void main(String... args) {
 		DatabaseConfiguration databaseConfiguration = new SimulationConfiguration().database();

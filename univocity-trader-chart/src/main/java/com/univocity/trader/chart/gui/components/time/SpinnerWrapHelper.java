@@ -1,4 +1,4 @@
-package com.univocity.trader.chart.gui.time;
+package com.univocity.trader.chart.gui.components.time;
 
 import javax.swing.*;
 import javax.swing.event.*;

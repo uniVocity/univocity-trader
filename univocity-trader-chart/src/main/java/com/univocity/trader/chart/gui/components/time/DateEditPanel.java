@@ -1,4 +1,4 @@
-package com.univocity.trader.chart.gui.time;
+package com.univocity.trader.chart.gui.components.time;
 
 import com.univocity.trader.chart.gui.*;
 import org.apache.commons.lang3.*;
@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.*;
 
 import static java.util.Calendar.*;
-import static javax.swing.SwingConstants.*;
 
 public class DateEditPanel extends JPanel implements EventDispatcher {
 
