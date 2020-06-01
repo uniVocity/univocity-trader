@@ -2,6 +2,7 @@ package com.univocity.trader.config;
 
 import com.univocity.trader.indicators.base.*;
 
+import java.time.*;
 import java.util.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
@@ -18,6 +19,9 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	private TimeInterval tickInterval = minutes(1);
 	private boolean updateHistoryBeforeLiveTrading = true;
 	private boolean pollCandles = true;
+	private Period warmUpPeriod;
+
+
 
 	protected Configuration() {
 		this("univocity-trader.properties");
@@ -124,6 +128,16 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 
 	public C pollCandles(boolean pollCandles) {
 		this.pollCandles = pollCandles;
+		return (C) this;
+	}
+
+
+	public Period warmUpPeriod() {
+		return warmUpPeriod == null ? Period.ZERO : warmUpPeriod;
+	}
+
+	public C warmUpPeriod(Period warmUpPeriod) {
+		this.warmUpPeriod = warmUpPeriod;
 		return (C) this;
 	}
 }

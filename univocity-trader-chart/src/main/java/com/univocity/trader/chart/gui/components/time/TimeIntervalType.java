@@ -122,6 +122,8 @@ public enum TimeIntervalType {
 
 	public TimeInterval toTimeInterval(int units) {
 		switch (this) {
+			case MONTH:
+				return TimeInterval.months(units);
 			case WEEK:
 				return TimeInterval.weeks(units);
 			case DAY:

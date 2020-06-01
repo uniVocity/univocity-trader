@@ -227,6 +227,9 @@ public class TimeIntervalSelector extends ChartCanvas {
 		if(updateType == CandleHistory.UpdateType.NEW_HISTORY) {
 			if (candleHistory.size() > 1000) {
 				startHandle.candle = candleHistory.get(candleHistory.size() - 1000);
+			} else {
+				startHandle.candle = candleHistory.getFirst();
+				endHandle.candle = candleHistory.getLast();
 			}
 		}
 

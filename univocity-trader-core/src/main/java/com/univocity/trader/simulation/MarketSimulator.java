@@ -70,7 +70,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		for (AccountManager account : accounts()) {
 			SimulatedExchange exchange = new SimulatedExchange(account);
 
-			for(String symbol : account.getAllSymbolPairs().keySet()){
+			for (String symbol : account.getAllSymbolPairs().keySet()) {
 				account.createTradingManager(symbol, exchange, null, parameters);
 			}
 
@@ -93,6 +93,10 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 
 		LocalDateTime start = getSimulationStart();
 		LocalDateTime end = getSimulationEnd();
+		start = start.minus(configuration.warmUpPeriod());
+
+		Instant from = start.toInstant(ZoneOffset.UTC);
+		Instant to = end.toInstant(ZoneOffset.UTC);
 
 		int activeQueries = 0;
 		Map<String, CompletableFuture<Enumeration<Candle>>> futures = new HashMap<>();
@@ -101,7 +105,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			boolean loadAllDataFirst = simulation.cacheCandles() || activeQueries > simulation.activeQueryLimit();
 
 			futures.put(symbol, CompletableFuture.supplyAsync(
-					() -> candleRepository.iterate(symbol, start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor)
+					() -> candleRepository.iterate(symbol, from, to, loadAllDataFirst), executor)
 			);
 		}
 
@@ -119,16 +123,50 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		executeSimulation(readers);
 	}
 
-	protected void executeSimulation(MarketReader[] readers) {
+	private void determineStartTimes(MarketReader[] readers) {
 		LocalDateTime start = getSimulationStart();
 		LocalDateTime end = getSimulationEnd();
 
-		final long startTime = getStartTime();
+		final long warmUpStart = getStartTime(configuration.warmUpPeriod());
+		final long simulationStart = getStartTime(null);
+
+		boolean hasCandles = false;
+		for (MarketReader reader : readers) {
+			if (reader.pending == null) {
+				if (reader.input.hasMoreElements()) {
+					Candle next = reader.input.nextElement();
+					if (next != null) {
+						reader.pending = next;
+					}
+				}
+			}
+			if (reader.pending != null) {
+				hasCandles = true;
+				long openTime = reader.pending.openTime;
+
+				long actualStart;
+				if (openTime >= simulationStart) {
+					actualStart = simulationStart + (simulationStart - warmUpStart);
+				} else {
+					actualStart = simulationStart + (openTime - warmUpStart);
+				}
+				reader.startTime = actualStart;
+			}
+		}
+
+		if (!hasCandles) {
+			throw new IllegalStateException("No candles processed in real time trading simulation from " + start + " to " + end);
+		}
+	}
+
+	protected void executeSimulation(MarketReader[] readers) {
+		final long startTime = getStartTime(configuration.warmUpPeriod());
 		final long endTime = getEndTime();
 
-		long candlesProcessed = 0;
-
 		boolean randomize = configuration.simulation().randomizeTicks();
+
+		determineStartTimes(readers);
+
 
 		for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
 			if (randomize) {
@@ -141,7 +179,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 				if (candle != null && candle.close > 0) {
 					if (candle.openTime + 1 >= clock && candle.openTime <= clock + MINUTE.ms - 1) {
 						for (int j = 0; j < reader.engines.length; j++) {
-							reader.engines[j].process(candle, false);
+							reader.engines[j].process(candle, clock <= reader.startTime);
 						}
 
 						reader.pending = null;
@@ -159,7 +197,6 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 					if (reader.input.hasMoreElements()) {
 						Candle next = reader.input.nextElement();
 						if (next != null) {
-							candlesProcessed++;
 							reader.pending = next;
 						}
 					}
@@ -168,9 +205,6 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			if (resetClock) {
 				clock -= MINUTE.ms;
 			}
-		}
-		if (candlesProcessed == 0) {
-			throw new IllegalStateException("No candles processed in real time trading simulation from " + start + " to " + end);
 		}
 	}
 
@@ -251,6 +285,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		Enumeration<Candle> input;
 		Candle pending;
 		Engine[] engines;
+		long startTime;
 	}
 
 	public final CandleRepository getCandleRepository() {

@@ -104,7 +104,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 	}
 
 	private final SmtpMailSender mailSender() {
-		if(mailSender == null){
+		if (mailSender == null) {
 			EmailConfiguration mail = configuration.mailSender();
 			this.mailSender = mail.isConfigured() ? new SmtpMailSender(mail) : null;
 		}
@@ -115,7 +115,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		return configuration;
 	}
 
-	public CandleRepository candleRepository(){
+	public CandleRepository candleRepository() {
 		if (candleRepository == null) {
 			candleRepository = new CandleRepository(configuration.database());
 		}
@@ -144,7 +144,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		updateDatabase();
 	}
 
-	protected AccountManager createAccountManager(ClientAccount clientAccount, A account){
+	protected AccountManager createAccountManager(ClientAccount clientAccount, A account) {
 		return new AccountManager(clientAccount, account);
 	}
 
@@ -163,7 +163,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 
 		this.allClientPairs = tmp.toString().toLowerCase();
 
-		if(configuration.updateHistoryBeforeLiveTrading()) {
+		if (configuration.updateHistoryBeforeLiveTrading()) {
 			//fill history with last 30 days of data
 			for (String symbol : allPairs.keySet()) {
 				backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
@@ -177,7 +177,15 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 
 			//loads last 60 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
 			for (String symbol : allPairs.keySet()) {
-				Enumeration<Candle> it = candleRepository().iterate(symbol, Instant.now().minus(60, ChronoUnit.DAYS), Instant.now(), false);
+				Period warmUpPeriod = configuration.warmUpPeriod();
+				Instant warmUpStart = Instant.now();
+				if (warmUpPeriod != null) {
+					warmUpStart = warmUpStart.minus(warmUpPeriod);
+				} else {
+					warmUpStart = warmUpStart.minus(60, ChronoUnit.DAYS);
+				}
+
+				Enumeration<Candle> it = candleRepository().iterate(symbol, warmUpStart, Instant.now(), false);
 				while (it.hasMoreElements()) {
 					Candle candle = it.nextElement();
 					if (candle != null) {
@@ -219,7 +227,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 					log.error("Error closing socket", e);
 				}
 			} else {
-				if(configuration.pollCandles()) {
+				if (configuration.pollCandles()) {
 					new PollThread().start();
 				}
 			}

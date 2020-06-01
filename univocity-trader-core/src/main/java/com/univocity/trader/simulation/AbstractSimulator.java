@@ -65,8 +65,13 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		return end != null ? end : LocalDateTime.now();
 	}
 
-	protected final long getStartTime() {
-		return getSimulationStart().toInstant(ZoneOffset.UTC).toEpochMilli() - MINUTE.ms;
+	protected final long getStartTime(Period warmUp) {
+		LocalDateTime start = getSimulationStart();
+		if(warmUp != null){
+			start = start.minus(warmUp);
+		}
+
+		return start.toInstant(ZoneOffset.UTC).toEpochMilli() - MINUTE.ms;
 	}
 
 	protected final long getEndTime() {
