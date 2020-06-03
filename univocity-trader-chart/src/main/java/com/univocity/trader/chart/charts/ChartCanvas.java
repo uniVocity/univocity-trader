@@ -1,5 +1,6 @@
 package com.univocity.trader.chart.charts;
 
+import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.scrolling.*;
 
 import javax.swing.*;
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.*;
 import java.util.function.*;
 
-public class ChartCanvas extends JPanel {
+public class ChartCanvas extends JPanel implements Repaintable {
 
 	final Insets insets = new Insets(0, 0, 0, 0);
 	protected ScrollBar scrollBar;
@@ -161,6 +162,7 @@ public class ChartCanvas extends JPanel {
 		return (Graphics2D) super.getGraphics();
 	}
 
+	@Override
 	public final void invokeRepaint() {
 		if (repainting) {
 			return;

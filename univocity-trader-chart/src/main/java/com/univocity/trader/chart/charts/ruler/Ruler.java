@@ -9,44 +9,38 @@ import java.awt.*;
 
 public abstract class Ruler<C extends RulerController<?>> implements Painter<C> {
 
-	protected final Insets insets = new Insets(0, 0, 0, 0);
-	protected final BasicChart<?> chart;
+	Insets insets = insets();
 	private C controller;
+	private BasicChart<?> chart;
 
 	public Ruler(BasicChart<?> chart) {
-		this.chart = chart;
-		chart.register(this);
+		chart.addPainter(getZ(), this);
 	}
 
-	private void updateFontSize(Graphics2D g){
+	private void updateFontSize(Graphics2D g) {
 		getController().updateFontSize(g);
 	}
 
-	public final void paintOn(Graphics2D g, int width) {
+	public final void paintOn(BasicChart<?> chart, Graphics2D g, int width) {
 		updateFontSize(g);
 
-		drawBackground(g, width);
+		drawBackground(chart, g, width);
 
 		Candle candle = chart.getCurrentCandle();
 		Point location = chart.getCurrentCandleLocation();
 
 		if (candle != null && location != null) {
-			drawSelection(g, width, candle, location);
+			drawSelection(chart, g, width, candle, location);
 		}
 
-		highlightMousePosition(g, width);
+		highlightMousePosition(chart, g, width);
 	}
 
-	@Override
-	public final Insets insets() {
-		return insets;
-	}
+	protected abstract void drawBackground(BasicChart<?> chart, Graphics2D g, int width);
 
-	protected abstract void drawBackground(Graphics2D g, int width);
+	protected abstract void drawSelection(BasicChart<?> chart, Graphics2D g, int width, Candle selectedCandle, Point location);
 
-	protected abstract void drawSelection(Graphics2D g, int width, Candle selectedCandle, Point location);
-
-	protected abstract void highlightMousePosition(Graphics2D g, int width);
+	protected abstract void highlightMousePosition(BasicChart<?> chart, Graphics2D g, int width);
 
 	public final C getController() {
 		if (controller == null) {
@@ -61,7 +55,7 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		return getController().getFontHeight();
 	}
 
-	protected final boolean isShowingGrid(){
+	protected final boolean isShowingGrid() {
 		return getController().isShowingGrid();
 	}
 
@@ -89,11 +83,11 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		return getController().getBackgroundColor();
 	}
 
-	protected final Color getProfitBackground(){
+	protected final Color getProfitBackground() {
 		return getController().getProfitBackground();
 	}
 
-	protected final Color getLossBackground(){
+	protected final Color getLossBackground() {
 		return getController().getLossBackground();
 	}
 
@@ -113,4 +107,20 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		g.drawString(string, x + stroke * 2, y + getFontHeight() - stroke * 2);
 	}
 
+	@Override
+	public final void invokeRepaint() {
+		if (chart != null) {
+			chart.invokeRepaint();
+		}
+	}
+
+	@Override
+	public void install(BasicChart<?> chart) {
+		this.chart = chart;
+	}
+
+	@Override
+	public void uninstall(BasicChart<?> chart) {
+		chart = null;
+	}
 }

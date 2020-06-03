@@ -4,18 +4,28 @@ package com.univocity.trader.chart.charts;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.painter.*;
+import com.univocity.trader.chart.indicators.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.*;
+import java.util.*;
+import java.util.List;
 
-public abstract class BasicChart<C extends BasicChartController> extends StaticChart<C> {
+public abstract class BasicChart<C extends PlotController> extends StaticChart<C> {
 
+	private final EnumMap<Painter.Z, List<Painter<?>>> painters = new EnumMap<>(Painter.Z.class);
 	private Point mousePosition = null;
 	private int draggingButton = -1;
 	private int dragStart;
 
 	public BasicChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
+
+		painters.put(Painter.Z.BACK, new ArrayList<>());
+		painters.put(Painter.Z.FRONT, new ArrayList<>());
+
 		canvas.setFocusable(true);
 
 		canvas.addMouseListener(new MouseAdapter() {
@@ -118,6 +128,8 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 
 	@Override
 	protected void draw(Graphics2D g, int width) {
+		runPainters(g, Painter.Z.BACK, width);
+
 		Point hoveredPosition = getCurrentCandleLocation();
 
 		if (isVerticalSelectionLineEnabled() || isHorizontalSelectionLineEnabled()) {
@@ -140,6 +152,8 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 		if (hoveredPosition != null) {
 			drawHovered(getCurrentCandle(), hoveredPosition, g);
 		}
+
+		runPainters(g, Painter.Z.FRONT, width);
 	}
 
 	protected final Stroke getLineStroke() {
@@ -149,4 +163,29 @@ public abstract class BasicChart<C extends BasicChartController> extends StaticC
 	protected abstract void drawSelected(Candle selected, Point location, Graphics2D g);
 
 	protected abstract void drawHovered(Candle hovered, Point location, Graphics2D g);
+
+	private void runPainters(Graphics2D g, Painter.Z z, int width) {
+		for (Painter<?> painter : painters.get(z)) {
+			painter.paintOn(this, g, width);
+			canvas.insets.right = Math.max(painter.insets().right, canvas.insets.right);
+			canvas.insets.left = Math.max(painter.insets().left, canvas.insets.left);
+		}
+	}
+
+	public void addPainter(Painter.Z z, Painter<?> painter){
+		if(painter != null) {
+			painters.get(z).add(painter);
+			painter.install(this);
+			invokeRepaint();
+		}
+	}
+
+	public void removePainter(Painter<?> painter){
+		if(painter != null) {
+			painter.uninstall(this);
+			painters.get(Painter.Z.BACK).remove(painter);
+			painters.get(Painter.Z.FRONT).remove(painter);
+			invokeRepaint();
+		}
+	}
 }

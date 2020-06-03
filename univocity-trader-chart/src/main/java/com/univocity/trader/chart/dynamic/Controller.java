@@ -1,10 +1,12 @@
 package com.univocity.trader.chart.dynamic;
 
+import com.univocity.trader.chart.charts.painter.*;
+
 import javax.swing.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public interface Controller {
-	public JPanel getControlPanel();
+public interface Controller extends Repaintable {
+	JPanel getControlPanel();
 }

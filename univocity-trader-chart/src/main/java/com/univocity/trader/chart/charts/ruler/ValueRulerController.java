@@ -5,7 +5,6 @@ import com.univocity.trader.chart.annotation.*;
 import java.awt.*;
 
 @Border("Value ruler settings")
-@UIBoundClass(updateProcessor = RulerUpdateProcessor.class)
 public class ValueRulerController extends RulerController<ValueRuler> {
 
 	private int tagWidth = 0;

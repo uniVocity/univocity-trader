@@ -11,7 +11,7 @@ import java.util.function.*;
 public abstract class Indicators {
 
 	public static HashMap<String, Indicator> instances = new HashMap<>();
-	public static BiFunction<Indicator, Object[], String> keyBuilder = (indicator, params) -> indicator.getClass().getName() + Arrays.toString(params);
+	public static BiFunction<Indicator, Object[], String> keyBuilder = null;
 
 	protected Indicators() {
 

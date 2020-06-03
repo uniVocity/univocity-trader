@@ -27,7 +27,7 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		return getController().getRightValueTagSpacing();
 	}
 
-	private void drawGlass(Graphics2D g) {
+	private void drawGlass(BasicChart<?> chart, Graphics2D g) {
 		int width = insets.right + getRightValueTagSpacing();
 		int start = chart.getBoundaryRight() - width;
 		int end = insets.right + width;
@@ -42,10 +42,10 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		g.fillRect(start, 0, end, chart.getHeight());
 	}
 
-	protected void drawBackground(Graphics2D g, int width) {
+	protected void drawBackground(BasicChart<?> chart, Graphics2D g, int width) {
 		setProfile(DEFAULT);
 
-		drawGlass(g);
+		drawGlass(chart, g);
 
 		final double yIncrement = getFontHeight();
 
@@ -80,22 +80,22 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		g.drawLine(width - length, y, width, y);
 	}
 
-	protected void drawSelection(Graphics2D g, int width, Candle candle, Point location) {
+	protected void drawSelection(BasicChart<?> chart, Graphics2D g, int width, Candle candle, Point location) {
 		setProfile(SELECTION);
-		refY1 = drawPrices(g, location, candle, chart.getCentralValue(candle), true, -1, false);
+		refY1 = drawPrices(chart, g, location, candle, chart.getCentralValue(candle), true, -1, false);
 
 		setProfile(HIGHLIGHT);
-		refY2 = drawPrices(g, location, candle, chart.getHighestPlottedValue(candle), false, refY1, true);
-		refY3 = drawPrices(g, location, candle, chart.getLowestPlottedValue(candle), false, refY1, false);
+		refY2 = drawPrices(chart, g, location, candle, chart.getHighestPlottedValue(candle), false, refY1, true);
+		refY3 = drawPrices(chart, g, location, candle, chart.getLowestPlottedValue(candle), false, refY1, false);
 	}
 
 	@Override
-	protected void highlightMousePosition(Graphics2D g, int width) {
+	protected void highlightMousePosition(BasicChart<?> chart, Graphics2D g, int width) {
 		Point mousePosition = chart.getCurrentMousePosition();
 		if (mousePosition != null && chart.isMouseDraggingCursor()) {
 			setProfile(HIGHLIGHT);
 			double valueAtMouseHeight = chart.getValueAtY(chart.getHeight() - mousePosition.y);
-			drawPrices(g, mousePosition, null, valueAtMouseHeight, true, -1, false);
+			drawPrices(chart, g, mousePosition, null, valueAtMouseHeight, true, -1, false);
 		}
 	}
 
@@ -104,7 +104,7 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		return (stringY + fh >= refY - fh) && (stringY - fh <= refY + fh);
 	}
 
-	private int drawPrices(Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY, boolean drawAboveRef) {
+	private int drawPrices(BasicChart<?> chart, Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY, boolean drawAboveRef) {
 		final int y = chart.getYCoordinate(value);
 		final int fontHeight = getController().getFontHeight();
 		int stringY = getController().centralizeYToFontHeight(y);

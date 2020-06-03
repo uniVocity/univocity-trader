@@ -3,6 +3,7 @@ package com.univocity.trader.chart.charts;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.painter.Painter;
 
 import javax.swing.*;
@@ -11,9 +12,7 @@ import java.awt.image.*;
 import java.util.List;
 import java.util.*;
 
-public abstract class StaticChart<C extends BasicChartController> {
-
-	private final EnumMap<Painter.Z, List<Painter<?>>> painters = new EnumMap<>(Painter.Z.class);
+public abstract class StaticChart<C extends PlotController> implements Repaintable {
 
 	private double horizontalIncrement = 0.0;
 	private double maximum = -1.0;
@@ -46,8 +45,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 		this.canvas = canvas;
 		this.canvas.addChart(this);
 		this.candleHistory = candleHistory;
-		painters.put(Painter.Z.BACK, new ArrayList<>());
-		painters.put(Painter.Z.FRONT, new ArrayList<>());
 		candleHistory.addDataUpdateListener(this::dataUpdated);
 		canvas.addScrollPositionListener(this::onScrollPositionUpdate);
 	}
@@ -87,9 +84,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		applyAntiAliasing(ig);
 		clearGraphics(ig, width);
 
-		runPainters(ig, Painter.Z.BACK, width);
 		draw(ig, width);
-		runPainters(ig, Painter.Z.FRONT, width);
 	}
 
 	public final void paintComponent(Graphics2D g) {
@@ -112,14 +107,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 	public int getBoundaryRight() {
 		return canvas.getBoundaryRight();
-	}
-
-	private void runPainters(Graphics2D g, Painter.Z z, int width) {
-		for (Painter<?> painter : painters.get(z)) {
-			painter.paintOn(g, width);
-			canvas.insets.right = Math.max(painter.insets().right, canvas.insets.right);
-			canvas.insets.left = Math.max(painter.insets().left, canvas.insets.left);
-		}
 	}
 
 	private void onScrollPositionUpdate(int newPosition) {
@@ -221,7 +208,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		return x;
 	}
 
-	private int getXCoordinate(int currentPosition) {
+	public int getXCoordinate(int currentPosition) {
 		return (int) Math.round(currentPosition * horizontalIncrement);
 	}
 
@@ -274,6 +261,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		}
 	}
 
+	@Override
 	public final void invokeRepaint() {
 		canvas.invokeRepaint();
 	}
@@ -343,10 +331,6 @@ public abstract class StaticChart<C extends BasicChartController> {
 			this.controller = newController();
 		}
 		return controller;
-	}
-
-	public void register(Painter<?> painter) {
-		painters.get(painter.getZ()).add(painter);
 	}
 
 	public double getHighestPlottedValue(Candle candle) {

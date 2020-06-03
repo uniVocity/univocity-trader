@@ -54,7 +54,14 @@ public class CandleHistoryView implements Iterable<Candle> {
 		history.addDataUpdateListener(l);
 	}
 
+	public void removeDataUpdateListener(Consumer<CandleHistory.UpdateType> l) {
+		history.removeDataUpdateListener(l);
+	}
+
 	public int size() {
+		if(start > end){
+			return 0;
+		}
 		return end - start;
 	}
 

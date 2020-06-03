@@ -10,7 +10,7 @@ import java.util.*;
 
 import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
-@UIBoundClass(updateProcessor = RulerUpdateProcessor.class)
+@UIBound
 public class RulerController<T> implements Controller {
 
 	@Label("Background color")
@@ -210,5 +210,10 @@ public class RulerController<T> implements Controller {
 
 	public Ruler<?> getRuler() {
 		return ruler;
+	}
+
+	@Override
+	public void invokeRepaint(){
+		ruler.invokeRepaint();
 	}
 }

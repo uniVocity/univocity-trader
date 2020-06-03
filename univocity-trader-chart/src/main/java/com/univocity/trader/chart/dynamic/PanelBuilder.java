@@ -1,13 +1,11 @@
 package com.univocity.trader.chart.dynamic;
 
 import com.univocity.parsers.annotations.helpers.*;
-import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.annotation.Label;
-import org.apache.commons.lang3.*;
+import com.univocity.trader.chart.annotation.*;
 import org.slf4j.*;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import java.awt.*;
@@ -26,8 +24,7 @@ public class PanelBuilder<T> {
 	private List<Field> fields;
 	private List<Method> setters;
 	private T observedObject;
-	protected UpdateProcessor updateProcessor;
-	private Class<? extends UpdateProcessor> processorType;
+	private Method updateProcessor;
 
 	private static final Comparator<Field> FIELD_COMPARATOR = new Comparator<Field>() {
 		@Override
@@ -42,12 +39,6 @@ public class PanelBuilder<T> {
 				return -1;
 			}
 			return 0;
-		}
-	};
-
-	static final UpdateProcessor DUMMY_PROCESSOR = new UpdateProcessor() {
-		@Override
-		public void execute() {
 		}
 	};
 
@@ -71,12 +62,10 @@ public class PanelBuilder<T> {
 	}
 
 	public PanelBuilder(Class<T> type) {
-		UIBoundClass annotation = type.getAnnotation(UIBoundClass.class);
+		UIBound annotation = type.getAnnotation(UIBound.class);
 		if (annotation == null) {
 			throw new IllegalArgumentException("Type " + type.getSimpleName() + " not UIBound");
 		}
-
-		processorType = annotation.updateProcessor();
 
 		this.type = type;
 		this.fields = getAnnotatedFields(type, CheckBoxBound.class, ColorBound.class, FontBound.class, SpinnerBound.class);
@@ -93,18 +82,8 @@ public class PanelBuilder<T> {
 		}
 	}
 
-	UpdateProcessor createProcessor() throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException {
-		if (processorType != UpdateProcessor.class) {
-			updateProcessor = (UpdateProcessor) processorType.getConstructors()[0].newInstance(observedObject);
-		} else {
-			updateProcessor = DUMMY_PROCESSOR;
-		}
-		return updateProcessor;
-	}
-
-	public JPanel getPanel(T observedObject) throws IllegalArgumentException, IllegalAccessException, SecurityException, InstantiationException, InvocationTargetException {
+	public JPanel getPanel(T observedObject) throws IllegalArgumentException, IllegalAccessException, SecurityException, NoSuchMethodException {
 		this.observedObject = observedObject;
-		createProcessor();
 
 		JPanel out = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -137,6 +116,13 @@ public class PanelBuilder<T> {
 		if (border != null && !border.value().isEmpty()) {
 			out.setBorder(new TitledBorder(border.value()));
 		}
+
+		UIBound bindingDetails = observedObject.getClass().getAnnotation(UIBound.class);
+		if (bindingDetails != null) {
+			updateProcessor = type.getMethod("invokeRepaint");
+		}
+
+
 		return out;
 	}
 
@@ -210,7 +196,10 @@ public class PanelBuilder<T> {
 	protected void updateValue(Object observedObject, Method setter, Object value) {
 		try {
 			setter.invoke(observedObject, value);
-			updateProcessor.execute();
+
+			if(updateProcessor != null){
+				updateProcessor.invoke(observedObject);
+			}
 		} catch (Exception ex) {
 			log.error("error", ex);
 		}

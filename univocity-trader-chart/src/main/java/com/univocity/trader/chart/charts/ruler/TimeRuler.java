@@ -17,13 +17,13 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 	}
 
 	@Override
-	protected void drawBackground(Graphics2D g, int width) {
+	protected void drawBackground(BasicChart<?> chart, Graphics2D g, int width) {
 		getController().setProfile(DEFAULT);
-		drawGrid(g, width);
+		drawGrid(chart, g, width);
 	}
 
 
-	private void drawGrid(Graphics2D g, int width) {
+	private void drawGrid(BasicChart<?> chart, Graphics2D g, int width) {
 		if (chart.candleHistory.isEmpty()) {
 			return;
 		}
@@ -60,7 +60,7 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 			previousTime = candleTime;
 
 			int stringWidth = getStringWidth(text, g);
-			int position = getTextPosition(x, stringWidth, false);
+			int position = getTextPosition(chart, x, stringWidth, false);
 			text(g);
 			drawString(position, chart.getHeight() - getFontHeight() - chart.canvas.getScrollHeight(), text, g, 1);
 		}
@@ -92,18 +92,18 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 		}
 	}
 
-	protected void drawSelection(Graphics2D g, int width, Candle candle, Point location) {
+	protected void drawSelection(BasicChart<?> chart, Graphics2D g, int width, Candle candle, Point location) {
 		getController().setProfile(SELECTION);
 		getController().drawing(g);
 		String text = candle.getFormattedCloseTime("MMM dd, HH:mm");
 		int stringWidth = getStringWidth(text, g) + 3;
 		g.setColor(getController().getBackgroundColor());
 
-		int position = getTextPosition(location.x, stringWidth, true);
+		int position = getTextPosition(chart, location.x, stringWidth, true);
 		drawStringInBox(position, chart.getHeight() - getFontHeight() - chart.canvas.getScrollHeight(), stringWidth, text, g, 1, getBackgroundColor());
 	}
 
-	private int getTextPosition(int x, int stringWidth, boolean centralize) {
+	private int getTextPosition(BasicChart<?> chart, int x, int stringWidth, boolean centralize) {
 		int rightLimit = chart.getBoundaryRight() - chart.canvas.getInsetsWidth() - stringWidth;
 
 		int position = centralize ? x - (stringWidth / 2) : x;
@@ -123,7 +123,7 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 	}
 
 	@Override
-	protected void highlightMousePosition(Graphics2D g, int width) {
+	protected void highlightMousePosition(BasicChart<?> chart, Graphics2D g, int width) {
 
 	}
 

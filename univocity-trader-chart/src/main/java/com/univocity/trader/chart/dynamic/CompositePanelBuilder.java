@@ -18,7 +18,6 @@ public class CompositePanelBuilder {
 	private final List<Field> uiBoundClassContainer;
 	private final List<Field> uiBoundFieldContainer;
 	private final HashMap<Method, Set<Object>> sharedSetters = new HashMap<>();
-	private final HashMap<Method, Set<UpdateProcessor>> sharedProcessors = new HashMap<>();
 	private final HashMap<Method, Set<Object>> notSharedSetters = new HashMap<>();
 
 	private final Set<Method> createdSetters = new HashSet<>();
@@ -40,12 +39,6 @@ public class CompositePanelBuilder {
 					Set<Object> toUpdate = sharedSetters.get(setter);
 					for (Object o : toUpdate) {
 						setter.invoke(o, value);
-					}
-				}
-				if (sharedProcessors.get(setter) != null) {
-					Set<UpdateProcessor> processors = sharedProcessors.get(setter);
-					for (UpdateProcessor processor : processors) {
-						processor.execute();
 					}
 				}
 			} catch (Exception ex) {
@@ -133,7 +126,7 @@ public class CompositePanelBuilder {
 			return;
 		}
 		log.debug("Looking for fields to merge in " + observedObject.getClass().getSimpleName());
-		if (observedObject.getClass().getAnnotation(UIBoundClass.class) != null) {
+		if (observedObject.getClass().getAnnotation(UIBound.class) != null) {
 			log.debug(observedObject.getClass().getSimpleName() + "is a UIBoundClass, merging its fields");
 			mergeBoundFields(observedObject);
 		} else if (observedObject.getClass().getAnnotation(CompositeUIBound.class) != null) {
@@ -164,7 +157,7 @@ public class CompositePanelBuilder {
 		}
 	}
 
-	public JPanel getPanel(Object observedObject) throws IllegalArgumentException, IllegalAccessException, SecurityException, InstantiationException, InvocationTargetException, NoSuchFieldException {
+	public JPanel getPanel(Object observedObject) throws IllegalArgumentException, IllegalAccessException, SecurityException, InstantiationException, InvocationTargetException, NoSuchFieldException, NoSuchMethodException {
 		log.debug("Creating panel from class " + observedObject.getClass().getSimpleName());
 		boundObjects.clear();
 		createdSetters.clear();
@@ -202,7 +195,7 @@ public class CompositePanelBuilder {
 		}
 	}
 
-	public JPanel getSubPanel(Object observedObject, List<Field> uiContainer) throws IllegalArgumentException, IllegalAccessException, SecurityException, InstantiationException, InvocationTargetException, NoSuchFieldException {
+	public JPanel getSubPanel(Object observedObject, List<Field> uiContainer) throws IllegalArgumentException, IllegalAccessException, SecurityException, InstantiationException, InvocationTargetException, NoSuchFieldException, NoSuchMethodException {
 		log.debug("Creating panel for " + observedObject.getClass().getSimpleName());
 		JPanel out = new JPanel(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
@@ -220,7 +213,7 @@ public class CompositePanelBuilder {
 				JPanel panel = null;
 				if (o.getClass().getAnnotation(CompositeUIBound.class) != null) {
 					panel = getSubPanel(o, getUIBoundClassContainer(o.getClass()));
-				} else if (o.getClass().getAnnotation(UIBoundClass.class) != null) {
+				} else if (o.getClass().getAnnotation(UIBound.class) != null) {
 					panel = buildContainedPanel(o);
 				}
 				if (panel != null && panel.getComponentCount() > 0) {
@@ -237,20 +230,7 @@ public class CompositePanelBuilder {
 		log.debug("Looking for field to bind in " + observedObject.getClass().getName());
 
 		if (observedObject.getClass().getAnnotation(CompositeUIBound.class) != null) {
-			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), Bind.class);
-			for (Field field : fields) {
-				Set<Method> boundSetters = getSettersOf(observedObject, field);
-				for (Method boundSetter : boundSetters) {
-					Set<UpdateProcessor> processors = sharedProcessors.get(boundSetter);
-					if (processors == null) {
-						sharedProcessors.put(boundSetter, createMergedProcessor(boundObjects));
-					} else {
-						processors.addAll(createMergedProcessor(boundObjects));
-					}
-				}
-			}
-
-			fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), ControllerContainer.class);
+			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), ControllerContainer.class);
 			log.debug("Looking for more composite class containers");
 			for (Field field : fields) {
 				field.setAccessible(true);
@@ -294,7 +274,7 @@ public class CompositePanelBuilder {
 		return setters;
 	}
 
-	private JPanel buildContainedPanel(Object o) throws IllegalArgumentException, SecurityException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchFieldException {
+	private JPanel buildContainedPanel(Object o) throws IllegalArgumentException, SecurityException, IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchFieldException, NoSuchMethodException {
 		log.debug("Creating panel for " + o.getClass().getSimpleName());
 		MergedProcessorPanelBuilder builder = new MergedProcessorPanelBuilder(o.getClass());
 		List<Method> setters = builder.getSetters();
@@ -305,15 +285,6 @@ public class CompositePanelBuilder {
 			Set<Object> toMerge = sharedSetters.get(setter);
 			log.debug("Setter " + setter.getName() + " merged with", toMerge);
 			if (toMerge != null) {
-				Set<UpdateProcessor> processors = sharedProcessors.get(setter);
-				if (processors == null) {
-					log.debug("Setter " + setter.getName() + " has no shared processor yet, creating one");
-					sharedProcessors.put(setter, createMergedProcessor(toMerge));
-				} else {
-					log.debug("Setter " + setter.getName() + " already have a shared processor, merging");
-					processors.addAll(createMergedProcessor(toMerge));
-				}
-
 				if (createdSetters.contains(setter)) {
 					if (notSharedSetters.containsKey(setter)) {
 						Set<Object> notShared = notSharedSetters.get(setter);
@@ -334,15 +305,5 @@ public class CompositePanelBuilder {
 		}
 
 		return builder.getPanel(o);
-	}
-
-	private Set<UpdateProcessor> createMergedProcessor(Set<Object> toMerge) throws InstantiationException, IllegalAccessException, IllegalArgumentException, SecurityException, InvocationTargetException {
-		final HashSet<UpdateProcessor> processors = new HashSet<UpdateProcessor>();
-		for (Object o : toMerge) {
-			UIBoundClass annotation = o.getClass().getAnnotation(UIBoundClass.class);
-			UpdateProcessor processor = (UpdateProcessor) annotation.updateProcessor().getConstructors()[0].newInstance(o);
-			processors.add(processor);
-		}
-		return processors;
 	}
 }

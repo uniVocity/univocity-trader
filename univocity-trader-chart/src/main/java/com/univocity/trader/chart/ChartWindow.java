@@ -4,9 +4,12 @@ import com.github.weisj.darklaf.*;
 import com.github.weisj.darklaf.theme.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
+import com.univocity.trader.chart.charts.painter.Painter;
 import com.univocity.trader.chart.charts.ruler.*;
 import com.univocity.trader.chart.charts.scrolling.*;
+import com.univocity.trader.chart.indicators.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.strategy.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,6 +26,7 @@ public class ChartWindow extends JFrame {
 	private ValueRuler valueRuler;
 	private TimeRuler timeRuler;
 	private SymbolSelector symbolSelector;
+	private IndicatorSelector indicatorSelector;
 
 	public ChartWindow() {
 		this.setLayout(new BorderLayout());
@@ -38,8 +42,9 @@ public class ChartWindow extends JFrame {
 
 	private JPanel getTopPanel() {
 		if (topPanel == null) {
-			topPanel = new JPanel();
+			topPanel = new JPanel(new GridLayout(1, 2));
 			topPanel.add(getSymbolSelector());
+			topPanel.add(getIndicatorSelector());
 		}
 		return topPanel;
 	}
@@ -97,7 +102,34 @@ public class ChartWindow extends JFrame {
 		return valueRuler;
 	}
 
-	private void updateHistory(){
+	private IndicatorSelector getIndicatorSelector() {
+		if (indicatorSelector == null) {
+			indicatorSelector = new IndicatorSelector(() -> getSymbolSelector().getInterval());
+			indicatorSelector.addIndicatorListener(this::indicatorUpdated);
+			indicatorSelector.loadIndicatorsFrom(Indicators.class);
+		}
+		return indicatorSelector;
+	}
+
+	private void indicatorUpdated(boolean preview, VisualIndicator previous, VisualIndicator current) {
+		com.univocity.trader.chart.charts.painter.Painter.Z z = current == null ? Painter.Z.FRONT : current.getZ();
+		if (preview) {
+			getChart().removePainter(previous);
+			getChart().addPainter(z, current);
+		} else {
+			if (current == null) {
+				getChart().removePainter(previous);
+			} else if (previous == null) {
+				getChart().addPainter(z, current);
+			} else {
+				getChart().removePainter(previous);
+				getChart().addPainter(z, current);
+			}
+		}
+	}
+
+
+	private void updateHistory() {
 
 	}
 

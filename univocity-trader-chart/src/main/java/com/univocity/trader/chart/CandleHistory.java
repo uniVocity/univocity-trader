@@ -21,6 +21,10 @@ public class CandleHistory implements Iterable<Candle> {
 		dataUpdateListeners.add(r);
 	}
 
+	public void removeDataUpdateListener(Consumer<UpdateType> r) {
+		dataUpdateListeners.remove(r);
+	}
+
 	public int size() {
 		return candles.size();
 	}
