@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.*;
 import java.util.function.*;
 
-public class VisualIndicator implements Painter<VisualIndicatorController> {
+public class VisualIndicator implements Painter<VisualIndicatorTheme> {
 
 	private Supplier<Indicator> indicatorSupplier;
 	private Indicator indicator;
@@ -69,8 +69,8 @@ public class VisualIndicator implements Painter<VisualIndicatorController> {
 	}
 
 	@Override
-	public VisualIndicatorController getController() {
-		return new VisualIndicatorController(this);
+	public VisualIndicatorTheme getTheme() {
+		return new VisualIndicatorTheme(this);
 	}
 
 	@Override

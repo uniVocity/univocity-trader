@@ -7,10 +7,10 @@ import com.univocity.trader.chart.charts.painter.*;
 
 import java.awt.*;
 
-public abstract class Ruler<C extends RulerController<?>> implements Painter<C> {
+public abstract class Ruler<T extends RulerTheme<?>> implements Painter<T> {
 
 	Insets insets = insets();
-	private C controller;
+	private T theme;
 	private BasicChart<?> chart;
 
 	public Ruler(BasicChart<?> chart) {
@@ -18,7 +18,7 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 	}
 
 	private void updateFontSize(Graphics2D g) {
-		getController().updateFontSize(g);
+		this.getTheme().updateFontSize(g);
 	}
 
 	public final void paintOn(BasicChart<?> chart, Graphics2D g, int width) {
@@ -42,53 +42,53 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 
 	protected abstract void highlightMousePosition(BasicChart<?> chart, Graphics2D g, int width);
 
-	public final C getController() {
-		if (controller == null) {
-			controller = newController();
+	public final T getTheme() {
+		if (theme == null) {
+			theme = newTheme();
 		}
-		return controller;
+		return theme;
 	}
 
-	protected abstract C newController();
+	protected abstract T newTheme();
 
 	protected final int getFontHeight() {
-		return getController().getFontHeight();
+		return this.getTheme().getFontHeight();
 	}
 
 	protected final boolean isShowingGrid() {
-		return getController().isShowingGrid();
+		return this.getTheme().isShowingGrid();
 	}
 
 	protected Color getGridColor() {
-		return getController().getGridColor();
+		return this.getTheme().getGridColor();
 	}
 
 	protected final void setProfile(DrawingProfile.Profile profile) {
-		getController().setProfile(profile);
+		this.getTheme().setProfile(profile);
 	}
 
 	protected final int getStringWidth(String str, Graphics2D g) {
-		return getController().getStringWidth(str, g);
+		return this.getTheme().getStringWidth(str, g);
 	}
 
 	protected final void text(Graphics2D g) {
-		getController().text(g);
+		this.getTheme().text(g);
 	}
 
 	protected final void drawing(Graphics2D g) {
-		getController().drawing(g);
+		this.getTheme().drawing(g);
 	}
 
 	protected Color getBackgroundColor() {
-		return getController().getBackgroundColor();
+		return this.getTheme().getBackgroundColor();
 	}
 
 	protected final Color getProfitBackground() {
-		return getController().getProfitBackground();
+		return this.getTheme().getProfitBackground();
 	}
 
 	protected final Color getLossBackground() {
-		return getController().getLossBackground();
+		return this.getTheme().getLossBackground();
 	}
 
 	protected void drawStringInBox(int x, int y, int width, String string, Graphics2D g, int stroke, Color background) {

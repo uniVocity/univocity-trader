@@ -6,17 +6,17 @@ import com.univocity.trader.chart.dynamic.*;
 import javax.swing.*;
 
 @UIBound
-public class VisualIndicatorController implements Theme {
+public class VisualIndicatorTheme implements Theme {
 
 	private JPanel controlPanel;
 	final VisualIndicator indicator;
 
-	public VisualIndicatorController(VisualIndicator indicator) {
+	public VisualIndicatorTheme(VisualIndicator indicator) {
 		this.indicator = indicator;
 	}
 
 	@Override
-	public JPanel getControlPanel() {
+	public JPanel getThemeSettingsPanel() {
 		if (controlPanel == null) {
 			controlPanel = PanelBuilder.createPanel(this);
 		}

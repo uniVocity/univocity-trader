@@ -49,10 +49,10 @@ public class CompositePanelBuilder {
 
 	;
 
-	public static JPanel createPanel(Object compositeUIController) {
+	public static JPanel createPanel(Object compositeTheme) {
 
 		try {
-			return new CompositePanelBuilder(compositeUIController.getClass()).getPanel(compositeUIController);
+			return new CompositePanelBuilder(compositeTheme.getClass()).getPanel(compositeTheme);
 		} catch (Exception e) {
 			if (e instanceof RuntimeException) {
 				throw (RuntimeException) e;
@@ -62,9 +62,9 @@ public class CompositePanelBuilder {
 	}
 
 	private List<Field> getUIBoundClassContainer(Class<?> type) {
-		List<Field> container = AnnotationHelper.getAnnotatedFields(type, ControllerContainer.class);
+		List<Field> container = AnnotationHelper.getAnnotatedFields(type, ThemeContainer.class);
 		if (container.size() == 0) {
-			throw new IllegalArgumentException("Type " + type.getSimpleName() + " does not contain ControllerContainer");
+			throw new IllegalArgumentException("Type " + type.getSimpleName() + " does not contain ThemeContainer");
 		}
 
 		for (Field field : container) {
@@ -131,7 +131,7 @@ public class CompositePanelBuilder {
 			mergeBoundFields(observedObject);
 		} else if (observedObject.getClass().getAnnotation(CompositeUIBound.class) != null) {
 			log.debug(observedObject.getClass().getSimpleName() + " is a CompositeUIBoundClass, reading the UIBoundClassContainers...");
-			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), ControllerContainer.class);
+			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), ThemeContainer.class);
 			for (Field field : fields) {
 				log.debug(observedObject.getClass().getSimpleName() + " contains container field: " + field.getName());
 				field.setAccessible(true);
@@ -152,7 +152,7 @@ public class CompositePanelBuilder {
 				log.debug("Setter" + setter.getName() + "not shared");
 				it.remove();
 			} else {
-				log.debug("Setter" + setter.getName() + " shared with 2 or more UIControllers");
+				log.debug("Setter" + setter.getName() + " shared with 2 or more themes");
 			}
 		}
 	}
@@ -179,17 +179,11 @@ public class CompositePanelBuilder {
 			for (Field field : fields) {
 				log.debug(observedObject.getClass().getSimpleName() + " contains shared field: " + field.getName());
 				Map<Theme, List<String>> map = getMapFrom(observedObject, field);
-				for (Theme controller : map.keySet()) {
-					Set<Method> setters = getSetters(controller, map.get(controller));
+				for (Theme  theme : map.keySet()) {
+					Set<Method> setters = getSetters( theme, map.get( theme));
 					for (Method setter : setters) {
-						Set<Object> controllers = notSharedSetters.get(setter);
-						if (controllers == null) {
-							controllers = new HashSet<Object>();
-							notSharedSetters.put(setter, controllers);
-						}
-						controllers.add(controller);
+						notSharedSetters.computeIfAbsent(setter, k -> new HashSet<>()).add( theme);
 					}
-
 				}
 			}
 		}
@@ -230,7 +224,7 @@ public class CompositePanelBuilder {
 		log.debug("Looking for field to bind in " + observedObject.getClass().getName());
 
 		if (observedObject.getClass().getAnnotation(CompositeUIBound.class) != null) {
-			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), ControllerContainer.class);
+			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), ThemeContainer.class);
 			log.debug("Looking for more composite class containers");
 			for (Field field : fields) {
 				field.setAccessible(true);
@@ -255,17 +249,17 @@ public class CompositePanelBuilder {
 		Set<Method> setters = new HashSet<>();
 
 		Map<Theme, List<String>> map = getMapFrom(observedObject, field);
-		for (Theme uiController : map.keySet()) {
-			setters.addAll(getSetters(uiController, map.get(uiController)));
+		for (Theme theme : map.keySet()) {
+			setters.addAll(getSetters(theme, map.get(theme)));
 		}
 
 		return setters;
 	}
 
-	private Set<Method> getSetters(Theme controller, List<String> fields) {
+	private Set<Method> getSetters(Theme  theme, List<String> fields) {
 		Set<Method> setters = new HashSet<Method>();
 		for (String fieldName : fields) {
-			Field foundField = getField(fieldName, controller.getClass());
+			Field foundField = getField(fieldName,  theme.getClass());
 			if (foundField != null) {
 				Method setter = findSetter(foundField);
 				setters.add(setter);

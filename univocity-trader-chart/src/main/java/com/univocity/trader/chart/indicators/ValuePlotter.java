@@ -13,7 +13,7 @@ public class ValuePlotter implements Repaintable {
 	private int i = 0;
 	private final DoubleSupplier valueSupplier;
 	private Point previousLocation;
-	private final LinePlotTheme<ValuePlotter> controller = new LinePlotTheme<>(this);
+	private final LinePlotTheme<ValuePlotter> theme = new LinePlotTheme<>(this);
 	private final Repaintable parent;
 
 	public ValuePlotter(Repaintable parent, DoubleSupplier valueSupplier) {
@@ -38,8 +38,8 @@ public class ValuePlotter implements Repaintable {
 	}
 
 	public void plotNext(int i, BasicChart<?> chart, Graphics2D g, int width) {
-		g.setStroke(controller.getNormalStroke());
-		g.setColor(controller.getLineColor());
+		g.setStroke(theme.getNormalStroke());
+		g.setColor(theme.getLineColor());
 
 		Point location = createCoordinate(chart, i, values[i]);
 

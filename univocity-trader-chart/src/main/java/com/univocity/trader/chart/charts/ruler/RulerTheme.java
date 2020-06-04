@@ -11,7 +11,7 @@ import java.util.*;
 import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
 @UIBound
-public class RulerController<T> implements Theme {
+public class RulerTheme<T> implements Theme {
 
 	@Label("Background color")
 	@ColorBound()
@@ -39,7 +39,7 @@ public class RulerController<T> implements Theme {
 	private JPanel controlPanel;
 	protected final Ruler<?> ruler;
 
-	public RulerController(Ruler<?> ruler) {
+	public RulerTheme(Ruler<?> ruler) {
 
 		this.ruler = ruler;
 		profiles = new EnumMap<>(DrawingProfile.Profile.class);
@@ -201,7 +201,7 @@ public class RulerController<T> implements Theme {
 	}
 
 
-	public JPanel getControlPanel() {
+	public JPanel getThemeSettingsPanel() {
 		if (controlPanel == null) {
 			controlPanel = PanelBuilder.createPanel(this);
 		}

@@ -5,7 +5,7 @@ import com.univocity.trader.chart.annotation.*;
 import java.awt.*;
 
 @Border("Value ruler settings")
-public class ValueRulerController extends RulerController<ValueRuler> {
+public class ValueRulerTheme extends RulerTheme<ValueRuler> {
 
 	private int tagWidth = 0;
 	private int lineWidth = 5;
@@ -13,7 +13,7 @@ public class ValueRulerController extends RulerController<ValueRuler> {
 	private int rightValueTagSpacing = 2;
 	private int minRulerWidth = 50;
 
-	public ValueRulerController(ValueRuler ruler) {
+	public ValueRulerTheme(ValueRuler ruler) {
 		super(ruler);
 	}
 

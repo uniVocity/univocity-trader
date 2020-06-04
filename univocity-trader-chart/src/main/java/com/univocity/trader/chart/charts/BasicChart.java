@@ -11,7 +11,7 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
-public abstract class BasicChart<C extends PainterTheme<?>> extends StaticChart<C> {
+public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<T> {
 
 	private final EnumMap<Painter.Z, List<Painter<?>>> painters = new EnumMap<>(Painter.Z.class);
 	private Point mousePosition = null;
@@ -109,15 +109,15 @@ public abstract class BasicChart<C extends PainterTheme<?>> extends StaticChart<
 	}
 
 	private boolean isVerticalSelectionLineEnabled() {
-		return getController().isVerticalSelectionLineEnabled();
+		return getTheme().isVerticalSelectionLineEnabled();
 	}
 
 	private boolean isHorizontalSelectionLineEnabled() {
-		return getController().isHorizontalSelectionLineEnabled();
+		return getTheme().isHorizontalSelectionLineEnabled();
 	}
 
 	private Color getSelectionLineColor() {
-		return getController().getSelectionLineColor();
+		return getTheme().getSelectionLineColor();
 	}
 
 	public final Point getCurrentMousePosition() {
@@ -155,7 +155,7 @@ public abstract class BasicChart<C extends PainterTheme<?>> extends StaticChart<
 	}
 
 	protected final Stroke getLineStroke() {
-		return getController().getNormalStroke();
+		return getTheme().getNormalStroke();
 	}
 
 	protected abstract void drawSelected(Candle selected, Point location, Graphics2D g);

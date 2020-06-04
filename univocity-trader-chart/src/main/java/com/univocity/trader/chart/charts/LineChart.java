@@ -14,7 +14,7 @@ public class LineChart extends BasicChart<LinePlotTheme<LineChart>> {
 	}
 
 	@Override
-	protected LinePlotTheme<LineChart> newController() {
+	protected LinePlotTheme<LineChart> newTheme() {
 		return new LinePlotTheme<>(this);
 	}
 
@@ -59,15 +59,15 @@ public class LineChart extends BasicChart<LinePlotTheme<LineChart>> {
 	}
 
 	private int getMarkerWidth(){
-		return getController().getMarkerWidth();
+		return getTheme().getMarkerWidth();
 	}
 
 	private Color getMarkerColor(){
-		return getController().getMarkerColor();
+		return getTheme().getMarkerColor();
 	}
 
 	protected final Color getLineColor() {
-		return getController().getLineColor();
+		return getTheme().getLineColor();
 	}
 
 	private void drawCircle(Color color, Point location, Graphics2D g){

@@ -6,10 +6,10 @@ import javax.swing.*;
 import java.util.*;
 
 @CompositeUIBound
-public class CompositeUIController {
+public class CompositeTheme {
 
-	@ControllerContainer
-	private List<Theme> controllers = new ArrayList<>();
+	@ThemeContainer
+	private List<Theme>  themes = new ArrayList<>();
 	
 	@Bind
 	private Map<Theme, List<String>> boundFields = new HashMap<>();

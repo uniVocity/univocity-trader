@@ -8,7 +8,7 @@ import com.univocity.trader.chart.charts.painter.*;
 import java.awt.*;
 import java.awt.image.*;
 
-public abstract class StaticChart<C extends PainterTheme<?>> implements Repaintable {
+public abstract class StaticChart<T extends PainterTheme<?>> implements Repaintable {
 
 	private double horizontalIncrement = 0.0;
 	private double maximum = -1.0;
@@ -23,7 +23,7 @@ public abstract class StaticChart<C extends PainterTheme<?>> implements Repainta
 	private Candle firstVisibleCandle;
 	private Candle lastVisibleCandle;
 
-	private C controller;
+	private T theme;
 
 	public final CandleHistoryView candleHistory;
 
@@ -46,11 +46,11 @@ public abstract class StaticChart<C extends PainterTheme<?>> implements Repainta
 	}
 
 	protected Color getBackgroundColor() {
-		return getController().getBackgroundColor();
+		return getTheme().getBackgroundColor();
 	}
 
 	protected boolean isAntialiased() {
-		return getController().isAntialiased();
+		return getTheme().isAntialiased();
 	}
 
 	protected void clearGraphics(Graphics g, int width) {
@@ -232,7 +232,7 @@ public abstract class StaticChart<C extends PainterTheme<?>> implements Repainta
 	}
 
 	private boolean displayLogarithmicScale() {
-		return getController().isDisplayingLogarithmicScale();
+		return getTheme().isDisplayingLogarithmicScale();
 	}
 
 	public final void layoutComponents() {
@@ -309,24 +309,24 @@ public abstract class StaticChart<C extends PainterTheme<?>> implements Repainta
 	}
 
 	public final int calculateBarWidth() {
-		return getController().getBarWidth();
+		return getTheme().getBarWidth();
 	}
 
 	private int getSpaceBetweenCandles() {
-		return getController().getSpaceBetweenBars();
+		return getTheme().getSpaceBetweenBars();
 	}
 
 	public int calculateRequiredWidth() {
 		return (canvas.getBarWidth() + getSpaceBetweenCandles()) * candleHistory.size() + canvas.getInsetsWidth();
 	}
 
-	protected abstract C newController();
+	protected abstract T newTheme();
 
-	public final C getController() {
-		if (controller == null) {
-			this.controller = newController();
+	public final T getTheme() {
+		if (theme == null) {
+			this.theme = newTheme();
 		}
-		return controller;
+		return theme;
 	}
 
 	public double getHighestPlottedValue(Candle candle) {

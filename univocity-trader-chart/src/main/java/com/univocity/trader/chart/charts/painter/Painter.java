@@ -5,7 +5,7 @@ import com.univocity.trader.chart.dynamic.*;
 
 import java.awt.*;
 
-public interface Painter<C extends Theme> extends Repaintable {
+public interface Painter<T extends Theme> extends Repaintable {
 
 	Insets NO_INSETS = new Insets(0, 0, 0, 0);
 
@@ -17,7 +17,7 @@ public interface Painter<C extends Theme> extends Repaintable {
 
 	void paintOn(BasicChart<?> chart, Graphics2D g, int width);
 
-	C getController();
+	T getTheme();
 
 	default Insets insets(){
 		return NO_INSETS;

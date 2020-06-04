@@ -45,18 +45,18 @@ abstract class FilledBarChart<C extends AbstractFilledBarTheme<?>> extends Basic
 	}
 
 	private Color getFillColor(Candle candle) {
-		return getController().getFillColor(candle);
+		return getTheme().getFillColor(candle);
 	}
 
 	private Color getLineColor(Candle candle) {
-		return getController().getLineColor(candle);
+		return getTheme().getLineColor(candle);
 	}
 
 	private Color getSelectionLineColor(Candle selected) {
-		return getController().getSelectionLineColor(selected);
+		return getTheme().getSelectionLineColor(selected);
 	}
 
 	private Color getSelectionFillColor(Candle selected) {
-		return getController().getSelectionFillColor(selected);
+		return getTheme().getSelectionFillColor(selected);
 	}
 }

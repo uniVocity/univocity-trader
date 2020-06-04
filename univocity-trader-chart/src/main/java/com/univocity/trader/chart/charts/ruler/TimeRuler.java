@@ -10,7 +10,7 @@ import java.time.*;
 import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
 
-public class TimeRuler extends Ruler<TimeRulerController> {
+public class TimeRuler extends Ruler<TimeRulerTheme> {
 
 	public TimeRuler(BasicChart<?> chart) {
 		super(chart);
@@ -18,7 +18,7 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 
 	@Override
 	protected void drawBackground(BasicChart<?> chart, Graphics2D g, int width) {
-		getController().setProfile(DEFAULT);
+		this.getTheme().setProfile(DEFAULT);
 		drawGrid(chart, g, width);
 	}
 
@@ -93,11 +93,11 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 	}
 
 	protected void drawSelection(BasicChart<?> chart, Graphics2D g, int width, Candle candle, Point location) {
-		getController().setProfile(SELECTION);
-		getController().drawing(g);
+		this.getTheme().setProfile(SELECTION);
+		this.getTheme().drawing(g);
 		String text = candle.getFormattedCloseTime("MMM dd, HH:mm");
 		int stringWidth = getStringWidth(text, g) + 3;
-		g.setColor(getController().getBackgroundColor());
+		g.setColor(this.getTheme().getBackgroundColor());
 
 		int position = getTextPosition(chart, location.x, stringWidth, true);
 		drawStringInBox(position, chart.getHeight() - getFontHeight() - chart.canvas.getScrollHeight(), stringWidth, text, g, 1, getBackgroundColor());
@@ -118,8 +118,8 @@ public class TimeRuler extends Ruler<TimeRulerController> {
 		return position;
 	}
 
-	public TimeRulerController newController() {
-		return new TimeRulerController(this);
+	public TimeRulerTheme newTheme() {
+		return new TimeRulerTheme(this);
 	}
 
 	@Override

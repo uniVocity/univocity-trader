@@ -64,9 +64,9 @@ public class ChartWindow extends JFrame {
 		if (leftPanel == null) {
 			leftPanel = new JPanel();
 			leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-			leftPanel.add(getChart().getController().getControlPanel());
-			leftPanel.add(getValueRuler().getController().getControlPanel());
-			leftPanel.add(getTimeRuler().getController().getControlPanel());
+			leftPanel.add(getChart().getTheme().getThemeSettingsPanel());
+			leftPanel.add(getValueRuler().getTheme().getThemeSettingsPanel());
+			leftPanel.add(getTimeRuler().getTheme().getThemeSettingsPanel());
 		}
 		return leftPanel;
 	}

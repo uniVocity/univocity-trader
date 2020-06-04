@@ -113,7 +113,7 @@ public class PainterTheme<T extends Repaintable> implements Theme {
 		this.backgroundColor = backgroundColor;
 	}
 
-	public JPanel getControlPanel() {
+	public JPanel getThemeSettingsPanel() {
 		if (controlPanel == null) {
 			controlPanel = PanelBuilder.createPanel(this);
 		}

@@ -26,7 +26,7 @@ public class CandleChart extends FilledBarChart<CandleTheme> {
 		int bodyWidth = getBarWidth();
 
 		if (trade.isClosePositive()) {
-			if (getController().getPositiveClosingFilled()) {
+			if (getTheme().getPositiveClosingFilled()) {
 				g.setColor(fillColor);
 				g.fillRect(x - (bodyWidth / 2), close, bodyWidth + 1, open - close + 1);
 			}
@@ -36,7 +36,7 @@ public class CandleChart extends FilledBarChart<CandleTheme> {
 			g.drawLine(x, close, x, high);
 			g.drawLine(x, open, x, low);
 		} else {
-			if (getController().getNegativeClosingFilled()) {
+			if (getTheme().getNegativeClosingFilled()) {
 				g.setColor(fillColor);
 				g.fillRect(x - (bodyWidth / 2), open, bodyWidth + 1, close - open + 1);
 			}
@@ -50,7 +50,7 @@ public class CandleChart extends FilledBarChart<CandleTheme> {
 	}
 
 	@Override
-	public CandleTheme newController() {
+	public CandleTheme newTheme() {
 		return new CandleTheme(this);
 	}
 }

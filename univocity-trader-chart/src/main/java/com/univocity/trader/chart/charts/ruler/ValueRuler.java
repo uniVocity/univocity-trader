@@ -10,7 +10,7 @@ import java.text.*;
 import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
 
-public class ValueRuler extends Ruler<ValueRulerController> {
+public class ValueRuler extends Ruler<ValueRulerTheme> {
 
 	private Point gradientStart = new Point(0, 0);
 	private Point gradientEnd = new Point(0, 0);
@@ -24,7 +24,7 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 	}
 
 	private int getRightValueTagSpacing() {
-		return getController().getRightValueTagSpacing();
+		return this.getTheme().getRightValueTagSpacing();
 	}
 
 	private void drawGlass(BasicChart<?> chart, Graphics2D g) {
@@ -54,7 +54,7 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		int insetRight = 0;
 		while (y > 0) {
 			String tag = getValueFormat().format(chart.getValueAtY(y));
-			int tagWidth = getController().getMaxStringWidth(tag, g);
+			int tagWidth = this.getTheme().getMaxStringWidth(tag, g);
 
 			insetRight = Math.max(insetRight, tagWidth);
 
@@ -68,7 +68,7 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 	}
 
 	private int getMinimumWidth() {
-		return getController().getMinimumWidth();
+		return this.getTheme().getMinimumWidth();
 	}
 
 	public int getRulerWidth() {
@@ -106,8 +106,8 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 
 	private int drawPrices(BasicChart<?> chart, Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY, boolean drawAboveRef) {
 		final int y = chart.getYCoordinate(value);
-		final int fontHeight = getController().getFontHeight();
-		int stringY = getController().centralizeYToFontHeight(y);
+		final int fontHeight = this.getTheme().getFontHeight();
+		int stringY = this.getTheme().centralizeYToFontHeight(y);
 
 		if (stringY + fontHeight > chart.getHeight()) {
 			stringY = chart.getHeight() - fontHeight;
@@ -124,9 +124,9 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 		}
 
 		String tag = format(value);
-		int tagWidth = getController().getMaxStringWidth(tag, g);
+		int tagWidth = this.getTheme().getMaxStringWidth(tag, g);
 
-		int x = chart.getBoundaryRight() - tagWidth - getController().getRightValueTagSpacing();
+		int x = chart.getBoundaryRight() - tagWidth - this.getTheme().getRightValueTagSpacing();
 		if (drawInBox) {
 			drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, candle == null ? getBackgroundColor() : candle.isGreen() ? getProfitBackground() : getLossBackground());
 		} else {
@@ -168,8 +168,8 @@ public class ValueRuler extends Ruler<ValueRulerController> {
 	}
 
 	@Override
-	protected ValueRulerController newController() {
-		return new ValueRulerController(this);
+	protected ValueRulerTheme newTheme() {
+		return new ValueRulerTheme(this);
 	}
 
 	protected String format(double value) {

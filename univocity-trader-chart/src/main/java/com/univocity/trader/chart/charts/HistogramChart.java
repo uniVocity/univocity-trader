@@ -32,7 +32,7 @@ public class HistogramChart extends FilledBarChart<HistogramTheme<HistogramChart
 	}
 
 	@Override
-	public HistogramTheme<HistogramChart> newController() {
+	public HistogramTheme<HistogramChart> newTheme() {
 		return new HistogramTheme<>(this);
 	}
 

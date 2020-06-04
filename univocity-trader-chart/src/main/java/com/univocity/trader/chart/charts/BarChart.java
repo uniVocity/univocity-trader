@@ -44,15 +44,15 @@ public class BarChart extends BasicChart<BarChartTheme> {
 	}
 
 	private Color getLineColor(Candle candle) {
-		return getController().getLineColor(candle);
+		return getTheme().getLineColor(candle);
 	}
 
 	private Color getLineSelectionColor(Candle candle) {
-		return getController().getSelectionLineColor(candle);
+		return getTheme().getSelectionLineColor(candle);
 	}
 
 	@Override
-	public BarChartTheme newController() {
+	public BarChartTheme newTheme() {
 		return new BarChartTheme(this);
 	}
 
