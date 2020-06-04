@@ -1,9 +1,8 @@
-package com.univocity.trader.chart.charts.controls;
+package com.univocity.trader.chart.charts.theme;
 
 
 import com.univocity.trader.chart.annotation.Label;
 import com.univocity.trader.chart.annotation.*;
-import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.dynamic.*;
 
@@ -13,7 +12,7 @@ import java.util.List;
 import java.util.*;
 
 @UIBound
-public class PlotController<T extends Repaintable> implements Controller {
+public class PainterTheme<T extends Repaintable> implements Theme {
 
 	@CheckBoxBound("Logarithmic scale")
 	private boolean displayingLogarithmicScale = true;
@@ -53,7 +52,7 @@ public class PlotController<T extends Repaintable> implements Controller {
 
 	protected T chart;
 
-	public PlotController(T chart) {
+	public PainterTheme(T chart) {
 		this.chart = chart;
 	}
 

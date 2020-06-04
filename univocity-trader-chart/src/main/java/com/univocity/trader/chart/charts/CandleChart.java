@@ -3,11 +3,11 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 
-public class CandleChart extends FilledBarChart<CandleChartController> {
+public class CandleChart extends FilledBarChart<CandleTheme> {
 
 	public CandleChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
@@ -50,7 +50,7 @@ public class CandleChart extends FilledBarChart<CandleChartController> {
 	}
 
 	@Override
-	public CandleChartController newController() {
-		return new CandleChartController(this);
+	public CandleTheme newController() {
+		return new CandleTheme(this);
 	}
 }

@@ -3,12 +3,12 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 import java.util.function.*;
 
-public class HistogramChart extends FilledBarChart<HistogramChartController> {
+public class HistogramChart extends FilledBarChart<HistogramTheme<HistogramChart>> {
 
 	private final Function<Candle, Double> valueReader;
 
@@ -32,8 +32,8 @@ public class HistogramChart extends FilledBarChart<HistogramChartController> {
 	}
 
 	@Override
-	public HistogramChartController newController() {
-		return new HistogramChartController(this);
+	public HistogramTheme<HistogramChart> newController() {
+		return new HistogramTheme<>(this);
 	}
 
 	public double getHighestPlottedValue(Candle candle) {

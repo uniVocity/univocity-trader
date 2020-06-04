@@ -5,7 +5,7 @@ import com.univocity.trader.chart.dynamic.*;
 
 import java.awt.*;
 
-public interface Painter<C extends Controller> extends Repaintable {
+public interface Painter<C extends Theme> extends Repaintable {
 
 	Insets NO_INSETS = new Insets(0, 0, 0, 0);
 

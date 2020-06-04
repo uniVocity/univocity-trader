@@ -1,13 +1,12 @@
-package com.univocity.trader.chart.charts.controls;
+package com.univocity.trader.chart.charts.theme;
 
 import com.univocity.trader.chart.annotation.Label;
 import com.univocity.trader.chart.annotation.*;
-import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
 
 import java.awt.*;
 
-public class LinePlotController<T extends Repaintable> extends PlotController<T> {
+public class LinePlotTheme<T extends Repaintable> extends PainterTheme<T> {
 
 	@Label("Marker width")
 	@SpinnerBound(maximum = 20)
@@ -21,7 +20,7 @@ public class LinePlotController<T extends Repaintable> extends PlotController<T>
 	@ColorBound
 	private Color lineColor = Color.BLACK;
 
-	public LinePlotController(T chart) {
+	public LinePlotTheme(T chart) {
 		super(chart);
 		setSpaceBetweenBars(0);
 	}

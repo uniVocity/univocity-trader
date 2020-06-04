@@ -7,6 +7,6 @@ import javax.swing.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public interface Controller extends Repaintable {
+public interface Theme extends Repaintable {
 	JPanel getControlPanel();
 }

@@ -178,8 +178,8 @@ public class CompositePanelBuilder {
 			List<Field> fields = AnnotationHelper.getAnnotatedFields(observedObject.getClass(), DontShare.class);
 			for (Field field : fields) {
 				log.debug(observedObject.getClass().getSimpleName() + " contains shared field: " + field.getName());
-				Map<Controller, List<String>> map = getMapFrom(observedObject, field);
-				for (Controller controller : map.keySet()) {
+				Map<Theme, List<String>> map = getMapFrom(observedObject, field);
+				for (Theme controller : map.keySet()) {
 					Set<Method> setters = getSetters(controller, map.get(controller));
 					for (Method setter : setters) {
 						Set<Object> controllers = notSharedSetters.get(setter);
@@ -245,24 +245,24 @@ public class CompositePanelBuilder {
 		}
 	}
 
-	private Map<Controller, List<String>> getMapFrom(Object observedObject, Field field) throws IllegalArgumentException, IllegalAccessException {
+	private Map<Theme, List<String>> getMapFrom(Object observedObject, Field field) throws IllegalArgumentException, IllegalAccessException {
 		field.setAccessible(true);
 		Object o = field.get(observedObject);
-		return (Map<Controller, List<String>>) o;
+		return (Map<Theme, List<String>>) o;
 	}
 
 	private Set<Method> getSettersOf(Object observedObject, Field field) throws IllegalArgumentException, IllegalAccessException {
 		Set<Method> setters = new HashSet<>();
 
-		Map<Controller, List<String>> map = getMapFrom(observedObject, field);
-		for (Controller uiController : map.keySet()) {
+		Map<Theme, List<String>> map = getMapFrom(observedObject, field);
+		for (Theme uiController : map.keySet()) {
 			setters.addAll(getSetters(uiController, map.get(uiController)));
 		}
 
 		return setters;
 	}
 
-	private Set<Method> getSetters(Controller controller, List<String> fields) {
+	private Set<Method> getSetters(Theme controller, List<String> fields) {
 		Set<Method> setters = new HashSet<Method>();
 		for (String fieldName : fields) {
 			Field foundField = getField(fieldName, controller.getClass());

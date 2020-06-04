@@ -11,7 +11,7 @@ import java.util.*;
 import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
 @UIBound
-public class RulerController<T> implements Controller {
+public class RulerController<T> implements Theme {
 
 	@Label("Background color")
 	@ColorBound()

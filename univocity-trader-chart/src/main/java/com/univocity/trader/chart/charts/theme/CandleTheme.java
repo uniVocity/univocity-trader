@@ -1,16 +1,16 @@
-package com.univocity.trader.chart.charts.controls;
+package com.univocity.trader.chart.charts.theme;
 
 import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.charts.*;
 
-public class CandleChartController extends AbstractFilledBarChartController<CandleChart> {
+public class CandleTheme extends AbstractFilledBarTheme<CandleChart> {
 
 
 	@Label("Candle width")
 	@SpinnerBound(maximum = 20, minimum = 3, increment = 2)
 	private int barWidth = 1;
 
-	public CandleChartController(CandleChart chart) {
+	public CandleTheme(CandleChart chart) {
 		super(chart);
 		setBarWidth(6);
 	}

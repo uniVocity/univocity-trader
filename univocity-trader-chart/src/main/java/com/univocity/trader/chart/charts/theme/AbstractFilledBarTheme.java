@@ -1,14 +1,14 @@
-package com.univocity.trader.chart.charts.controls;
+package com.univocity.trader.chart.charts.theme;
 
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.annotation.Label;
 import com.univocity.trader.chart.annotation.*;
-import com.univocity.trader.chart.charts.*;
+import com.univocity.trader.chart.charts.painter.*;
 
 import java.awt.*;
 
-public abstract class AbstractFilledBarChartController<C extends BasicChart<?>> extends AbstractBarChartController<C> {
+public abstract class AbstractFilledBarTheme<C extends Repaintable> extends AbstractBarTheme<C> {
 
 	@CheckBoxBound("Fill positive candles")
 	private boolean positiveClosingFilled = true;
@@ -31,7 +31,7 @@ public abstract class AbstractFilledBarChartController<C extends BasicChart<?>> 
 	@ColorBound()
 	private Color downSelectionFillColor = Color.ORANGE;
 
-	public AbstractFilledBarChartController(C chart) {
+	public AbstractFilledBarTheme(C chart) {
 		super(chart);
 	}
 

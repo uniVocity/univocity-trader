@@ -1,7 +1,7 @@
 package com.univocity.trader.chart.indicators;
 
 import com.univocity.trader.chart.charts.*;
-import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.theme.*;
 import com.univocity.trader.chart.charts.painter.*;
 
 import java.awt.*;
@@ -13,7 +13,7 @@ public class ValuePlotter implements Repaintable {
 	private int i = 0;
 	private final DoubleSupplier valueSupplier;
 	private Point previousLocation;
-	private final LinePlotController<ValuePlotter> controller = new LinePlotController<>(this);
+	private final LinePlotTheme<ValuePlotter> controller = new LinePlotTheme<>(this);
 	private final Repaintable parent;
 
 	public ValuePlotter(Repaintable parent, DoubleSupplier valueSupplier) {

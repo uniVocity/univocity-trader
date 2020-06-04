@@ -3,11 +3,11 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 
-abstract class FilledBarChart<C extends AbstractFilledBarChartController<?>> extends BasicChart<C> {
+abstract class FilledBarChart<C extends AbstractFilledBarTheme<?>> extends BasicChart<C> {
 
 	public FilledBarChart(CandleHistoryView candleHistory) {
 		super(candleHistory);

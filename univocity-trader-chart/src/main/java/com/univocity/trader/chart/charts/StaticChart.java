@@ -2,17 +2,13 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.theme.*;
 import com.univocity.trader.chart.charts.painter.*;
-import com.univocity.trader.chart.charts.painter.Painter;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.*;
-import java.util.List;
-import java.util.*;
 
-public abstract class StaticChart<C extends PlotController> implements Repaintable {
+public abstract class StaticChart<C extends PainterTheme<?>> implements Repaintable {
 
 	private double horizontalIncrement = 0.0;
 	private double maximum = -1.0;

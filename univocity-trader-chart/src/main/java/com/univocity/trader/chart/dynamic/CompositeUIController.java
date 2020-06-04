@@ -9,13 +9,13 @@ import java.util.*;
 public class CompositeUIController {
 
 	@ControllerContainer
-	private List<Controller> controllers = new ArrayList<>();
+	private List<Theme> controllers = new ArrayList<>();
 	
 	@Bind
-	private Map<Controller, List<String>> boundFields = new HashMap<Controller, List<String>>();
+	private Map<Theme, List<String>> boundFields = new HashMap<>();
 	
 	@DontShare
-	private Map<Controller, List<String>> dontShareFields = new HashMap<Controller, List<String>>();
+	private Map<Theme, List<String>> dontShareFields = new HashMap<>();
 
 	public JPanel getControlPanel(){
 		return CompositePanelBuilder.createPanel(this);

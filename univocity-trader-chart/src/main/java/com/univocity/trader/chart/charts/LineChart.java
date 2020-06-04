@@ -3,19 +3,19 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 
-public class LineChart extends BasicChart<LineChartController> {
+public class LineChart extends BasicChart<LinePlotTheme<LineChart>> {
 
 	public LineChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
 	}
 
 	@Override
-	protected LineChartController newController() {
-		return new LineChartController(this);
+	protected LinePlotTheme<LineChart> newController() {
+		return new LinePlotTheme<>(this);
 	}
 
 	@Override
