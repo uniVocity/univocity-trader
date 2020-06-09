@@ -1,104 +1,113 @@
 package com.univocity.trader.chart.indicators;
 
 import com.univocity.trader.candles.*;
-import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
+import com.univocity.trader.chart.charts.painter.renderer.*;
+import com.univocity.trader.chart.charts.theme.*;
+import com.univocity.trader.chart.dynamic.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
 import java.awt.*;
+import java.lang.reflect.*;
 import java.util.List;
 import java.util.*;
 import java.util.function.*;
 
-public class VisualIndicator implements Painter<VisualIndicatorTheme> {
+public class VisualIndicator implements Painter<CompositeTheme> {
 
-	private Supplier<Indicator> indicatorSupplier;
+	private static final LineRenderer[] EMPTY = new LineRenderer[0];
+
+	private final Supplier<Indicator> indicatorSupplier;
+	private Aggregator aggregator;
 	private Indicator indicator;
-	private Z z = Z.FRONT;
 	BasicChart<?> chart;
-	private Supplier<TimeInterval> interval;
+	private final Supplier<TimeInterval> interval;
 
-	private final List<ValuePlotter> plotters = new ArrayList<>();
-
-	private final Consumer<CandleHistory.UpdateType> historyUpdateConsumer = t -> {
-		indicator = this.indicatorSupplier.get();
-		Aggregator aggregator = new Aggregator("").getInstance(interval.get());
-		indicator.initialize(aggregator);
-
-		final int historySize = chart.candleHistory.size();
-		for (int j = 0; j < plotters.size(); j++) {
-			plotters.get(j).reset(historySize);
-		}
-
-		for (int i = 0; i < historySize; i++) {
-			Candle candle = chart.candleHistory.get(i);
-			if(candle == null){
-				return;
-			}
-			aggregator.aggregate(candle);
-			indicator.accumulate(candle);
-			for (int j = 0; j < plotters.size(); j++) {
-				plotters.get(j).nextValue();
-			}
-		}
-
-		invokeRepaint();
-	};
+	private Painter<CompositeTheme> indicatorPainter;
 
 	public VisualIndicator(Supplier<TimeInterval> interval, Supplier<Indicator> indicator) {
 		this.indicatorSupplier = indicator;
 		this.interval = interval;
-
-		createPlotters();
 	}
+
+	private LineRenderer[] createRenderers() {
+		List<Renderer<?>> out = new ArrayList<>();
+
+		for (Method m : getIndicator().getClass().getMethods()) {
+			if (m.getReturnType() == double.class && m.getParameterCount() == 0) {
+				out.add(createRenderer(m));
+			}
+		}
+
+		return out.toArray(LineRenderer[]::new);
+	}
+
+	private LineRenderer createRenderer(Method m) {
+		return new LineRenderer(new LineTheme<>(this), () -> invoke(m));
+	}
+
+	private double invoke(Method m) {
+		try {
+			return (double) m.invoke(getIndicator());
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	private void reset() {
+		aggregator = new Aggregator("").getInstance(interval.get());
+		getIndicator().initialize(aggregator);
+	}
+
+	private Painter<CompositeTheme> getIndicatorPainter() {
+		if (indicatorPainter == null) {
+			indicatorPainter = new LinePainter(Z.FRONT, this::reset, this::process, createRenderers());
+		}
+		return indicatorPainter;
+	}
+
+	private void process(Candle candle) {
+		aggregator.aggregate(candle);
+		getIndicator().accumulate(candle);
+	}
+
 
 	@Override
 	public Z getZ() {
-		return z;
+		return getIndicatorPainter().getZ();
+	}
+
+	@Override
+	public CompositeTheme getTheme() {
+		return getIndicatorPainter().getTheme();
 	}
 
 	@Override
 	public void paintOn(BasicChart<?> chart, Graphics2D g, int width) {
-		for (int i = 0; i < chart.candleHistory.size(); i++) {
-			for (int j = 0; j < plotters.size(); j++) {
-				plotters.get(j).plotNext(i, chart, g, width);
-			}
-		}
-	}
-
-	@Override
-	public VisualIndicatorTheme getTheme() {
-		return new VisualIndicatorTheme(this);
+		getIndicatorPainter().paintOn(chart, g, width);
 	}
 
 	@Override
 	public void install(BasicChart<?> chart) {
-		this.chart = chart;
-		chart.candleHistory.addDataUpdateListener(historyUpdateConsumer);
-		historyUpdateConsumer.accept(CandleHistory.UpdateType.NEW_HISTORY);
+		getIndicatorPainter().install(chart);
 	}
 
 	@Override
 	public void uninstall(BasicChart<?> chart) {
-		chart.candleHistory.removeDataUpdateListener(historyUpdateConsumer);
-		this.chart = null;
+		getIndicatorPainter().uninstall(chart);
 	}
 
 	@Override
 	public void invokeRepaint() {
-		if (this.chart != null) {
-			chart.invokeRepaint();
-		}
+		getIndicatorPainter().invokeRepaint();
 	}
 
 	private Indicator getIndicator() {
+		if (indicator == null) {
+			indicator = indicatorSupplier.get();
+		}
 		return indicator;
-	}
-
-	private void createPlotters() {
-		ValuePlotter plotter = new ValuePlotter(this, () -> getIndicator().getValue());
-		plotters.add(plotter);
 	}
 }

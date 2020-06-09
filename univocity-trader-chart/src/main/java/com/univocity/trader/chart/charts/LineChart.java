@@ -7,15 +7,15 @@ import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 
-public class LineChart extends BasicChart<LinePlotTheme<LineChart>> {
+public class LineChart extends BasicChart<LineTheme<LineChart>> {
 
 	public LineChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
 	}
 
 	@Override
-	protected LinePlotTheme<LineChart> newTheme() {
-		return new LinePlotTheme<>(this);
+	protected LineTheme<LineChart> newTheme() {
+		return new LineTheme<>(this);
 	}
 
 	@Override

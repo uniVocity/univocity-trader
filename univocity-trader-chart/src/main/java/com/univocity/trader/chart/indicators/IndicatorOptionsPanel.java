@@ -1,9 +1,7 @@
 package com.univocity.trader.chart.indicators;
 
-import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.gui.*;
 import com.univocity.trader.indicators.base.*;
-import com.univocity.trader.strategy.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -50,7 +48,7 @@ class IndicatorOptionsPanel extends JPanel {
 			indicatorDefinition.argumentTypes.forEach(this::addComponent);
 		}
 
-		if(visualIndicatorPreview != null) {
+		if (visualIndicatorPreview != null) {
 			updatePreview(null);
 		}
 
@@ -87,13 +85,16 @@ class IndicatorOptionsPanel extends JPanel {
 
 	private JSpinner getFloatingPointInput(String label, Class<?> type) {
 		JSpinner out = new JSpinner(new SpinnerNumberModel());
-
 		values.put(label, out::getValue);
 		return out;
 	}
 
 	private JSpinner getNumericInput(String label, Class<?> type) {
-		JSpinner out = new JSpinner(new SpinnerNumberModel());
+		SpinnerNumberModel model = new SpinnerNumberModel();
+		model.setMinimum(1);
+		model.setValue(1);
+		JSpinner out = new JSpinner(model);
+
 		values.put(label, out::getValue);
 		return out;
 	}

@@ -6,7 +6,7 @@ import com.univocity.trader.chart.charts.painter.*;
 
 import java.awt.*;
 
-public class LinePlotTheme<T extends Repaintable> extends PainterTheme<T> {
+public class LineTheme<T extends Repaintable> extends PainterTheme<T> {
 
 	@Label("Marker width")
 	@SpinnerBound(maximum = 20)
@@ -20,7 +20,7 @@ public class LinePlotTheme<T extends Repaintable> extends PainterTheme<T> {
 	@ColorBound
 	private Color lineColor = Color.BLACK;
 
-	public LinePlotTheme(T chart) {
+	public LineTheme(T chart) {
 		super(chart);
 		setSpaceBetweenBars(0);
 	}
