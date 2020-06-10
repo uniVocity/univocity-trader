@@ -54,19 +54,27 @@ public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 
 	@Override
 	public double getMaximumValue(int from, int to) {
-		double max = values[from];
-		for (int i = from; i < to; i++) {
-			max = Math.max(values[i], max);
+		to = Math.max(to, values.length);
+		if (from < to) {
+			double max = values[from];
+			for (int i = from; i < to; i++) {
+				max = Math.max(values[i], max);
+			}
+			return max;
 		}
-		return max;
+		return Integer.MIN_VALUE;
 	}
 
 	@Override
 	public double getMinimumValue(int from, int to) {
-		double min = values[from];
-		for (int i = from; i < to; i++) {
-			min = Math.min(values[i], min);
+		to = Math.max(to, values.length);
+		if (from < to) {
+			double min = values[from];
+			for (int i = from; i < to; i++) {
+				min = Math.min(values[i], min);
+			}
+			return min;
 		}
-		return min;
+		return Integer.MAX_VALUE;
 	}
 }

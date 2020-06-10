@@ -32,7 +32,7 @@ public class ChartWindow extends JFrame {
 		this.setLayout(new BorderLayout());
 		this.setTitle("No candle data loaded");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		this.setBounds(0, 0, 800, 600);
+		this.setBounds(0, 0, 1000, 800);
 		this.setLocationRelativeTo(null);
 
 		this.add(getCentralPanel(), BorderLayout.CENTER);
@@ -106,7 +106,7 @@ public class ChartWindow extends JFrame {
 		if (indicatorSelector == null) {
 			indicatorSelector = new IndicatorSelector(() -> getSymbolSelector().getInterval());
 			indicatorSelector.addIndicatorListener(this::indicatorUpdated);
-			indicatorSelector.loadIndicatorsFrom(Indicators.class);
+			indicatorSelector.loadIndicatorsFrom(DefaultIndicators.class);
 		}
 		return indicatorSelector;
 	}

@@ -1,21 +1,20 @@
 package com.univocity.trader.chart.indicators;
 
-import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
 import java.lang.reflect.*;
 import java.util.*;
 
-class IndicatorDefinition implements Comparable<IndicatorDefinition>{
+class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 
 	private final String indicator;
-	final Map<String, Class<?>> argumentTypes = new LinkedHashMap<>();
-	private final Parameter[] parameters;
-
+	final List<Argument> parameters = new ArrayList<>();
 	private final Method factoryMethod;
 	private final Constructor<?> constructor;
 	private final String description;
+	private boolean overlay;
 
 	private IndicatorDefinition(Class<? extends Indicator> indicatorType, Method factoryMethod) {
 		this(indicatorType, null, factoryMethod, factoryMethod.getParameters());
@@ -29,38 +28,39 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition>{
 		this.indicator = indicatorType.getSimpleName();
 		this.constructor = constructor;
 		this.factoryMethod = factoryMethod;
-		this.parameters = params;
 
+		StringBuilder tmp = new StringBuilder();
 		for (Parameter p : params) {
-			if (p.getType() != TimeInterval.class) {
-				if(p.isNamePresent()) {
-					argumentTypes.put(p.getName(), p.getType());
+			Argument a = new Argument(p);
+			parameters.add(a);
+
+			if (a.inputType != TimeInterval.class) {
+				if (tmp.length() > 0) {
+					tmp.append(", ");
 				} else {
-					argumentTypes.put(p.getType().getSimpleName(), p.getType());
+					tmp.append('(');
 				}
+				tmp.append(a.name);
 			}
 		}
 
-		description = indicator + (argumentTypes.isEmpty() ? "" : " (" + String.join(", ", argumentTypes.keySet()) + ")");
+		if (tmp.length() > 0) {
+			tmp.append(')');
+		}
+
+		description = indicator + tmp;
+		this.overlay = (factoryMethod != null && factoryMethod.getAnnotation(Overlay.class) != null) || (constructor != null && constructor.getAnnotation(Overlay.class) != null) || indicatorType.getAnnotation(Overlay.class) != null;
 	}
 
-	public Set<String> argumentNames() {
-		return argumentTypes.keySet();
-	}
-
-	public Indicator create(Map<String, Object> arguments, TimeInterval interval) {
+	public Indicator create(TimeInterval interval) {
+		Object[] args = new Object[parameters.size()];
 		try {
-			Object[] args = new Object[parameters.length];
-			for (int i = 0; i < parameters.length; i++) {
-				Parameter param = parameters[i];
-				if (param.getType() == TimeInterval.class) {
+			for (int i = 0; i < parameters.size(); i++) {
+				Argument arg = parameters.get(i);
+				if (arg.inputType == TimeInterval.class) {
 					args[i] = interval;
 				} else {
-					if(param.isNamePresent()) {
-						args[i] = arguments.get(param.getName());
-					} else {
-						args[i] = arguments.get(param.getType().getSimpleName());
-					}
+					args[i] = arg.getValue();
 				}
 			}
 			Indicator indicator;
@@ -71,7 +71,7 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition>{
 			}
 			return indicator;
 		} catch (Exception e) {
-			throw new IllegalArgumentException(e);
+			throw new IllegalArgumentException("Error creating " + this + " with: " + Arrays.toString(args), e);
 		}
 	}
 

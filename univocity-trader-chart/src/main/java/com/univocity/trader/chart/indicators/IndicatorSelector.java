@@ -5,6 +5,7 @@ import com.univocity.trader.strategy.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.beans.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -42,9 +43,14 @@ public class IndicatorSelector extends JPanel {
 	}
 
 	public void addIndicatorListener(IndicatorListener listener) {
-		getIndicatorOptionsPanel().addPropertyChangeListener(PREVIEW_UPDATED, e -> listener.indicatorUpdated(true, (VisualIndicator) e.getOldValue(), (VisualIndicator) e.getNewValue()));
-		getIndicatorOptionsPanel().addPropertyChangeListener(INDICATOR_UPDATED, e -> listener.indicatorUpdated(false, (VisualIndicator) e.getOldValue(), (VisualIndicator) e.getNewValue()));
+		getIndicatorOptionsPanel().addPropertyChangeListener(PREVIEW_UPDATED, e -> invokeListener(listener, e, true));
+		getIndicatorOptionsPanel().addPropertyChangeListener(INDICATOR_UPDATED, e -> invokeListener(listener, e, false));
 	}
+
+	private void invokeListener(IndicatorListener listener, PropertyChangeEvent e, boolean preview) {
+		listener.indicatorUpdated(preview, (VisualIndicator) e.getOldValue(), (VisualIndicator) e.getNewValue());
+	}
+
 
 	public IndicatorSelector loadIndicator(Class<? extends Indicator> indicator) {
 		availableIndicators.addAll(IndicatorDefinition.loadConstructors(indicator));
@@ -69,7 +75,7 @@ public class IndicatorSelector extends JPanel {
 		if (cmbIndicators == null) {
 			indicators = new DefaultComboBoxModel<>();
 			cmbIndicators = new JComboBox<>(indicators);
-			cmbIndicators.addItemListener(e -> getIndicatorOptionsPanel().updateIndicator((IndicatorDefinition) e.getItem(), timeInterval));
+			cmbIndicators.addItemListener(e -> SwingUtilities.invokeLater(() -> getIndicatorOptionsPanel().updateIndicator((IndicatorDefinition) cmbIndicators.getSelectedItem(), timeInterval)));
 		}
 		return cmbIndicators;
 	}
@@ -79,7 +85,7 @@ public class IndicatorSelector extends JPanel {
 		f.setLayout(new BorderLayout());
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setBounds(100, 100, 800, 220);
-		f.add(new IndicatorSelector(() -> null).loadIndicatorsFrom(Indicators.class), BorderLayout.CENTER);
+		f.add(new IndicatorSelector(() -> null).loadIndicatorsFrom(DefaultIndicators.class), BorderLayout.CENTER);
 		f.setVisible(true);
 	}
 }
