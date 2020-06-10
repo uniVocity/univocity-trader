@@ -31,6 +31,14 @@ public interface Painter<T extends Theme> extends Repaintable {
 
 	}
 
+	default double getMaximumValue(int from, int to){
+		return Integer.MIN_VALUE;
+	}
+
+	default double getMinimumValue(int from, int to){
+		return Integer.MAX_VALUE;
+	}
+
 	static Point createCoordinate(BasicChart<?> chart, int candleIndex, double value) {
 		Point p = new Point();
 		p.x = chart.getXCoordinate(candleIndex);

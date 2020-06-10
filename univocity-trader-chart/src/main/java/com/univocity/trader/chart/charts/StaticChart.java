@@ -2,8 +2,8 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.theme.*;
 import com.univocity.trader.chart.charts.painter.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 import java.awt.image.*;
@@ -131,6 +131,14 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 		return maximum;
 	}
 
+	double getMaximum(int from, int to) {
+		return maximum;
+	}
+
+	double getMinimum(int from, int to) {
+		return minimum;
+	}
+
 	private void updateEdgeValues() {
 		maximum = 0;
 		minimum = Integer.MAX_VALUE;
@@ -139,7 +147,7 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 
 		for (int i = 0; i < candleHistory.size(); i++) {
 			Candle candle = candleHistory.get(i);
-			if(candle == null){
+			if (candle == null) {
 				return;
 			}
 			updateEdgeValues(candle);
@@ -171,6 +179,14 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 		value = getLowestPlottedValue(candle);
 		if (minimum > value && value != 0.0) {
 			minimum = value;
+		}
+
+		if(firstVisibleCandle != null && lastVisibleCandle != null) {
+			int from = candleHistory.indexOf(firstVisibleCandle);
+			int to = candleHistory.indexOf(lastVisibleCandle);
+
+			maximum = Math.max(maximum, getMaximum(from, to));
+			minimum = Math.min(minimum, getMinimum(from, to));
 		}
 	}
 

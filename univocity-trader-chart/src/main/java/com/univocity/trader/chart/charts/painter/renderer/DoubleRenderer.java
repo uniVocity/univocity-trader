@@ -26,29 +26,47 @@ public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 
 	@Override
 	public final void updateValue() {
-		if(i < values.length) {
+		if (i < values.length) {
 			values[i] = valueSupplier.getAsDouble();
 		}
 	}
 
 	@Override
 	public final void nextValue() {
-		if(i < values.length) {
+		if (i < values.length) {
 			values[i++] = valueSupplier.getAsDouble();
 		}
 	}
 
 	@Override
 	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, int width) {
-		if(i < values.length) {
+		if (i < values.length) {
 			paintNext(i, values[i], chart, g, width);
 		}
 	}
 
 	@Override
-	public final T getTheme(){
+	public final T getTheme() {
 		return theme;
 	}
 
 	protected abstract void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, int width);
+
+	@Override
+	public double getMaximumValue(int from, int to) {
+		double max = values[from];
+		for (int i = from; i < to; i++) {
+			max = Math.max(values[i], max);
+		}
+		return max;
+	}
+
+	@Override
+	public double getMinimumValue(int from, int to) {
+		double min = values[from];
+		for (int i = from; i < to; i++) {
+			min = Math.min(values[i], min);
+		}
+		return min;
+	}
 }

@@ -3,13 +3,13 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.theme.*;
 import com.univocity.trader.chart.charts.painter.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<T> {
 
@@ -57,7 +57,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				if(isMouseDraggingChart()){
+				if (isMouseDraggingChart()) {
 					dragStart = canvas.scrollBar.drag(e, dragStart);
 				}
 				processMouseEvent(e);
@@ -89,15 +89,15 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 		});
 	}
 
-	public boolean isMouseDragging(){
+	public boolean isMouseDragging() {
 		return draggingButton != -1 && mousePosition != null && mousePosition.getY() < getHeight() - canvas.getScrollHeight();
 	}
 
-	public boolean isMouseDraggingChart(){
+	public boolean isMouseDraggingChart() {
 		return draggingButton == MouseEvent.BUTTON1 && isMouseDragging();
 	}
 
-	public boolean isMouseDraggingCursor(){
+	public boolean isMouseDraggingCursor() {
 		return draggingButton == MouseEvent.BUTTON3 && isMouseDragging();
 	}
 
@@ -170,20 +170,54 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 		}
 	}
 
-	public void addPainter(Painter.Z z, Painter<?> painter){
-		if(painter != null) {
+	public void addPainter(Painter.Z z, Painter<?> painter) {
+		if (painter != null) {
 			painters.get(z).add(painter);
 			painter.install(this);
 			invokeRepaint();
 		}
 	}
 
-	public void removePainter(Painter<?> painter){
-		if(painter != null) {
+	public void removePainter(Painter<?> painter) {
+		if (painter != null) {
 			painter.uninstall(this);
 			painters.get(Painter.Z.BACK).remove(painter);
 			painters.get(Painter.Z.FRONT).remove(painter);
 			invokeRepaint();
 		}
+	}
+
+	@Override
+	public double getMaximum(int from, int to) {
+		List<Painter<?>> p;
+		p = painters.get(Painter.Z.FRONT);
+		double maximum = super.getMaximum(from, to);
+		for (int i = 0; i < p.size(); i++) {
+			maximum = Math.max(p.get(i).getMaximumValue(from, to), maximum);
+		}
+
+		p = painters.get(Painter.Z.BACK);
+		for (int i = 0; i < p.size(); i++) {
+			maximum = Math.max(p.get(i).getMaximumValue(from, to), maximum);
+		}
+
+		return maximum;
+	}
+
+	@Override
+	public double getMinimum(int from, int to) {
+		List<Painter<?>> p;
+		p = painters.get(Painter.Z.FRONT);
+		double minimum = super.getMinimum(from, to);
+		for (int i = 0; i < p.size(); i++) {
+			minimum = Math.min(p.get(i).getMinimumValue(from, to), minimum);
+		}
+
+		p = painters.get(Painter.Z.BACK);
+		for (int i = 0; i < p.size(); i++) {
+			minimum = Math.min(p.get(i).getMinimumValue(from, to), minimum);
+		}
+
+		return minimum;
 	}
 }

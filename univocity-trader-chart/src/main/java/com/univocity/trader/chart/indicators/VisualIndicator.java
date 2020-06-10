@@ -24,8 +24,8 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 	private Indicator indicator;
 	BasicChart<?> chart;
 	private final Supplier<TimeInterval> interval;
-
 	private Painter<CompositeTheme> indicatorPainter;
+	private LineRenderer[] currentRenderers = EMPTY;
 
 	public VisualIndicator(Supplier<TimeInterval> interval, Supplier<Indicator> indicator) {
 		this.indicatorSupplier = indicator;
@@ -63,7 +63,8 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 
 	private Painter<CompositeTheme> getIndicatorPainter() {
 		if (indicatorPainter == null) {
-			indicatorPainter = new LinePainter(Z.FRONT, this::reset, this::process, createRenderers());
+			currentRenderers = createRenderers();
+			indicatorPainter = new LinePainter(Z.FRONT, this::reset, this::process, currentRenderers);
 		}
 		return indicatorPainter;
 	}
@@ -109,5 +110,23 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 			indicator = indicatorSupplier.get();
 		}
 		return indicator;
+	}
+
+	@Override
+	public final double getMaximumValue(int from, int to) {
+		double maximum = Integer.MIN_VALUE;
+		for (int i = 0; i < currentRenderers.length; i++) {
+			maximum = Math.max(maximum, currentRenderers[i].getMaximumValue(from, to));
+		}
+		return maximum;
+	}
+
+	@Override
+	public final double getMinimumValue(int from, int to) {
+		double minimum = Integer.MAX_VALUE;
+		for (int i = 0; i < currentRenderers.length; i++) {
+			minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));
+		}
+		return minimum;
 	}
 }
