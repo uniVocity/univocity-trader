@@ -10,7 +10,7 @@ public class LinePainter extends AbstractDataPainter<CompositeTheme> {
 
 	private final LineRenderer[] renderers;
 
-	public LinePainter(Z z, Runnable reset, Consumer<Candle> process, LineRenderer... renderers) {
+	public LinePainter(Overlay z, Runnable reset, Consumer<Candle> process, LineRenderer... renderers) {
 		super(z, reset, process);
 		this.renderers = renderers;
 	}

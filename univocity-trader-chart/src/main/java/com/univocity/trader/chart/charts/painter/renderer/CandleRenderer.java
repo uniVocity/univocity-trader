@@ -36,7 +36,7 @@ public abstract class CandleRenderer<T extends Theme> implements Renderer<T> {
 		return theme;
 	}
 
-	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, int width) {
+	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, int y, int height, int width) {
 		Candle candle = chart.candleHistory.get(i);
 		paintNext(i, candle, chart, g, width);
 	}

@@ -2,6 +2,7 @@ package com.univocity.trader.candles;
 
 import com.univocity.trader.config.*;
 import org.slf4j.*;
+import org.springframework.dao.*;
 import org.springframework.jdbc.core.*;
 
 import java.sql.*;
@@ -354,7 +355,11 @@ public class CandleRepository {
 	private Candle loadCandle(String symbol, String ordering) {
 		String query = buildCandleQuery(symbol);
 		query += " ORDER BY close_time " + ordering + " LIMIT 1";
-		return db().queryForObject(query, CANDLE_MAPPER);
+		try {
+			return db().queryForObject(query, CANDLE_MAPPER);
+		} catch (EmptyResultDataAccessException e) {
+			return null;
+		}
 	}
 
 	public PreciseCandle lastFullCandle(String symbol) {

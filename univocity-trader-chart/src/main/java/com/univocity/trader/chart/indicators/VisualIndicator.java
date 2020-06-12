@@ -26,8 +26,12 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 	private final Supplier<TimeInterval> interval;
 	private Painter<CompositeTheme> indicatorPainter;
 	private LineRenderer[] currentRenderers = EMPTY;
+	private final Painter.Overlay overlay;
+	private final Rectangle bounds;
 
-	public VisualIndicator(Supplier<TimeInterval> interval, Supplier<Indicator> indicator) {
+	public VisualIndicator(boolean overlay, Supplier<TimeInterval> interval, Supplier<Indicator> indicator) {
+		this.overlay = overlay ? Overlay.FRONT : Overlay.NONE;
+		this.bounds = overlay ? null : new Rectangle(0, 0, 0, 0);
 		this.indicatorSupplier = indicator;
 		this.interval = interval;
 	}
@@ -64,7 +68,7 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 	private Painter<CompositeTheme> getIndicatorPainter() {
 		if (indicatorPainter == null) {
 			currentRenderers = createRenderers();
-			indicatorPainter = new LinePainter(Z.FRONT, this::reset, this::process, currentRenderers);
+			indicatorPainter = new LinePainter(Overlay.FRONT, this::reset, this::process, currentRenderers);
 		}
 		return indicatorPainter;
 	}
@@ -74,15 +78,19 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 		getIndicator().accumulate(candle);
 	}
 
-
 	@Override
-	public Z getZ() {
-		return getIndicatorPainter().getZ();
+	public Rectangle bounds() {
+		return bounds;
 	}
 
 	@Override
-	public CompositeTheme getTheme() {
-		return getIndicatorPainter().getTheme();
+	public Overlay overlay() {
+		return overlay;
+	}
+
+	@Override
+	public CompositeTheme theme() {
+		return getIndicatorPainter().theme();
 	}
 
 	@Override
@@ -113,7 +121,7 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 	}
 
 	@Override
-	public final double getMaximumValue(int from, int to) {
+	public final double maximumValue(int from, int to) {
 		double maximum = Integer.MIN_VALUE;
 		for (int i = 0; i < currentRenderers.length; i++) {
 			maximum = Math.max(maximum, currentRenderers[i].getMaximumValue(from, to));
@@ -122,7 +130,7 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 	}
 
 	@Override
-	public final double getMinimumValue(int from, int to) {
+	public final double minimumValue(int from, int to) {
 		double minimum = Integer.MAX_VALUE;
 		for (int i = 0; i < currentRenderers.length; i++) {
 			minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));

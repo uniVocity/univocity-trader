@@ -62,8 +62,8 @@ public class CHOP extends SingleValueCalculationIndicator {
 		return scaleUpTo * (Math.log10(atrIndicators.sum() / (hvi.getValue() - lvi.getValue()))) / log10n;
 	}
 
-	public boolean isMarketTrending(double lowChopinessValue) {
-		return getValue() < lowChopinessValue;
+	public boolean isMarketTrending(double lowChoppinessValue) {
+		return getValue() < lowChoppinessValue;
 	}
 
 	public boolean isMarketTrending() {
@@ -74,7 +74,7 @@ public class CHOP extends SingleValueCalculationIndicator {
 		return isMarketSideways(HIGH_CHOPPINESS_VALUE);
 	}
 
-	public boolean isMarketSideways(double highChopinessValue) {
-		return getValue() > highChopinessValue;
+	public boolean isMarketSideways(double highChoppinessValue) {
+		return getValue() > highChoppinessValue;
 	}
 }

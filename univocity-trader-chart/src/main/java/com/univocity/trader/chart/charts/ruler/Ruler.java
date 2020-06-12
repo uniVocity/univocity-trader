@@ -9,16 +9,16 @@ import java.awt.*;
 
 public abstract class Ruler<T extends RulerTheme<?>> implements Painter<T> {
 
-	Insets insets = insets();
+	Insets insets = new Insets(0, 0, 0, 0);
 	private T theme;
 	private BasicChart<?> chart;
 
 	public Ruler(BasicChart<?> chart) {
-		chart.addPainter(getZ(), this);
+		chart.addPainter(overlay(), this);
 	}
 
 	private void updateFontSize(Graphics2D g) {
-		this.getTheme().updateFontSize(g);
+		this.theme().updateFontSize(g);
 	}
 
 	public final void paintOn(BasicChart<?> chart, Graphics2D g, int width) {
@@ -42,53 +42,58 @@ public abstract class Ruler<T extends RulerTheme<?>> implements Painter<T> {
 
 	protected abstract void highlightMousePosition(BasicChart<?> chart, Graphics2D g, int width);
 
-	public final T getTheme() {
+	public final T theme() {
 		if (theme == null) {
 			theme = newTheme();
 		}
 		return theme;
 	}
 
+	@Override
+	public Insets insets() {
+		return insets;
+	}
+
 	protected abstract T newTheme();
 
 	protected final int getFontHeight() {
-		return this.getTheme().getFontHeight();
+		return this.theme().getFontHeight();
 	}
 
 	protected final boolean isShowingGrid() {
-		return this.getTheme().isShowingGrid();
+		return this.theme().isShowingGrid();
 	}
 
 	protected Color getGridColor() {
-		return this.getTheme().getGridColor();
+		return this.theme().getGridColor();
 	}
 
 	protected final void setProfile(DrawingProfile.Profile profile) {
-		this.getTheme().setProfile(profile);
+		this.theme().setProfile(profile);
 	}
 
 	protected final int getStringWidth(String str, Graphics2D g) {
-		return this.getTheme().getStringWidth(str, g);
+		return this.theme().getStringWidth(str, g);
 	}
 
 	protected final void text(Graphics2D g) {
-		this.getTheme().text(g);
+		this.theme().text(g);
 	}
 
 	protected final void drawing(Graphics2D g) {
-		this.getTheme().drawing(g);
+		this.theme().drawing(g);
 	}
 
 	protected Color getBackgroundColor() {
-		return this.getTheme().getBackgroundColor();
+		return this.theme().getBackgroundColor();
 	}
 
 	protected final Color getProfitBackground() {
-		return this.getTheme().getProfitBackground();
+		return this.theme().getProfitBackground();
 	}
 
 	protected final Color getLossBackground() {
-		return this.getTheme().getLossBackground();
+		return this.theme().getLossBackground();
 	}
 
 	protected void drawStringInBox(int x, int y, int width, String string, Graphics2D g, int stroke, Color background) {

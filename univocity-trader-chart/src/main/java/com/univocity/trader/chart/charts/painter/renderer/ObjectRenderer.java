@@ -41,7 +41,7 @@ public abstract class ObjectRenderer<O, T extends Theme> implements Renderer<T> 
 	}
 
 	@Override
-	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, int width) {
+	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, int y, int height, int width) {
 		if (i < objects.length) {
 			paintNext(i, objects[i], chart, g, width);
 		}

@@ -18,10 +18,13 @@ public class TimeRuler extends Ruler<TimeRulerTheme> {
 
 	@Override
 	protected void drawBackground(BasicChart<?> chart, Graphics2D g, int width) {
-		this.getTheme().setProfile(DEFAULT);
+		this.theme().setProfile(DEFAULT);
 		drawGrid(chart, g, width);
 	}
 
+	private int getOffset(BasicChart<?> chart){
+		return chart.getAvailableHeight() == chart.getHeight() ? chart.canvas.getScrollHeight() : 0;
+	}
 
 	private void drawGrid(BasicChart<?> chart, Graphics2D g, int width) {
 		if (chart.candleHistory.isEmpty()) {
@@ -34,6 +37,8 @@ public class TimeRuler extends Ruler<TimeRulerTheme> {
 		}
 
 		double increments = width / columnWidth;
+		int height = chart.getAvailableHeight();
+		int offset = getOffset(chart);
 
 		LocalDateTime previousTime = null;
 		for (int i = 0; i <= increments; i++) {
@@ -45,7 +50,7 @@ public class TimeRuler extends Ruler<TimeRulerTheme> {
 
 			if (isShowingGrid()) {
 				g.setColor(getGridColor());
-				g.drawLine(x, 0, x, chart.getHeight());
+				g.drawLine(x, 0, x, height);
 			}
 
 
@@ -62,7 +67,7 @@ public class TimeRuler extends Ruler<TimeRulerTheme> {
 			int stringWidth = getStringWidth(text, g);
 			int position = getTextPosition(chart, x, stringWidth, false);
 			text(g);
-			drawString(position, chart.getHeight() - getFontHeight() - chart.canvas.getScrollHeight(), text, g, 1);
+			drawString(position, height - getFontHeight() - offset, text, g, 1);
 		}
 
 	}
@@ -93,14 +98,14 @@ public class TimeRuler extends Ruler<TimeRulerTheme> {
 	}
 
 	protected void drawSelection(BasicChart<?> chart, Graphics2D g, int width, Candle candle, Point location) {
-		this.getTheme().setProfile(SELECTION);
-		this.getTheme().drawing(g);
+		this.theme().setProfile(SELECTION);
+		this.theme().drawing(g);
 		String text = candle.getFormattedCloseTime("MMM dd, HH:mm");
 		int stringWidth = getStringWidth(text, g) + 3;
-		g.setColor(this.getTheme().getBackgroundColor());
+		g.setColor(this.theme().getBackgroundColor());
 
 		int position = getTextPosition(chart, location.x, stringWidth, true);
-		drawStringInBox(position, chart.getHeight() - getFontHeight() - chart.canvas.getScrollHeight(), stringWidth, text, g, 1, getBackgroundColor());
+		drawStringInBox(position, chart.getAvailableHeight() - getFontHeight() - getOffset(chart), stringWidth, text, g, 1, getBackgroundColor());
 	}
 
 	private int getTextPosition(BasicChart<?> chart, int x, int stringWidth, boolean centralize) {
@@ -128,7 +133,7 @@ public class TimeRuler extends Ruler<TimeRulerTheme> {
 	}
 
 	@Override
-	public Z getZ() {
-		return Z.BACK;
+	public Overlay overlay() {
+		return Overlay.BACK;
 	}
 }

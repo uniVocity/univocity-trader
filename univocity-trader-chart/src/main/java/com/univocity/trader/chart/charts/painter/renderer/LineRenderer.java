@@ -16,7 +16,7 @@ public class LineRenderer extends DoubleRenderer<LineTheme<?>> {
 	}
 
 	@Override
-	public void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, int width) {
+	public void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, int y, int height, int width) {
 		g.setStroke(theme.getNormalStroke());
 		g.setColor(theme.getLineColor());
 

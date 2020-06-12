@@ -14,7 +14,7 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 	private final Method factoryMethod;
 	private final Constructor<?> constructor;
 	private final String description;
-	private boolean overlay;
+	final boolean overlay;
 
 	private IndicatorDefinition(Class<? extends Indicator> indicatorType, Method factoryMethod) {
 		this(indicatorType, null, factoryMethod, factoryMethod.getParameters());

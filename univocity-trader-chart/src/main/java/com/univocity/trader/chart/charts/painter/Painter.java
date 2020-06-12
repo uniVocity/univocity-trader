@@ -8,19 +8,24 @@ import java.awt.*;
 public interface Painter<T extends Theme> extends Repaintable {
 
 	Insets NO_INSETS = new Insets(0, 0, 0, 0);
+	Rectangle NO_BOUNDS = new Rectangle(0, 0, 0, 0);
 
-	enum Z {
-		FRONT, BACK
+	enum Overlay {
+		FRONT, BACK, NONE
 	}
 
-	Z getZ();
+	Overlay overlay();
 
 	void paintOn(BasicChart<?> chart, Graphics2D g, int width);
 
-	T getTheme();
+	T theme();
 
-	default Insets insets() {
+	default Insets insets(){
 		return NO_INSETS;
+	}
+
+	default Rectangle bounds(){
+		return NO_BOUNDS;
 	}
 
 	default void install(BasicChart<?> chart) {
@@ -31,11 +36,11 @@ public interface Painter<T extends Theme> extends Repaintable {
 
 	}
 
-	default double getMaximumValue(int from, int to){
+	default double maximumValue(int from, int to) {
 		return Integer.MIN_VALUE;
 	}
 
-	default double getMinimumValue(int from, int to){
+	default double minimumValue(int from, int to) {
 		return Integer.MAX_VALUE;
 	}
 

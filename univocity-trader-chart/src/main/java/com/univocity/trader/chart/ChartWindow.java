@@ -9,7 +9,6 @@ import com.univocity.trader.chart.charts.ruler.*;
 import com.univocity.trader.chart.charts.scrolling.*;
 import com.univocity.trader.chart.indicators.*;
 import com.univocity.trader.config.*;
-import com.univocity.trader.strategy.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -65,8 +64,8 @@ public class ChartWindow extends JFrame {
 			leftPanel = new JPanel();
 			leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
 			leftPanel.add(getChart().getTheme().getThemeSettingsPanel());
-			leftPanel.add(getValueRuler().getTheme().getThemeSettingsPanel());
-			leftPanel.add(getTimeRuler().getTheme().getThemeSettingsPanel());
+			leftPanel.add(getValueRuler().theme().getThemeSettingsPanel());
+			leftPanel.add(getTimeRuler().theme().getThemeSettingsPanel());
 		}
 		return leftPanel;
 	}
@@ -112,7 +111,7 @@ public class ChartWindow extends JFrame {
 	}
 
 	private void indicatorUpdated(boolean preview, VisualIndicator previous, VisualIndicator current) {
-		com.univocity.trader.chart.charts.painter.Painter.Z z = current == null ? Painter.Z.FRONT : current.getZ();
+		Painter.Overlay z = current == null ? Painter.Overlay.FRONT : current.overlay();
 		if (preview) {
 			getChart().removePainter(previous);
 			getChart().addPainter(z, current);

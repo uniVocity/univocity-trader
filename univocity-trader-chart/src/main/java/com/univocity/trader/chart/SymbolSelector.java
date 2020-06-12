@@ -215,15 +215,17 @@ public class SymbolSelector extends JPanel {
 		setDateSelectionEnabled(symbol != null);
 		if (symbol != null) {
 			Candle first = candleRepository.firstCandle(symbol);
-			Candle last = candleRepository.lastCandle(symbol);
+			if(first != null) {
+				Candle last = candleRepository.lastCandle(symbol);
 
-			getChartStart().setMinimumValue(first.openTime);
-			getChartEnd().setMaximumValue(last.closeTime);
+				getChartStart().setMinimumValue(first.openTime);
+				getChartEnd().setMaximumValue(last.closeTime);
 
-			getChartStart().setValue(first.openTime);
-			getChartEnd().setValue(last.closeTime);
+				getChartStart().setValue(first.openTime);
+				getChartEnd().setValue(last.closeTime);
 
-			updateDateFields();
+				updateDateFields();
+			}
 		}
 	}
 

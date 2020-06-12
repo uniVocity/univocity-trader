@@ -48,9 +48,9 @@ class IndicatorOptionsPanel extends JPanel {
 			indicatorDefinition.parameters.forEach(this::addComponent);
 		}
 
-//		if (visualIndicatorPreview != null) {
-//			updatePreview(null);
-//		}
+		if (visualIndicatorPreview != null) {
+			updatePreview(null);
+		}
 
 		revalidate();
 		repaint();
@@ -79,7 +79,7 @@ class IndicatorOptionsPanel extends JPanel {
 
 	private void updatePreview(ActionEvent e) {
 		VisualIndicator old = visualIndicatorPreview;
-		visualIndicatorPreview = new VisualIndicator(interval, () -> indicatorDefinition.create(interval.get()));
+		visualIndicatorPreview = new VisualIndicator(indicatorDefinition.overlay, interval, () -> indicatorDefinition.create(interval.get()));
 		SwingUtilities.invokeLater(() -> firePropertyChange(PREVIEW_UPDATED, old, visualIndicatorPreview));
 	}
 }

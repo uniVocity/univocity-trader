@@ -8,7 +8,7 @@ import java.util.function.*;
 
 public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 
-	private double[] values;
+	private double[] values = new double[0];
 	private int i = 0;
 	private final DoubleSupplier valueSupplier;
 	protected final T theme;
@@ -39,9 +39,9 @@ public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 	}
 
 	@Override
-	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, int width) {
+	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, int y, int height, int width) {
 		if (i < values.length) {
-			paintNext(i, values[i], chart, g, width);
+			paintNext(i, values[i], chart, g, y, height, width);
 		}
 	}
 
@@ -50,7 +50,7 @@ public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 		return theme;
 	}
 
-	protected abstract void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, int width);
+	protected abstract void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, int y, int height, int width);
 
 	@Override
 	public double getMaximumValue(int from, int to) {

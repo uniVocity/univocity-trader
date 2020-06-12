@@ -36,7 +36,7 @@ public class TimeIntervalSelector extends ChartCanvas {
 	public TimeIntervalSelector(CandleHistory fullCandleHistory, BasicChart<?> chart) {
 		this.candleHistory = fullCandleHistory;
 		this.chart = chart;
-		super.addChart(chart);
+		super.setChart(chart);
 		this.setPreferredSize(new Dimension(100, 100));
 
 		addMouseMotionListener(new MouseAdapter() {

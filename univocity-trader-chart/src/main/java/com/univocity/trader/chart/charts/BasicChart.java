@@ -13,16 +13,18 @@ import java.util.*;
 
 public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<T> {
 
-	private final EnumMap<Painter.Z, List<Painter<?>>> painters = new EnumMap<>(Painter.Z.class);
+	private final EnumMap<Painter.Overlay, List<Painter<?>>> painters = new EnumMap<>(Painter.Overlay.class);
 	private Point mousePosition = null;
 	private int draggingButton = -1;
 	private int dragStart;
+	private int reservedHeight = -1;
 
 	public BasicChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
 
-		painters.put(Painter.Z.BACK, new ArrayList<>());
-		painters.put(Painter.Z.FRONT, new ArrayList<>());
+		painters.put(Painter.Overlay.BACK, new ArrayList<>());
+		painters.put(Painter.Overlay.FRONT, new ArrayList<>());
+		painters.put(Painter.Overlay.NONE, new ArrayList<>());
 
 		canvas.setFocusable(true);
 
@@ -126,7 +128,9 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 
 	@Override
 	protected void draw(Graphics2D g, int width) {
-		runPainters(g, Painter.Z.BACK, width);
+		runPainters(g, Painter.Overlay.NONE, width);
+
+		runPainters(g, Painter.Overlay.BACK, width);
 
 		Point hoveredPosition = getCurrentCandleLocation();
 
@@ -151,7 +155,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 			drawHovered(getCurrentCandle(), hoveredPosition, g);
 		}
 
-		runPainters(g, Painter.Z.FRONT, width);
+		runPainters(g, Painter.Overlay.FRONT, width);
 	}
 
 	protected final Stroke getLineStroke() {
@@ -162,7 +166,8 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 
 	protected abstract void drawHovered(Candle hovered, Point location, Graphics2D g);
 
-	private void runPainters(Graphics2D g, Painter.Z z, int width) {
+	private void runPainters(Graphics2D g, Painter.Overlay z, int width) {
+
 		for (Painter<?> painter : painters.get(z)) {
 			painter.paintOn(this, g, width);
 			canvas.insets.right = Math.max(painter.insets().right, canvas.insets.right);
@@ -170,10 +175,15 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 		}
 	}
 
-	public void addPainter(Painter.Z z, Painter<?> painter) {
+	public void addPainter(Painter.Overlay overlay, Painter<?> painter) {
 		if (painter != null) {
-			painters.get(z).add(painter);
+			painters.get(overlay).add(painter);
 			painter.install(this);
+
+			if (overlay == Painter.Overlay.NONE) {
+				reservedHeight = -1;
+			}
+
 			invokeRepaint();
 		}
 	}
@@ -181,8 +191,10 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	public void removePainter(Painter<?> painter) {
 		if (painter != null) {
 			painter.uninstall(this);
-			painters.get(Painter.Z.BACK).remove(painter);
-			painters.get(Painter.Z.FRONT).remove(painter);
+			painters.get(Painter.Overlay.FRONT).remove(painter);
+			painters.get(Painter.Overlay.BACK).remove(painter);
+			painters.get(Painter.Overlay.NONE).remove(painter);
+			reservedHeight = -1;
 			invokeRepaint();
 		}
 	}
@@ -190,15 +202,15 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	@Override
 	public double getMaximum(int from, int to) {
 		List<Painter<?>> p;
-		p = painters.get(Painter.Z.FRONT);
+		p = painters.get(Painter.Overlay.FRONT);
 		double maximum = super.getMaximum(from, to);
 		for (int i = 0; i < p.size(); i++) {
-			maximum = Math.max(p.get(i).getMaximumValue(from, to), maximum);
+			maximum = Math.max(p.get(i).maximumValue(from, to), maximum);
 		}
 
-		p = painters.get(Painter.Z.BACK);
+		p = painters.get(Painter.Overlay.BACK);
 		for (int i = 0; i < p.size(); i++) {
-			maximum = Math.max(p.get(i).getMaximumValue(from, to), maximum);
+			maximum = Math.max(p.get(i).maximumValue(from, to), maximum);
 		}
 
 		return maximum;
@@ -207,17 +219,42 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	@Override
 	public double getMinimum(int from, int to) {
 		List<Painter<?>> p;
-		p = painters.get(Painter.Z.FRONT);
+		p = painters.get(Painter.Overlay.FRONT);
 		double minimum = super.getMinimum(from, to);
 		for (int i = 0; i < p.size(); i++) {
-			minimum = Math.min(p.get(i).getMinimumValue(from, to), minimum);
+			minimum = Math.min(p.get(i).minimumValue(from, to), minimum);
 		}
 
-		p = painters.get(Painter.Z.BACK);
+		p = painters.get(Painter.Overlay.BACK);
 		for (int i = 0; i < p.size(); i++) {
-			minimum = Math.min(p.get(i).getMinimumValue(from, to), minimum);
+			minimum = Math.min(p.get(i).minimumValue(from, to), minimum);
 		}
 
 		return minimum;
+	}
+
+	protected int getReservedHeight() {
+		if (reservedHeight < 0) {
+			reservedHeight = 0;
+			List<Painter<?>> all = painters.get(Painter.Overlay.NONE);
+			if (all.size() == 0) {
+				return 0;
+			}
+
+			final int available = getHeight();
+			int maxIndividualHeight = (int) (available * 0.8 / all.size());
+			for (Painter<?> painter : all) {
+				Rectangle bounds = painter.bounds();
+				if (bounds.height == 0) {
+					bounds.height = (int) (available * 0.2);
+				}
+
+				int diff = bounds.height > maxIndividualHeight ? bounds.height - maxIndividualHeight : 0;
+				bounds.x = available - reservedHeight;
+				bounds.height = bounds.height - diff;
+				reservedHeight += bounds.height;
+			}
+		}
+		return reservedHeight;
 	}
 }

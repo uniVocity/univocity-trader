@@ -11,9 +11,9 @@ import java.awt.image.*;
 public abstract class StaticChart<T extends PainterTheme<?>> implements Repaintable {
 
 	private double horizontalIncrement = 0.0;
+
 	private double maximum = -1.0;
 	private double minimum = Double.MAX_VALUE;
-
 	private double logLow;
 	private double logRange;
 
@@ -31,15 +31,13 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 	private long lastPaint;
 	public final ChartCanvas canvas;
 
-	private int height = -1;
-
 	public StaticChart(CandleHistoryView candleHistory) {
 		this(new ChartCanvas(), candleHistory);
 	}
 
 	public StaticChart(ChartCanvas canvas, CandleHistoryView candleHistory) {
 		this.canvas = canvas;
-		this.canvas.addChart(this);
+		this.canvas.setChart(this);
 		this.candleHistory = candleHistory;
 		candleHistory.addDataUpdateListener(this::dataUpdated);
 		canvas.addScrollPositionListener(this::onScrollPositionUpdate);
@@ -225,26 +223,42 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 	}
 
 	private int getLogarithmicYCoordinate(double value) {
-		return getHeight() - (int) ((Math.log10(value) - logLow) * getHeight() / logRange);
+		return getLogarithmicYCoordinate(value, getAvailableHeight());
 	}
 
 	private int getLinearYCoordinate(double value) {
-		double linearRange = getHeight() - (getHeight() * minimum / maximum);
-		double proportion = (getHeight() - (getHeight() * value / maximum)) / linearRange;
-
-		return (int) (getHeight() * proportion);
+		return getLinearYCoordinate(value, getAvailableHeight());
 	}
 
 	public double getValueAtY(int y) {
-		if (displayLogarithmicScale()) {
-			return Math.pow(10, (y + logLow * getHeight() / logRange) / getHeight() * logRange);
-		} else {
-			return minimum + ((maximum - minimum) / getHeight()) * y;
-		}
+		return getValueAtY(y, getAvailableHeight());
 	}
 
 	public final int getYCoordinate(double value) {
 		return displayLogarithmicScale() ? getLogarithmicYCoordinate(value) : getLinearYCoordinate(value);
+	}
+
+	private int getLogarithmicYCoordinate(double value, int height) {
+		return height - (int) ((Math.log10(value) - logLow) * height / logRange);
+	}
+
+	private int getLinearYCoordinate(double value, int height) {
+		double linearRange = height - (height * minimum / maximum);
+		double proportion = (height - (height * value / maximum)) / linearRange;
+
+		return (int) (height * proportion);
+	}
+
+	public double getValueAtY(int y, int height) {
+		if (displayLogarithmicScale()) {
+			return Math.pow(10, (y + logLow * height / logRange) / height * logRange);
+		} else {
+			return minimum + ((maximum - minimum) / height) * y;
+		}
+	}
+
+	public final int getYCoordinate(double value, int height) {
+		return displayLogarithmicScale() ? getLogarithmicYCoordinate(value, height) : getLinearYCoordinate(value, height);
 	}
 
 	private boolean displayLogarithmicScale() {
@@ -360,11 +374,15 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 	protected abstract void draw(Graphics2D g, int width);
 
 	public int getHeight() {
-		return height < 0 ? canvas.getHeight() : height;
+		return canvas.getHeight();
 	}
 
-	public final void setHeight(int height) {
-		this.height = height;
+	public int getAvailableHeight(){
+		return getHeight() - getReservedHeight();
+	}
+
+	protected int getReservedHeight(){
+		return 0;
 	}
 
 	public int getBarWidth() {

@@ -24,7 +24,7 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 	}
 
 	private int getRightValueTagSpacing() {
-		return this.getTheme().getRightValueTagSpacing();
+		return this.theme().getRightValueTagSpacing();
 	}
 
 	private void drawGlass(BasicChart<?> chart, Graphics2D g) {
@@ -49,16 +49,17 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 
 		final double yIncrement = getFontHeight();
 
-		int y = chart.getHeight() - chart.getYCoordinate(chart.getMaximum());
+		int height = chart.getAvailableHeight();
+		int y = height - chart.getYCoordinate(chart.getMaximum());
 
 		int insetRight = 0;
 		while (y > 0) {
 			String tag = getValueFormat().format(chart.getValueAtY(y));
-			int tagWidth = this.getTheme().getMaxStringWidth(tag, g);
+			int tagWidth = this.theme().getMaxStringWidth(tag, g);
 
 			insetRight = Math.max(insetRight, tagWidth);
 
-			int yy = chart.getHeight() - y;
+			int yy = height - y;
 			text(g);
 			g.drawString(tag, chart.getBoundaryRight() - tagWidth - getRightValueTagSpacing(), yy + (getFontHeight() / 2));
 			y -= yIncrement;
@@ -68,7 +69,7 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 	}
 
 	private int getMinimumWidth() {
-		return this.getTheme().getMinimumWidth();
+		return this.theme().getMinimumWidth();
 	}
 
 	public int getRulerWidth() {
@@ -94,7 +95,7 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 		Point mousePosition = chart.getCurrentMousePosition();
 		if (mousePosition != null && chart.isMouseDraggingCursor()) {
 			setProfile(HIGHLIGHT);
-			double valueAtMouseHeight = chart.getValueAtY(chart.getHeight() - mousePosition.y);
+			double valueAtMouseHeight = chart.getValueAtY(chart.getAvailableHeight() - mousePosition.y);
 			drawPrices(chart, g, mousePosition, null, valueAtMouseHeight, true, -1, false);
 		}
 	}
@@ -106,11 +107,12 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 
 	private int drawPrices(BasicChart<?> chart, Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY, boolean drawAboveRef) {
 		final int y = chart.getYCoordinate(value);
-		final int fontHeight = this.getTheme().getFontHeight();
-		int stringY = this.getTheme().centralizeYToFontHeight(y);
+		final int fontHeight = this.theme().getFontHeight();
+		int stringY = this.theme().centralizeYToFontHeight(y);
 
-		if (stringY + fontHeight > chart.getHeight()) {
-			stringY = chart.getHeight() - fontHeight;
+		int height = chart.getAvailableHeight();
+		if (stringY + fontHeight > height) {
+			stringY = height - fontHeight;
 		} else if (stringY < 0) {
 			stringY = 0;
 		}
@@ -124,9 +126,9 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 		}
 
 		String tag = format(value);
-		int tagWidth = this.getTheme().getMaxStringWidth(tag, g);
+		int tagWidth = this.theme().getMaxStringWidth(tag, g);
 
-		int x = chart.getBoundaryRight() - tagWidth - this.getTheme().getRightValueTagSpacing();
+		int x = chart.getBoundaryRight() - tagWidth - this.theme().getRightValueTagSpacing();
 		if (drawInBox) {
 			drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, candle == null ? getBackgroundColor() : candle.isGreen() ? getProfitBackground() : getLossBackground());
 		} else {
@@ -181,7 +183,7 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 	}
 
 	@Override
-	public Z getZ() {
-		return Z.FRONT;
+	public Overlay overlay() {
+		return Overlay.FRONT;
 	}
 }

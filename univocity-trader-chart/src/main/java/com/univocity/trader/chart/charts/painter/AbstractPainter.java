@@ -3,19 +3,21 @@ package com.univocity.trader.chart.charts.painter;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.dynamic.*;
 
+import java.awt.*;
+
 public abstract class AbstractPainter<T extends Theme> implements Painter<T> {
 
-	final Z z;
+	final Overlay overlay;
 	protected BasicChart<?> chart;
 	private T theme;
 
-	public AbstractPainter(Z z){
-		this.z = z;
+	public AbstractPainter(Overlay overlay) {
+		this.overlay = overlay;
 	}
 
 	@Override
-	public final Z getZ() {
-		return z;
+	public final Overlay overlay() {
+		return overlay;
 	}
 
 	@Override
@@ -35,8 +37,8 @@ public abstract class AbstractPainter<T extends Theme> implements Painter<T> {
 		}
 	}
 
-	public final T getTheme(){
-		if(theme == null){
+	public final T theme() {
+		if (theme == null) {
 			theme = newTheme();
 		}
 		return theme;

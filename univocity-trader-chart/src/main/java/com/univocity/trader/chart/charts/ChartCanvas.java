@@ -23,8 +23,8 @@ public class ChartCanvas extends JPanel implements Repaintable {
 	private int requiredWidth = -1;
 	private int barWidth;
 
-	private List<StaticChart<?>> charts = new ArrayList<>();
-	private List<IntConsumer> scrollPositionListeners = new ArrayList<>();
+	private StaticChart<?> chart;
+	private final List<IntConsumer> scrollPositionListeners = new ArrayList<>();
 	private boolean repainting;
 
 	public ChartCanvas() {
@@ -47,8 +47,8 @@ public class ChartCanvas extends JPanel implements Repaintable {
 		});
 	}
 
-	public void addChart(StaticChart<?> chart) {
-		this.charts.add(chart);
+	public void setChart(StaticChart<?> chart) {
+		this.chart = chart;
 	}
 
 	public void paintComponent(Graphics g1d) {
@@ -58,16 +58,12 @@ public class ChartCanvas extends JPanel implements Repaintable {
 		Graphics2D g = (Graphics2D) g1d;
 
 
-		for (StaticChart<?> chart : charts) {
-			this.requiredWidth = chart.calculateRequiredWidth();
-			this.barWidth = chart.calculateBarWidth();
-		}
+		this.requiredWidth = chart.calculateRequiredWidth();
+		this.barWidth = chart.calculateBarWidth();
 
 		updateScroll();
 
-		for (StaticChart<?> chart : charts) {
-			chart.paintComponent(g);
-		}
+		chart.paintComponent(g);
 
 		if (scrollBar != null) {
 			scrollBar.draw(g);
@@ -78,9 +74,7 @@ public class ChartCanvas extends JPanel implements Repaintable {
 		if (isPanelBeingShown || boundsChanged) {
 			height = getHeight();
 			width = getWidth();
-			for (StaticChart<?> chart : charts) {
-				chart.layoutComponents();
-			}
+			chart.layoutComponents();
 
 			boundsChanged = false;
 		}
@@ -97,6 +91,9 @@ public class ChartCanvas extends JPanel implements Repaintable {
 		}
 	}
 
+	public int getAvailableHeight(){
+		return chart.getAvailableHeight();
+	}
 
 	public final boolean isDraggingScroll() {
 		return isScrollingView() && scrollBar.isDraggingScroll();
