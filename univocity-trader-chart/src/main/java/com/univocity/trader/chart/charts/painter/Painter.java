@@ -8,7 +8,6 @@ import java.awt.*;
 public interface Painter<T extends Theme> extends Repaintable {
 
 	Insets NO_INSETS = new Insets(0, 0, 0, 0);
-	Rectangle NO_BOUNDS = new Rectangle(0, 0, 0, 0);
 
 	enum Overlay {
 		FRONT, BACK, NONE
@@ -25,7 +24,7 @@ public interface Painter<T extends Theme> extends Repaintable {
 	}
 
 	default Rectangle bounds(){
-		return NO_BOUNDS;
+		return null;
 	}
 
 	default void install(BasicChart<?> chart) {
@@ -44,10 +43,16 @@ public interface Painter<T extends Theme> extends Repaintable {
 		return Integer.MAX_VALUE;
 	}
 
-	static Point createCoordinate(BasicChart<?> chart, int candleIndex, double value) {
+	static Point createCoordinate(BasicChart<?> chart, AreaPainter painter, int candleIndex, double value) {
 		Point p = new Point();
 		p.x = chart.getXCoordinate(candleIndex);
-		p.y = chart.getYCoordinate(value);
+		if(painter == null || painter.bounds() == null){
+			p.y = chart.getYCoordinate(value);
+		} else {
+			Rectangle bounds = painter.bounds();
+			p.y =  chart.getAvailableHeight() +  painter.getYCoordinate(value, bounds.height);
+		}
+
 		return p;
 	}
 }

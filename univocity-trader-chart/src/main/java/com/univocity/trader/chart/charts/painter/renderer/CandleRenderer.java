@@ -2,6 +2,7 @@ package com.univocity.trader.chart.charts.painter.renderer;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
+import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.dynamic.*;
 
 import java.awt.*;
@@ -32,14 +33,14 @@ public abstract class CandleRenderer<T extends Theme> implements Renderer<T> {
 	}
 
 	@Override
-	public final T getTheme(){
+	public final T getTheme() {
 		return theme;
 	}
 
-	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, int y, int height, int width) {
+	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {
 		Candle candle = chart.candleHistory.get(i);
-		paintNext(i, candle, chart, g, width);
+		paintNext(i, candle, chart, g, painter);
 	}
 
-	protected abstract void paintNext(int i, Candle candle, BasicChart<?> chart, Graphics2D g, int width);
+	protected abstract void paintNext(int i, Candle candle, BasicChart<?> chart, Graphics2D g, AreaPainter painter);
 }

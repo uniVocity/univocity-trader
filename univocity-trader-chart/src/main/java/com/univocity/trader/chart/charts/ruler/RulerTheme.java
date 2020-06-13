@@ -11,12 +11,11 @@ import java.util.*;
 import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
 @UIBound
-public class RulerTheme<T> implements Theme {
+public class RulerTheme<T> extends Theme {
 
 	@Label("Background color")
 	@ColorBound()
 	private Color backgroundColor = new Color(128, 128, 128, 128);
-
 
 	@Label("Grid color")
 	@ColorBound()
@@ -36,7 +35,6 @@ public class RulerTheme<T> implements Theme {
 	@ColorBound()
 	private Color selectionFontColor = Color.BLACK;
 
-	private JPanel controlPanel;
 	protected final Ruler<?> ruler;
 
 	public RulerTheme(Ruler<?> ruler) {
@@ -198,14 +196,6 @@ public class RulerTheme<T> implements Theme {
 
 	public int getFontAscent(Graphics2D g) {
 		return selectedProfile.getFontAscent(g);
-	}
-
-
-	public JPanel getThemeSettingsPanel() {
-		if (controlPanel == null) {
-			controlPanel = PanelBuilder.createPanel(this);
-		}
-		return controlPanel;
 	}
 
 	public Ruler<?> getRuler() {

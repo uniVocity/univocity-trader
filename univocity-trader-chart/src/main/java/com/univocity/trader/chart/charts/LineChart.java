@@ -59,15 +59,15 @@ public class LineChart extends BasicChart<LineTheme<LineChart>> {
 	}
 
 	private int getMarkerWidth(){
-		return getTheme().getMarkerWidth();
+		return theme().getMarkerWidth();
 	}
 
 	private Color getMarkerColor(){
-		return getTheme().getMarkerColor();
+		return theme().getMarkerColor();
 	}
 
 	protected final Color getLineColor() {
-		return getTheme().getLineColor();
+		return theme().getLineColor();
 	}
 
 	private void drawCircle(Color color, Point location, Graphics2D g){

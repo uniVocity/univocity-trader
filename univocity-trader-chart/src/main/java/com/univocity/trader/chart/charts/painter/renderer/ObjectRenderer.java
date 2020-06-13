@@ -1,6 +1,7 @@
 package com.univocity.trader.chart.charts.painter.renderer;
 
 import com.univocity.trader.chart.charts.*;
+import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.dynamic.*;
 
 import java.awt.*;
@@ -41,9 +42,9 @@ public abstract class ObjectRenderer<O, T extends Theme> implements Renderer<T> 
 	}
 
 	@Override
-	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, int y, int height, int width) {
+	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, AreaPainter areaPainter) {
 		if (i < objects.length) {
-			paintNext(i, objects[i], chart, g, width);
+			paintNext(i, objects[i], chart, g, areaPainter);
 		}
 	}
 
@@ -52,5 +53,5 @@ public abstract class ObjectRenderer<O, T extends Theme> implements Renderer<T> 
 		return theme;
 	}
 
-	protected abstract void paintNext(int i, O value, BasicChart<?> chart, Graphics2D g, int width);
+	protected abstract void paintNext(int i, O value, BasicChart<?> chart, Graphics2D g, AreaPainter areaPainter);
 }

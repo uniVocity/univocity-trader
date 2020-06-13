@@ -8,7 +8,7 @@ import javax.swing.*;
 import java.util.*;
 
 @CompositeUIBound
-public class CompositeTheme implements Theme {
+public class CompositeTheme extends Theme {
 
 	@ThemeContainer
 	private List<Theme> themes = new ArrayList<>();

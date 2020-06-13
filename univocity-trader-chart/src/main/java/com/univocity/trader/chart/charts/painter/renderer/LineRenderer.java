@@ -16,11 +16,11 @@ public class LineRenderer extends DoubleRenderer<LineTheme<?>> {
 	}
 
 	@Override
-	public void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, int y, int height, int width) {
+	public void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {
 		g.setStroke(theme.getNormalStroke());
 		g.setColor(theme.getLineColor());
 
-		Point location = Painter.createCoordinate(chart, i, value);
+		Point location = Painter.createCoordinate(chart, painter, i, value);
 		if (i == 0) {
 			previousLocation = location;
 		}

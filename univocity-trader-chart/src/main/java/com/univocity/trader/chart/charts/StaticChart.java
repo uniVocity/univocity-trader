@@ -8,14 +8,9 @@ import com.univocity.trader.chart.charts.theme.*;
 import java.awt.*;
 import java.awt.image.*;
 
-public abstract class StaticChart<T extends PainterTheme<?>> implements Repaintable {
+public abstract class StaticChart<T extends PainterTheme<?>> extends CoordinateManager implements Repaintable {
 
 	private double horizontalIncrement = 0.0;
-
-	private double maximum = -1.0;
-	private double minimum = Double.MAX_VALUE;
-	private double logLow;
-	private double logRange;
 
 	private Candle selectedCandle;
 	private Candle currentCandle;
@@ -44,11 +39,11 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 	}
 
 	protected Color getBackgroundColor() {
-		return getTheme().getBackgroundColor();
+		return theme().getBackgroundColor();
 	}
 
 	protected boolean isAntialiased() {
-		return getTheme().isAntialiased();
+		return theme().isAntialiased();
 	}
 
 	protected void clearGraphics(Graphics g, int width) {
@@ -103,9 +98,13 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 		return canvas.getBoundaryRight();
 	}
 
-	private void onScrollPositionUpdate(int newPosition) {
+	void onScrollPositionUpdate(int newPosition) {
 		onScrollPositionUpdate();
-		updateEdgeValues();
+
+		int from = firstVisibleCandle == null ? 0 : candleHistory.indexOf(firstVisibleCandle);
+		int to = lastVisibleCandle == null ? candleHistory.size() : candleHistory.indexOf(lastVisibleCandle);
+
+		updateEdgeValues(from, to);
 		invokeRepaint();
 	}
 
@@ -125,67 +124,38 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 		onScrollPositionUpdate(-1);
 	}
 
-	public double getMaximum() {
-		return maximum;
-	}
-
 	double getMaximum(int from, int to) {
-		return maximum;
+		return getMaximum();
 	}
 
 	double getMinimum(int from, int to) {
-		return minimum;
+		return getMinimum();
 	}
 
-	private void updateEdgeValues() {
-		maximum = 0;
-		minimum = Integer.MAX_VALUE;
-
+	@Override
+	protected final void updateMinAndMax(int from, int to) {
 		onScrollPositionUpdate();
-
-		for (int i = 0; i < candleHistory.size(); i++) {
+		for (int i = from; i < to; i++) {
 			Candle candle = candleHistory.get(i);
 			if (candle == null) {
-				return;
+				continue;
 			}
-			updateEdgeValues(candle);
+
+			double value = getHighestPlottedValue(candle);
+			if (maximum < value) {
+				maximum = value;
+			}
+			value = getLowestPlottedValue(candle);
+			if (minimum > value) {
+				minimum = value;
+			}
 		}
 
-		updateIncrements();
-
-		// avoids touching upper and lower limits of the chart
-		minimum = minimum * 0.995;
-		maximum = maximum * 1.0005;
-
-		updateLogarithmicData();
-	}
-
-	private void updateLogarithmicData() {
-		logLow = Math.log10(minimum);
-		logRange = Math.log10(maximum) - logLow;
-	}
-
-	private void updateEdgeValues(Candle candle) {
-		if (candle == null || (firstVisibleCandle != null && candle.openTime < firstVisibleCandle.openTime) || (lastVisibleCandle != null && candle.closeTime > lastVisibleCandle.closeTime)) {
-			return;
-		}
-
-		double value = getHighestPlottedValue(candle);
-		if (maximum < value) {
-			maximum = value;
-		}
-		value = getLowestPlottedValue(candle);
-		if (minimum > value && value != 0.0) {
-			minimum = value;
-		}
-
-		if(firstVisibleCandle != null && lastVisibleCandle != null) {
-			int from = candleHistory.indexOf(firstVisibleCandle);
-			int to = candleHistory.indexOf(lastVisibleCandle);
-
+		if (firstVisibleCandle != null && lastVisibleCandle != null) {
 			maximum = Math.max(maximum, getMaximum(from, to));
 			minimum = Math.min(minimum, getMinimum(from, to));
 		}
+		updateIncrements();
 	}
 
 	public int getRequiredWidth() {
@@ -238,31 +208,8 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 		return displayLogarithmicScale() ? getLogarithmicYCoordinate(value) : getLinearYCoordinate(value);
 	}
 
-	private int getLogarithmicYCoordinate(double value, int height) {
-		return height - (int) ((Math.log10(value) - logLow) * height / logRange);
-	}
-
-	private int getLinearYCoordinate(double value, int height) {
-		double linearRange = height - (height * minimum / maximum);
-		double proportion = (height - (height * value / maximum)) / linearRange;
-
-		return (int) (height * proportion);
-	}
-
-	public double getValueAtY(int y, int height) {
-		if (displayLogarithmicScale()) {
-			return Math.pow(10, (y + logLow * height / logRange) / height * logRange);
-		} else {
-			return minimum + ((maximum - minimum) / height) * y;
-		}
-	}
-
-	public final int getYCoordinate(double value, int height) {
-		return displayLogarithmicScale() ? getLogarithmicYCoordinate(value, height) : getLinearYCoordinate(value, height);
-	}
-
 	private boolean displayLogarithmicScale() {
-		return getTheme().isDisplayingLogarithmicScale();
+		return theme().isDisplayingLogarithmicScale();
 	}
 
 	public final void layoutComponents() {
@@ -339,11 +286,11 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 	}
 
 	public final int calculateBarWidth() {
-		return getTheme().getBarWidth();
+		return theme().getBarWidth();
 	}
 
 	private int getSpaceBetweenCandles() {
-		return getTheme().getSpaceBetweenBars();
+		return theme().getSpaceBetweenBars();
 	}
 
 	public int calculateRequiredWidth() {
@@ -352,7 +299,8 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 
 	protected abstract T newTheme();
 
-	public final T getTheme() {
+	@Override
+	public final T theme() {
 		if (theme == null) {
 			this.theme = newTheme();
 		}
@@ -377,11 +325,11 @@ public abstract class StaticChart<T extends PainterTheme<?>> implements Repainta
 		return canvas.getHeight();
 	}
 
-	public int getAvailableHeight(){
+	public int getAvailableHeight() {
 		return getHeight() - getReservedHeight();
 	}
 
-	protected int getReservedHeight(){
+	protected int getReservedHeight() {
 		return 0;
 	}
 

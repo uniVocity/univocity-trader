@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.*;
 import java.util.function.*;
 
-public class VisualIndicator implements Painter<CompositeTheme> {
+public class VisualIndicator extends AreaPainter {
 
 	private static final LineRenderer[] EMPTY = new LineRenderer[0];
 
@@ -68,7 +68,7 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 	private Painter<CompositeTheme> getIndicatorPainter() {
 		if (indicatorPainter == null) {
 			currentRenderers = createRenderers();
-			indicatorPainter = new LinePainter(Overlay.FRONT, this::reset, this::process, currentRenderers);
+			indicatorPainter = new LinePainter(this, this::reset, this::process, currentRenderers);
 		}
 		return indicatorPainter;
 	}
@@ -121,8 +121,15 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 	}
 
 	@Override
+	protected void updateMinAndMax(int from, int to) {
+		for (int i = 0; i < currentRenderers.length; i++) {
+			maximum = Math.max(maximum, currentRenderers[i].getMaximumValue(from, to));
+			minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));
+		}
+	}
+
+	@Override
 	public final double maximumValue(int from, int to) {
-		double maximum = Integer.MIN_VALUE;
 		for (int i = 0; i < currentRenderers.length; i++) {
 			maximum = Math.max(maximum, currentRenderers[i].getMaximumValue(from, to));
 		}
@@ -131,7 +138,6 @@ public class VisualIndicator implements Painter<CompositeTheme> {
 
 	@Override
 	public final double minimumValue(int from, int to) {
-		double minimum = Integer.MAX_VALUE;
 		for (int i = 0; i < currentRenderers.length; i++) {
 			minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));
 		}

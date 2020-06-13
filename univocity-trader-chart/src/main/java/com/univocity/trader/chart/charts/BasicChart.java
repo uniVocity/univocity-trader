@@ -111,15 +111,15 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	}
 
 	private boolean isVerticalSelectionLineEnabled() {
-		return getTheme().isVerticalSelectionLineEnabled();
+		return theme().isVerticalSelectionLineEnabled();
 	}
 
 	private boolean isHorizontalSelectionLineEnabled() {
-		return getTheme().isHorizontalSelectionLineEnabled();
+		return theme().isHorizontalSelectionLineEnabled();
 	}
 
 	private Color getSelectionLineColor() {
-		return getTheme().getSelectionLineColor();
+		return theme().getSelectionLineColor();
 	}
 
 	public final Point getCurrentMousePosition() {
@@ -128,9 +128,8 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 
 	@Override
 	protected void draw(Graphics2D g, int width) {
-		runPainters(g, Painter.Overlay.NONE, width);
-
 		runPainters(g, Painter.Overlay.BACK, width);
+		runPainters(g, Painter.Overlay.NONE, width);
 
 		Point hoveredPosition = getCurrentCandleLocation();
 
@@ -159,7 +158,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	}
 
 	protected final Stroke getLineStroke() {
-		return getTheme().getNormalStroke();
+		return theme().getNormalStroke();
 	}
 
 	protected abstract void drawSelected(Candle selected, Point location, Graphics2D g);
@@ -182,6 +181,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 
 			if (overlay == Painter.Overlay.NONE) {
 				reservedHeight = -1;
+				onScrollPositionUpdate(-1);
 			}
 
 			invokeRepaint();
@@ -198,6 +198,16 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 			invokeRepaint();
 		}
 	}
+
+	@Override
+	public void updateEdgeValues(int from, int to) {
+		super.updateEdgeValues(from, to);
+		List<Painter<?>> p = painters.get(Painter.Overlay.NONE);
+		for (int i = 0; i < p.size(); i++) {
+			((AreaPainter)p.get(i)).updateEdgeValues(from, to);
+		}
+	}
+
 
 	@Override
 	public double getMaximum(int from, int to) {
@@ -250,9 +260,9 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 				}
 
 				int diff = bounds.height > maxIndividualHeight ? bounds.height - maxIndividualHeight : 0;
-				bounds.x = available - reservedHeight;
 				bounds.height = bounds.height - diff;
 				reservedHeight += bounds.height;
+				bounds.y = available - reservedHeight;
 			}
 		}
 		return reservedHeight;

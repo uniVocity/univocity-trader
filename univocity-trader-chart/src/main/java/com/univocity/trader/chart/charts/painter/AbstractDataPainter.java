@@ -14,16 +14,24 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 	private Renderer<?>[] renderers;
 
 	private final Consumer<CandleHistory.UpdateType> historyUpdateConsumer;
-
+	private final Painter<T> parent;
 	private Candle prev;
 	private final Runnable reset;
 	private final Consumer<Candle> process;
+	private final AreaPainter areaPainter;
 
-	public AbstractDataPainter(Overlay z, Runnable reset, Consumer<Candle> process) {
-		super(z);
+	public AbstractDataPainter(Painter<T> parent, Runnable reset, Consumer<Candle> process) {
+		super(parent.overlay());
+		this.parent = parent;
 		historyUpdateConsumer = this::processHistoryUpdate;
 		this.reset = reset;
 		this.process = process;
+		this.areaPainter = parent instanceof AreaPainter ? (AreaPainter) parent : null;
+	}
+
+	@Override
+	public final Rectangle bounds() {
+		return parent.bounds();
 	}
 
 	protected abstract Renderer<?>[] createRenderers();
@@ -45,10 +53,9 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 
 	@Override
 	public void paintOn(BasicChart<?> chart, Graphics2D g, int width) {
-		Rectangle bounds = bounds();
 		for (int i = 0; i < chart.candleHistory.size(); i++) {
 			for (int j = 0; j < renderers.length; j++) {
-				renderers[j].paintNext(i, chart, g, bounds.y, bounds.height, width);
+				renderers[j].paintNext(i, chart, g, areaPainter);
 			}
 		}
 	}
