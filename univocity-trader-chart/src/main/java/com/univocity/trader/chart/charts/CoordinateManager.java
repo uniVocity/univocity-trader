@@ -21,10 +21,13 @@ public abstract class CoordinateManager {
 		maximum = Integer.MIN_VALUE;
 
 		updateMinAndMax(from, to);
-
 		// avoids touching upper and lower limits of the chart
 		minimum = minimum * 0.995;
 		maximum = maximum * 1.0005;
+
+		if(minimum == 0){
+			minimum = 0.0000000000000001;
+		}
 
 		updateLogarithmicData();
 	}
@@ -60,7 +63,7 @@ public abstract class CoordinateManager {
 	}
 
 	private boolean displayLogarithmicScale() {
-		return theme().isDisplayingLogarithmicScale();
+		return !(minimum < 0) && theme().isDisplayingLogarithmicScale();
 	}
 
 	protected abstract Theme theme();

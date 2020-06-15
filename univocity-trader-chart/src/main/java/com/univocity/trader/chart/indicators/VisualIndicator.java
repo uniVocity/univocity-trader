@@ -34,6 +34,10 @@ public class VisualIndicator extends AreaPainter {
 		this.bounds = overlay ? null : new Rectangle(0, 0, 0, 0);
 		this.indicatorSupplier = indicator;
 		this.interval = interval;
+
+		if(!overlay){
+			theme().setDisplayingLogarithmicScale(false);
+		}
 	}
 
 	private LineRenderer[] createRenderers() {
