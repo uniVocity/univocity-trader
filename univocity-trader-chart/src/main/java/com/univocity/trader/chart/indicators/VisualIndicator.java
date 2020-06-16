@@ -58,6 +58,8 @@ public class VisualIndicator extends AreaPainter {
 							out.add(createRenderer(m, r));
 						}
 					}
+				} else {
+					out.add(createRenderer(m, null));
 				}
 			}
 		}

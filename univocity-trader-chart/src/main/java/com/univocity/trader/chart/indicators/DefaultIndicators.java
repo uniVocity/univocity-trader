@@ -54,9 +54,9 @@ public class DefaultIndicators {
 		return Indicators.ConnorsRSI(rsiLength, streakRsiLength, pctRankLength, interval);
 	}
 
-	public static <T extends SingleValueIndicator> DirectionIndicator<T> DirectionIndicator(T indicator, ToDoubleFunction<T> valueGetter) {
-		return Indicators.DirectionIndicator(indicator, valueGetter);
-	}
+//	public static <T extends SingleValueIndicator> DirectionIndicator<T> DirectionIndicator(T indicator, ToDoubleFunction<T> valueGetter) {
+//		return Indicators.DirectionIndicator(indicator, valueGetter);
+//	}
 
 	@Overlay
 	public static DonchianChannel DonchianChannel(@PositiveDefault(12) int length, TimeInterval interval) {
