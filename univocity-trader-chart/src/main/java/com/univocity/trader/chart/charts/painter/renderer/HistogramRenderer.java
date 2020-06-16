@@ -1,8 +1,11 @@
 package com.univocity.trader.chart.charts.painter.renderer;
 
+import com.univocity.trader.*;
+import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.theme.*;
+import com.univocity.trader.chart.gui.*;
 
 import java.awt.*;
 import java.util.function.*;
@@ -11,8 +14,8 @@ public class HistogramRenderer extends DoubleRenderer<HistogramTheme<?>> {
 
 	private Point previousZeroLineLocation;
 
-	public HistogramRenderer(HistogramTheme<?> theme, DoubleSupplier valueSupplier) {
-		super(theme, valueSupplier);
+	public HistogramRenderer(String description, HistogramTheme<?> theme, DoubleSupplier valueSupplier) {
+		super(description, theme, valueSupplier);
 	}
 
 	@Override

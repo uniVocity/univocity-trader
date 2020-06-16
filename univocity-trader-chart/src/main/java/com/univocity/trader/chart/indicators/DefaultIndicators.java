@@ -101,8 +101,8 @@ public class DefaultIndicators {
 		return Indicators.KeltnerChannel(length, atrLength, interval, valueGetter(valueGetter));
 	}
 
-	@Render("getMacdSignal")
-	@Render("getMacdLine")
+	@Render(value = "getMacdSignal", description = "Signal")
+	@Render(value = "getMacdLine", description = "Line")
 	@Render(value = "getHistogram", renderer = HistogramRenderer.class)
 	public static MACD MACD(@PositiveDefault(12) int shortCount, @PositiveDefault(26) int longCount, @PositiveDefault(9) int macdCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.MACD(shortCount, longCount, macdCount, interval, valueGetter(valueGetter));

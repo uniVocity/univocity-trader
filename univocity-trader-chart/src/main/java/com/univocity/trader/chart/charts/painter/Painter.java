@@ -19,11 +19,15 @@ public interface Painter<T extends Theme> extends Repaintable {
 
 	T theme();
 
-	default Insets insets(){
+	default String header() {
+		return null;
+	}
+
+	default Insets insets() {
 		return NO_INSETS;
 	}
 
-	default Rectangle bounds(){
+	default Rectangle bounds() {
 		return null;
 	}
 
@@ -46,11 +50,11 @@ public interface Painter<T extends Theme> extends Repaintable {
 	static Point createCoordinate(BasicChart<?> chart, AreaPainter painter, int candleIndex, double value) {
 		Point p = new Point();
 		p.x = chart.getXCoordinate(candleIndex);
-		if(painter == null || painter.bounds() == null){
+		if (painter == null || painter.bounds() == null) {
 			p.y = chart.getYCoordinate(value);
 		} else {
 			Rectangle bounds = painter.bounds();
-			p.y =  chart.getAvailableHeight() +  painter.getYCoordinate(value, bounds.height);
+			p.y = chart.getAvailableHeight() + painter.getYCoordinate(value, bounds.height);
 		}
 
 		return p;

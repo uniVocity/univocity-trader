@@ -11,8 +11,8 @@ public class CompositePainter extends AbstractDataPainter<CompositeTheme> {
 
 	private final Renderer[] renderers;
 
-	public CompositePainter(Painter<CompositeTheme> parent, Runnable reset, Consumer<Candle> process, Renderer... renderers) {
-		super(parent, reset, process);
+	public CompositePainter(String description, Painter<CompositeTheme> parent, Runnable reset, Consumer<Candle> process, Renderer... renderers) {
+		super(description, parent, reset, process);
 		this.renderers = renderers;
 	}
 

@@ -11,8 +11,8 @@ public class LineRenderer extends DoubleRenderer<LineTheme<?>> {
 
 	private Point previousLocation;
 
-	public LineRenderer(LineTheme<?> lineTheme, DoubleSupplier valueSupplier) {
-		super(lineTheme, valueSupplier);
+	public LineRenderer(String description, LineTheme<?> lineTheme, DoubleSupplier valueSupplier) {
+		super(description, lineTheme, valueSupplier);
 	}
 
 	@Override

@@ -11,6 +11,8 @@ import java.awt.event.*;
 import java.util.List;
 import java.util.*;
 
+import static com.univocity.trader.chart.charts.painter.Painter.Overlay.*;
+
 public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<T> {
 
 	private final EnumMap<Painter.Overlay, List<Painter<?>>> painters = new EnumMap<>(Painter.Overlay.class);
@@ -24,7 +26,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 
 		painters.put(Painter.Overlay.BACK, new ArrayList<>());
 		painters.put(Painter.Overlay.FRONT, new ArrayList<>());
-		painters.put(Painter.Overlay.NONE, new ArrayList<>());
+		painters.put(NONE, new ArrayList<>());
 
 		canvas.setFocusable(true);
 
@@ -129,7 +131,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	@Override
 	protected void draw(Graphics2D g, int width) {
 		runPainters(g, Painter.Overlay.BACK, width);
-		runPainters(g, Painter.Overlay.NONE, width);
+		runPainters(g, NONE, width);
 
 		Point hoveredPosition = getCurrentCandleLocation();
 
@@ -155,6 +157,31 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 		}
 
 		runPainters(g, Painter.Overlay.FRONT, width);
+
+		int y = 0;
+		y = printPainterHeaders(Painter.Overlay.BACK, g, y);
+		y = printPainterHeaders(Painter.Overlay.FRONT, g, y);
+		printPainterHeaders(NONE, g, y);
+	}
+
+	private int printPainterHeaders(Painter.Overlay overlay, Graphics2D g, int y) {
+		for (Painter<?> painter : painters.get(overlay)) {
+			String header = painter.header();
+			if (header == null || header.isBlank()) {
+				continue;
+			}
+
+			if (overlay == NONE) {
+				y = painter.bounds().y;
+			}
+
+			y += 15;
+			g.setColor(Color.GRAY); //TODO: get from theme.
+			g.drawString(header, getBoundaryLeft() + 5, y);
+			y += 5;
+		}
+
+		return y;
 	}
 
 	protected final Stroke getLineStroke() {
@@ -165,9 +192,8 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 
 	protected abstract void drawHovered(Candle hovered, Point location, Graphics2D g);
 
-	private void runPainters(Graphics2D g, Painter.Overlay z, int width) {
-
-		for (Painter<?> painter : painters.get(z)) {
+	private void runPainters(Graphics2D g, Painter.Overlay overlay, int width) {
+		for (Painter<?> painter : painters.get(overlay)) {
 			painter.paintOn(this, g, width);
 			canvas.insets.right = Math.max(painter.insets().right, canvas.insets.right);
 			canvas.insets.left = Math.max(painter.insets().left, canvas.insets.left);
@@ -179,7 +205,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 			painters.get(overlay).add(painter);
 			painter.install(this);
 
-			if (overlay == Painter.Overlay.NONE) {
+			if (overlay == NONE) {
 				reservedHeight = -1;
 				onScrollPositionUpdate(-1);
 			}
@@ -193,7 +219,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 			painter.uninstall(this);
 			painters.get(Painter.Overlay.FRONT).remove(painter);
 			painters.get(Painter.Overlay.BACK).remove(painter);
-			painters.get(Painter.Overlay.NONE).remove(painter);
+			painters.get(NONE).remove(painter);
 			reservedHeight = -1;
 			invokeRepaint();
 		}
@@ -202,9 +228,9 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	@Override
 	public void updateEdgeValues(int from, int to) {
 		super.updateEdgeValues(from, to);
-		List<Painter<?>> p = painters.get(Painter.Overlay.NONE);
+		List<Painter<?>> p = painters.get(NONE);
 		for (int i = 0; i < p.size(); i++) {
-			((AreaPainter)p.get(i)).updateEdgeValues(from, to);
+			((AreaPainter) p.get(i)).updateEdgeValues(from, to);
 		}
 	}
 
@@ -246,7 +272,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	protected int getReservedHeight() {
 		if (reservedHeight < 0) {
 			reservedHeight = 0;
-			List<Painter<?>> all = painters.get(Painter.Overlay.NONE);
+			List<Painter<?>> all = painters.get(NONE);
 			if (all.size() == 0) {
 				return 0;
 			}
