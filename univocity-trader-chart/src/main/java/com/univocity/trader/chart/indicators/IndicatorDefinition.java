@@ -14,6 +14,7 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 	private final Method factoryMethod;
 	private final Constructor<?> constructor;
 	private final String description;
+	final Render[] renderConfig;
 	final boolean overlay;
 
 	private IndicatorDefinition(Class<? extends Indicator> indicatorType, Method factoryMethod) {
@@ -28,6 +29,17 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 		this.indicator = indicatorType.getSimpleName();
 		this.constructor = constructor;
 		this.factoryMethod = factoryMethod;
+
+		Render[] config = null;
+		if (factoryMethod != null) {
+			config = factoryMethod.getAnnotationsByType(Render.class);
+		}
+
+		if (config == null || config.length == 0) {
+			config = indicatorType.getAnnotationsByType(Render.class);
+		}
+
+		renderConfig = config;
 
 		StringBuilder tmp = new StringBuilder();
 		for (Parameter p : params) {

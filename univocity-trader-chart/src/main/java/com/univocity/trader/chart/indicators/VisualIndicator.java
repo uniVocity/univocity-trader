@@ -1,6 +1,7 @@
 package com.univocity.trader.chart.indicators;
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.painter.renderer.*;
@@ -25,35 +26,71 @@ public class VisualIndicator extends AreaPainter {
 	BasicChart<?> chart;
 	private final Supplier<TimeInterval> interval;
 	private Painter<CompositeTheme> indicatorPainter;
-	private LineRenderer[] currentRenderers = EMPTY;
+	private Renderer[] currentRenderers = EMPTY;
 	private final Painter.Overlay overlay;
 	private final Rectangle bounds;
+	private Render[] renderConfig;
 
-	public VisualIndicator(boolean overlay, Supplier<TimeInterval> interval, Supplier<Indicator> indicator) {
+	public VisualIndicator(Supplier<TimeInterval> interval, IndicatorDefinition indicator) {
+		boolean overlay = indicator.overlay;
 		this.overlay = overlay ? Overlay.FRONT : Overlay.NONE;
 		this.bounds = overlay ? null : new Rectangle(0, 0, 0, 0);
-		this.indicatorSupplier = indicator;
+		this.indicatorSupplier = () -> indicator.create(interval.get());
 		this.interval = interval;
-
-		if(!overlay){
+		this.renderConfig = indicator.renderConfig;
+		if (!overlay) {
 			theme().setDisplayingLogarithmicScale(false);
 		}
 	}
 
-	private LineRenderer[] createRenderers() {
+	private Renderer[] createRenderers() {
 		List<Renderer<?>> out = new ArrayList<>();
 
 		for (Method m : getIndicator().getClass().getMethods()) {
-			if (m.getReturnType() == double.class && m.getParameterCount() == 0) {
-				out.add(createRenderer(m));
+			Render[] renderConfig = m.getAnnotationsByType(Render.class);
+			if(renderConfig.length == 0){
+				renderConfig = this.renderConfig;
+			}
+			if ((m.getReturnType() == double.class || renderConfig.length > 0) && m.getParameterCount() == 0) {
+				if (renderConfig.length > 0) {
+					for (Render r : renderConfig) {
+						if (r.value().equals(m.getName())) {
+							out.add(createRenderer(m, r));
+						}
+					}
+				}
 			}
 		}
 
-		return out.toArray(LineRenderer[]::new);
+		return out.toArray(Renderer[]::new);
 	}
 
-	private LineRenderer createRenderer(Method m) {
-		return new LineRenderer(new LineTheme<>(this), () -> invoke(m));
+	private Renderer createRenderer(Method m, Render renderConfig) {
+		try {
+			if (renderConfig == null) {
+				if (m.getReturnType() == double.class) {
+					return new LineRenderer(new LineTheme<>(this), () -> invoke(m));
+				}
+			} else {
+				Class<? extends Theme> themeType = renderConfig.theme();
+				Class<? extends Renderer<?>> rendererType = renderConfig.renderer();
+				if(themeType == Theme.class){ //try to guess from existing implementations.
+					if(rendererType == LineRenderer.class){
+						themeType = LineTheme.class;
+					} else if(rendererType == HistogramRenderer.class){
+						themeType = HistogramTheme.class;
+					} else {
+						throw new IllegalStateException("No theme defined for renderer " + rendererType.getSimpleName() + " defined in " + m);
+					}
+				}
+				Theme theme = themeType.getConstructor(Repaintable.class).newInstance(this);
+				return rendererType.getConstructor(theme.getClass(), DoubleSupplier.class).newInstance(theme, (DoubleSupplier) () -> invoke(m));
+			}
+		} catch (Exception e) {
+			throw new IllegalStateException("Error initializing visualization for indicator returned by " + m, e);
+		}
+		throw new IllegalStateException("Unable to to initialize visualization for indicator returned by " + m);
+
 	}
 
 	private double invoke(Method m) {
@@ -72,7 +109,7 @@ public class VisualIndicator extends AreaPainter {
 	private Painter<CompositeTheme> getIndicatorPainter() {
 		if (indicatorPainter == null) {
 			currentRenderers = createRenderers();
-			indicatorPainter = new LinePainter(this, this::reset, this::process, currentRenderers);
+			indicatorPainter = new CompositePainter(this, this::reset, this::process, currentRenderers);
 		}
 		return indicatorPainter;
 	}

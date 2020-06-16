@@ -2,6 +2,7 @@ package com.univocity.trader.chart.indicators;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.annotation.*;
+import com.univocity.trader.chart.charts.painter.renderer.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -100,13 +101,16 @@ public class DefaultIndicators {
 		return Indicators.KeltnerChannel(length, atrLength, interval, valueGetter(valueGetter));
 	}
 
+	@Render("getMacdSignal")
+	@Render("getMacdLine")
+	@Render(value = "getHistogram", renderer = HistogramRenderer.class)
+	public static MACD MACD(@PositiveDefault(12) int shortCount, @PositiveDefault(26) int longCount, @PositiveDefault(9) int macdCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.MACD(shortCount, longCount, macdCount, interval, valueGetter(valueGetter));
+	}
+
 	@Overlay
 	public static LowestValueIndicator LowestValueIndicator(@PositiveDefault(12) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.LowestValueIndicator(length, interval, valueGetter(valueGetter));
-	}
-
-	public static MACD MACD(@PositiveDefault(12) int shortCount, @PositiveDefault(26) int longCount, @PositiveDefault(9) int macdCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
-		return Indicators.MACD(shortCount, longCount, macdCount, interval, valueGetter(valueGetter));
 	}
 
 	@Overlay

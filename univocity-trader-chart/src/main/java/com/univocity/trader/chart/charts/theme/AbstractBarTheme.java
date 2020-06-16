@@ -61,16 +61,16 @@ public abstract class AbstractBarTheme<C extends Repaintable> extends PainterThe
 		this.downSelectionColor = downSelectionColor;
 	}
 
-	public Color getLineColor(Candle trade) {
-		if (trade.isClosePositive()) {
+	public Color getLineColor(double value) {
+		if (value >= 0) {
 			return getUpColor();
 		} else {
 			return getDownColor();
 		}
 	}
 
-	public Color getSelectionLineColor(Candle trade) {
-		if (trade.isClosePositive()) {
+	public Color getSelectionLineColor(double value) {
+		if (value >= 0) {
 			return getUpSelectionColor();
 		} else {
 			return getDownSelectionColor();

@@ -7,11 +7,11 @@ import com.univocity.trader.chart.dynamic.*;
 import java.awt.*;
 import java.util.function.*;
 
-public class LinePainter extends AbstractDataPainter<CompositeTheme> {
+public class CompositePainter extends AbstractDataPainter<CompositeTheme> {
 
-	private final LineRenderer[] renderers;
+	private final Renderer[] renderers;
 
-	public LinePainter(Painter<CompositeTheme> parent, Runnable reset, Consumer<Candle> process, LineRenderer... renderers) {
+	public CompositePainter(Painter<CompositeTheme> parent, Runnable reset, Consumer<Candle> process, Renderer... renderers) {
 		super(parent, reset, process);
 		this.renderers = renderers;
 	}
@@ -22,7 +22,7 @@ public class LinePainter extends AbstractDataPainter<CompositeTheme> {
 	}
 
 	@Override
-	protected LineRenderer[] createRenderers() {
+	protected Renderer[] createRenderers() {
 		return renderers;
 	}
 }

@@ -84,15 +84,23 @@ public abstract class AbstractFilledBarTheme<C extends Repaintable> extends Abst
 	}
 
 	public Color getFillColor(Candle candle) {
-		if (candle.isClosePositive()) {
+		return getFillColor(candle.close - candle.open);
+	}
+
+	public Color getSelectionFillColor(Candle candle) {
+		return getSelectionFillColor(candle.close - candle.open);
+	}
+
+	public Color getFillColor(double value) {
+		if (value >= 0) {
 			return getUpFillColor();
 		} else {
 			return getDownFillColor();
 		}
 	}
 
-	public Color getSelectionFillColor(Candle selected) {
-		if (selected.isClosePositive()) {
+	public Color getSelectionFillColor(double value) {
+		if (value >= 0) {
 			return getUpSelectionFillColor();
 		} else {
 			return getDownSelectionFillColor();
