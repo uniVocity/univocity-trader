@@ -6,7 +6,7 @@ public abstract class AbstractRenderer<T extends Theme> implements Renderer<T> {
 
 	private final String description;
 	protected final T theme;
-	private boolean constant = false;
+	private boolean displayValue = true;
 
 
 	public AbstractRenderer(String description, T theme) {
@@ -27,11 +27,11 @@ public abstract class AbstractRenderer<T extends Theme> implements Renderer<T> {
 
 
 	@Override
-	public final boolean constant() {
-		return constant;
+	public final boolean displayValue() {
+		return displayValue;
 	}
 
-	public final void setConstant(boolean constant) {
-		this.constant = constant;
+	public final void displayValue(boolean displayValue) {
+		this.displayValue = displayValue;
 	}
 }

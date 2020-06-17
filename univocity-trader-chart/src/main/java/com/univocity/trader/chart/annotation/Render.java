@@ -14,7 +14,7 @@ public @interface Render {
 	String description () default "";
 	Class<? extends Renderer<?>> renderer () default LineRenderer.class;
 	Class<? extends Theme> theme () default Theme.class;
-	boolean constant() default false;
+	boolean displayValue() default true;
 
 	@Inherited
 	@Retention(RetentionPolicy.RUNTIME)

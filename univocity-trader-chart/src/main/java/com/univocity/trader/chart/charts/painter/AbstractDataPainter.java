@@ -76,17 +76,23 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 			}
 
 			int candleIndex = chart.candleHistory.indexOf(candle);
-			if(candleIndex >= 0) {
+			if (candleIndex >= 0) {
+				int len = headerLine.length();
 				if (renderers.length > 0 && headerLine.length() > 0) {
 					headerLine.append('[');
 				}
 				for (int i = 0; i < renderers.length; i++) {
-					if(!renderers[i].constant()) {
+					if (renderers[i].displayValue()) {
 						renderers[i].updateSelection(candleIndex, candle, candleLocation, chart, g, areaPainter, headerLine);
 					}
 				}
-				if (renderers.length > 0 && headerLine.length() > 0) {
-					headerLine.append(']');
+
+				if (headerLine.length() == len + 1) { //nothing appended by renderers, remove the '['
+					headerLine.deleteCharAt(len);
+				} else {
+					if (renderers.length > 0 && headerLine.length() > 0) {
+						headerLine.append(']');
+					}
 				}
 			}
 		}

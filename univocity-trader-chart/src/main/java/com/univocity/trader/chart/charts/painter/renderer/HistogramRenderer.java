@@ -11,6 +11,7 @@ import java.util.function.*;
 public class HistogramRenderer extends DoubleRenderer<HistogramTheme<?>> {
 
 	private Point previousZeroLineLocation;
+	private double previousValue = Integer.MIN_VALUE;
 
 	public HistogramRenderer(String description, HistogramTheme<?> theme, DoubleSupplier valueSupplier) {
 		super(description, theme, valueSupplier);
@@ -18,13 +19,14 @@ public class HistogramRenderer extends DoubleRenderer<HistogramTheme<?>> {
 
 	@Override
 	public void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {
-		drawBar(i, value, chart, g, painter, theme.getFillColor(value), theme.getLineColor(value));
+		drawBar(i, value, chart, g, painter, getFillColor(theme.getFillColor(value), previousValue, value), getLineColor(theme.getLineColor(value), previousValue, value));
 	}
 
 	@Override
 	protected void updateSelection(int i, double value, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
 		super.updateSelection(i, value, candle, candleLocation, chart, g, painter, headerLine);
-		drawBar(i, value, chart, g, painter, theme.getSelectionFillColor(value), theme.getSelectionLineColor(value));
+		double previousValue = getValueAt(i -1);
+		drawBar(i, value, chart, g, painter, getSelectionFillColor(theme.getSelectionFillColor(value), previousValue, value), getSelectionLineColor(theme.getSelectionLineColor(value), previousValue, value));
 	}
 
 	private void drawBar(int i, double value, BasicChart<?> chart, Graphics2D g, AreaPainter painter, Color fillColor, Color lineColor) {
@@ -37,7 +39,7 @@ public class HistogramRenderer extends DoubleRenderer<HistogramTheme<?>> {
 		int areaHeight = painter.bounds().y + painter.bounds().height;
 		int zeroLineHeight = areaHeight - zeroLineLocation.y;
 		int barHeight = location.y - zeroLineLocation.y;
-		barHeight *= 2.0;
+//		barHeight *= 2.0;
 		if (barHeight == 0 && value != 0) {
 			barHeight = value > 0 ? 1 : -1;
 		}
@@ -60,5 +62,22 @@ public class HistogramRenderer extends DoubleRenderer<HistogramTheme<?>> {
 		}
 		g.drawLine(previousZeroLineLocation.x, previousZeroLineLocation.y, zeroLineLocation.x, zeroLineLocation.y);
 		previousZeroLineLocation = zeroLineLocation;
+		previousValue = value;
+	}
+
+	protected Color getLineColor(Color currentLineColor, double previousValue, double currentValue) {
+		return currentLineColor;
+	}
+
+	protected Color getFillColor(Color currentFillColor, double previousValue, double currentValue) {
+		return currentFillColor;
+	}
+
+	protected Color getSelectionLineColor(Color currentLineColor, double previousValue, double currentValue) {
+		return currentLineColor;
+	}
+
+	protected Color getSelectionFillColor(Color currentFillColor, double previousValue, double currentValue) {
+		return currentFillColor;
 	}
 }

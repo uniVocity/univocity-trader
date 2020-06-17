@@ -36,7 +36,7 @@ public class VisualIndicator extends AreaPainter {
 	public VisualIndicator(Supplier<TimeInterval> interval, IndicatorDefinition indicator) {
 		this.config = indicator;
 		boolean overlay = indicator.overlay;
-		this.overlay = overlay ? Overlay.FRONT : Overlay.NONE;
+		this.overlay = overlay ? Overlay.BACK : Overlay.NONE;
 		this.bounds = overlay ? null : new Rectangle(0, 0, 0, 0);
 		this.interval = interval;
 		if (!overlay) {
@@ -74,7 +74,7 @@ public class VisualIndicator extends AreaPainter {
 
 		int variableCount = 0;
 		for (Renderer r : renderers) {
-			if (!r.constant()) {
+			if (r.displayValue()) {
 				variableCount++;
 			}
 		}
@@ -131,8 +131,8 @@ public class VisualIndicator extends AreaPainter {
 
 				Renderer out;
 				out = rendererType.getConstructor(String.class, theme.getClass(), DoubleSupplier.class).newInstance(description, theme, (DoubleSupplier) () -> invoke(m));
-				if (renderConfig.constant() && out instanceof DoubleRenderer) {
-					((DoubleRenderer<?>) out).setConstant(renderConfig.constant());
+				if (!renderConfig.displayValue() && out instanceof AbstractRenderer) {
+					((AbstractRenderer<?>) out).displayValue(renderConfig.displayValue());
 				}
 				return out;
 			}
@@ -270,7 +270,7 @@ public class VisualIndicator extends AreaPainter {
 		}
 		for (int i = 0, c = 0; i < currentRenderers.length; i++) {
 			Renderer<?> r = currentRenderers[i];
-			if (!r.constant()) {
+			if (r.displayValue()) {
 				values[c] = r.getValueAt(position);
 				c++;
 			}

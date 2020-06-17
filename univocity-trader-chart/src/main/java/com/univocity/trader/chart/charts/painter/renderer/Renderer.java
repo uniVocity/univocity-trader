@@ -25,8 +25,8 @@ public interface Renderer<T extends Theme> {
 
 	void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine);
 
-	default boolean constant(){
-		return false;
+	default boolean displayValue(){
+		return true;
 	}
 
 	default double getMaximumValue(int from, int to) {

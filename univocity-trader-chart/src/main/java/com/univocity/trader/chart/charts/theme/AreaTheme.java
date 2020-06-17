@@ -11,11 +11,11 @@ public class AreaTheme extends AbstractTheme<Repaintable> {
 
 	@Label("Positive color")
 	@ColorBound()
-	private Color positiveColor = new Color(0, 153, 51, 128);
+	private Color positiveColor = new Color(0, 153, 51, 64);
 
 	@Label("Negative color")
 	@ColorBound()
-	private Color negativeColor = new Color(205, 0, 51, 128);
+	private Color negativeColor = new Color(205, 0, 51, 64);
 
 	public AreaTheme(Repaintable chart) {
 		super(chart);

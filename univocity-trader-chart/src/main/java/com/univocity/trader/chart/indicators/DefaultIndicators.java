@@ -3,6 +3,7 @@ package com.univocity.trader.chart.indicators;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.charts.painter.renderer.*;
+import com.univocity.trader.chart.charts.theme.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -25,6 +26,8 @@ public class DefaultIndicators {
 		return Indicators.AverageTrueRange(length, interval);
 	}
 
+	@Underlay
+	@Render(value = "getValue", renderer = HistogramStreakRenderer.class, theme = HistogramTheme.class)
 	public static AwesomeOscillator AwesomeOscillator(@PositiveDefault(5) int lengthShort, @PositiveDefault(14) int lengthLong, TimeInterval interval) {
 		return Indicators.AwesomeOscillator(lengthShort, lengthLong, interval);
 	}
@@ -53,8 +56,8 @@ public class DefaultIndicators {
 
 	@Underlay(min = 0.0, max = 100.0)
 	@Render(value = "getValue")
-	@Render(value = "getHighChoppinessValue", description = "High", constant = true)
-	@Render(value = "getLowChoppinessValue", description = "Low", constant = true)
+	@Render(value = "getHighChoppinessValue", description = "High", displayValue = false)
+	@Render(value = "getLowChoppinessValue", description = "Low", displayValue = false)
 	public static CHOP CHOP(@PositiveDefault(14) int length, @PositiveDefault(value = HIGH_CHOPPINESS_VALUE, maximum = 100.0) double high, @PositiveDefault(value = LOW_CHOPPINESS_VALUE, maximum = 100) double low, TimeInterval interval) {
 		CHOP out = Indicators.CHOP(length, 100, interval);
 		out.setHighChoppinessValue(high);
@@ -99,8 +102,9 @@ public class DefaultIndicators {
 			renderer = AreaRenderer.class,
 			elements = {
 					@Render(value = "getZl", description = "ZL"),
-					@Render(value = "getTrendLine", description = "TrendLine")
+					@Render(value = "getTrendLine", description = "TL")
 			}
+
 	)
 	public static InstantaneousTrendline InstantaneousTrendline(TimeInterval interval, boolean useHilbertTransform) {
 		return Indicators.InstantaneousTrendline(interval, useHilbertTransform);
