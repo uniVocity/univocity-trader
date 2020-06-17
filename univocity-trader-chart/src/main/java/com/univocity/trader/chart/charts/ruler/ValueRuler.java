@@ -3,9 +3,13 @@ package com.univocity.trader.chart.charts.ruler;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
+import com.univocity.trader.chart.charts.painter.*;
+import com.univocity.trader.chart.indicators.*;
+import org.apache.commons.lang3.*;
 
 import java.awt.*;
 import java.text.*;
+import java.util.*;
 
 import static com.univocity.trader.chart.charts.ruler.DrawingProfile.Profile.*;
 
@@ -88,6 +92,37 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 		setProfile(HIGHLIGHT);
 		refY2 = drawPrices(chart, g, location, candle, chart.getHighestPlottedValue(candle), false, refY1, true);
 		refY3 = drawPrices(chart, g, location, candle, chart.getLowestPlottedValue(candle), false, refY1, false);
+
+		for (Painter<?> underlay : chart.underlays()) {
+			if (underlay instanceof VisualIndicator) {
+				VisualIndicator p = (VisualIndicator) underlay;
+				double[] values = p.getCurrentSelectionValues(chart.candleHistory.indexOf(candle));
+				if (values != null) {
+					setProfile(HIGHLIGHT);
+					Arrays.sort(values);
+					ArrayUtils.reverse(values);
+
+					if (values.length > 2) {
+						int middle = values.length / 2;
+						refY1 = drawValue(values[middle], p, chart, g, location, candle, -1, true, true);
+						refY2 = drawValue(values[0], p, chart, g, location, candle, refY1, true, false);
+						refY3 = drawValue(values[values.length - 1], p, chart, g, location, candle, refY1, false, false);
+					} else if (values.length == 2) {
+						refY1 = drawValue(values[0], p, chart, g, location, candle, -1, true, false);
+						refY2 = drawValue(values[1], p, chart, g, location, candle, refY1, false, false);
+					} else {
+						refY1 = drawValue(values[0], p, chart, g, location, candle, -1, false, true);
+					}
+				}
+			}
+		}
+	}
+
+	private int drawValue(double value, VisualIndicator p, BasicChart<?> chart, Graphics2D g, Point location, Candle candle, int refY, boolean drawAboveRef, boolean inMiddle) {
+		Rectangle bounds = p.bounds();
+		int y = bounds.y + p.getYCoordinate(value, bounds.height);
+		refY = drawValues(chart, y, bounds.y + bounds.height, g, location, candle, value, false, refY, drawAboveRef, inMiddle);
+		return refY;
 	}
 
 	@Override
@@ -106,11 +141,14 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 	}
 
 	private int drawPrices(BasicChart<?> chart, Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY, boolean drawAboveRef) {
-		final int y = chart.getYCoordinate(value);
+		int y = chart.getYCoordinate(value);
+		return drawValues(chart, y, chart.getAvailableHeight(), g, location, candle, value, drawInBox, refY, drawAboveRef, false);
+	}
+
+	private int drawValues(BasicChart<?> chart, int y, int height, Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY, boolean drawAboveRef, boolean inMiddle) {
 		final int fontHeight = this.theme().getFontHeight();
 		int stringY = this.theme().centralizeYToFontHeight(y);
 
-		int height = chart.getAvailableHeight();
 		if (stringY + fontHeight > height) {
 			stringY = height - fontHeight;
 		} else if (stringY < 0) {
@@ -129,10 +167,14 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 		int tagWidth = this.theme().getMaxStringWidth(tag, g);
 
 		int x = chart.getBoundaryRight() - tagWidth - this.theme().getRightValueTagSpacing();
-		if (drawInBox) {
-			drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, candle == null ? getBackgroundColor() : candle.isGreen() ? getProfitBackground() : getLossBackground());
+		if (drawInBox || inMiddle) {
+			if (drawInBox) {
+				drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, candle == null ? getBackgroundColor() : candle.isGreen() ? getProfitBackground() : getLossBackground());
+			} else {
+				drawString(x, stringY, tag, g, 1);
+			}
 		} else {
-			if (drawAboveRef) {
+			if (drawAboveRef && refY != -1) {
 				setProfile(SELECTION);
 				drawing(g);
 				g.drawLine(x, stringY, x + chart.getWidth(), stringY);
@@ -140,14 +182,14 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 			setProfile(HIGHLIGHT);
 			text(g);
 			drawString(x, stringY, tag, g, 1);
-			if (!drawAboveRef) {
+			if (!drawAboveRef && refY != -1) {
 				setProfile(SELECTION);
 				drawing(g);
 				g.drawLine(x, stringY + fontHeight, x + chart.getWidth(), stringY + fontHeight);
 			}
 		}
 
-		if (!drawInBox || candle == null) {
+		if ((!drawInBox || candle == null)) {
 			setProfile(HIGHLIGHT);
 			drawing(g);
 			drawLineToPrice(g, fontHeight, location, x, y, stringY);

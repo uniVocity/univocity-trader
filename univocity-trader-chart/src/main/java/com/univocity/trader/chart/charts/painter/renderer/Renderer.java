@@ -19,6 +19,8 @@ public interface Renderer<T extends Theme> {
 
 	void nextValue();
 
+	double getValueAt(int i);
+
 	void paintNext(int i, BasicChart<?> chart, Graphics2D g, AreaPainter painter);
 
 	void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine);

@@ -293,4 +293,8 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 		}
 		return reservedHeight;
 	}
+
+	public List<Painter<?>> underlays(){
+		return painters.get(NONE);
+	}
 }

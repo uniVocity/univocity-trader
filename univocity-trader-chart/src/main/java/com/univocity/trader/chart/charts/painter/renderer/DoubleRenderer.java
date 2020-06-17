@@ -50,6 +50,14 @@ public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 	}
 
 	@Override
+	public final double getValueAt(int i) {
+		if(i < 0 || i > values.length){
+			return Double.MIN_VALUE;
+		}
+		return values[i];
+	}
+
+	@Override
 	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {
 		if (i < values.length) {
 			paintNext(i, values[i], chart, g, painter);

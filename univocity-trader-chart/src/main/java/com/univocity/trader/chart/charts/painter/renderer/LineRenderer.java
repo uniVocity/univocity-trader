@@ -1,5 +1,6 @@
 package com.univocity.trader.chart.charts.painter.renderer;
 
+import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.theme.*;
@@ -26,5 +27,16 @@ public class LineRenderer extends DoubleRenderer<LineTheme<?>> {
 		}
 		g.drawLine(previousLocation.x, previousLocation.y, location.x, location.y);
 		previousLocation = location;
+	}
+
+	@Override
+	protected void updateSelection(int i, double value, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
+		super.updateSelection(i, value, candle, candleLocation, chart, g, painter, headerLine);
+
+		g.setColor(theme.getMarkerColor());
+		int markerWidth = theme.getMarkerWidth();
+
+		Point location = Painter.createCoordinate(chart, painter, i, value);
+		g.fillOval(candleLocation.x - markerWidth / 2, location.y - markerWidth / 2, markerWidth, markerWidth);
 	}
 }

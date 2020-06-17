@@ -31,6 +31,8 @@ public class VisualIndicator extends AreaPainter {
 	private final Rectangle bounds;
 	private final IndicatorDefinition config;
 
+	private double[] values;
+
 	public VisualIndicator(Supplier<TimeInterval> interval, IndicatorDefinition indicator) {
 		this.config = indicator;
 		boolean overlay = indicator.overlay;
@@ -68,7 +70,17 @@ public class VisualIndicator extends AreaPainter {
 			}
 		}
 
-		return out.toArray(Renderer[]::new);
+		Renderer[] renderers = out.toArray(Renderer[]::new);
+
+		int variableCount = 0;
+		for (Renderer r : renderers) {
+			if (!r.constant()) {
+				variableCount++;
+			}
+		}
+
+		values = new double[variableCount];
+		return renderers;
 	}
 
 	private String getDescription(Method m, Render renderConfig) {
@@ -113,8 +125,8 @@ public class VisualIndicator extends AreaPainter {
 
 				Theme theme = themeType.getConstructor(Repaintable.class).newInstance(this);
 				Renderer out = rendererType.getConstructor(String.class, theme.getClass(), DoubleSupplier.class).newInstance(description, theme, (DoubleSupplier) () -> invoke(m));
-				if(renderConfig.constant() && out instanceof DoubleRenderer){
-					((DoubleRenderer<?>)out).setConstant(renderConfig.constant());
+				if (renderConfig.constant() && out instanceof DoubleRenderer) {
+					((DoubleRenderer<?>) out).setConstant(renderConfig.constant());
 				}
 				return out;
 			}
@@ -234,5 +246,19 @@ public class VisualIndicator extends AreaPainter {
 			}
 		}
 		return minimum;
+	}
+
+	public double[] getCurrentSelectionValues(int position) {
+		if (position < 0) {
+			return null;
+		}
+		for (int i = 0, c = 0; i < currentRenderers.length; i++) {
+			Renderer<?> r = currentRenderers[i];
+			if (!r.constant()) {
+				values[c] = r.getValueAt(position);
+				c++;
+			}
+		}
+		return values;
 	}
 }
