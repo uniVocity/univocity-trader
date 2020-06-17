@@ -23,6 +23,10 @@ public interface Renderer<T extends Theme> {
 
 	void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine);
 
+	default boolean constant(){
+		return false;
+	}
+
 	default double getMaximumValue(int from, int to) {
 		return Integer.MIN_VALUE;
 	}
@@ -30,4 +34,5 @@ public interface Renderer<T extends Theme> {
 	default double getMinimumValue(int from, int to) {
 		return Integer.MAX_VALUE;
 	}
+
 }

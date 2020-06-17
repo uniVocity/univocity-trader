@@ -21,7 +21,6 @@ public class VisualIndicator extends AreaPainter {
 
 	private static final LineRenderer[] EMPTY = new LineRenderer[0];
 
-	private final Supplier<Indicator> indicatorSupplier;
 	private Aggregator aggregator;
 	private Indicator indicator;
 	BasicChart<?> chart;
@@ -30,15 +29,14 @@ public class VisualIndicator extends AreaPainter {
 	private Renderer[] currentRenderers = EMPTY;
 	private final Painter.Overlay overlay;
 	private final Rectangle bounds;
-	private Render[] renderConfig;
+	private final IndicatorDefinition config;
 
 	public VisualIndicator(Supplier<TimeInterval> interval, IndicatorDefinition indicator) {
+		this.config = indicator;
 		boolean overlay = indicator.overlay;
 		this.overlay = overlay ? Overlay.FRONT : Overlay.NONE;
 		this.bounds = overlay ? null : new Rectangle(0, 0, 0, 0);
-		this.indicatorSupplier = () -> indicator.create(interval.get());
 		this.interval = interval;
-		this.renderConfig = indicator.renderConfig;
 		if (!overlay) {
 			theme().setDisplayingLogarithmicScale(false);
 		}
@@ -55,7 +53,7 @@ public class VisualIndicator extends AreaPainter {
 		for (Method m : getIndicator().getClass().getMethods()) {
 			Render[] renderConfig = m.getAnnotationsByType(Render.class);
 			if (renderConfig.length == 0) {
-				renderConfig = this.renderConfig;
+				renderConfig = config.renderConfig;
 			}
 			if ((m.getReturnType() == double.class || renderConfig.length > 0) && m.getParameterCount() == 0) {
 				if (renderConfig.length > 0) {
@@ -114,7 +112,11 @@ public class VisualIndicator extends AreaPainter {
 
 
 				Theme theme = themeType.getConstructor(Repaintable.class).newInstance(this);
-				return rendererType.getConstructor(String.class, theme.getClass(), DoubleSupplier.class).newInstance(description, theme, (DoubleSupplier) () -> invoke(m));
+				Renderer out = rendererType.getConstructor(String.class, theme.getClass(), DoubleSupplier.class).newInstance(description, theme, (DoubleSupplier) () -> invoke(m));
+				if(renderConfig.constant() && out instanceof DoubleRenderer){
+					((DoubleRenderer<?>)out).setConstant(renderConfig.constant());
+				}
+				return out;
 			}
 		} catch (Exception e) {
 			throw new IllegalStateException("Error initializing visualization for indicator returned by " + m, e);
@@ -186,31 +188,50 @@ public class VisualIndicator extends AreaPainter {
 
 	private Indicator getIndicator() {
 		if (indicator == null) {
-			indicator = indicatorSupplier.get();
+			indicator = config.create(interval.get());
 		}
 		return indicator;
 	}
 
 	@Override
 	protected void updateMinAndMax(int from, int to) {
-		for (int i = 0; i < currentRenderers.length; i++) {
-			maximum = Math.max(maximum, currentRenderers[i].getMaximumValue(from, to));
-			minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));
+		if (config.max != Double.MAX_VALUE && config.min != Double.MIN_VALUE) {
+			maximum = config.max;
+			minimum = config.min;
+		} else {
+			if (config.max != Double.MAX_VALUE) {
+				maximum = config.max;
+			}
+			if (config.min != Double.MIN_VALUE) {
+				minimum = config.min;
+			}
+			for (int i = 0; i < currentRenderers.length; i++) {
+				maximum = Math.max(maximum, currentRenderers[i].getMaximumValue(from, to));
+				minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));
+			}
 		}
 	}
 
 	@Override
 	public final double maximumValue(int from, int to) {
-		for (int i = 0; i < currentRenderers.length; i++) {
-			maximum = Math.max(maximum, currentRenderers[i].getMaximumValue(from, to));
+		if (config.max != Double.MAX_VALUE) {
+			maximum = config.max;
+		} else {
+			for (int i = 0; i < currentRenderers.length; i++) {
+				maximum = Math.max(maximum, currentRenderers[i].getMaximumValue(from, to));
+			}
 		}
 		return maximum;
 	}
 
 	@Override
 	public final double minimumValue(int from, int to) {
-		for (int i = 0; i < currentRenderers.length; i++) {
-			minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));
+		if (config.min != Double.MIN_VALUE) {
+			minimum = config.min;
+		} else {
+			for (int i = 0; i < currentRenderers.length; i++) {
+				minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));
+			}
 		}
 		return minimum;
 	}

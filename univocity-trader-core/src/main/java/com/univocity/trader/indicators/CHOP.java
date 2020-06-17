@@ -20,6 +20,9 @@ public class CHOP extends SingleValueCalculationIndicator {
 	private final LowestValueIndicator lvi;
 	private final double scaleUpTo;
 
+	private double highChoppinessValue = HIGH_CHOPPINESS_VALUE;
+	private double lowChoppinessValue = LOW_CHOPPINESS_VALUE;
+
 	@Override
 	protected Indicator[] children() {
 		return new Indicator[]{atrIndicator, hvi, lvi};
@@ -67,14 +70,30 @@ public class CHOP extends SingleValueCalculationIndicator {
 	}
 
 	public boolean isMarketTrending() {
-		return isMarketTrending(LOW_CHOPPINESS_VALUE);
+		return isMarketTrending(lowChoppinessValue);
 	}
 
 	public boolean isMarketSideways() {
-		return isMarketSideways(HIGH_CHOPPINESS_VALUE);
+		return isMarketSideways(highChoppinessValue);
 	}
 
 	public boolean isMarketSideways(double highChoppinessValue) {
 		return getValue() > highChoppinessValue;
+	}
+
+	public double getHighChoppinessValue() {
+		return highChoppinessValue;
+	}
+
+	public void setHighChoppinessValue(double highChoppinessValue) {
+		this.highChoppinessValue = highChoppinessValue;
+	}
+
+	public double getLowChoppinessValue() {
+		return lowChoppinessValue;
+	}
+
+	public void setLowChoppinessValue(double lowChoppinessValue) {
+		this.lowChoppinessValue = lowChoppinessValue;
 	}
 }

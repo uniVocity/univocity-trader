@@ -16,6 +16,7 @@ public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 	private final DoubleSupplier valueSupplier;
 	protected final T theme;
 	private final String description;
+	private boolean constant = false;
 
 	public DoubleRenderer(String description, T theme, DoubleSupplier valueSupplier) {
 		this.valueSupplier = valueSupplier;
@@ -105,5 +106,14 @@ public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 			return min;
 		}
 		return Integer.MAX_VALUE;
+	}
+
+	@Override
+	public boolean constant() {
+		return constant;
+	}
+
+	public void setConstant(boolean constant) {
+		this.constant = constant;
 	}
 }

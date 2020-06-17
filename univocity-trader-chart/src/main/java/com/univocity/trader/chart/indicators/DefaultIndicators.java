@@ -9,6 +9,8 @@ import com.univocity.trader.strategy.*;
 
 import java.util.function.*;
 
+import static com.univocity.trader.indicators.CHOP.*;
+
 public class DefaultIndicators {
 
 	public static ADX ADX(@PositiveDefault(14) int diLength, @PositiveDefault(14) int adxLength, TimeInterval interval) {
@@ -27,7 +29,10 @@ public class DefaultIndicators {
 		return Indicators.AwesomeOscillator(lengthShort, lengthLong, interval);
 	}
 
-	@Overlay
+	@Overlay(label = "Bollinger")
+	@Render(value = "getUpperBand", description = "High")
+	@Render(value = "getMiddleBand", description = "Middle")
+	@Render(value = "getLowerBand", description = "Low")
 	public static BollingerBand BollingerBand(@PositiveDefault(12) int length, TimeInterval interval) {
 		return Indicators.BollingerBand(length, interval);
 	}
@@ -46,8 +51,15 @@ public class DefaultIndicators {
 		return Indicators.ChangeIndicator(interval, valueGetter(valueGetter));
 	}
 
-	public static CHOP CHOP(@PositiveDefault(14) int length, TimeInterval interval) {
-		return Indicators.CHOP(length, 100, interval);
+	@Underlay(min = 0.0, max = 100.0)
+	@Render(value = "getValue")
+	@Render(value = "getHighChoppinessValue", description = "High", constant = true)
+	@Render(value = "getLowChoppinessValue", description = "Low", constant = true)
+	public static CHOP CHOP(@PositiveDefault(14) int length, @PositiveDefault(value = HIGH_CHOPPINESS_VALUE, maximum = 100.0) double high, @PositiveDefault(value = LOW_CHOPPINESS_VALUE, maximum = 100) double low, TimeInterval interval) {
+		CHOP out = Indicators.CHOP(length, 100, interval);
+		out.setHighChoppinessValue(high);
+		out.setLowChoppinessValue(low);
+		return out;
 	}
 
 	public static ConnorsRSI ConnorsRSI(@PositiveDefault(3) int rsiLength, @PositiveDefault(2) int streakRsiLength, @PositiveDefault(100) int pctRankLength, TimeInterval interval) {
