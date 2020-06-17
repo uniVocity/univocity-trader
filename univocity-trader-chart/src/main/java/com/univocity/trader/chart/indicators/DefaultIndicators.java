@@ -95,6 +95,12 @@ public class DefaultIndicators {
 	}
 
 	@Overlay
+	@Compose(
+			renderer = AreaRenderer.class,
+			elements = {
+					@Render(value = "getTrendLine", description = "TrendLine"),
+					@Render(value = "getZl", description = "ZL")}
+	)
 	public static InstantaneousTrendline InstantaneousTrendline(TimeInterval interval, boolean useHilbertTransform) {
 		return Indicators.InstantaneousTrendline(interval, useHilbertTransform);
 	}

@@ -9,24 +9,15 @@ import com.univocity.trader.chart.dynamic.*;
 import java.awt.*;
 import java.util.function.*;
 
-public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
+public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T> {
 
 	private double[] values = new double[0];
 	private int i = 0;
 	private final DoubleSupplier valueSupplier;
-	protected final T theme;
-	private final String description;
-	private boolean constant = false;
 
 	public DoubleRenderer(String description, T theme, DoubleSupplier valueSupplier) {
+		super(description, theme);
 		this.valueSupplier = valueSupplier;
-		this.theme = theme;
-		this.description = description;
-	}
-
-	@Override
-	public String description() {
-		return description;
 	}
 
 	@Override
@@ -51,7 +42,7 @@ public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 
 	@Override
 	public final double getValueAt(int i) {
-		if(i < 0 || i > values.length){
+		if (i < 0 || i > values.length) {
 			return Double.MIN_VALUE;
 		}
 		return values[i];
@@ -62,11 +53,6 @@ public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 		if (i < values.length) {
 			paintNext(i, values[i], chart, g, painter);
 		}
-	}
-
-	@Override
-	public final T getTheme() {
-		return theme;
 	}
 
 	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
@@ -116,12 +102,4 @@ public abstract class DoubleRenderer<T extends Theme> implements Renderer<T> {
 		return Integer.MAX_VALUE;
 	}
 
-	@Override
-	public boolean constant() {
-		return constant;
-	}
-
-	public void setConstant(boolean constant) {
-		this.constant = constant;
-	}
 }

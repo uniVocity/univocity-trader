@@ -13,10 +13,11 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 	private final Method factoryMethod;
 	private final Constructor<?> constructor;
 	private final String description;
-	final Render[] renderConfig;
+	final Render[] renders;
 	final boolean overlay;
 	final double min;
 	final double max;
+	Compose compose;
 
 	private IndicatorDefinition(Class<? extends Indicator> indicatorType, Method factoryMethod) {
 		this(indicatorType, null, factoryMethod, factoryMethod.getParameters());
@@ -32,25 +33,31 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 
 		Overlay overlay = null;
 		Underlay underlay = null;
-		Render[] config = null;
+		Render[] rendererList = null;
 		if (factoryMethod != null) {
-			config = factoryMethod.getAnnotationsByType(Render.class);
+			rendererList = factoryMethod.getAnnotationsByType(Render.class);
 			overlay = factoryMethod.getAnnotation(Overlay.class);
 			underlay = factoryMethod.getAnnotation(Underlay.class);
+			compose = factoryMethod.getAnnotation(Compose.class);
 		} else if (constructor != null) {
-			config = indicatorType.getAnnotationsByType(Render.class);
+			rendererList = indicatorType.getAnnotationsByType(Render.class);
 			overlay = indicatorType.getAnnotation(Overlay.class);
 			underlay = indicatorType.getAnnotation(Underlay.class);
+			compose = indicatorType.getAnnotation(Compose.class);
 		}
 
-		if (config == null || config.length == 0) {
-			config = indicatorType.getAnnotationsByType(Render.class);
+		if (compose != null) {
+			rendererList = compose.elements();
+		} else {
+			if (rendererList == null || rendererList.length == 0) {
+				rendererList = indicatorType.getAnnotationsByType(Render.class);
+			}
 		}
 
 		min = underlay == null ? Double.MIN_VALUE : underlay.min();
 		max = underlay == null ? Double.MAX_VALUE : underlay.max();
 
-		renderConfig = config;
+		renders = rendererList;
 
 		StringBuilder tmp = new StringBuilder();
 		for (Parameter p : params) {
@@ -72,8 +79,8 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 		}
 
 		String displayName = overlay != null ? overlay.label() : underlay != null ? underlay.label() : "";
-		if(displayName.isBlank()){
-			 displayName = indicatorType.getSimpleName();
+		if (displayName.isBlank()) {
+			displayName = indicatorType.getSimpleName();
 		}
 		description = displayName + tmp.toString();
 		this.overlay = overlay != null;

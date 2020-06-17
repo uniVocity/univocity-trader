@@ -289,7 +289,7 @@ public abstract class StaticChart<T extends PainterTheme<?>> extends CoordinateM
 		return theme().getBarWidth();
 	}
 
-	private int getSpaceBetweenCandles() {
+	public int getSpaceBetweenCandles() {
 		return theme().getSpaceBetweenBars();
 	}
 

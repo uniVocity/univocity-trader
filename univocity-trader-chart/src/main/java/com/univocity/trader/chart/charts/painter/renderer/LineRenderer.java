@@ -10,7 +10,7 @@ import java.util.function.*;
 
 public class LineRenderer extends DoubleRenderer<LineTheme<?>> {
 
-	private Point previousLocation;
+	Point previousLocation;
 
 	public LineRenderer(String description, LineTheme<?> lineTheme, DoubleSupplier valueSupplier) {
 		super(description, lineTheme, valueSupplier);
@@ -18,15 +18,19 @@ public class LineRenderer extends DoubleRenderer<LineTheme<?>> {
 
 	@Override
 	public void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {
-		g.setStroke(theme.getNormalStroke());
-		g.setColor(theme.getLineColor());
+		if(g != null) {
+			g.setStroke(theme.getNormalStroke());
+			g.setColor(theme.getLineColor());
 
-		Point location = Painter.createCoordinate(chart, painter, i, value);
-		if (i == 0) {
+			Point location = Painter.createCoordinate(chart, painter, i, value);
+			if (i == 0) {
+				previousLocation = location;
+			}
+			g.drawLine(previousLocation.x, previousLocation.y, location.x, location.y);
 			previousLocation = location;
+		} else {
+			previousLocation = Painter.createCoordinate(chart, painter, i, value);
 		}
-		g.drawLine(previousLocation.x, previousLocation.y, location.x, location.y);
-		previousLocation = location;
 	}
 
 	@Override

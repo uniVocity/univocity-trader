@@ -7,14 +7,12 @@ import com.univocity.trader.chart.dynamic.*;
 
 import java.awt.*;
 
-public abstract class CandleRenderer<T extends Theme> implements Renderer<T> {
+public abstract class CandleRenderer<T extends Theme> extends AbstractRenderer<T> {
 
 	private Candle candle;
 
-	protected final T theme;
-
-	public CandleRenderer(T theme) {
-		this.theme = theme;
+	public CandleRenderer(String description, T theme) {
+		super(description, theme);
 	}
 
 	@Override
@@ -30,11 +28,6 @@ public abstract class CandleRenderer<T extends Theme> implements Renderer<T> {
 	@Override
 	public final void nextValue() {
 
-	}
-
-	@Override
-	public final T getTheme() {
-		return theme;
 	}
 
 	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {

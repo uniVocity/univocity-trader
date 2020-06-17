@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.*;
 
 @UIBound
-public class PainterTheme<T extends Repaintable> extends Theme {
+public class PainterTheme<T extends Repaintable> extends AbstractTheme<T> {
 
 	@Label("Bar width")
 	@SpinnerBound(maximum = 20)
@@ -21,8 +21,6 @@ public class PainterTheme<T extends Repaintable> extends Theme {
 	@Label("Bar spacing")
 	@SpinnerBound(minimum = 1, maximum = 20)
 	private int spaceBetweenBars = 1;
-
-	private Stroke normalStroke = new BasicStroke(1);
 
 	@Label("Selection color")
 	@ColorBound()
@@ -34,18 +32,8 @@ public class PainterTheme<T extends Repaintable> extends Theme {
 	@CheckBoxBound("Vertical selection")
 	private boolean verticalSelectionLineEnabled = true;
 
-	@Label("Line stroke")
-	@SpinnerBound(maximum = 10)
-	private int stroke = 1;
-
-	protected T chart;
-
 	public PainterTheme(T chart) {
-		this.chart = chart;
-	}
-
-	public T getChart() {
-		return chart;
+		super(chart);
 	}
 
 	public int getBarWidth() {
@@ -88,28 +76,6 @@ public class PainterTheme<T extends Repaintable> extends Theme {
 		this.verticalSelectionLineEnabled = verticalSelectionLineEnabled;
 	}
 
-	public Stroke getNormalStroke() {
-		return normalStroke;
-	}
-
-	public void setNormalStroke(Stroke normalStroke) {
-		this.normalStroke = normalStroke;
-	}
-
-	public int getStroke() {
-		return stroke;
-	}
-
-	public void setStroke(int stroke) {
-		this.stroke = stroke;
-		this.setNormalStroke(new BasicStroke(stroke));
-	}
-
-	@Override
-	public final void invokeRepaint(){
-		if(chart != null) {
-			chart.invokeRepaint();
-		}
-	}
 }
+
 

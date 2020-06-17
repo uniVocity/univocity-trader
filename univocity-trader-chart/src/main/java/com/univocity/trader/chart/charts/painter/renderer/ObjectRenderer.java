@@ -7,18 +7,17 @@ import com.univocity.trader.chart.dynamic.*;
 import java.awt.*;
 import java.util.function.*;
 
-public abstract class ObjectRenderer<O, T extends Theme> implements Renderer<T> {
+public abstract class ObjectRenderer<O, T extends Theme> extends AbstractRenderer<T> {
 
 	private int i;
 	private O[] objects;
 	private final Supplier<O> valueSupplier;
-	protected final T theme;
 	private final IntFunction<O[]> arrayGenerator;
 
-	public ObjectRenderer(T theme, IntFunction<O[]> arrayGenerator, Supplier<O> valueSupplier) {
+	public ObjectRenderer(String description, T theme, IntFunction<O[]> arrayGenerator, Supplier<O> valueSupplier) {
+		super(description, theme);
 		this.arrayGenerator = arrayGenerator;
 		this.valueSupplier = valueSupplier;
-		this.theme = theme;
 	}
 
 	@Override
@@ -46,11 +45,6 @@ public abstract class ObjectRenderer<O, T extends Theme> implements Renderer<T> 
 		if (i < objects.length) {
 			paintNext(i, objects[i], chart, g, areaPainter);
 		}
-	}
-
-	@Override
-	public final T getTheme() {
-		return theme;
 	}
 
 	protected abstract void paintNext(int i, O value, BasicChart<?> chart, Graphics2D g, AreaPainter areaPainter);

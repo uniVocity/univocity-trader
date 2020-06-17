@@ -55,7 +55,7 @@ public class VisualIndicator extends AreaPainter {
 		for (Method m : getIndicator().getClass().getMethods()) {
 			Render[] renderConfig = m.getAnnotationsByType(Render.class);
 			if (renderConfig.length == 0) {
-				renderConfig = config.renderConfig;
+				renderConfig = config.renders;
 			}
 			if ((m.getReturnType() == double.class || renderConfig.length > 0) && m.getParameterCount() == 0) {
 				if (renderConfig.length > 0) {
@@ -119,6 +119,8 @@ public class VisualIndicator extends AreaPainter {
 						themeType = HistogramTheme.class;
 					} else if (rendererType == MarkerRenderer.class) {
 						themeType = MarkerTheme.class;
+					} else if (rendererType == AreaRenderer.class) {
+						themeType = AreaTheme.class;
 					} else {
 						throw new IllegalStateException("No theme defined for renderer " + rendererType.getSimpleName() + " defined in " + m);
 					}
@@ -126,7 +128,9 @@ public class VisualIndicator extends AreaPainter {
 
 
 				Theme theme = themeType.getConstructor(Repaintable.class).newInstance(this);
-				Renderer out = rendererType.getConstructor(String.class, theme.getClass(), DoubleSupplier.class).newInstance(description, theme, (DoubleSupplier) () -> invoke(m));
+
+				Renderer out;
+				out = rendererType.getConstructor(String.class, theme.getClass(), DoubleSupplier.class).newInstance(description, theme, (DoubleSupplier) () -> invoke(m));
 				if (renderConfig.constant() && out instanceof DoubleRenderer) {
 					((DoubleRenderer<?>) out).setConstant(renderConfig.constant());
 				}
@@ -154,7 +158,17 @@ public class VisualIndicator extends AreaPainter {
 
 	private Painter<CompositeTheme> getIndicatorPainter() {
 		if (indicatorPainter == null) {
-			currentRenderers = createRenderers();
+			Renderer[] renderers = createRenderers();
+
+			if (config.compose != null) {
+				AreaRenderer a = new AreaRenderer(config.compose.description(), new AreaTheme(chart), renderers);
+				currentRenderers = new Renderer[]{a};
+			} else {
+
+				currentRenderers = renderers;
+			}
+
+
 			indicatorPainter = new CompositePainter(indicator.getClass().getSimpleName(), this, this::reset, this::process, currentRenderers);
 		}
 		return indicatorPainter;
