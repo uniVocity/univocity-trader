@@ -12,6 +12,9 @@ public class AreaRenderer extends CompositeRenderer<AreaTheme> {
 	private final LineRenderer line1;
 	private final LineRenderer line2;
 
+	private Point prev1;
+	private Point prev2;
+
 	public AreaRenderer(String description, AreaTheme areaTheme, Renderer[] renderers) {
 		super(description, areaTheme, renderers);
 		this.line1 = (LineRenderer) renderers[0];
@@ -23,32 +26,19 @@ public class AreaRenderer extends CompositeRenderer<AreaTheme> {
 		line1.paintNext(i, chart, null, painter);
 		line2.paintNext(i, chart, null, painter);
 
-		int yTop = line1.previousLocation.y;
-		int yBottom = line2.previousLocation.y;
+		Point p1 = line1.previousLocation;
+		Point p2 = line2.previousLocation;
 
-		int x = line1.previousLocation.x;
+		if (prev1 != null) {
+			g.setColor(p2.y > p1.y ? theme.getNegativeColor() : theme.getPositiveColor());
 
-		int y;
-		int height;
-		Color color;
-		if (yBottom > yTop) {
-			height = yBottom - yTop;
-			color = theme.getNegativeColor();
-			y = yTop;
-		} else {
-			height = yTop - yBottom;
-			color = theme.getPositiveColor();
-			y = yBottom;
+			int[] xPoints = {prev1.x, p1.x, p2.x, prev2.x};
+			int[] yPoints = {prev1.y, p1.y, p2.y, prev2.y};
+
+			g.fillPolygon(xPoints, yPoints, 4);
 		}
-
-		g.setColor(color);
-		g.fillRect(x, y, chart.getBarWidth() + chart.getSpaceBetweenCandles(), height);
-
-//		g.setColor(Color.ORANGE);
-//		int[] xPoints = {x, x + chart.getBarWidth() + chart.getSpaceBetweenCandles()};
-//		int[] yPoints = {y, y + height};
-
-//		g.fillPolygon(xPoints, yPoints, 2);
+		prev1 = p1;
+		prev2 = p2;
 
 	}
 

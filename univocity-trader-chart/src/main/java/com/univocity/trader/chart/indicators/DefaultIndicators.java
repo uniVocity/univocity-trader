@@ -98,8 +98,9 @@ public class DefaultIndicators {
 	@Compose(
 			renderer = AreaRenderer.class,
 			elements = {
-					@Render(value = "getTrendLine", description = "TrendLine"),
-					@Render(value = "getZl", description = "ZL")}
+					@Render(value = "getZl", description = "ZL"),
+					@Render(value = "getTrendLine", description = "TrendLine")
+			}
 	)
 	public static InstantaneousTrendline InstantaneousTrendline(TimeInterval interval, boolean useHilbertTransform) {
 		return Indicators.InstantaneousTrendline(interval, useHilbertTransform);
