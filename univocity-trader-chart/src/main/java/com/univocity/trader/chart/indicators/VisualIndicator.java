@@ -117,6 +117,8 @@ public class VisualIndicator extends AreaPainter {
 						themeType = LineTheme.class;
 					} else if (rendererType == HistogramRenderer.class) {
 						themeType = HistogramTheme.class;
+					} else if (rendererType == MarkerRenderer.class) {
+						themeType = MarkerTheme.class;
 					} else {
 						throw new IllegalStateException("No theme defined for renderer " + rendererType.getSimpleName() + " defined in " + m);
 					}

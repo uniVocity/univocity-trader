@@ -145,6 +145,7 @@ public class DefaultIndicators {
 	}
 
 	@Overlay
+	@Render(renderer = MarkerRenderer.class)
 	public static ParabolicSAR ParabolicSAR(@PositiveDefault(value = 0.02, increment = 0.001) double aF, @PositiveDefault(value = 0.2, increment = 0.001) double maxA, @PositiveDefault(value = 0.02, increment = 0.001) double increment, TimeInterval interval) {
 		return Indicators.ParabolicSAR(aF, maxA, increment, interval);
 	}
