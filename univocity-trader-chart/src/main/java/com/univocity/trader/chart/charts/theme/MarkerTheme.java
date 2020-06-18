@@ -10,7 +10,7 @@ public class MarkerTheme<T extends Repaintable> extends PainterTheme<T> {
 
 	@Label("Marker width")
 	@SpinnerBound(maximum = 20)
-	private int markerWidth = 4;
+	private int markerWidth = 5;
 
 	@Label("Marker color")
 	@ColorBound

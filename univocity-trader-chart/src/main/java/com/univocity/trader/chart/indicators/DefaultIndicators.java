@@ -56,8 +56,8 @@ public class DefaultIndicators {
 
 	@Underlay(min = 0.0, max = 100.0)
 	@Render(value = "getValue")
-	@Render(value = "getHighChoppinessValue", description = "High", displayValue = false)
-	@Render(value = "getLowChoppinessValue", description = "Low", displayValue = false)
+	@Render(value = "getHighChoppinessValue", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
+	@Render(value = "getLowChoppinessValue", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
 	public static CHOP CHOP(@PositiveDefault(14) int length, @PositiveDefault(value = HIGH_CHOPPINESS_VALUE, maximum = 100.0) double high, @PositiveDefault(value = LOW_CHOPPINESS_VALUE, maximum = 100) double low, TimeInterval interval) {
 		CHOP out = Indicators.CHOP(length, 100, interval);
 		out.setHighChoppinessValue(high);
@@ -65,8 +65,15 @@ public class DefaultIndicators {
 		return out;
 	}
 
-	public static ConnorsRSI ConnorsRSI(@PositiveDefault(3) int rsiLength, @PositiveDefault(2) int streakRsiLength, @PositiveDefault(100) int pctRankLength, TimeInterval interval) {
-		return Indicators.ConnorsRSI(rsiLength, streakRsiLength, pctRankLength, interval);
+	@Underlay(min = 0.0, max = 100.0)
+	@Render(value = "getValue")
+	@Render(value = "getUpperBound", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
+	@Render(value = "getLowerBound", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
+	public static ConnorsRSI ConnorsRSI(@PositiveDefault(3) int rsiLength, @PositiveDefault(2) int streakRsiLength, @PositiveDefault(100) int pctRankLength, @PositiveDefault(value = ConnorsRSI.UPPER_BOUND, maximum = 100.0) double high, @PositiveDefault(value = ConnorsRSI.LOWER_BOUND, maximum = 100) double low, TimeInterval interval) {
+		ConnorsRSI out = Indicators.ConnorsRSI(rsiLength, streakRsiLength, pctRankLength, interval);
+		out.setUpperBound(high);
+		out.setLowerBound(low);
+		return out;
 	}
 
 //	public static <T extends SingleValueIndicator> DirectionIndicator<T> DirectionIndicator(T indicator, ToDoubleFunction<T> valueGetter) {
@@ -83,6 +90,8 @@ public class DefaultIndicators {
 		return Indicators.DoubleExponentialMovingAverage(length, interval, valueGetter(valueGetter));
 	}
 
+	@Render(value = "getValue")
+	@Render(constant = 0.0, theme = BoundaryLineTheme.class)
 	public static EldersForceIndex EldersForceIndex(@PositiveDefault(13) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.EldersForceIndex(length, interval, valueGetter(valueGetter));
 	}
@@ -104,7 +113,6 @@ public class DefaultIndicators {
 					@Render(value = "getZl", description = "ZL"),
 					@Render(value = "getTrendLine", description = "TL")
 			}
-
 	)
 	public static InstantaneousTrendline InstantaneousTrendline(TimeInterval interval, boolean useHilbertTransform) {
 		return Indicators.InstantaneousTrendline(interval, useHilbertTransform);
@@ -115,11 +123,17 @@ public class DefaultIndicators {
 		return Indicators.KAMA(barCountEffectiveRatio, barCountFast, barCountSlow, interval, valueGetter(valueGetter));
 	}
 
+	@Render(value = "k")
+	@Render(value = "d")
+	@Render(value = "j")
 	public static KDJ KDJ(@PositiveDefault(3) int dLength, @PositiveDefault(3) int kLength, TimeInterval interval) {
 		return Indicators.KDJ(dLength, kLength, interval);
 	}
 
 	@Overlay
+	@Render(value = "getUpperBand", description = "High")
+	@Render(value = "getMiddleBand", description = "Middle")
+	@Render(value = "getLowerBand", description = "Low")
 	public static KeltnerChannel KeltnerChannel(@PositiveDefault(20) int length, @PositiveDefault(10) int atrLength, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.KeltnerChannel(length, atrLength, interval, valueGetter(valueGetter));
 	}
@@ -165,16 +179,44 @@ public class DefaultIndicators {
 		return Indicators.PVT(interval, valueGetter(valueGetter));
 	}
 
+	@Render(value = "getValue")
+	@Render(constant = 0.0, theme = BoundaryLineTheme.class)
 	public static RateOfChange RateOfChange(@PositiveDefault(12) int length, TimeInterval interval) {
 		return Indicators.RateOfChange(length, interval);
 	}
 
-	public static RSI RSI(@PositiveDefault(14) int length, TimeInterval interval) {
-		return Indicators.RSI(length, interval);
+	@Underlay(min = 0.0, max = 100.0)
+	@Render(value = "getValue")
+	@Render(value = "getUpperBound", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
+	@Render(value = "getLowerBound", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
+	public static RSI RSI(@PositiveDefault(14) int length, @PositiveDefault(value = RSI.UPPER_BOUND, maximum = 100.0) double high, @PositiveDefault(value = RSI.LOWER_BOUND, maximum = 100) double low, TimeInterval interval) {
+		RSI out = Indicators.RSI(length, interval);
+		out.setUpperBound(high);
+		out.setLowerBound(low);
+		return out;
 	}
 
-	public static StochasticRSI StochasticRSI(@PositiveDefault(14) int length, TimeInterval interval) {
-		return Indicators.StochasticRSI(length, interval);
+	@Underlay(min = 0.0, max = 100.0)
+	@Render(value = "getValue")
+	@Render(value = "getUpperBound", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
+	@Render(value = "getLowerBound", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
+	public static StochasticRSI StochasticRSI(@PositiveDefault(14) int length, @PositiveDefault(value = StochasticRSI.UPPER_BOUND, maximum = 100.0) double high, @PositiveDefault(value = StochasticRSI.LOWER_BOUND, maximum = 100) double low, TimeInterval interval) {
+		StochasticRSI out = Indicators.StochasticRSI(length, interval);
+		out.setLowerBound(low);
+		out.setUpperBound(high);
+		return out;
+	}
+
+	@Underlay(min = 0.0, max = 100.0)
+	@Render(value = "k")
+	@Render(value = "d")
+	@Render(value = "getUpperBound", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
+	@Render(value = "getLowerBound", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
+	public static StochasticOscillatorD StochasticOscillator(@PositiveDefault(14) int dLength, @PositiveDefault(14) int kLength, @PositiveDefault(value = StochasticOscillatorD.UPPER_BOUND, maximum = 100.0) double high, @PositiveDefault(value = StochasticOscillatorD.LOWER_BOUND, maximum = 100) double low, TimeInterval interval) {
+		StochasticOscillatorD out = Indicators.StochasticOscillatorD(dLength, kLength, interval);
+		out.setLowerBound(low);
+		out.setUpperBound(high);
+		return out;
 	}
 
 	public static TrueRange TrueRange(TimeInterval interval) {

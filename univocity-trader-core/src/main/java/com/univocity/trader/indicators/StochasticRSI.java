@@ -6,6 +6,11 @@ import com.univocity.trader.strategy.*;
 
 public class StochasticRSI extends SingleValueIndicator {
 
+	public static final double UPPER_BOUND = 80.0;
+	public static final double LOWER_BOUND = 20.0;
+	private double upperBound = UPPER_BOUND;
+	private double lowerBound = LOWER_BOUND;
+
 	private final RSI rsi;
 	private final LowestValueIndicator minRsi;
 	private final HighestValueIndicator maxRsi;
@@ -47,5 +52,29 @@ public class StochasticRSI extends SingleValueIndicator {
 	@Override
 	protected Indicator[] children() {
 		return new Indicator[]{rsi, minRsi, maxRsi};
+	}
+
+	public double min(){
+		return minRsi.getValue();
+	}
+
+	public double max(){
+		return maxRsi.getValue();
+	}
+
+	public double getUpperBound() {
+		return upperBound;
+	}
+
+	public void setUpperBound(double upperBound) {
+		this.upperBound = upperBound;
+	}
+
+	public double getLowerBound() {
+		return lowerBound;
+	}
+
+	public void setLowerBound(double lowerBound) {
+		this.lowerBound = lowerBound;
 	}
 }

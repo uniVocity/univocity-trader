@@ -21,7 +21,7 @@ public class VisualIndicator extends AreaPainter {
 
 	private static final LineRenderer[] EMPTY = new LineRenderer[0];
 
-	private Aggregator aggregator;
+	private Aggregator[] aggregators;
 	private Indicator indicator;
 	BasicChart<?> chart;
 	private final Supplier<TimeInterval> interval;
@@ -50,7 +50,7 @@ public class VisualIndicator extends AreaPainter {
 	}
 
 	private Renderer[] createRenderers() {
-		List<Renderer<?>> out = new ArrayList<>();
+		Map<Integer, Renderer<?>> out = new TreeMap<>();
 
 		for (Method m : getIndicator().getClass().getMethods()) {
 			Render[] renderConfig = m.getAnnotationsByType(Render.class);
@@ -59,18 +59,27 @@ public class VisualIndicator extends AreaPainter {
 			}
 			if ((m.getReturnType() == double.class || renderConfig.length > 0) && m.getParameterCount() == 0) {
 				if (renderConfig.length > 0) {
-					for (Render r : renderConfig) {
-						if (r.value().equals(m.getName())) {
-							out.add(createRenderer(m, r));
+					for (int i = 0; i < renderConfig.length; i++) {
+						Render r = renderConfig[i];
+						if (r.constant() == Double.MIN_VALUE && r.value().equals(m.getName())) {
+							out.put(i, createRenderer(m, r));
 						}
 					}
 				} else {
-					out.add(createRenderer(m, null));
+					out.put(-1, createRenderer(m, null));
 				}
 			}
 		}
 
-		Renderer[] renderers = out.toArray(Renderer[]::new);
+		if(config.renders != null) {
+			for (Render r : config.renders) {
+				if (r.constant() != Double.MIN_VALUE) {
+					out.put(-1, createRenderer(r.constant(), r));
+				}
+			}
+		}
+
+		Renderer[] renderers = out.values().toArray(Renderer[]::new);
 
 		int variableCount = 0;
 		for (Renderer r : renderers) {
@@ -84,6 +93,9 @@ public class VisualIndicator extends AreaPainter {
 	}
 
 	private String getDescription(Method m, Render renderConfig) {
+		if (m == null) {
+			return "";
+		}
 		String description = renderConfig == null ? "" : renderConfig.description();
 
 		if (description.isBlank()) {
@@ -102,37 +114,52 @@ public class VisualIndicator extends AreaPainter {
 		return description;
 	}
 
+	private Renderer createRenderer(double constant, Render renderConfig) {
+		return createRenderer(null, () -> constant, renderConfig);
+	}
+
 	private Renderer createRenderer(Method m, Render renderConfig) {
+		return createRenderer(m, () -> invoke(m), renderConfig);
+	}
+
+	private Renderer createRenderer(Method m, DoubleSupplier supplier, Render renderConfig) {
 		try {
 			String description = getDescription(m, renderConfig);
 			if (renderConfig == null) {
-				if (m.getReturnType() == double.class) {
-					return new LineRenderer(description, new LineTheme<>(this), () -> invoke(m));
+				if (m == null || m.getReturnType() == double.class) {
+					return new LineRenderer(description, new LineTheme<>(this), supplier);
 				}
 			} else {
 				Class<? extends Theme> themeType = renderConfig.theme();
+				Class<? extends Theme> constructorThemeType = null;
 				Class<? extends Renderer<?>> rendererType = renderConfig.renderer();
-				if (themeType == Theme.class) { //try to guess from existing implementations.
-					if (rendererType == LineRenderer.class) {
-						themeType = LineTheme.class;
-					} else if (rendererType == HistogramRenderer.class) {
-						themeType = HistogramTheme.class;
-					} else if (rendererType == MarkerRenderer.class) {
-						themeType = MarkerTheme.class;
-					} else if (rendererType == AreaRenderer.class) {
-						themeType = AreaTheme.class;
-					} else {
+
+				if (rendererType == LineRenderer.class) {
+					constructorThemeType = LineTheme.class;
+				} else if (rendererType == HistogramRenderer.class) {
+					constructorThemeType = HistogramTheme.class;
+				} else if (rendererType == MarkerRenderer.class) {
+					constructorThemeType = MarkerTheme.class;
+				} else if (rendererType == AreaRenderer.class) {
+					constructorThemeType = AreaTheme.class;
+				}
+				if (themeType == Theme.class) {
+					themeType = constructorThemeType;
+					if (themeType == null) {
 						throw new IllegalStateException("No theme defined for renderer " + rendererType.getSimpleName() + " defined in " + m);
 					}
 				}
 
+				if (constructorThemeType == null) {
+					constructorThemeType = themeType;
+				}
 
 				Theme theme = themeType.getConstructor(Repaintable.class).newInstance(this);
 
 				Renderer out;
-				out = rendererType.getConstructor(String.class, theme.getClass(), DoubleSupplier.class).newInstance(description, theme, (DoubleSupplier) () -> invoke(m));
-				if (!renderConfig.displayValue() && out instanceof AbstractRenderer) {
-					((AbstractRenderer<?>) out).displayValue(renderConfig.displayValue());
+				out = rendererType.getConstructor(String.class, constructorThemeType, DoubleSupplier.class).newInstance(description, theme, supplier);
+				if ((m == null || !renderConfig.displayValue()) && out instanceof AbstractRenderer) {
+					((AbstractRenderer<?>) out).displayValue(false);
 				}
 				return out;
 			}
@@ -152,8 +179,10 @@ public class VisualIndicator extends AreaPainter {
 	}
 
 	private void reset() {
-		aggregator = new Aggregator("").getInstance(interval.get());
+		Aggregator aggregator = new Aggregator("").getInstance(interval.get());
 		getIndicator().initialize(aggregator);
+
+		aggregators = aggregator.getAggregators();
 	}
 
 	private Painter<CompositeTheme> getIndicatorPainter() {
@@ -175,7 +204,9 @@ public class VisualIndicator extends AreaPainter {
 	}
 
 	private void process(Candle candle) {
-		aggregator.aggregate(candle);
+		for (int i = 0; i < aggregators.length; i++) {
+			aggregators[i].aggregate(candle);
+		}
 		getIndicator().accumulate(candle);
 	}
 

@@ -11,6 +11,7 @@ import java.lang.annotation.*;
 @Inherited
 public @interface Render {
 	String value () default "getValue";
+	double constant() default Double.MIN_VALUE;
 	String description () default "";
 	Class<? extends Renderer<?>> renderer () default LineRenderer.class;
 	Class<? extends Theme> theme () default Theme.class;

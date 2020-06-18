@@ -97,7 +97,7 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 			if (underlay instanceof VisualIndicator) {
 				VisualIndicator p = (VisualIndicator) underlay;
 				double[] values = p.getCurrentSelectionValues(chart.candleHistory.indexOf(candle));
-				if (values != null) {
+				if (values != null && values.length > 0) {
 					setProfile(HIGHLIGHT);
 					Arrays.sort(values);
 					ArrayUtils.reverse(values);

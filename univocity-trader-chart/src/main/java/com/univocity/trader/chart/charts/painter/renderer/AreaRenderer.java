@@ -1,5 +1,6 @@
 package com.univocity.trader.chart.charts.painter.renderer;
 
+import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.theme.*;
@@ -38,6 +39,9 @@ public class AreaRenderer extends CompositeRenderer<AreaTheme> {
 		}
 		prev1 = p1;
 		prev2 = p2;
+	}
+
+	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
 
 	}
 }

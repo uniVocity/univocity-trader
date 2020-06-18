@@ -6,6 +6,12 @@ import com.univocity.trader.strategy.*;
 
 public class ConnorsRSI extends SingleValueIndicator {
 
+	public static final double UPPER_BOUND = 75.0;
+	public static final double  LOWER_BOUND = 25.0;
+	private double upperBound = UPPER_BOUND;
+	private double lowerBound = LOWER_BOUND;
+
+
 	private RSI rsi;
 	private StreakIndicator streak;
 	private RSI streakRsi;
@@ -50,5 +56,22 @@ public class ConnorsRSI extends SingleValueIndicator {
 			return true;
 		}
 		return false;
+	}
+
+
+	public double getLowerBound() {
+		return lowerBound;
+	}
+
+	public void setLowerBound(double lowerBound) {
+		this.lowerBound = lowerBound;
+	}
+
+	public double getUpperBound() {
+		return upperBound;
+	}
+
+	public void setUpperBound(double upperBound) {
+		this.upperBound = upperBound;
 	}
 }
