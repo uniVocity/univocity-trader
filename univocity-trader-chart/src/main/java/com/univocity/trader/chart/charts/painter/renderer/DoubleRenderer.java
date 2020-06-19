@@ -78,10 +78,9 @@ public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T
 
 	@Override
 	public double getMaximumValue(int from, int to) {
-		to = Math.max(to, values.length);
-		if (from < to) {
+		if (from < to && to <= values.length) {
 			double max = values[from];
-			for (int i = from; i < to && i < values.length; i++) {
+			for (int i = from + 1; i < to; i++) {
 				max = Math.max(values[i], max);
 			}
 			return max;
@@ -91,10 +90,9 @@ public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T
 
 	@Override
 	public double getMinimumValue(int from, int to) {
-		to = Math.max(to, values.length);
-		if (from < to) {
+		if (from < to && to <= values.length) {
 			double min = values[from];
-			for (int i = from; i < to && i < values.length; i++) {
+			for (int i = from + 1; i < to; i++) {
 				min = Math.min(values[i], min);
 			}
 			return min;

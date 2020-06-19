@@ -207,9 +207,8 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 
 			if (overlay == NONE) {
 				reservedHeight = -1;
-				onScrollPositionUpdate(-1);
 			}
-
+			onScrollPositionUpdate(-1);
 			invokeRepaint();
 		}
 	}

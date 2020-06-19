@@ -165,6 +165,7 @@ public class ChartWindow extends JFrame {
 		if (timeIntervalSelector == null) {
 			LineChart selectorChart = new LineChart(getCandleHistory().newView());
 			timeIntervalSelector = new TimeIntervalSelector(getCandleHistory(), selectorChart);
+			timeIntervalSelector.addIntervalListener((f, t) -> getIndicatorSelector().recalculateIndicators());
 		}
 		return timeIntervalSelector;
 	}

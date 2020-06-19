@@ -276,6 +276,7 @@ public class VisualIndicator extends AreaPainter {
 		if (config.max != Double.MAX_VALUE) {
 			maximum = config.max;
 		} else {
+			maximum = Integer.MIN_VALUE;
 			for (int i = 0; i < currentRenderers.length; i++) {
 				maximum = Math.max(maximum, currentRenderers[i].getMaximumValue(from, to));
 			}
@@ -288,6 +289,7 @@ public class VisualIndicator extends AreaPainter {
 		if (config.min != Double.MIN_VALUE) {
 			minimum = config.min;
 		} else {
+			minimum = Integer.MAX_VALUE;
 			for (int i = 0; i < currentRenderers.length; i++) {
 				minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));
 			}

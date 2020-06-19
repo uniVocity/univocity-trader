@@ -80,6 +80,10 @@ public class IndicatorSelector extends JPanel {
 		return cmbIndicators;
 	}
 
+	public void recalculateIndicators() {
+		getIndicatorOptionsPanel().updatePreview(null);
+	}
+
 	public static void main(String... args) {
 		JFrame f = new JFrame();
 		f.setLayout(new BorderLayout());

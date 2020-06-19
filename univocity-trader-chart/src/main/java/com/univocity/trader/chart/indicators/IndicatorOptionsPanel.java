@@ -77,9 +77,11 @@ class IndicatorOptionsPanel extends JPanel {
 	}
 
 
-	private void updatePreview(ActionEvent e) {
-		VisualIndicator old = visualIndicatorPreview;
-		visualIndicatorPreview = new VisualIndicator(interval, indicatorDefinition);
-		SwingUtilities.invokeLater(() -> firePropertyChange(PREVIEW_UPDATED, old, visualIndicatorPreview));
+	void updatePreview(ActionEvent e) {
+		if(indicatorDefinition != null) {
+			VisualIndicator old = visualIndicatorPreview;
+			visualIndicatorPreview = new VisualIndicator(interval, indicatorDefinition);
+			firePropertyChange(PREVIEW_UPDATED, old, visualIndicatorPreview);
+		}
 	}
 }
