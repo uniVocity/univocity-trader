@@ -155,8 +155,8 @@ public class ChartWindow extends JFrame {
 			chart = new CandleChart(getChartHistoryView());
 			chart.canvas.enableScrolling();
 			getCandleHistory().addDataUpdateListener((type) -> getTimeIntervalSelector().dataUpdated(type));
-
 			getTimeIntervalSelector().addIntervalListener(chartHistoryView::updateView);
+			chart.addPainterSelectedListener(painter -> getIndicatorSelector().displayOptionsFor(painter));
 		}
 		return chart;
 	}

@@ -54,7 +54,7 @@ public interface Painter<T extends Theme> extends Repaintable {
 			p.y = chart.getYCoordinate(value);
 		} else {
 			Rectangle bounds = painter.bounds();
-			p.y = chart.getAvailableHeight() + painter.getYCoordinate(value, bounds.height);
+			p.y = bounds.y + painter.getYCoordinate(value, bounds.height);
 		}
 
 		return p;
