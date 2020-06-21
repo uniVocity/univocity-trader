@@ -29,7 +29,7 @@ public class VisualIndicator extends AreaPainter {
 	private Renderer[] currentRenderers = EMPTY;
 	private final Painter.Overlay overlay;
 	private final Rectangle bounds;
-	private final IndicatorDefinition config;
+	final IndicatorDefinition config;
 
 	private double[] values;
 

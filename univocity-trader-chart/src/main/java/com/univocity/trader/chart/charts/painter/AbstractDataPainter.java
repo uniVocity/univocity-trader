@@ -99,6 +99,9 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 	}
 
 	private void processHistoryUpdate(CandleHistory.UpdateType updateType) {
+		if(chart == null){ //painter uninstalled.
+			return;
+		}
 		if (updateType != CandleHistory.UpdateType.INCREMENT) {
 			reset();
 			final int historySize = chart.candleHistory.size();

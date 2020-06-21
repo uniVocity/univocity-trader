@@ -166,6 +166,10 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 		String tag = format(value);
 		int tagWidth = this.theme().getMaxStringWidth(tag, g);
 
+		if(tagWidth > insets.right){
+			tagWidth = insets.right;
+		}
+
 		int x = chart.getBoundaryRight() - tagWidth - this.theme().getRightValueTagSpacing();
 		if (drawInBox || inMiddle) {
 			if (drawInBox) {

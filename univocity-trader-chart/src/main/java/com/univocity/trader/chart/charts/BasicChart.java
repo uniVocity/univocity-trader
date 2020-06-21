@@ -10,6 +10,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 import java.util.*;
+import java.util.function.*;
 
 import static com.univocity.trader.chart.charts.painter.Painter.Overlay.*;
 
@@ -20,6 +21,10 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	private int draggingButton = -1;
 	private int dragStart;
 	private int reservedHeight = -1;
+
+	private Painter<?> hoveredPainter;
+	private Painter<?> selectedPainter;
+	private List<Consumer<Painter<?>>> painterSelectedListeners = new ArrayList<>();
 
 	public BasicChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
@@ -41,6 +46,10 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 					setSelectedCandle(current);
 				} else {
 					setSelectedCandle(null);
+				}
+
+				if (hoveredPainter != null) {
+					setSelectedPainter(hoveredPainter == selectedPainter ? null : hoveredPainter);
 				}
 			}
 
@@ -176,7 +185,21 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 			}
 
 			y += 15;
-			g.setColor(Color.GRAY); //TODO: get from theme.
+			g.setFont(theme().getHoveredHeaderFont());
+			if (mousePosition != null && mousePosition.y >= y - 20 && mousePosition.y <= y + 5) {
+				g.setColor(theme().getSelectedHeaderColor());
+				canvas.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+				hoveredPainter = painter;
+			} else {
+				g.setColor(theme().getHeaderColor());
+				canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				hoveredPainter = null;
+			}
+
+			if (painter == selectedPainter) {
+				g.setFont(theme().getSelectedHeaderFont());
+			}
+
 			g.drawString(header, getBoundaryLeft() + 5, y);
 			y += 5;
 		}
@@ -208,6 +231,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 			if (overlay == NONE) {
 				reservedHeight = -1;
 			}
+			
 			onScrollPositionUpdate(-1);
 			invokeRepaint();
 		}
@@ -293,7 +317,18 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 		return reservedHeight;
 	}
 
-	public List<Painter<?>> underlays(){
+	public List<Painter<?>> underlays() {
 		return painters.get(NONE);
+	}
+
+	public void addPainterSelectedListener(Consumer<Painter<?>> listener) {
+		painterSelectedListeners.add(listener);
+	}
+
+	private void setSelectedPainter(Painter<?> painter) {
+		this.selectedPainter = painter;
+		if (painter != null) {
+			painterSelectedListeners.forEach(c -> c.accept(painter));
+		}
 	}
 }
