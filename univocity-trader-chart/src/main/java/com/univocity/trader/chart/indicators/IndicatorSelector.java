@@ -156,6 +156,11 @@ public class IndicatorSelector extends JPanel {
 		editing = preview = i;
 		getCmbIndicators().getModel().setSelectedItem(i.config);
 		getCmbIndicators().setEnabled(false);
+
+		addingIndicator();
+		getBtAdd().setText("Update");
+		getBtAdd().setEnabled(true);
+		getBtRemove().setEnabled(true);
 	}
 
 	void updatePreview() {

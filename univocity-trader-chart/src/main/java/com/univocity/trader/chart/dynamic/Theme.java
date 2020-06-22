@@ -1,13 +1,13 @@
 package com.univocity.trader.chart.dynamic;
 
-import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.annotation.Label;
+import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.charts.painter.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -22,6 +22,8 @@ public abstract class Theme implements Repaintable {
 	@Label("Background color")
 	@ColorBound()
 	private Color backgroundColor = new Color(255, 255, 255);
+
+	private Color transparentBackgroundColor;
 
 	private JPanel controlPanel;
 
@@ -67,6 +69,13 @@ public abstract class Theme implements Repaintable {
 		return backgroundColor;
 	}
 
+	public Color getTransparentBackgroundColor() {
+		if (transparentBackgroundColor == null) {
+			this.transparentBackgroundColor = new Color(backgroundColor.getRed(), backgroundColor.getBlue(), backgroundColor.getGreen(), 196);
+		}
+		return transparentBackgroundColor;
+	}
+
 	public List<JMenu> getMenuOptions() {
 		ArrayList<JMenu> options = new ArrayList<JMenu>();
 		return options;
@@ -81,6 +90,7 @@ public abstract class Theme implements Repaintable {
 
 	public void setBackgroundColor(Color backgroundColor) {
 		this.backgroundColor = backgroundColor;
+		this.transparentBackgroundColor = null;
 	}
 
 	public JPanel getThemeSettingsPanel() {

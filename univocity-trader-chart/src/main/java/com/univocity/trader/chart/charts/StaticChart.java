@@ -87,8 +87,14 @@ public abstract class StaticChart<T extends PainterTheme<?>> extends CoordinateM
 		int imgFrom = imgTo - getWidth();
 		g.drawImage(image, 0, 0, getWidth(), getHeight(), imgFrom, 0, imgTo, getHeight(), null);
 
+		paintOver(g);
+
 		lastPaint = System.currentTimeMillis();
 	}
+
+	protected void paintOver(Graphics2D g){
+
+	};
 
 	public int getBoundaryLeft() {
 		return canvas.getBoundaryLeft();

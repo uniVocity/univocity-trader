@@ -5,6 +5,7 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
 import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.theme.*;
+import com.univocity.trader.chart.gui.*;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -92,6 +93,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 				if (candle != getCurrentCandle()) {
 					setCurrentCandle(candle);
 				}
+				invokeRepaint();
 			}
 		});
 
@@ -166,8 +168,11 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 		}
 
 		runPainters(g, Painter.Overlay.FRONT, width);
+	}
 
+	protected void paintOver(Graphics2D g) {
 		int y = 0;
+		this.hoveredPainter = null;
 		y = printPainterHeaders(Painter.Overlay.BACK, g, y);
 		y = printPainterHeaders(Painter.Overlay.FRONT, g, y);
 		printPainterHeaders(NONE, g, y);
@@ -185,24 +190,29 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 			}
 
 			y += 15;
-			g.setFont(theme().getHoveredHeaderFont());
+			Font font = theme().getHoveredHeaderFont();
+			Color headerColor = theme().getHeaderColor();
 			if (mousePosition != null && mousePosition.y >= y - 20 && mousePosition.y <= y + 5) {
-				g.setColor(theme().getSelectedHeaderColor());
-				canvas.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+				headerColor = theme().getSelectedHeaderColor();
 				hoveredPainter = painter;
-			} else {
-				g.setColor(theme().getHeaderColor());
-				canvas.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-				hoveredPainter = null;
 			}
 
 			if (painter == selectedPainter) {
-				g.setFont(theme().getSelectedHeaderFont());
+				font = theme().getSelectedHeaderFont();
 			}
 
-			g.drawString(header, getBoundaryLeft() + 5, y);
+			if (hoveredPainter == painter) {
+				GraphicUtils.drawStringInBox(5, y, header, g, 1, theme().getTransparentBackgroundColor(), font, headerColor);
+			} else {
+				g.setFont(font);
+				g.setColor(headerColor);
+				g.drawString(header, 5, y);
+			}
+
 			y += 5;
 		}
+
+		this.canvas.setCursor(Cursor.getPredefinedCursor(hoveredPainter == null ? Cursor.DEFAULT_CURSOR : Cursor.HAND_CURSOR));
 
 		return y;
 	}
@@ -231,7 +241,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 			if (overlay == NONE) {
 				reservedHeight = -1;
 			}
-			
+
 			onScrollPositionUpdate(-1);
 			invokeRepaint();
 		}
