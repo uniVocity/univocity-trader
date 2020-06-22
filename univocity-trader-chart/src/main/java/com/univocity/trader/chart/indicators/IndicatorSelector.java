@@ -5,9 +5,9 @@ import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
 import javax.swing.*;
+import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.*;
 import java.util.List;
 import java.util.*;
 import java.util.function.*;
@@ -24,7 +24,30 @@ public class IndicatorSelector extends JPanel {
 	private JButton btAdd;
 	private JButton btRemove;
 
-	private VisualIndicator visualIndicatorPreview;
+	private VisualIndicator editing;
+	private VisualIndicator preview;
+
+	private class Updater implements ChangeListener, ItemListener, ActionListener{
+		@Override
+		public void stateChanged(ChangeEvent e) {
+			indicatorChanged();
+			Object source = e.getSource();
+			if(source instanceof JSpinner){
+				((JSpinner)source).requestFocus();
+			}
+		}
+
+		@Override
+		public void itemStateChanged(ItemEvent e) {
+			indicatorChanged();
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			indicatorChanged();
+		}
+	}
+	final Updater previewUpdater = new Updater();
 
 	private final List<IndicatorListener> indicatorListenerList = new ArrayList<>();
 
@@ -62,7 +85,7 @@ public class IndicatorSelector extends JPanel {
 
 	private JButton getBtAdd() {
 		if (btAdd == null) {
-			btAdd = new JButton("Add");
+			btAdd = new JButton("New indicator");
 			btAdd.addActionListener(e -> addIndicator());
 		}
 		return btAdd;
@@ -71,7 +94,8 @@ public class IndicatorSelector extends JPanel {
 	private JButton getBtRemove() {
 		if (btRemove == null) {
 			btRemove = new JButton("Remove");
-			btRemove.addActionListener(this::updatePreview);
+			btRemove.addActionListener(e -> removeIndicator());
+			btRemove.setEnabled(false);
 		}
 		return btRemove;
 	}
@@ -79,7 +103,7 @@ public class IndicatorSelector extends JPanel {
 
 	private IndicatorOptionsPanel getIndicatorOptionsPanel() {
 		if (indicatorOptions == null) {
-			indicatorOptions = new IndicatorOptionsPanel();
+			indicatorOptions = new IndicatorOptionsPanel(this);
 		}
 		return indicatorOptions;
 	}
@@ -111,13 +135,14 @@ public class IndicatorSelector extends JPanel {
 		if (cmbIndicators == null) {
 			indicators = new DefaultComboBoxModel<>();
 			cmbIndicators = new JComboBox<>(indicators);
-			cmbIndicators.addItemListener(this::indicatorChanged);
+			cmbIndicators.addItemListener(previewUpdater);
+			cmbIndicators.setEnabled(false);
 		}
 		return cmbIndicators;
 	}
 
 	public void recalculateIndicators() {
-		updatePreview((ActionEvent) null);
+		updatePreview();
 	}
 
 
@@ -128,39 +153,78 @@ public class IndicatorSelector extends JPanel {
 	}
 
 	public void displayOptionsFor(VisualIndicator i) {
-		visualIndicatorPreview = i;
+		editing = preview = i;
 		getCmbIndicators().getModel().setSelectedItem(i.config);
+		getCmbIndicators().setEnabled(false);
 	}
 
-	void updatePreview(ActionEvent e) {
-		indicatorChanged(null);
+	void updatePreview() {
+		SwingUtilities.invokeLater(this::indicatorChanged);
 	}
 
 	private void fireIndicatorUpdated(boolean preview, VisualIndicator old, VisualIndicator newIndicator) {
 		indicatorListenerList.forEach(l -> l.indicatorUpdated(preview, old, newIndicator));
 	}
 
-	private void indicatorChanged(ItemEvent e) {
+	private void indicatorChanged() {
 		IndicatorDefinition indicatorDefinition = (IndicatorDefinition) cmbIndicators.getSelectedItem();
 		if (getIndicatorOptionsPanel().updateIndicator(indicatorDefinition)) {
 			updatePreview(indicatorDefinition);
+			getBtAdd().setEnabled(true);
 		}
 	}
 
 	void updatePreview(IndicatorDefinition indicatorDefinition) {
 		if (indicatorDefinition != null) {
-			VisualIndicator old = visualIndicatorPreview;
-			visualIndicatorPreview = new VisualIndicator(timeInterval, indicatorDefinition);
-			fireIndicatorUpdated(true, old, visualIndicatorPreview);
+			VisualIndicator old = preview;
+			preview = new VisualIndicator(timeInterval, indicatorDefinition);
+			fireIndicatorUpdated(true, old, preview);
 		}
 	}
 
 	void addIndicator() {
-		if (visualIndicatorPreview != null) {
-			fireIndicatorUpdated(true, visualIndicatorPreview, null); //remove preview
-			fireIndicatorUpdated(false, null, new VisualIndicator(timeInterval, visualIndicatorPreview.config)); //add "persistent" indicator
-			getCmbIndicators().setSelectedItem(null);
+		if (preview != null) {
+			fireIndicatorUpdated(true, preview, null); //remove preview
+			fireIndicatorUpdated(false, null, new VisualIndicator(timeInterval, preview.config)); //add "persistent" indicator
+			editingStopped();
+		} else {
+			addingIndicator();
 		}
+
+		editing = null;
+		preview = null;
+	}
+
+	private void addingIndicator(){
+		getBtAdd().setText("Add");
+		getBtAdd().setEnabled(false); //enable after selecting indicator
+
+		getBtRemove().setText("Cancel");
+		getBtRemove().setEnabled(true);
+
+		getCmbIndicators().setEnabled(true);
+	}
+
+	private void editingStopped(){
+		getBtAdd().setText("New Indicator");
+		getBtAdd().setEnabled(true);
+
+		getBtRemove().setText("Remove");
+		getBtRemove().setEnabled(false);
+
+		getCmbIndicators().setSelectedItem(null);
+		getCmbIndicators().setEnabled(false);
+	}
+
+	void removeIndicator() {
+		if (preview != null) {
+			fireIndicatorUpdated(false, preview, null);
+		}
+
+		editingStopped();
+
+		preview = null;
+		editing = null;
 	}
 
 	public static void main(String... args) {

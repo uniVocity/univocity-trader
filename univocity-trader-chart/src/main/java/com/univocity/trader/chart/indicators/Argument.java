@@ -52,20 +52,20 @@ public class Argument {
 		}
 	}
 
-	JComponent getComponent() {
+	JComponent getComponent(IndicatorSelector indicatorSelector) {
 		if (input == null) {
 			if (inputType == double.class || inputType == Double.class || inputType == float.class || inputType == Float.class || inputType == BigDecimal.class) {
-				input = getFloatingPointInput();
+				input = getFloatingPointInput(indicatorSelector);
 			} else if (inputType == long.class || inputType == Long.class || inputType == int.class || inputType == Integer.class || inputType == short.class || inputType == Short.class || inputType == byte.class || inputType == Byte.class) {
-				input = getNumericInput();
+				input = getNumericInput(indicatorSelector);
 			} else if (inputType == boolean.class || inputType == Boolean.class) {
-				input = getBooleanInput();
+				input = getBooleanInput(indicatorSelector);
 			}
 		}
 		return input;
 	}
 
-	private JSpinner getFloatingPointInput() {
+	private JSpinner getFloatingPointInput(IndicatorSelector indicatorSelector) {
 		SpinnerNumberModel model = new SpinnerNumberModel();
 		model.setMaximum(maximum);
 		model.setMinimum(minimum);
@@ -73,10 +73,11 @@ public class Argument {
 		model.setStepSize(increment);
 		JSpinner out = new JSpinner(model);
 		valueGetter = out::getValue;
+		out.addChangeListener(indicatorSelector.previewUpdater);
 		return out;
 	}
 
-	private JSpinner getNumericInput() {
+	private JSpinner getNumericInput(IndicatorSelector indicatorSelector) {
 		SpinnerNumberModel model = new SpinnerNumberModel();
 		model.setMaximum((int) maximum);
 		model.setMinimum((int) minimum);
@@ -84,12 +85,14 @@ public class Argument {
 		model.setStepSize((int) increment);
 		JSpinner out = new JSpinner(model);
 		valueGetter = out::getValue;
+		out.addChangeListener(indicatorSelector.previewUpdater);
 		return out;
 	}
 
-	private JCheckBox getBooleanInput() {
+	private JCheckBox getBooleanInput(IndicatorSelector indicatorSelector) {
 		JCheckBox out = new JCheckBox();
 		valueGetter = out::isSelected;
+		out.addActionListener(indicatorSelector.previewUpdater);
 		return out;
 	}
 

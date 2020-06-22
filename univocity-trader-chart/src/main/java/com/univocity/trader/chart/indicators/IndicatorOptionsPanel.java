@@ -12,9 +12,11 @@ class IndicatorOptionsPanel extends JPanel {
 
 	private IndicatorDefinition indicatorDefinition;
 	private GridBagConstraints c;
+	private final IndicatorSelector indicatorSelector;
 
-	public IndicatorOptionsPanel() {
+	public IndicatorOptionsPanel(IndicatorSelector indicatorSelector) {
 		super(new GridBagLayout());
+		this.indicatorSelector = indicatorSelector;
 	}
 
 	public boolean updateIndicator(IndicatorDefinition indicatorDefinition) {
@@ -43,7 +45,7 @@ class IndicatorOptionsPanel extends JPanel {
 
 	private void addComponent(Argument argument) {
 		JLabel lbl = new JLabel(argument.name);
-		JComponent input = argument.getComponent();
+		JComponent input = argument.getComponent(indicatorSelector);
 
 		if (input != null) {
 			c.gridx = 0;
