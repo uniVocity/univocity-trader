@@ -110,7 +110,7 @@ public abstract class StaticChart<T extends PainterTheme<?>> extends CoordinateM
 		int from = firstVisibleCandle == null ? 0 : candleHistory.indexOf(firstVisibleCandle);
 		int to = lastVisibleCandle == null ? candleHistory.size() : candleHistory.indexOf(lastVisibleCandle);
 
-		updateEdgeValues(from, to);
+		updateEdgeValues(theme.isDisplayingLogarithmicScale(), from, to);
 		invokeRepaint();
 	}
 
@@ -139,7 +139,7 @@ public abstract class StaticChart<T extends PainterTheme<?>> extends CoordinateM
 	}
 
 	@Override
-	protected final void updateMinAndMax(int from, int to) {
+	protected final void updateMinAndMax(boolean logScale, int from, int to) {
 		onScrollPositionUpdate();
 		for (int i = from; i < to; i++) {
 			Candle candle = candleHistory.get(i);

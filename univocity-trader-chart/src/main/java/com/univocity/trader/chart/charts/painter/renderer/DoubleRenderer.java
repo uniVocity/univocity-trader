@@ -14,10 +14,13 @@ public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T
 	private double[] values = new double[0];
 	private int i = 0;
 	private final DoubleSupplier valueSupplier;
+	private boolean log;
+	private double min;
 
 	public DoubleRenderer(String description, T theme, DoubleSupplier valueSupplier) {
 		super(description, theme);
 		this.valueSupplier = valueSupplier;
+		log = theme.isDisplayingLogarithmicScale();
 	}
 
 	@Override
@@ -50,8 +53,13 @@ public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T
 
 	@Override
 	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {
+		log = theme.isDisplayingLogarithmicScale() && chart.theme().isDisplayingLogarithmicScale();
 		if (i < values.length) {
-			paintNext(i, values[i], chart, g, painter);
+			double value = values[i];
+			if (log && value <= 0) {
+				value = this.min;
+			}
+			paintNext(i, value, chart, g, painter);
 		}
 	}
 
@@ -89,15 +97,17 @@ public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T
 	}
 
 	@Override
-	public double getMinimumValue(int from, int to) {
+	public double getMinimumValue(boolean logScale, int from, int to) {
+		min = Integer.MAX_VALUE;
 		if (from < to && to <= values.length) {
-			double min = values[from];
-			for (int i = from + 1; i < to; i++) {
-				min = Math.min(values[i], min);
+			for (int i = from; i < to; i++) {
+				double v = values[i];
+				if (!logScale || v > 0) {
+					min = Math.min(v, min);
+				}
 			}
-			return min;
 		}
-		return Integer.MAX_VALUE;
+		return min;
 	}
 
 }

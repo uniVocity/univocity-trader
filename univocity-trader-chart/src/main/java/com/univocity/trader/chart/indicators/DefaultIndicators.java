@@ -81,6 +81,9 @@ public class DefaultIndicators {
 //	}
 
 	@Overlay
+	@Render(value = "getUpperBand", description = "High")
+	@Render(value = "getMiddleBand", description = "Middle")
+	@Render(value = "getLowerBand", description = "Low")
 	public static DonchianChannel DonchianChannel(@PositiveDefault(12) int length, TimeInterval interval) {
 		return Indicators.DonchianChannel(length, interval);
 	}

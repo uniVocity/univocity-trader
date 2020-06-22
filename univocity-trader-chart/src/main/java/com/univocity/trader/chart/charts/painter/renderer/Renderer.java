@@ -33,7 +33,7 @@ public interface Renderer<T extends Theme> {
 		return Integer.MIN_VALUE;
 	}
 
-	default double getMinimumValue(int from, int to) {
+	default double getMinimumValue(boolean logScale, int from, int to) {
 		return Integer.MAX_VALUE;
 	}
 

@@ -16,11 +16,11 @@ public abstract class CoordinateManager {
 		return minimum;
 	}
 
-	public void updateEdgeValues(int from, int to) {
+	public void updateEdgeValues(boolean logScale, int from, int to) {
 		minimum = Integer.MAX_VALUE;
 		maximum = Integer.MIN_VALUE;
 
-		updateMinAndMax(from, to);
+		updateMinAndMax(logScale, from, to);
 		// avoids touching upper and lower limits of the chart
 		minimum = minimum * 0.995;
 		maximum = maximum * 1.0005;
@@ -32,7 +32,7 @@ public abstract class CoordinateManager {
 		updateLogarithmicData();
 	}
 
-	protected abstract void updateMinAndMax(int from, int to);
+	protected abstract void updateMinAndMax(boolean logScale, int from, int to);
 
 	private void updateLogarithmicData() {
 		logLow = Math.log10(minimum);

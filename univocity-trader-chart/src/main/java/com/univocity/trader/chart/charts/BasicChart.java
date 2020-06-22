@@ -259,11 +259,11 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	}
 
 	@Override
-	public void updateEdgeValues(int from, int to) {
-		super.updateEdgeValues(from, to);
+	public void updateEdgeValues(boolean logScale, int from, int to) {
+		super.updateEdgeValues(logScale, from, to);
 		List<Painter<?>> p = painters.get(NONE);
 		for (int i = 0; i < p.size(); i++) {
-			((AreaPainter) p.get(i)).updateEdgeValues(from, to);
+			((AreaPainter) p.get(i)).updateEdgeValues(false, from, to);
 		}
 	}
 
@@ -287,18 +287,23 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 
 	@Override
 	public double getMinimum(int from, int to) {
-		List<Painter<?>> p;
-		p = painters.get(Painter.Overlay.FRONT);
 		double minimum = super.getMinimum(from, to);
-		for (int i = 0; i < p.size(); i++) {
-			minimum = Math.min(p.get(i).minimumValue(from, to), minimum);
-		}
+		boolean logScale = theme().isDisplayingLogarithmicScale();
 
-		p = painters.get(Painter.Overlay.BACK);
-		for (int i = 0; i < p.size(); i++) {
-			minimum = Math.min(p.get(i).minimumValue(from, to), minimum);
-		}
+		minimum = getMinimum(minimum, Painter.Overlay.FRONT, from, to, logScale);
+		minimum = getMinimum(minimum, Painter.Overlay.BACK, from, to, logScale);
 
+		return minimum;
+	}
+
+	private double getMinimum(double minimum, Painter.Overlay overlay, int from, int to, boolean logScale) {
+		List<Painter<?>> p = painters.get(overlay);
+		for (int i = 0; i < p.size(); i++) {
+			double min = p.get(i).minimumValue(logScale, from, to);
+			if (!logScale || min > 0) {
+				minimum = Math.min(min, minimum);
+			}
+		}
 		return minimum;
 	}
 

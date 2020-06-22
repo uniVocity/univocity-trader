@@ -13,7 +13,6 @@ import org.apache.commons.lang3.*;
 
 import java.awt.*;
 import java.lang.reflect.*;
-import java.util.List;
 import java.util.*;
 import java.util.function.*;
 
@@ -71,7 +70,7 @@ public class VisualIndicator extends AreaPainter {
 			}
 		}
 
-		if(config.renders != null) {
+		if (config.renders != null) {
 			for (Render r : config.renders) {
 				if (r.constant() != Double.MIN_VALUE) {
 					out.put(-1, createRenderer(r.constant(), r));
@@ -124,9 +123,6 @@ public class VisualIndicator extends AreaPainter {
 
 	private Renderer createRenderer(Method m, DoubleSupplier supplier, Render renderConfig) {
 		try {
-			if(overlay != Overlay.NONE){
-				supplier = new NonNegativeDoubleSupplier(supplier);
-			}
 			String description = getDescription(m, renderConfig);
 			if (renderConfig == null) {
 				if (m == null || m.getReturnType() == double.class) {
@@ -256,7 +252,7 @@ public class VisualIndicator extends AreaPainter {
 	}
 
 	@Override
-	protected void updateMinAndMax(int from, int to) {
+	protected void updateMinAndMax(boolean logScale, int from, int to) {
 		if (config.max != Double.MAX_VALUE && config.min != Double.MIN_VALUE) {
 			maximum = config.max;
 			minimum = config.min;
@@ -269,7 +265,7 @@ public class VisualIndicator extends AreaPainter {
 			}
 			for (int i = 0; i < currentRenderers.length; i++) {
 				maximum = Math.max(maximum, currentRenderers[i].getMaximumValue(from, to));
-				minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));
+				minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(logScale, from, to));
 			}
 		}
 	}
@@ -288,13 +284,14 @@ public class VisualIndicator extends AreaPainter {
 	}
 
 	@Override
-	public final double minimumValue(int from, int to) {
+	public final double minimumValue(boolean logScale, int from, int to) {
 		if (config.min != Double.MIN_VALUE) {
 			minimum = config.min;
 		} else {
+			logScale &= theme().isDisplayingLogarithmicScale();
 			minimum = Integer.MAX_VALUE;
 			for (int i = 0; i < currentRenderers.length; i++) {
-				minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(from, to));
+				minimum = Math.min(minimum, currentRenderers[i].getMinimumValue(logScale, from, to));
 			}
 		}
 		return minimum;
