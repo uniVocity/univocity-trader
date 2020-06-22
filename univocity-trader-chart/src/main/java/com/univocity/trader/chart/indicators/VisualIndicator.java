@@ -124,6 +124,9 @@ public class VisualIndicator extends AreaPainter {
 
 	private Renderer createRenderer(Method m, DoubleSupplier supplier, Render renderConfig) {
 		try {
+			if(overlay != Overlay.NONE){
+				supplier = new NonNegativeDoubleSupplier(supplier);
+			}
 			String description = getDescription(m, renderConfig);
 			if (renderConfig == null) {
 				if (m == null || m.getReturnType() == double.class) {
