@@ -78,6 +78,8 @@ public class VisualIndicator extends AreaPainter {
 			}
 		}
 
+		out.put(-1, new SignalRenderer("Signal", new AreaTheme(chart), indicator)); //TODO implement proper theme
+
 		Renderer[] renderers = out.values().toArray(Renderer[]::new);
 
 		int variableCount = 0;

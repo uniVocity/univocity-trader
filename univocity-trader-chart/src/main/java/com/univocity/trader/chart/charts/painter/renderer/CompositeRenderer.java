@@ -24,16 +24,16 @@ public abstract class CompositeRenderer<T extends Theme> extends AbstractRendere
 	}
 
 	@Override
-	public final void updateValue() {
+	public final void updateValue(Candle candle) {
 		for (int i = 0; i < renderers.length; i++) {
-			renderers[i].updateValue();
+			renderers[i].updateValue(candle);
 		}
 	}
 
 	@Override
-	public final void nextValue() {
+	public final void nextValue(Candle candle) {
 		for (int i = 0; i < renderers.length; i++) {
-			renderers[i].nextValue();
+			renderers[i].nextValue(candle);
 		}
 	}
 

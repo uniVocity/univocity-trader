@@ -30,14 +30,14 @@ public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T
 	}
 
 	@Override
-	public final void updateValue() {
+	public final void updateValue(Candle candle) {
 		if (i < values.length) {
 			values[i] = valueSupplier.getAsDouble();
 		}
 	}
 
 	@Override
-	public final void nextValue() {
+	public final void nextValue(Candle candle) {
 		if (i < values.length) {
 			values[i++] = valueSupplier.getAsDouble();
 		}

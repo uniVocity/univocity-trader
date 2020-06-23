@@ -1,5 +1,6 @@
 package com.univocity.trader.chart.charts.painter.renderer;
 
+import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.dynamic.*;
@@ -10,11 +11,11 @@ import java.util.function.*;
 public abstract class ObjectRenderer<O, T extends Theme> extends AbstractRenderer<T> {
 
 	private int i;
-	private O[] objects;
-	private final Supplier<O> valueSupplier;
+	protected O[] objects;
+	private final Function<Candle, O> valueSupplier;
 	private final IntFunction<O[]> arrayGenerator;
 
-	public ObjectRenderer(String description, T theme, IntFunction<O[]> arrayGenerator, Supplier<O> valueSupplier) {
+	public ObjectRenderer(String description, T theme, IntFunction<O[]> arrayGenerator, Function<Candle, O> valueSupplier) {
 		super(description, theme);
 		this.arrayGenerator = arrayGenerator;
 		this.valueSupplier = valueSupplier;
@@ -27,16 +28,16 @@ public abstract class ObjectRenderer<O, T extends Theme> extends AbstractRendere
 	}
 
 	@Override
-	public final void updateValue() {
+	public final void updateValue(Candle candle) {
 		if (i < objects.length) {
-			objects[i] = valueSupplier.get();
+			objects[i] = valueSupplier.apply(candle);
 		}
 	}
 
 	@Override
-	public final void nextValue() {
+	public final void nextValue(Candle candle) {
 		if (i < objects.length) {
-			objects[i++] = valueSupplier.get();
+			objects[i++] = valueSupplier.apply(candle);
 		}
 	}
 

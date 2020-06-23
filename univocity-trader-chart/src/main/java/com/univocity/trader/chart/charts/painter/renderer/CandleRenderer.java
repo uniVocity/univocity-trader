@@ -21,12 +21,12 @@ public abstract class CandleRenderer<T extends Theme> extends AbstractRenderer<T
 	}
 
 	@Override
-	public final void updateValue() {
+	public final void updateValue(Candle candle) {
 
 	}
 
 	@Override
-	public final void nextValue() {
+	public final void nextValue(Candle candle) {
 
 	}
 

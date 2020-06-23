@@ -115,7 +115,7 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 				}
 				process(candle);
 				for (int j = 0; j < renderers.length; j++) {
-					renderers[j].nextValue();
+					renderers[j].nextValue(candle);
 				}
 			}
 		}
@@ -123,11 +123,11 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 		Candle last = chart.candleHistory.getLast();
 		if (prev != null && prev.openTime == last.openTime) {
 			for (int j = 0; j < renderers.length; j++) {
-				renderers[j].updateValue();
+				renderers[j].updateValue(last);
 			}
 		} else {
 			for (int j = 0; j < renderers.length; j++) {
-				renderers[j].nextValue();
+				renderers[j].nextValue(last);
 			}
 		}
 		prev = last;

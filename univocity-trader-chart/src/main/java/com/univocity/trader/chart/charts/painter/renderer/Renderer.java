@@ -15,9 +15,9 @@ public interface Renderer<T extends Theme> {
 
 	void reset(int length);
 
-	void updateValue();
+	void updateValue(Candle candle);
 
-	void nextValue();
+	void nextValue(Candle candle);
 
 	double getValueAt(int i);
 
