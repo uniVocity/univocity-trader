@@ -78,7 +78,7 @@ public class VisualIndicator extends AreaPainter {
 			}
 		}
 
-		out.put(-1, new SignalRenderer("Signal", new AreaTheme(chart), indicator)); //TODO implement proper theme
+		out.put(-2, new SignalRenderer("Signal", new AreaTheme(chart), indicator)); //TODO implement proper theme
 
 		Renderer[] renderers = out.values().toArray(Renderer[]::new);
 
@@ -156,6 +156,7 @@ public class VisualIndicator extends AreaPainter {
 				}
 
 				Theme theme = themeType.getConstructor(Repaintable.class).newInstance(this);
+				theme.setDisplayingLogarithmicScale(overlay != Overlay.NONE);
 
 				Renderer out;
 				out = rendererType.getConstructor(String.class, constructorThemeType, DoubleSupplier.class).newInstance(description, theme, supplier);
