@@ -12,7 +12,9 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 
 	private final MovingAverage sma5;
 	private final MovingAverage sma34;
-	public final CircularList bars = new CircularList(3);
+
+	private double veryOld;
+	private double old;
 
 	private double peak;
 	private int trough;
@@ -39,8 +41,11 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
 		sma5.accumulate(candle);
 		sma34.accumulate(candle);
-		indicator = populateIndicator(updating);
-		return sma5.getValue() - sma34.getValue();
+
+		double next = sma5.getValue() - sma34.getValue();
+
+		indicator = populateIndicator(updating, previousValue, next);
+		return next;
 	}
 
 	private double getMedianPrice(Candle candle) {
@@ -48,20 +53,26 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 	}
 
 	@Override
+	public String signalDescription() {
+		return type;
+	}
+
+	@Override
 	public Signal calculateSignal(Candle candle) {
 		return indicator;
 	}
 
-	private Signal populateIndicator(boolean updating) {
+	private Signal populateIndicator(boolean updating, double prev, double next) {
 		double z, a, b, c;
 
-		z = bars.getRecentValue(1);
+		z = veryOld;
+		a = old;
+		b = prev;
+		c = next;
 
-		a = bars.getRecentValue(2);
-		b = bars.getRecentValue(3);
-		c = getValue();
 		if (!updating) {
-			bars.add(c);
+			veryOld = old;
+			old = prev;
 		}
 		type = "";
 		if (getAccumulationCount() < 6) {
@@ -69,70 +80,59 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 		}
 
 		//Zero line cross (upwards)
-		if (((a < 0.0 || b <= 0.0) && c > 0) || (a < 0.0 && (b >= 0.0 && c > 0))) {
-			type = "zero line x";
-			return clearPeak(BUY);
+		if (b <= 0.0 && c > 0) {
+			type = "zero line cross up";
+			return clearPeak(BUY, 0.0);
 		}
 		//Zero line cross (downwards)
-		if (((a > 0.0 || b >= 0.0) && c < 0) || (a > 0.0 && (b <= 0.0 && c < 0))) {
-			type = "zero line x";
-			return clearPeak(SELL);
+		if (b >= 0.0 && c < 0) {
+			type = "zero line cross down";
+			return clearPeak(SELL, 0.0);
+		}
+
+		//Twin peaks (bullish or bearish)
+		if(peak != 0) {
+			trough++;
+		} else {
+			trough = 0;
+		}
+		if ((b > a && b > c && b > 0) || (b < a && b < c && b < 0)) {
+			if(peak == 0) {
+				peak = b;
+			} else if(trough >= 10){
+				if (peak < 0 && b < 0 && b > peak) { //going up
+					type = "bullish twin peaks";
+					return clearPeak(BUY, b);
+				} else if (peak > 0 && b > 0 && b < peak) {  //going down
+					type = "bearish twin peaks";
+					return clearPeak(SELL, b);
+				}
+			} else {
+				peak = b;
+				trough = 0;
+			}
+
 		}
 
 		//Saucer
-		if (z > 0 && a > 0 && b > 0 && c > 0) { //bullish saucer
+		if (a > 0 && b > 0 && c > 0) { //bullish saucer
 			if (a < z && b < a && c > b) {
-				type = "saucer";
+				type = "bullish saucer";
 				return BUY;
 			}
 		} else if (z < 0 && a < 0 && b < 0 && c < 0) { //bearish saucer
 			if (a > z && b > a && c < b) {
-				type = "saucer";
+				type = "bearish saucer";
 				return SELL;
 			}
 		}
 
-		//Twin peaks (bullish or bearish)
-		if ((a > b && b < c) || (a < b && b > c)) {
-			if (peak == 0.0 || trough == 0) {
-				return clearPeak(NEUTRAL);
-			}
-
-			if (peak < 0) {
-				if (b >= 0) {
-					return clearPeak(NEUTRAL);
-				}
-				if (b < peak) {
-					trough = 0;
-				}
-			} else {
-				if (b <= 0) {
-					return clearPeak(NEUTRAL);
-				}
-				if (b > peak) {
-					trough = 0;
-				}
-			}
-
-			if (trough > 10) {
-				Signal out = NEUTRAL;
-				if (peak < 0 && b < 0) { //going up
-					type = "twin peaks";
-					out = BUY;
-				} else if (peak > 0 && b > 0) {  //going down
-					type = "twin peaks";
-					out = SELL;
-				}
-				return clearPeak(out);
-			}
-
-		}
 
 		return NEUTRAL;
 	}
 
-	private Signal clearPeak(Signal out) {
-		peak = 0.0;
+	private Signal clearPeak(Signal out, double peakValue) {
+		peak = peakValue;
 		trough = 0;
 		return out;
 	}

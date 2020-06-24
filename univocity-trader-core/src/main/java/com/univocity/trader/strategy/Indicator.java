@@ -81,6 +81,14 @@ public interface Indicator {
 	Signal getSignal(Candle candle);
 
 	/**
+	 * Returns an optional description relating to the source/reason of the {@link Signal} returned by the {@link #getSignal(Candle)} method.
+	 * @return a description associated with the latest signal emitted by the indicator.
+	 */
+	default String signalDescription(){
+		return "";
+	}
+
+	/**
 	 * Initializes this indicator with an {@link Aggregator} which will merge resolution candles into candles that contain data for the
 	 * interval specified by {@link #getInterval()}.
 	 *
