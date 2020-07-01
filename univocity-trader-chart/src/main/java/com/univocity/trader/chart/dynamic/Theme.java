@@ -23,6 +23,8 @@ public abstract class Theme implements Repaintable {
 	@ColorBound()
 	private Color backgroundColor = new Color(255, 255, 255);
 
+	private Color inverseBackgroundColor;
+
 	private Color transparentBackgroundColor;
 
 	private JPanel controlPanel;
@@ -69,6 +71,13 @@ public abstract class Theme implements Repaintable {
 		return backgroundColor;
 	}
 
+	public Color getInverseBackgroundColor() {
+		if (inverseBackgroundColor == null) {
+			inverseBackgroundColor = new Color(255 - backgroundColor.getRed(), 255 - backgroundColor.getGreen(), 255 - backgroundColor.getBlue(), 64);
+		}
+		return inverseBackgroundColor;
+	}
+
 	public Color getTransparentBackgroundColor() {
 		if (transparentBackgroundColor == null) {
 			this.transparentBackgroundColor = new Color(backgroundColor.getRed(), backgroundColor.getBlue(), backgroundColor.getGreen(), 196);
@@ -91,6 +100,7 @@ public abstract class Theme implements Repaintable {
 	public void setBackgroundColor(Color backgroundColor) {
 		this.backgroundColor = backgroundColor;
 		this.transparentBackgroundColor = null;
+		this.inverseBackgroundColor = null;
 	}
 
 	public JPanel getThemeSettingsPanel() {

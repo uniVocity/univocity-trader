@@ -142,6 +142,13 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	@Override
 	protected void draw(Graphics2D g, int width) {
 		runPainters(g, Painter.Overlay.BACK, width);
+
+		for (Painter<?> painter : painters.get(NONE)) {
+			int y = painter.bounds().y;
+			g.setPaint(new GradientPaint(0, -100, theme().getInverseBackgroundColor(), 0, y + 20, theme().getTransparentBackgroundColor()));
+			g.fillRect(0, y, width - canvas.insets.right - 1, 20);
+		}
+
 		runPainters(g, NONE, width);
 
 		Point hoveredPosition = getCurrentCandleLocation();
@@ -248,7 +255,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 				if (painter.position() > painterList.size()) {
 					painterList.add(painter);
 					int i = 0;
-					for(Painter<?> p : painterList){
+					for (Painter<?> p : painterList) {
 						p.position(i++);
 					}
 				} else {
