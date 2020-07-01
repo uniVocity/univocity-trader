@@ -21,6 +21,7 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 	private final Consumer<Candle> process;
 	private final AreaPainter areaPainter;
 	private final StringBuilder headerLine = new StringBuilder();
+	private boolean resetting = false;
 
 	public AbstractDataPainter(String description, Painter<T> parent, Runnable reset, Consumer<Candle> process) {
 		super(parent.overlay());
@@ -45,14 +46,23 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 	protected abstract Renderer<?>[] createRenderers();
 
 	protected final void reset() {
-		if (this.renderers == null) {
-			this.renderers = createRenderers();
-			if (renderers == null) {
-				throw new IllegalStateException("Renderers cannot be null");
+		if(resetting){
+			return;
+		}
+		try{
+			resetting = true;
+			reset.run();
+
+			if (this.renderers == null) {
+				this.renderers = createRenderers();
+				if (renderers == null) {
+					throw new IllegalStateException("Renderers cannot be null");
+				}
 			}
+		} finally {
+			resetting = false;
 		}
 
-		reset.run();
 	}
 
 	protected final void process(Candle candle) {
@@ -99,11 +109,14 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 	}
 
 	private void processHistoryUpdate(CandleHistory.UpdateType updateType) {
-		if(chart == null){ //painter uninstalled.
+		if (chart == null) { //painter uninstalled.
 			return;
 		}
 		if (updateType != CandleHistory.UpdateType.INCREMENT) {
 			reset();
+			if (chart == null) {
+				return;
+			}
 			final int historySize = chart.candleHistory.size();
 			for (int j = 0; j < renderers.length; j++) {
 				renderers[j].reset(historySize);
@@ -121,7 +134,7 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 		}
 
 		Candle last = chart.candleHistory.getLast();
-		if (prev != null && prev.openTime == last.openTime) {
+		if (prev != null && last != null && prev.openTime == last.openTime) {
 			for (int j = 0; j < renderers.length; j++) {
 				renderers[j].updateValue(last);
 			}

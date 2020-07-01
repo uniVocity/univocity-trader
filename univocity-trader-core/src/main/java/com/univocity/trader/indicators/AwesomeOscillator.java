@@ -4,7 +4,6 @@ package com.univocity.trader.indicators;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
-import com.univocity.trader.utils.*;
 
 import static com.univocity.trader.indicators.Signal.*;
 
@@ -19,7 +18,7 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 	private double peak;
 	private int trough;
 
-	private Signal indicator;
+	private Signal signal;
 	private String type;
 
 	@Override
@@ -44,7 +43,7 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 
 		double next = sma5.getValue() - sma34.getValue();
 
-		indicator = populateIndicator(updating, previousValue, next);
+		signal = populateIndicator(updating, previousValue, next);
 		return next;
 	}
 
@@ -59,7 +58,7 @@ public class AwesomeOscillator extends SingleValueCalculationIndicator {
 
 	@Override
 	public Signal calculateSignal(Candle candle) {
-		return indicator;
+		return signal;
 	}
 
 	private Signal populateIndicator(boolean updating, double prev, double next) {

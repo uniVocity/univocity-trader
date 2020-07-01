@@ -78,7 +78,7 @@ public class VisualIndicator extends AreaPainter {
 			}
 		}
 
-		out.put(-2, new SignalRenderer("Signal", new AreaTheme(chart), indicator)); //TODO implement proper theme
+		out.put(-2, new SignalRenderer("Signal", new AreaTheme(chart), indicator)); //TODO proper theme
 
 		Renderer[] renderers = out.values().toArray(Renderer[]::new);
 
@@ -181,10 +181,27 @@ public class VisualIndicator extends AreaPainter {
 	}
 
 	private void reset() {
-		Aggregator aggregator = new Aggregator("").getInstance(interval.get());
-		getIndicator().initialize(aggregator);
+		if (this.aggregators == null) {
+			Aggregator aggregator = new Aggregator("").getInstance(interval.get());
+			getIndicator().initialize(aggregator);
 
-		aggregators = aggregator.getAggregators();
+			aggregators = aggregator.getAggregators();
+		} else {
+			if (getIndicator().getAccumulationCount() == 0) {
+				return;
+			}
+			BasicChart<?> chart = this.chart;
+			chart.removePainter(this);
+
+			this.indicator = null;
+			Aggregator aggregator = new Aggregator("").getInstance(interval.get());
+			getIndicator().initialize(aggregator);
+			aggregators = aggregator.getAggregators();
+			indicatorPainter = null;
+
+			chart.addPainter(this.overlay(), this);
+
+		}
 	}
 
 	private Painter<CompositeTheme> getIndicatorPainter() {
@@ -234,11 +251,13 @@ public class VisualIndicator extends AreaPainter {
 
 	@Override
 	public void install(BasicChart<?> chart) {
+		this.chart = chart;
 		getIndicatorPainter().install(chart);
 	}
 
 	@Override
 	public void uninstall(BasicChart<?> chart) {
+		this.chart = null;
 		getIndicatorPainter().uninstall(chart);
 	}
 

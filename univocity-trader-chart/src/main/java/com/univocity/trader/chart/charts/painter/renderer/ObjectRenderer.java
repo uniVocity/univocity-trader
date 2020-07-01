@@ -17,6 +17,7 @@ public abstract class ObjectRenderer<O, T extends Theme> extends AbstractRendere
 
 	public ObjectRenderer(String description, T theme, IntFunction<O[]> arrayGenerator, Function<Candle, O> valueSupplier) {
 		super(description, theme);
+		this.objects = arrayGenerator.apply(0);
 		this.arrayGenerator = arrayGenerator;
 		this.valueSupplier = valueSupplier;
 	}
@@ -43,7 +44,7 @@ public abstract class ObjectRenderer<O, T extends Theme> extends AbstractRendere
 
 	@Override
 	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, AreaPainter areaPainter) {
-		if (i < objects.length) {
+		if (i < objects.length && objects[i] != null) {
 			paintNext(i, objects[i], chart, g, areaPainter);
 		}
 	}

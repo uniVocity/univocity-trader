@@ -24,6 +24,9 @@ public class SignalRenderer extends ObjectRenderer<String, AreaTheme> {
 
 	private static String generateSignal(Indicator indicator, Candle candle) {
 		Signal signal = indicator.getSignal(candle);
+		if(signal == null){
+			signal = Signal.NEUTRAL;
+		}
 
 		String out = signal.toString();
 		if (signal != Signal.NEUTRAL) {

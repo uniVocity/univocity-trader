@@ -3,6 +3,7 @@ package com.univocity.trader.chart;
 import com.univocity.trader.candles.*;
 
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.function.*;
 
 /**
@@ -11,7 +12,7 @@ import java.util.function.*;
 public class CandleHistory implements Iterable<Candle> {
 
 	private final List<Candle> candles = new ArrayList<>(1000);
-	private final List<Consumer<UpdateType>> dataUpdateListeners = new ArrayList<>();
+	private final Set<Consumer<UpdateType>> dataUpdateListeners = ConcurrentHashMap.newKeySet();
 
 	public enum UpdateType {
 		NEW_HISTORY, INCREMENT, SELECTION

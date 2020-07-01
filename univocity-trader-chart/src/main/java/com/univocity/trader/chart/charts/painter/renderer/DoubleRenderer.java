@@ -45,7 +45,7 @@ public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T
 
 	@Override
 	public final double getValueAt(int i) {
-		if (i < 0 || i > values.length) {
+		if (i < 0 || i >= values.length) {
 			return Double.MIN_VALUE;
 		}
 		return values[i];
