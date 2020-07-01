@@ -21,7 +21,7 @@ public abstract class Ruler<T extends RulerTheme<?>> implements Painter<T> {
 		this.theme().updateFontSize(g);
 	}
 
-	public final void paintOn(BasicChart<?> chart, Graphics2D g, int width) {
+	public final void paintOn(BasicChart<?> chart, Graphics2D g, int width, Overlay overlay) {
 		updateFontSize(g);
 
 		drawBackground(chart, g, width);

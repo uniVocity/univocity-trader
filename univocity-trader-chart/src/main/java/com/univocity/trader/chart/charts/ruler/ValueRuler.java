@@ -120,7 +120,7 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 
 	private int drawValue(double value, VisualIndicator p, BasicChart<?> chart, Graphics2D g, Point location, Candle candle, int refY, boolean drawAboveRef, boolean inMiddle) {
 		Rectangle bounds = p.bounds();
-		int y = bounds.y + p.getYCoordinate(value, bounds.height);
+		int y = bounds.y + p.getYCoordinate(Overlay.NONE, value, bounds.height);
 		refY = drawValues(chart, y, bounds.y + bounds.height, g, location, candle, value, false, refY, drawAboveRef, inMiddle);
 		return refY;
 	}

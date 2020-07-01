@@ -1,5 +1,6 @@
 package com.univocity.trader.chart.charts;
 
+import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.dynamic.*;
 
 public abstract class CoordinateManager {
@@ -58,8 +59,8 @@ public abstract class CoordinateManager {
 		}
 	}
 
-	public final int getYCoordinate(double value, int height) {
-		return displayLogarithmicScale() ? getLogarithmicYCoordinate(value, height) : getLinearYCoordinate(value, height);
+	public final int getYCoordinate(Painter.Overlay overlay, double value, int height) {
+		return overlay != Painter.Overlay.NONE && displayLogarithmicScale() ? getLogarithmicYCoordinate(value, height) : getLinearYCoordinate(value, height);
 	}
 
 	private boolean displayLogarithmicScale() {

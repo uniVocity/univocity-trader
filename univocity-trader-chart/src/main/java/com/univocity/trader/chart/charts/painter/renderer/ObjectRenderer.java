@@ -43,11 +43,11 @@ public abstract class ObjectRenderer<O, T extends Theme> extends AbstractRendere
 	}
 
 	@Override
-	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, AreaPainter areaPainter) {
+	public final void paintNext(int i, BasicChart<?> chart,Painter.Overlay overlay, Graphics2D g, AreaPainter areaPainter) {
 		if (i < objects.length && objects[i] != null) {
-			paintNext(i, objects[i], chart, g, areaPainter);
+			paintNext(i, objects[i], chart, overlay, g, areaPainter);
 		}
 	}
 
-	protected abstract void paintNext(int i, O value, BasicChart<?> chart, Graphics2D g, AreaPainter areaPainter);
+	protected abstract void paintNext(int i, O value, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter areaPainter);
 }

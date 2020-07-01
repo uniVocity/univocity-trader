@@ -16,6 +16,8 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.function.*;
 
+import static com.univocity.trader.chart.charts.painter.Painter.Overlay.*;
+
 public class VisualIndicator extends AreaPainter {
 
 	private static final LineRenderer[] EMPTY = new LineRenderer[0];
@@ -29,13 +31,14 @@ public class VisualIndicator extends AreaPainter {
 	private final Painter.Overlay overlay;
 	private final Rectangle bounds;
 	final IndicatorDefinition config;
+	private int position = -1;
 
 	private double[] values;
 
 	public VisualIndicator(Supplier<TimeInterval> interval, IndicatorDefinition indicator) {
 		this.config = indicator;
 		boolean overlay = indicator.overlay;
-		this.overlay = overlay ? Overlay.BACK : Overlay.NONE;
+		this.overlay = overlay ? Overlay.BACK : NONE;
 		this.bounds = overlay ? null : new Rectangle(0, 0, 0, 0);
 		this.interval = interval;
 		if (!overlay) {
@@ -128,7 +131,9 @@ public class VisualIndicator extends AreaPainter {
 			String description = getDescription(m, renderConfig);
 			if (renderConfig == null) {
 				if (m == null || m.getReturnType() == double.class) {
-					return new LineRenderer(description, new LineTheme<>(this), supplier);
+					var theme = new LineTheme<>(this);
+					theme.setDisplayingLogarithmicScale(overlay != NONE);
+					return new LineRenderer(description, theme, supplier);
 				}
 			} else {
 				Class<? extends Theme> themeType = renderConfig.theme();
@@ -156,7 +161,7 @@ public class VisualIndicator extends AreaPainter {
 				}
 
 				Theme theme = themeType.getConstructor(Repaintable.class).newInstance(this);
-				theme.setDisplayingLogarithmicScale(overlay != Overlay.NONE);
+				theme.setDisplayingLogarithmicScale(overlay != NONE);
 
 				Renderer out;
 				out = rendererType.getConstructor(String.class, constructorThemeType, DoubleSupplier.class).newInstance(description, theme, supplier);
@@ -200,8 +205,17 @@ public class VisualIndicator extends AreaPainter {
 			indicatorPainter = null;
 
 			chart.addPainter(this.overlay(), this);
-
 		}
+	}
+
+	@Override
+	public int position() {
+		return position;
+	}
+
+	@Override
+	public void position(int position) {
+		this.position = position;
 	}
 
 	private Painter<CompositeTheme> getIndicatorPainter() {
@@ -209,7 +223,9 @@ public class VisualIndicator extends AreaPainter {
 			Renderer[] renderers = createRenderers();
 
 			if (config.compose != null) {
-				AreaRenderer a = new AreaRenderer(config.compose.description(), new AreaTheme(chart), renderers);
+				AreaTheme theme = new AreaTheme(chart);
+				theme.setDisplayingLogarithmicScale(overlay != NONE);
+				AreaRenderer a = new AreaRenderer(config.compose.description(), theme, renderers);
 				currentRenderers = new Renderer[]{a};
 			} else {
 
@@ -245,8 +261,8 @@ public class VisualIndicator extends AreaPainter {
 	}
 
 	@Override
-	public void paintOn(BasicChart<?> chart, Graphics2D g, int width) {
-		getIndicatorPainter().paintOn(chart, g, width);
+	public void paintOn(BasicChart<?> chart, Graphics2D g, int width, Overlay overlay) {
+		getIndicatorPainter().paintOn(chart, g, width, overlay);
 	}
 
 	@Override

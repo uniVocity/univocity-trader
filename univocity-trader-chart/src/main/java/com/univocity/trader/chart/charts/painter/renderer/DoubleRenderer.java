@@ -52,24 +52,25 @@ public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T
 	}
 
 	@Override
-	public final void paintNext(int i, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {
+	public final void paintNext(int i, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter) {
 		log = theme.isDisplayingLogarithmicScale() && chart.theme().isDisplayingLogarithmicScale();
 		if (i < values.length) {
 			double value = values[i];
 			if (log && value <= 0) {
 				value = this.min;
 			}
-			paintNext(i, value, chart, g, painter);
+			paintNext(i, value, chart, overlay, g, painter);
 		}
 	}
 
-	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
+	@Override
+	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
 		if (i < values.length) {
-			updateSelection(i, values[i], candle, candleLocation, chart, g, painter, headerLine);
+			updateSelection(i, values[i], candle, candleLocation, chart, overlay, g, painter, headerLine);
 		}
 	}
 
-	protected void updateSelection(int i, double value, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
+	protected void updateSelection(int i, double value, Candle candle, Point candleLocation, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
 		String string = SymbolPriceDetails.toString(8, value);
 		if (headerLine.length() > 0 && headerLine.charAt(headerLine.length() - 1) != '[') {
 			headerLine.append(", ");
@@ -82,7 +83,7 @@ public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T
 		headerLine.append(string);
 	}
 
-	protected abstract void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, AreaPainter painter);
+	protected abstract void paintNext(int i, double value, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter);
 
 	@Override
 	public double getMaximumValue(int from, int to) {

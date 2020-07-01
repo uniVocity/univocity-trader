@@ -44,11 +44,11 @@ public abstract class CompositeRenderer<T extends Theme> extends AbstractRendere
 
 
 	@Override
-	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
+	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
 		for(int j = 0; j < renderers.length; j++){
 			Renderer r = renderers[j];
 			if(r.displayValue()){
-				r.updateSelection(i, candle, candleLocation, chart, g, painter, headerLine);
+				r.updateSelection(i, candle, candleLocation, chart, overlay, g, painter, headerLine);
 			}
 		}
 	}

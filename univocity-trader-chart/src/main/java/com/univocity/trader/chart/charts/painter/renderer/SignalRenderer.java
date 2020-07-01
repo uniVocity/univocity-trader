@@ -15,6 +15,7 @@ public class SignalRenderer extends ObjectRenderer<String, AreaTheme> {
 
 	public SignalRenderer(String description, AreaTheme theme, Indicator indicator) {
 		super(description, theme, String[]::new, (c) -> generateSignal(indicator, c));
+		displayValue(false);
 	}
 
 	@Override
@@ -24,7 +25,7 @@ public class SignalRenderer extends ObjectRenderer<String, AreaTheme> {
 
 	private static String generateSignal(Indicator indicator, Candle candle) {
 		Signal signal = indicator.getSignal(candle);
-		if(signal == null){
+		if (signal == null) {
 			signal = Signal.NEUTRAL;
 		}
 
@@ -40,15 +41,15 @@ public class SignalRenderer extends ObjectRenderer<String, AreaTheme> {
 	}
 
 	@Override
-	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
+	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
 		if (i < objects.length && objects[i] != null) {
-			paintNext(i, objects[i], chart, g, painter);
+			paintNext(i, objects[i], chart, overlay, g, painter);
 			headerLine.append(objects[i]);
 		}
 	}
 
 	@Override
-	protected void paintNext(int i, String signal, BasicChart<?> chart, Graphics2D g, AreaPainter areaPainter) {
+	protected void paintNext(int i, String signal, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter areaPainter) {
 		if (i < objects.length && signal != NEUTRAL) {
 			Candle candle = chart.candleHistory.get(i);
 			if (candle != null) {
@@ -56,7 +57,7 @@ public class SignalRenderer extends ObjectRenderer<String, AreaTheme> {
 				int y = areaPainter.bounds().y;
 
 				char ch = signal.charAt(0);
-				switch (ch){
+				switch (ch) {
 					case 'B': //buy
 					case 'U': //undervalued
 						g.setColor(theme.getPositiveColor());

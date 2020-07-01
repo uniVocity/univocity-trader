@@ -17,30 +17,30 @@ public class LineRenderer extends DoubleRenderer<LineTheme<?>> {
 	}
 
 	@Override
-	public void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {
+	public void paintNext(int i, double value, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter) {
 		if(g != null) {
 			g.setStroke(theme.getNormalStroke());
 			g.setColor(theme.getLineColor());
 
-			Point location = Painter.createCoordinate(chart, painter, i, value);
+			Point location = Painter.createCoordinate(chart, painter, overlay, i, value);
 			if (i == 0) {
 				previousLocation = location;
 			}
 			g.drawLine(previousLocation.x, previousLocation.y, location.x, location.y);
 			previousLocation = location;
 		} else {
-			previousLocation = Painter.createCoordinate(chart, painter, i, value);
+			previousLocation = Painter.createCoordinate(chart, painter, overlay, i, value);
 		}
 	}
 
 	@Override
-	protected void updateSelection(int i, double value, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
-		super.updateSelection(i, value, candle, candleLocation, chart, g, painter, headerLine);
+	protected void updateSelection(int i, double value, Candle candle, Point candleLocation, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
+		super.updateSelection(i, value, candle, candleLocation, chart, overlay, g, painter, headerLine);
 
 		g.setColor(theme.getMarkerColor());
 		int markerWidth = theme.getMarkerWidth();
 
-		Point location = Painter.createCoordinate(chart, painter, i, value);
+		Point location = Painter.createCoordinate(chart, painter, overlay, i, value);
 		g.fillOval(candleLocation.x - markerWidth / 2, location.y - markerWidth / 2, markerWidth, markerWidth);
 	}
 }

@@ -227,15 +227,35 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 
 	private void runPainters(Graphics2D g, Painter.Overlay overlay, int width) {
 		for (Painter<?> painter : painters.get(overlay)) {
-			painter.paintOn(this, g, width);
+			painter.paintOn(this, g, width, overlay);
 			canvas.insets.right = Math.max(painter.insets().right, canvas.insets.right);
 			canvas.insets.left = Math.max(painter.insets().left, canvas.insets.left);
 		}
 	}
 
+	public int painterCount(Painter.Overlay overlay) {
+		return painters.get(overlay).size();
+	}
+
 	public void addPainter(Painter.Overlay overlay, Painter<?> painter) {
 		if (painter != null) {
-			painters.get(overlay).add(painter);
+			var painterList = painters.get(overlay);
+
+			if (painter.position() == -1) {
+				painter.position(painterList.size());
+				painterList.add(painter);
+			} else {
+				if (painter.position() > painterList.size()) {
+					painterList.add(painter);
+					int i = 0;
+					for(Painter<?> p : painterList){
+						p.position(i++);
+					}
+				} else {
+					painterList.add(painter.position(), painter);
+				}
+			}
+
 			painter.install(this);
 
 			if (overlay == NONE) {
@@ -246,6 +266,22 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 			invokeRepaint();
 		}
 	}
+
+//	public void replacePainter(Painter.Overlay overlay, Painter<?> old, Painter<?> replacement) {
+//		if (old == null) {
+//			addPainter(overlay, replacement);
+//		} else {
+//			old.uninstall(this);
+//			var p = painters.get(overlay);
+//			int i = p.indexOf(old);
+//			if (i == -1) {
+//				p.add(replacement);
+//			} else {
+//				p.set(i, replacement);
+//			}
+//		}
+//		selectedPainter.install();
+//	}
 
 	public void removePainter(Painter<?> painter) {
 		if (painter != null) {

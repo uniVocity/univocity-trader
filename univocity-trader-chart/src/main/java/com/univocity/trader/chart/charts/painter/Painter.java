@@ -15,7 +15,7 @@ public interface Painter<T extends Theme> extends Repaintable {
 
 	Overlay overlay();
 
-	void paintOn(BasicChart<?> chart, Graphics2D g, int width);
+	void paintOn(BasicChart<?> chart, Graphics2D g, int width, Overlay overlay);
 
 	T theme();
 
@@ -39,6 +39,14 @@ public interface Painter<T extends Theme> extends Repaintable {
 
 	}
 
+	default void position(int position){
+
+	}
+
+	default int position() {
+		return -1;
+	}
+
 	default double maximumValue(int from, int to) {
 		return Integer.MIN_VALUE;
 	}
@@ -47,14 +55,14 @@ public interface Painter<T extends Theme> extends Repaintable {
 		return Integer.MAX_VALUE;
 	}
 
-	static Point createCoordinate(BasicChart<?> chart, AreaPainter painter, int candleIndex, double value) {
+	static Point createCoordinate(BasicChart<?> chart, AreaPainter painter, Overlay overlay, int candleIndex, double value) {
 		Point p = new Point();
 		p.x = chart.getXCoordinate(candleIndex);
 		if (painter == null || painter.bounds() == null) {
 			p.y = chart.getYCoordinate(value);
 		} else {
 			Rectangle bounds = painter.bounds();
-			p.y = bounds.y + painter.getYCoordinate(value, bounds.height);
+			p.y = bounds.y + painter.getYCoordinate(overlay, value, bounds.height);
 		}
 
 		return p;

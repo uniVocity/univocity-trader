@@ -70,10 +70,10 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 	}
 
 	@Override
-	public void paintOn(BasicChart<?> chart, Graphics2D g, int width) {
+	public void paintOn(BasicChart<?> chart, Graphics2D g, int width, Overlay overlay) {
 		for (int i = 0; i < chart.candleHistory.size(); i++) {
 			for (int j = 0; j < renderers.length; j++) {
-				renderers[j].paintNext(i, chart, g, areaPainter);
+				renderers[j].paintNext(i, chart, overlay, g, areaPainter);
 			}
 		}
 
@@ -93,7 +93,7 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 				}
 				for (int i = 0; i < renderers.length; i++) {
 					if (renderers[i].displayValue()) {
-						renderers[i].updateSelection(candleIndex, candle, candleLocation, chart, g, areaPainter, headerLine);
+						renderers[i].updateSelection(candleIndex, candle, candleLocation, chart, overlay, g, areaPainter, headerLine);
 					}
 				}
 

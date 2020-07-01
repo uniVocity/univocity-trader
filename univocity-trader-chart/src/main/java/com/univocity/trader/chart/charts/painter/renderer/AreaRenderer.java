@@ -22,9 +22,9 @@ public class AreaRenderer extends CompositeRenderer<AreaTheme> {
 	}
 
 	@Override
-	public void paintNext(int i, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {
-		line1.paintNext(i, chart, null, painter);
-		line2.paintNext(i, chart, null, painter);
+	public void paintNext(int i, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter) {
+		line1.paintNext(i, chart, overlay, null, painter);
+		line2.paintNext(i, chart, overlay, null, painter);
 
 		Point p1 = line1.previousLocation;
 		Point p2 = line2.previousLocation;

@@ -5,6 +5,7 @@ import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.theme.*;
 
+import javax.net.ssl.*;
 import java.awt.*;
 import java.util.function.*;
 
@@ -18,23 +19,23 @@ public class HistogramRenderer extends DoubleRenderer<HistogramTheme<?>> {
 	}
 
 	@Override
-	public void paintNext(int i, double value, BasicChart<?> chart, Graphics2D g, AreaPainter painter) {
-		drawBar(i, value, chart, g, painter, getFillColor(theme.getFillColor(value), previousValue, value), getLineColor(theme.getLineColor(value), previousValue, value));
+	public void paintNext(int i, double value, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter) {
+		drawBar(i, value, chart, overlay, g, painter, getFillColor(theme.getFillColor(value), previousValue, value), getLineColor(theme.getLineColor(value), previousValue, value));
 	}
 
 	@Override
-	protected void updateSelection(int i, double value, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
-		super.updateSelection(i, value, candle, candleLocation, chart, g, painter, headerLine);
+	protected void updateSelection(int i, double value, Candle candle, Point candleLocation, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
+		super.updateSelection(i, value, candle, candleLocation, chart, overlay, g, painter, headerLine);
 		double previousValue = getValueAt(i -1);
-		drawBar(i, value, chart, g, painter, getSelectionFillColor(theme.getSelectionFillColor(value), previousValue, value), getSelectionLineColor(theme.getSelectionLineColor(value), previousValue, value));
+		drawBar(i, value, chart, overlay, g, painter, getSelectionFillColor(theme.getSelectionFillColor(value), previousValue, value), getSelectionLineColor(theme.getSelectionLineColor(value), previousValue, value));
 	}
 
-	private void drawBar(int i, double value, BasicChart<?> chart, Graphics2D g, AreaPainter painter, Color fillColor, Color lineColor) {
+	private void drawBar(int i, double value, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, Color fillColor, Color lineColor) {
 		g.setStroke(theme.getNormalStroke());
 		g.setColor(theme.getLineColor(value));
 
-		Point location = Painter.createCoordinate(chart, painter, i, value);
-		Point zeroLineLocation = Painter.createCoordinate(chart, painter, i, 0);
+		Point location = Painter.createCoordinate(chart, painter, overlay, i, value);
+		Point zeroLineLocation = Painter.createCoordinate(chart, painter, overlay, i, 0);
 
 		int areaHeight = painter.bounds().y + painter.bounds().height;
 		int zeroLineHeight = areaHeight - zeroLineLocation.y;
