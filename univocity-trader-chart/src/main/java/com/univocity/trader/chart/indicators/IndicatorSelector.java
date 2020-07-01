@@ -158,9 +158,10 @@ public class IndicatorSelector extends JPanel {
 		getCmbIndicators().setEnabled(false);
 
 		addingIndicator();
-		getBtAdd().setText("Update");
+		getBtAdd().setText("Close");
 		getBtAdd().setEnabled(true);
 		getBtRemove().setEnabled(true);
+		getBtRemove().setText("Remove");
 	}
 
 	void updatePreview() {
@@ -183,7 +184,10 @@ public class IndicatorSelector extends JPanel {
 		if (indicatorDefinition != null) {
 			VisualIndicator old = preview;
 			preview = new VisualIndicator(timeInterval, indicatorDefinition);
-			fireIndicatorUpdated(true, old, preview);
+			if(editing != null){
+				preview.position(editing.position());
+			}
+			fireIndicatorUpdated(editing == null, old, preview);
 		}
 	}
 

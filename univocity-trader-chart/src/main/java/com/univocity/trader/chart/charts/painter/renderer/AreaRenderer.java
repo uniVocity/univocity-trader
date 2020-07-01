@@ -9,16 +9,26 @@ import java.awt.*;
 
 public class AreaRenderer extends CompositeRenderer<AreaTheme> {
 
-	private final LineRenderer line1;
-	private final LineRenderer line2;
+	private LineRenderer line1;
+	private LineRenderer line2;
+	private SignalRenderer signalRenderer;
 
 	private Point prev1;
 	private Point prev2;
 
 	public AreaRenderer(String description, AreaTheme areaTheme, Renderer[] renderers) {
 		super(description, areaTheme, renderers);
-		this.line1 = (LineRenderer) renderers[0];
-		this.line2 = (LineRenderer) renderers[1];
+		for (int i = 0; i < renderers.length; i++) {
+			if (renderers[i] instanceof LineRenderer) {
+				if (line1 == null) {
+					line1 = (LineRenderer) renderers[i];
+				} else {
+					line2 = (LineRenderer) renderers[i];
+				}
+			} else if (renderers[i] instanceof SignalRenderer) {
+				signalRenderer = (SignalRenderer) renderers[i];
+			}
+		}
 	}
 
 	@Override
@@ -41,7 +51,8 @@ public class AreaRenderer extends CompositeRenderer<AreaTheme> {
 		prev2 = p2;
 	}
 
-	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
-
+	@Override
+	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
+		signalRenderer.updateSelection(i, candle, candleLocation, chart, overlay, g, painter, headerLine);
 	}
 }

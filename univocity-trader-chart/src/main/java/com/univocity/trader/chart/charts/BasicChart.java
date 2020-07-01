@@ -274,22 +274,6 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 		}
 	}
 
-//	public void replacePainter(Painter.Overlay overlay, Painter<?> old, Painter<?> replacement) {
-//		if (old == null) {
-//			addPainter(overlay, replacement);
-//		} else {
-//			old.uninstall(this);
-//			var p = painters.get(overlay);
-//			int i = p.indexOf(old);
-//			if (i == -1) {
-//				p.add(replacement);
-//			} else {
-//				p.set(i, replacement);
-//			}
-//		}
-//		selectedPainter.install();
-//	}
-
 	public void removePainter(Painter<?> painter) {
 		if (painter != null) {
 			painter.uninstall(this);

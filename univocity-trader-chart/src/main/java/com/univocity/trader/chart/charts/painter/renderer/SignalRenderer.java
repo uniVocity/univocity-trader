@@ -43,7 +43,9 @@ public class SignalRenderer extends ObjectRenderer<String, AreaTheme> {
 	@Override
 	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
 		if (i < objects.length && objects[i] != null) {
-			paintNext(i, objects[i], chart, overlay, g, painter);
+			if (g != null && painter != null && painter.bounds() != null) {
+				paintNext(i, objects[i], chart, overlay, g, painter);
+			}
 			headerLine.append(objects[i]);
 		}
 	}
