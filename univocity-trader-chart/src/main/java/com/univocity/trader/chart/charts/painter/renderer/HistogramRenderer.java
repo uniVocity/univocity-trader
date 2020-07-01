@@ -40,13 +40,19 @@ public class HistogramRenderer extends DoubleRenderer<HistogramTheme<?>> {
 		int zeroLineHeight = areaHeight - zeroLineLocation.y;
 		int barHeight = location.y - zeroLineLocation.y;
 //		barHeight *= 2.0;
+
+		boolean onNegativeEdge = false;
 		if (barHeight == 0 && value != 0) {
 			barHeight = value > 0 ? 1 : -1;
+			onNegativeEdge = barHeight < 0;
 		}
 
 		if (barHeight < 0) {
 			barHeight = -barHeight;
 			zeroLineHeight += barHeight;
+		}
+		if(onNegativeEdge){
+			zeroLineHeight--;
 		}
 
 		g.setColor(fillColor);
