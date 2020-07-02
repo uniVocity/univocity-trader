@@ -27,13 +27,13 @@ public class IndicatorSelector extends JPanel {
 	private VisualIndicator editing;
 	private VisualIndicator preview;
 
-	private class Updater implements ChangeListener, ItemListener, ActionListener{
+	private class Updater implements ChangeListener, ItemListener, ActionListener {
 		@Override
 		public void stateChanged(ChangeEvent e) {
 			indicatorChanged();
 			Object source = e.getSource();
-			if(source instanceof JSpinner){
-				((JSpinner)source).requestFocus();
+			if (source instanceof JSpinner) {
+				((JSpinner) source).requestFocus();
 			}
 		}
 
@@ -47,6 +47,7 @@ public class IndicatorSelector extends JPanel {
 			indicatorChanged();
 		}
 	}
+
 	final Updater previewUpdater = new Updater();
 
 	private final List<IndicatorListener> indicatorListenerList = new ArrayList<>();
@@ -145,7 +146,6 @@ public class IndicatorSelector extends JPanel {
 		updatePreview();
 	}
 
-
 	public void displayOptionsFor(Painter<?> painter) {
 		if (painter instanceof VisualIndicator) {
 			displayOptionsFor((VisualIndicator) painter);
@@ -162,6 +162,8 @@ public class IndicatorSelector extends JPanel {
 		getBtAdd().setEnabled(true);
 		getBtRemove().setEnabled(true);
 		getBtRemove().setText("Remove");
+
+		i.updateEditorValues();
 	}
 
 	void updatePreview() {
@@ -184,7 +186,7 @@ public class IndicatorSelector extends JPanel {
 		if (indicatorDefinition != null) {
 			VisualIndicator old = preview;
 			preview = new VisualIndicator(timeInterval, indicatorDefinition);
-			if(editing != null){
+			if (editing != null) {
 				preview.position(editing.position());
 			}
 			fireIndicatorUpdated(editing == null, old, preview);
@@ -204,7 +206,7 @@ public class IndicatorSelector extends JPanel {
 		preview = null;
 	}
 
-	private void addingIndicator(){
+	private void addingIndicator() {
 		getBtAdd().setText("Add");
 		getBtAdd().setEnabled(false); //enable after selecting indicator
 
@@ -214,7 +216,7 @@ public class IndicatorSelector extends JPanel {
 		getCmbIndicators().setEnabled(true);
 	}
 
-	private void editingStopped(){
+	private void editingStopped() {
 		getBtAdd().setText("New Indicator");
 		getBtAdd().setEnabled(true);
 

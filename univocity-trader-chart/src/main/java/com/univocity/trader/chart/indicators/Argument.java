@@ -11,13 +11,14 @@ public class Argument {
 
 	final String name;
 	final Class<?> inputType;
-	final double value;
+	final double defaultValue;
 	final double minimum;
 	final double maximum;
 	final double increment;
 
 	private JComponent input;
-	private Supplier<Object> valueGetter;
+	private Supplier<Object> componentGetter;
+	private Consumer<Object> componentSetter;
 
 	Argument(Parameter p) {
 		this.inputType = p.getType();
@@ -34,18 +35,18 @@ public class Argument {
 
 		if (p.getAnnotation(Default.class) != null) {
 			Default defaults = p.getAnnotation(Default.class);
-			this.value = defaults.value();
+			this.defaultValue = defaults.value();
 			this.maximum = defaults.maximum();
 			this.increment = defaults.increment();
 			this.minimum = defaults.minimum();
 		} else if (p.getAnnotation(PositiveDefault.class) != null) {
 			PositiveDefault defaults = p.getAnnotation(PositiveDefault.class);
-			this.value = defaults.value();
+			this.defaultValue = defaults.value();
 			this.maximum = defaults.maximum();
 			this.increment = defaults.increment();
 			this.minimum = 1.0;
 		} else {
-			this.value = 0.0;
+			this.defaultValue = 0.0;
 			this.maximum = 0.0;
 			this.increment = 0.0;
 			this.minimum = 0.0;
@@ -69,10 +70,11 @@ public class Argument {
 		SpinnerNumberModel model = new SpinnerNumberModel();
 		model.setMaximum(maximum);
 		model.setMinimum(minimum);
-		model.setValue(value);
+		model.setValue(defaultValue);
 		model.setStepSize(increment);
 		JSpinner out = new JSpinner(model);
-		valueGetter = out::getValue;
+		componentGetter = out::getValue;
+		componentSetter = out::setValue;
 		out.addChangeListener(indicatorSelector.previewUpdater);
 		return out;
 	}
@@ -81,23 +83,32 @@ public class Argument {
 		SpinnerNumberModel model = new SpinnerNumberModel();
 		model.setMaximum((int) maximum);
 		model.setMinimum((int) minimum);
-		model.setValue((int) value);
+		model.setValue((int) defaultValue);
 		model.setStepSize((int) increment);
 		JSpinner out = new JSpinner(model);
-		valueGetter = out::getValue;
+		componentGetter = out::getValue;
+		componentSetter = out::setValue;
 		out.addChangeListener(indicatorSelector.previewUpdater);
 		return out;
 	}
 
 	private JCheckBox getBooleanInput(IndicatorSelector indicatorSelector) {
 		JCheckBox out = new JCheckBox();
-		valueGetter = out::isSelected;
+		componentGetter = out::isSelected;
+		componentSetter = (v) -> out.setSelected(v == null ? false : (Boolean) v);
 		out.addActionListener(indicatorSelector.previewUpdater);
 		return out;
 	}
 
-	public Object getValue() {
-		return valueGetter == null ? null : valueGetter.get();
+	public ArgumentValue getValue() {
+		Object v = componentGetter == null ? null : componentGetter.get();
+		return new ArgumentValue(name, v);
+	}
+
+	void updateComponentValue(ArgumentValue argumentValue) {
+		if (componentSetter != null && argumentValue != null) {
+			componentSetter.accept(argumentValue.getValue());
+		}
 	}
 
 	@Override

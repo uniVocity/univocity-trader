@@ -21,6 +21,7 @@ import static com.univocity.trader.chart.charts.painter.Painter.Overlay.*;
 public class VisualIndicator extends AreaPainter {
 
 	private static final LineRenderer[] EMPTY = new LineRenderer[0];
+	final ArgumentValue[] argumentValues;
 
 	private Aggregator[] aggregators;
 	private Indicator indicator;
@@ -36,7 +37,12 @@ public class VisualIndicator extends AreaPainter {
 	private double[] values;
 
 	public VisualIndicator(Supplier<TimeInterval> interval, IndicatorDefinition indicator) {
+		this(interval, indicator.getArgumentValues(interval), indicator);
+	}
+
+	public VisualIndicator(Supplier<TimeInterval> interval, ArgumentValue[] argumentValues, IndicatorDefinition indicator) {
 		this.config = indicator;
+		this.argumentValues = argumentValues;
 		boolean overlay = indicator.overlay;
 		this.overlay = overlay ? Overlay.BACK : NONE;
 		this.bounds = overlay ? null : new Rectangle(0, 0, 0, 0);
@@ -284,7 +290,7 @@ public class VisualIndicator extends AreaPainter {
 
 	private Indicator getIndicator() {
 		if (indicator == null) {
-			indicator = config.create(interval.get());
+			indicator = config.create(argumentValues);
 		}
 		return indicator;
 	}
@@ -347,5 +353,9 @@ public class VisualIndicator extends AreaPainter {
 			}
 		}
 		return values;
+	}
+
+	void updateEditorValues() {
+		config.setEditorValues(argumentValues);
 	}
 }

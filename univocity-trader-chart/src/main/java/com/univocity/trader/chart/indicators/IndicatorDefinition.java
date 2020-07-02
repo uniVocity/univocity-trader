@@ -6,10 +6,11 @@ import com.univocity.trader.strategy.*;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.*;
 
 class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 
-	final List<Argument> parameters = new ArrayList<>();
+	final List<Argument> arguments = new ArrayList<>();
 	private final Method factoryMethod;
 	private final Constructor<?> constructor;
 	private final String description;
@@ -62,7 +63,7 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 		StringBuilder tmp = new StringBuilder();
 		for (Parameter p : params) {
 			Argument a = new Argument(p);
-			parameters.add(a);
+			arguments.add(a);
 
 			if (a.inputType != TimeInterval.class) {
 				if (tmp.length() > 0) {
@@ -86,16 +87,28 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 		this.overlay = overlay != null;
 	}
 
-	public Indicator create(TimeInterval interval) {
-		Object[] args = new Object[parameters.size()];
+	public ArgumentValue[] getArgumentValues(Supplier<TimeInterval> interval) {
+		ArgumentValue[] args = new ArgumentValue[arguments.size()];
 		try {
-			for (int i = 0; i < parameters.size(); i++) {
-				Argument arg = parameters.get(i);
+			for (int i = 0; i < arguments.size(); i++) {
+				Argument arg = arguments.get(i);
 				if (arg.inputType == TimeInterval.class) {
-					args[i] = interval;
+					args[i] = new ArgumentValue(arg.name, interval);
 				} else {
 					args[i] = arg.getValue();
 				}
+			}
+			return args;
+		} catch (Exception e) {
+			throw new IllegalArgumentException("Error creating " + this + " with: " + Arrays.toString(args), e);
+		}
+	}
+
+	Indicator create(ArgumentValue[] argumentValues) {
+		Object[] args = new Object[argumentValues.length];
+		try {
+			for (int i = 0; i < argumentValues.length; i++) {
+				args[i] = argumentValues[i].getValue();
 			}
 			Indicator indicator;
 			if (factoryMethod != null) {
@@ -106,6 +119,14 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 			return indicator;
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Error creating " + this + " with: " + Arrays.toString(args), e);
+		}
+	}
+
+	public void setEditorValues(ArgumentValue[] argumentValues){
+		if(argumentValues != null){
+			for (int i = 0; i < argumentValues.length; i++) {
+				this.arguments.get(i).updateComponentValue(argumentValues[i]);
+			}
 		}
 	}
 

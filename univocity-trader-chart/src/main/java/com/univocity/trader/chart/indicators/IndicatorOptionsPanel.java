@@ -1,12 +1,9 @@
 package com.univocity.trader.chart.indicators;
 
 import com.univocity.trader.chart.gui.*;
-import com.univocity.trader.indicators.base.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.function.*;
 
 class IndicatorOptionsPanel extends JPanel {
 
@@ -35,7 +32,7 @@ class IndicatorOptionsPanel extends JPanel {
 			c.insets = new Insets(2, 2, 2, 2);
 			c.anchor = GridBagConstraints.WEST;
 			c.gridy = 0;
-			indicatorDefinition.parameters.forEach(this::addComponent);
+			indicatorDefinition.arguments.forEach(this::addComponent);
 		}
 
 		revalidate();
