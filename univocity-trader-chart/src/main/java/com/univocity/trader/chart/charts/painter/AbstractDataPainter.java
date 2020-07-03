@@ -16,7 +16,6 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 
 	private final Consumer<CandleHistory.UpdateType> historyUpdateConsumer;
 	private final Painter<T> parent;
-	private Candle prev;
 	private final Runnable reset;
 	private final Consumer<Candle> process;
 	private final AreaPainter areaPainter;
@@ -134,17 +133,12 @@ public abstract class AbstractDataPainter<T extends Theme> extends AbstractPaint
 		}
 
 		Candle last = chart.candleHistory.getLast();
-		if (prev != null && last != null && prev.openTime == last.openTime) {
-			for (int j = 0; j < renderers.length; j++) {
-				renderers[j].updateValue(last);
-			}
-		} else {
+		if(last != null) {
+			process(last);
 			for (int j = 0; j < renderers.length; j++) {
 				renderers[j].nextValue(last);
 			}
 		}
-		prev = last;
-
 		invokeRepaint();
 	}
 

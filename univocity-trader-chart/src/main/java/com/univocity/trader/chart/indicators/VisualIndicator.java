@@ -35,6 +35,7 @@ public class VisualIndicator extends AreaPainter {
 	private int position = -1;
 
 	private double[] values;
+	private Candle last;
 
 	public VisualIndicator(Supplier<TimeInterval> interval, IndicatorDefinition indicator) {
 		this(interval, indicator.getArgumentValues(interval), indicator);
@@ -212,6 +213,8 @@ public class VisualIndicator extends AreaPainter {
 
 			chart.addPainter(this.overlay(), this);
 		}
+
+		last = chart.candleHistory.getLast();
 	}
 
 	@Override
@@ -237,17 +240,24 @@ public class VisualIndicator extends AreaPainter {
 
 				currentRenderers = renderers;
 			}
-
-
 			indicatorPainter = new CompositePainter(indicator.getClass().getSimpleName(), this, this::reset, this::process, currentRenderers);
 		}
 		return indicatorPainter;
 	}
 
 	private void process(Candle candle) {
-		for (int i = 0; i < aggregators.length; i++) {
-			aggregators[i].aggregate(candle);
+		if (candle == last) {
+			//FIXME: ugly workaround to render indicator state based on last candle from history (not fully populated yet).
+			//       won't work when live trading.
+			for (int i = 0; i < aggregators.length; i++) {
+				aggregators[i].setFull(candle);
+			}
+		} else {
+			for (int i = 0; i < aggregators.length; i++) {
+				aggregators[i].aggregate(candle);
+			}
 		}
+
 		getIndicator().accumulate(candle);
 	}
 
