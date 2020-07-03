@@ -93,7 +93,7 @@ public class Argument {
 	}
 
 	private JCheckBox getBooleanInput(IndicatorSelector indicatorSelector) {
-		JCheckBox out = new JCheckBox();
+		JCheckBox out = new JCheckBox(name);
 		componentGetter = out::isSelected;
 		componentSetter = (v) -> out.setSelected(v == null ? false : (Boolean) v);
 		out.addActionListener(indicatorSelector.previewUpdater);

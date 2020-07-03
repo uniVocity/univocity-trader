@@ -15,7 +15,6 @@ public class SignalRenderer extends ObjectRenderer<String, AreaTheme> {
 
 	public SignalRenderer(String description, AreaTheme theme, Indicator indicator) {
 		super(description, theme, String[]::new, (c) -> generateSignal(indicator, c));
-		displayValue(false);
 	}
 
 	@Override

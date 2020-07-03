@@ -17,7 +17,7 @@ class IndicatorOptionsPanel extends JPanel {
 	}
 
 	public boolean updateIndicator(IndicatorDefinition indicatorDefinition) {
-		if(indicatorDefinition == null && this.indicatorDefinition != null){
+		if (indicatorDefinition == null && this.indicatorDefinition != null) {
 			this.indicatorDefinition = null;
 			ContainerUtils.clearPanel(this);
 			return false;
@@ -47,12 +47,12 @@ class IndicatorOptionsPanel extends JPanel {
 		if (input != null) {
 			c.gridx = 0;
 			c.weightx = 1.0;
-			add(lbl, c);
-
-			c.gridx = 1;
-			c.weightx = 1.0;
+			if (!(input instanceof JCheckBox)) {
+				add(lbl, c);
+				c.gridx = 1;
+				c.weightx = 1.0;
+			}
 			add(input, c);
-
 			c.gridy++;
 		}
 		c.gridx = 0;
