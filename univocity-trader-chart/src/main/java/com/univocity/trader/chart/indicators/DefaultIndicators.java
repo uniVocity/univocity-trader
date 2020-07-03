@@ -4,6 +4,7 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.annotation.*;
 import com.univocity.trader.chart.charts.painter.renderer.*;
 import com.univocity.trader.chart.charts.theme.*;
+import com.univocity.trader.chart.charts.theme.indicator.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
@@ -33,9 +34,9 @@ public class DefaultIndicators {
 	}
 
 	@Overlay(label = "Bollinger")
-	@Render(value = "getUpperBand", description = "High")
-	@Render(value = "getMiddleBand", description = "Middle")
-	@Render(value = "getLowerBand", description = "Low")
+	@Render(value = "getUpperBand", description = "High", theme = UpperBand.class)
+	@Render(value = "getMiddleBand", description = "Middle", theme = MiddleBand.class)
+	@Render(value = "getLowerBand", description = "Low", theme = LowerBand.class)
 	public static BollingerBand BollingerBand(@PositiveDefault(12) int length, TimeInterval interval) {
 		return Indicators.BollingerBand(length, interval);
 	}
@@ -55,7 +56,7 @@ public class DefaultIndicators {
 	}
 
 	@Underlay(min = 0.0, max = 100.0)
-	@Render(value = "getValue")
+	@Render(value = "getValue", theme = BlueLine.class)
 	@Render(value = "getHighChoppinessValue", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
 	@Render(value = "getLowChoppinessValue", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
 	public static CHOP CHOP(@PositiveDefault(14) int length, @PositiveDefault(value = HIGH_CHOPPINESS_VALUE, maximum = 100.0) double high, @PositiveDefault(value = LOW_CHOPPINESS_VALUE, maximum = 100) double low, TimeInterval interval) {
@@ -66,7 +67,7 @@ public class DefaultIndicators {
 	}
 
 	@Underlay(min = 0.0, max = 100.0)
-	@Render(value = "getValue")
+	@Render(value = "getValue", theme = BlueLine.class)
 	@Render(value = "getUpperBound", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
 	@Render(value = "getLowerBound", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
 	public static ConnorsRSI ConnorsRSI(@PositiveDefault(3) int rsiLength, @PositiveDefault(2) int streakRsiLength, @PositiveDefault(100) int pctRankLength, @PositiveDefault(value = ConnorsRSI.UPPER_BOUND, maximum = 100.0) double high, @PositiveDefault(value = ConnorsRSI.LOWER_BOUND, maximum = 100) double low, TimeInterval interval) {
@@ -81,9 +82,9 @@ public class DefaultIndicators {
 //	}
 
 	@Overlay
-	@Render(value = "getUpperBand", description = "High")
-	@Render(value = "getMiddleBand", description = "Middle")
-	@Render(value = "getLowerBand", description = "Low")
+	@Render(value = "getUpperBand", description = "High", theme = UpperBand.class)
+	@Render(value = "getMiddleBand", description = "Middle", theme = MiddleBand.class)
+	@Render(value = "getLowerBand", description = "Low", theme = LowerBand.class)
 	public static DonchianChannel DonchianChannel(@PositiveDefault(12) int length, TimeInterval interval) {
 		return Indicators.DonchianChannel(length, interval);
 	}
@@ -93,7 +94,7 @@ public class DefaultIndicators {
 		return Indicators.DoubleExponentialMovingAverage(length, interval, valueGetter(valueGetter));
 	}
 
-	@Render(value = "getValue")
+	@Render(value = "getValue", theme = BlueLine.class)
 	@Render(constant = 0.0, theme = BoundaryLineTheme.class)
 	public static EldersForceIndex EldersForceIndex(@PositiveDefault(13) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.EldersForceIndex(length, interval, valueGetter(valueGetter));
@@ -126,23 +127,23 @@ public class DefaultIndicators {
 		return Indicators.KAMA(barCountEffectiveRatio, barCountFast, barCountSlow, interval, valueGetter(valueGetter));
 	}
 
-	@Render(value = "k")
-	@Render(value = "d")
-	@Render(value = "j")
+	@Render(value = "k", theme = BlueLine.class)
+	@Render(value = "d", theme = RedLine.class)
+	@Render(value = "j", theme = GreenLine.class)
 	public static KDJ KDJ(@PositiveDefault(3) int dLength, @PositiveDefault(3) int kLength, TimeInterval interval) {
 		return Indicators.KDJ(dLength, kLength, interval);
 	}
 
 	@Overlay
-	@Render(value = "getUpperBand", description = "High")
-	@Render(value = "getMiddleBand", description = "Middle")
-	@Render(value = "getLowerBand", description = "Low")
+	@Render(value = "getUpperBand", description = "High", theme = UpperBand.class)
+	@Render(value = "getMiddleBand", description = "Middle", theme = MiddleBand.class)
+	@Render(value = "getLowerBand", description = "Low", theme = LowerBand.class)
 	public static KeltnerChannel KeltnerChannel(@PositiveDefault(20) int length, @PositiveDefault(10) int atrLength, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.KeltnerChannel(length, atrLength, interval, valueGetter(valueGetter));
 	}
 
-	@Render(value = "getMacdSignal", description = "Signal")
-	@Render(value = "getMacdLine", description = "Line")
+	@Render(value = "getMacdSignal", description = "Signal", theme = RedLine.class)
+	@Render(value = "getMacdLine", description = "Line", theme = BlueLine.class)
 	@Render(value = "getHistogram", renderer = HistogramRenderer.class)
 	public static MACD MACD(@PositiveDefault(12) int shortCount, @PositiveDefault(26) int longCount, @PositiveDefault(9) int macdCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.MACD(shortCount, longCount, macdCount, interval, valueGetter(valueGetter));
@@ -182,14 +183,14 @@ public class DefaultIndicators {
 		return Indicators.PVT(interval, valueGetter(valueGetter));
 	}
 
-	@Render(value = "getValue")
+	@Render(value = "getValue", theme = BlueLine.class)
 	@Render(constant = 0.0, theme = BoundaryLineTheme.class)
 	public static RateOfChange RateOfChange(@PositiveDefault(12) int length, TimeInterval interval) {
 		return Indicators.RateOfChange(length, interval);
 	}
 
 	@Underlay(min = 0.0, max = 100.0)
-	@Render(value = "getValue")
+	@Render(value = "getValue", theme = BlueLine.class)
 	@Render(value = "getUpperBound", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
 	@Render(value = "getLowerBound", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
 	public static RSI RSI(@PositiveDefault(14) int length, @PositiveDefault(value = RSI.UPPER_BOUND, maximum = 100.0) double high, @PositiveDefault(value = RSI.LOWER_BOUND, maximum = 100) double low, TimeInterval interval) {
@@ -200,7 +201,7 @@ public class DefaultIndicators {
 	}
 
 	@Underlay(min = 0.0, max = 100.0)
-	@Render(value = "getValue")
+	@Render(value = "getValue", theme = BlueLine.class)
 	@Render(value = "getUpperBound", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
 	@Render(value = "getLowerBound", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
 	public static StochasticRSI StochasticRSI(@PositiveDefault(14) int length, @PositiveDefault(value = StochasticRSI.UPPER_BOUND, maximum = 100.0) double high, @PositiveDefault(value = StochasticRSI.LOWER_BOUND, maximum = 100) double low, TimeInterval interval) {
@@ -211,8 +212,8 @@ public class DefaultIndicators {
 	}
 
 	@Underlay(min = 0.0, max = 100.0)
-	@Render(value = "k")
-	@Render(value = "d")
+	@Render(value = "k", theme = BlueLine.class)
+	@Render(value = "d", theme = RedLine.class)
 	@Render(value = "getUpperBound", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
 	@Render(value = "getLowerBound", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
 	public static StochasticOscillatorD StochasticOscillator(@PositiveDefault(14) int dLength, @PositiveDefault(14) int kLength, @PositiveDefault(value = StochasticOscillatorD.UPPER_BOUND, maximum = 100.0) double high, @PositiveDefault(value = StochasticOscillatorD.LOWER_BOUND, maximum = 100) double low, TimeInterval interval) {
