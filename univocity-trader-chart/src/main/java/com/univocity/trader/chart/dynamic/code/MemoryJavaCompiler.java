@@ -13,7 +13,7 @@ public class MemoryJavaCompiler {
 		fileManager = compiler.getStandardFileManager(null, null, null);
 	}
 
-	public <T> T compileString(final String className, final String source, Writer errorOutput) throws ClassNotFoundException {
+	public <T> T compileString(final String className, final String source, Writer errorOutput) {
 		try {
 			final Map<String, byte[]> classBytes = compileFile(className + ".java", source, errorOutput);
 			final MemoryClassLoader classLoader = new MemoryClassLoader(classBytes);
