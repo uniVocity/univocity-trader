@@ -1,6 +1,7 @@
 package com.univocity.trader.chart.indicators;
 
 import com.univocity.trader.chart.charts.painter.Painter;
+import com.univocity.trader.chart.dynamic.code.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
@@ -27,7 +28,7 @@ public class IndicatorSelector extends JPanel {
 	private VisualIndicator editing;
 	private VisualIndicator preview;
 
-	private class Updater implements ChangeListener, ItemListener, ActionListener {
+	private class Updater implements ChangeListener, ItemListener, ActionListener, UserCode.CodeUpdateListener {
 		@Override
 		public void stateChanged(ChangeEvent e) {
 			indicatorChanged();

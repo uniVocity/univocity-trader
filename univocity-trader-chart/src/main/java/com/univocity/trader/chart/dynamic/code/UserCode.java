@@ -8,21 +8,79 @@ import org.fife.ui.rtextarea.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.io.*;
 import java.util.function.*;
 
-public class UserCode extends JPanel {
+public class UserCode<T> extends JSplitPane {
 
-	private RSyntaxTextArea textArea;
-	private RTextScrollPane textAreaScroll;
+	private RSyntaxTextArea codeArea;
+	private RTextScrollPane codeAreaScroll;
 	private AutoCompletion autoCompletion;
 	private DefaultCompletionProvider completionProvider;
-	private JButton btTest;
 
-	public UserCode() {
-		setLayout(new BorderLayout());
-		add(getTextAreaScroll(), BorderLayout.CENTER);
-		add(getBtTest(), BorderLayout.SOUTH);
+	private RSyntaxTextArea outputArea;
+	private RTextScrollPane outputAreaScroll;
+
+	private JButton btSave;
+	private JButton btTest;
+	private JButton btClose;
+	private JToggleButton btLock;
+	private JPanel controlPanel;
+	private JPanel editorPanel;
+
+	private String lastWorkingVersion;
+	private T lastInstanceBuilt;
+	private final Function<T, ?> resultProducer;
+
+	public static final String CANDLE_CLOSE = "" +
+			"import com.univocity.trader.candles.*;\n" +
+			"import java.util.function.*;\n\n" +
+			"public final class Custom implements ToDoubleFunction<Candle> {\n\n" +
+			"\tpublic double applyAsDouble(Candle candle) {\n" +
+			"\t\treturn candle.close;\n" +
+			"\t}\n" +
+			"}\n";
+
+
+	public <I> UserCode() {
+		this(null);
+	}
+
+	public <I> UserCode(Function<T, I> resultProducer) {
+		super(JSplitPane.VERTICAL_SPLIT, false);
+		setLeftComponent(getEditorPanel());
+		setRightComponent(getOutputAreaScroll());
+		setDividerLocation(400);
+		setDividerSize(2);
+		this.resultProducer = resultProducer;
+	}
+
+	private JPanel getEditorPanel() {
+		if (editorPanel == null) {
+			editorPanel = new JPanel(new BorderLayout());
+			editorPanel.add(getControlPanel(), BorderLayout.NORTH);
+			editorPanel.add(getCodeAreaScroll(), BorderLayout.CENTER);
+		}
+		return editorPanel;
+	}
+
+	private JPanel getControlPanel() {
+		if (controlPanel == null) {
+			controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+			controlPanel.add(getBtSave());
+			controlPanel.add(getBtTest());
+			controlPanel.add(getBtLock());
+			controlPanel.add(getBtClose());
+		}
+		return controlPanel;
+	}
+
+	JButton getBtClose() {
+		if (btClose == null) {
+			btClose = new JButton("Close");
+		}
+		return btClose;
 	}
 
 	private JButton getBtTest() {
@@ -33,22 +91,61 @@ public class UserCode extends JPanel {
 		return btTest;
 	}
 
-
-	private RTextScrollPane getTextAreaScroll() {
-		if (textAreaScroll == null) {
-			textAreaScroll = new RTextScrollPane(getTextArea());
+	private JButton getBtSave() {
+		if (btSave == null) {
+			btSave = new JButton("Save");
+			btSave.addActionListener(e -> save());
 		}
-		return textAreaScroll;
+		return btSave;
 	}
 
-	private RSyntaxTextArea getTextArea() {
-		if (textArea == null) {
-			textArea = new RSyntaxTextArea(20, 80);
-			textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
-			textArea.setCodeFoldingEnabled(true);
-			getAutoCompletion().install(textArea);
+	private JToggleButton getBtLock() {
+		if (btLock == null) {
+			btLock = new JToggleButton("Unlock");
+			btLock.setSelected(true);
+			btLock.addActionListener(e -> lockClicked());
+			lockClicked();
 		}
-		return textArea;
+		return btLock;
+	}
+
+	private void lockClicked() {
+		getCodeArea().setEditable(!getBtLock().isSelected());
+		getBtLock().setText(!getBtLock().isSelected() ? "Lock" : "Unlock");
+	}
+
+
+	private RTextScrollPane getCodeAreaScroll() {
+		if (codeAreaScroll == null) {
+			codeAreaScroll = new RTextScrollPane(getCodeArea());
+		}
+		return codeAreaScroll;
+	}
+
+	private RTextScrollPane getOutputAreaScroll() {
+		if (outputAreaScroll == null) {
+			outputAreaScroll = new RTextScrollPane(getOutputArea());
+		}
+		return outputAreaScroll;
+	}
+
+	private RSyntaxTextArea getCodeArea() {
+		if (codeArea == null) {
+			codeArea = new RSyntaxTextArea(20, 80);
+			codeArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
+			codeArea.setCodeFoldingEnabled(true);
+			getAutoCompletion().install(codeArea);
+		}
+		return codeArea;
+	}
+
+	private RSyntaxTextArea getOutputArea() {
+		if (outputArea == null) {
+			outputArea = new RSyntaxTextArea(20, 80);
+			outputArea.setEditable(false);
+			outputArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL);
+		}
+		return outputArea;
 	}
 
 	private AutoCompletion getAutoCompletion() {
@@ -72,35 +169,72 @@ public class UserCode extends JPanel {
 	}
 
 	private void compileAndRun() {
-		MemoryJavaCompiler compiler = new MemoryJavaCompiler();
-		String source = getTextArea().getText();
-		StringWriter errorOutput = new StringWriter();
+		outputArea.setText("Compiling...");
 
-		ToDoubleFunction<Candle> f;
-		try {
-			f = compiler.compileString("Custom", source, errorOutput);
-			double result = f.applyAsDouble(new Candle(10, 10, 10.0, 20.0, 10.0, 10.0, 10.0));
-			System.out.println(result);
-		} catch (Exception e) {
-			errorOutput.flush();
-			String errors = errorOutput.toString();
-			System.err.println(errors);
-		}
+		SwingUtilities.invokeLater(() -> {
+			MemoryJavaCompiler compiler = new MemoryJavaCompiler();
+			String source = getSourceCode();
+			StringWriter errorOutput = new StringWriter();
+			try {
+				T instance = compiler.compileString("Custom", source, errorOutput);
+				if (resultProducer != null) {
+					Object result = resultProducer.apply(instance);
+					outputArea.setText("Result:\n" + result);
+				} else {
+					outputArea.setText("Success!");
+				}
+				lastWorkingVersion = source;
+				this.lastInstanceBuilt = instance;
+				CodeUpdateListener[] listeners = listenerList.getListeners(CodeUpdateListener.class);
+				for (int i = 0; i < listeners.length; i++) {
+					listeners[i].actionPerformed(null);
+				}
+			} catch (Exception e) {
+				errorOutput.flush();
+				String errors = errorOutput.toString();
+				outputArea.setText(errors);
+
+				if (errors.isBlank()) {
+					outputArea.setText("Internal error: " + e.getMessage());
+				}
+			}
+		});
+	}
+
+	public void save() {
+		String code = getSourceCode();
+
+	}
+
+	public String getSourceCode() {
+		return getCodeArea().getText();
+	}
+
+	public String getLastWorkingVersion() {
+		return lastWorkingVersion;
+	}
+
+	public T lastInstanceBuilt() {
+		return lastInstanceBuilt;
+	}
+
+	public void setSourceCode(String sourceCode) {
+		getCodeArea().setText(sourceCode);
+	}
+
+	public void addCodeUpdateListener(CodeUpdateListener l) {
+		listenerList.add(CodeUpdateListener.class, l);
+	}
+
+	public interface CodeUpdateListener extends ActionListener {
+
 	}
 
 	public static void main(String... args) {
-		final String source = "" +
-				"import com.univocity.trader.candles.*;\n" +
-				"import java.util.function.*;\n" +
-				"public final class Custom implements ToDoubleFunction<Candle> {\n" +
-				"\tpublic double applyAsDouble(Candle candle) {\n" +
-				"\t\treturn (candle.high + candle.low) / 2.0;\n" +
-				"\t}\n" +
-				"}\n";
+		Candle testCandle = new Candle(10, 10, 10.0, 20.0, 10.0, 10.0, 10.0);
 
-
-		UserCode userCode = new UserCode();
-		userCode.getTextArea().setText(source);
+		UserCode<ToDoubleFunction<Candle>> userCode = new UserCode<>(f -> f.applyAsDouble(testCandle));
+		userCode.setSourceCode(CANDLE_CLOSE);
 
 		WindowUtils.displayTestFrame(userCode);
 	}

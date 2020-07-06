@@ -37,8 +37,8 @@ public class DefaultIndicators {
 	@Render(value = "getUpperBand", description = "High", theme = UpperBand.class)
 	@Render(value = "getMiddleBand", description = "Middle", theme = MiddleBand.class)
 	@Render(value = "getLowerBand", description = "Low", theme = LowerBand.class)
-	public static BollingerBand BollingerBand(@PositiveDefault(12) int length, TimeInterval interval) {
-		return Indicators.BollingerBand(length, interval);
+	public static BollingerBand BollingerBand(@PositiveDefault(12) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.BollingerBand(length, interval, valueGetter);
 	}
 
 	@Overlay

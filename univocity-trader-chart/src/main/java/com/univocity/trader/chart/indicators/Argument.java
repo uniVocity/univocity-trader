@@ -1,6 +1,8 @@
 package com.univocity.trader.chart.indicators;
 
+import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.annotation.*;
+import com.univocity.trader.chart.dynamic.code.*;
 
 import javax.swing.*;
 import java.lang.reflect.*;
@@ -19,15 +21,23 @@ public class Argument {
 	private JComponent input;
 	private Supplier<Object> componentGetter;
 	private Consumer<Object> componentSetter;
+	private boolean isUserCode;
+	private UserCode<?> userCode;
 
 	Argument(Parameter p) {
 		this.inputType = p.getType();
+
+		isUserCode = inputType.getAnnotation(FunctionalInterface.class) != null;
 		Label label = p.getAnnotation(Label.class);
 		if (label == null) {
-			if (p.isNamePresent()) {
-				this.name = p.getName();
+			if (isUserCode) {
+				this.name = "Configure input";
 			} else {
-				this.name = p.getType().getSimpleName();
+				if (p.isNamePresent()) {
+					this.name = p.getName();
+				} else {
+					this.name = p.getType().getSimpleName();
+				}
 			}
 		} else {
 			this.name = label.value();
@@ -61,6 +71,8 @@ public class Argument {
 				input = getNumericInput(indicatorSelector);
 			} else if (inputType == boolean.class || inputType == Boolean.class) {
 				input = getBooleanInput(indicatorSelector);
+			} else if (isUserCode) {
+				input = getSourceCodeInput(indicatorSelector);
 			}
 		}
 		return input;
@@ -100,14 +112,37 @@ public class Argument {
 		return out;
 	}
 
+	private Candle getTestCandle() {
+		return new Candle(10, 10, 10.0, 20.0, 10.0, 10.0, 10.0);
+	}
+
+	private JButton getSourceCodeInput(IndicatorSelector indicatorSelector) {
+		JButton out = new JButton("...");
+
+		userCode = new UserCode<ToDoubleFunction<Candle>>(null);
+		componentGetter = userCode::getSourceCode;
+		componentSetter = (v) -> userCode.setSourceCode(String.valueOf(v));
+
+		userCode.setSourceCode(UserCode.CANDLE_CLOSE);
+
+		userCode.addCodeUpdateListener(indicatorSelector.previewUpdater);
+
+		out.addActionListener((e) -> new UserCodeDialog(userCode).setVisible(true));
+
+		return out;
+	}
+
 	public ArgumentValue getValue() {
 		Object v = componentGetter == null ? null : componentGetter.get();
+		if (userCode != null) {
+			return new ArgumentValue(name, userCode.lastInstanceBuilt(), userCode.getSourceCode());
+		}
 		return new ArgumentValue(name, v);
 	}
 
 	void updateComponentValue(ArgumentValue argumentValue) {
 		if (componentSetter != null && argumentValue != null) {
-			componentSetter.accept(argumentValue.getValue());
+			componentSetter.accept(argumentValue.getEditorValue());
 		}
 	}
 

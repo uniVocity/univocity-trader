@@ -65,7 +65,7 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 			Argument a = new Argument(p);
 			arguments.add(a);
 
-			if (a.inputType != TimeInterval.class) {
+			if (a.inputType != TimeInterval.class && a.inputType.getAnnotation(FunctionalInterface.class) == null) {
 				if (tmp.length() > 0) {
 					tmp.append(", ");
 				} else {
@@ -108,7 +108,7 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 		Object[] args = new Object[argumentValues.length];
 		try {
 			for (int i = 0; i < argumentValues.length; i++) {
-				args[i] = argumentValues[i].getValue();
+				args[i] = argumentValues[i].getArgumentValue();
 			}
 			Indicator indicator;
 			if (factoryMethod != null) {
@@ -122,8 +122,8 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 		}
 	}
 
-	public void setEditorValues(ArgumentValue[] argumentValues){
-		if(argumentValues != null){
+	public void setEditorValues(ArgumentValue[] argumentValues) {
+		if (argumentValues != null) {
 			for (int i = 0; i < argumentValues.length; i++) {
 				this.arguments.get(i).updateComponentValue(argumentValues[i]);
 			}

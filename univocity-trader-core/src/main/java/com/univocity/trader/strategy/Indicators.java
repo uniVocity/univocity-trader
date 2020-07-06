@@ -62,6 +62,10 @@ public abstract class Indicators {
 		return register(new BollingerBand(length, interval), length, interval);
 	}
 
+	public static BollingerBand BollingerBand(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new BollingerBand(length, interval, valueGetter), length, interval, valueGetter);
+	}
+
 	public static ChandelierExitLong ChandelierExitLong(TimeInterval interval) {
 		return register(new ChandelierExitLong(interval), interval);
 	}

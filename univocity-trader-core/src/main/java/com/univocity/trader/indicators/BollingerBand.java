@@ -4,7 +4,7 @@ package com.univocity.trader.indicators;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 
-import static com.univocity.trader.indicators.Signal.*;
+import java.util.function.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -21,14 +21,18 @@ public class BollingerBand extends MovingAverage {
 		super(length, interval);
 	}
 
+	public BollingerBand(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		super(length, interval, valueGetter == null ? c -> c.close : valueGetter);
+	}
+
 	private double getStandardDeviation() {
 		return stddev;
 	}
 
 	@Override
 	protected boolean calculateIndicatorValue(Candle candle, double value, boolean updating) {
-		boolean out = super.calculateIndicatorValue(candle,value, updating);
-		if(out){
+		boolean out = super.calculateIndicatorValue(candle, value, updating);
+		if (out) {
 			updateStandardDeviation();
 		}
 		return out;
