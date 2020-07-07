@@ -1,8 +1,11 @@
 package com.univocity.trader.chart.indicators;
 
+import com.univocity.trader.chart.dynamic.code.*;
 import com.univocity.trader.chart.gui.*;
+import org.apache.commons.lang3.*;
 
 import javax.swing.*;
+import javax.swing.border.*;
 import java.awt.*;
 
 class IndicatorOptionsPanel extends JPanel {
@@ -26,6 +29,7 @@ class IndicatorOptionsPanel extends JPanel {
 
 		ContainerUtils.clearPanel(this);
 		if (indicatorDefinition != null) {
+			setBorder(new TitledBorder("Indicator parameters"));
 			c = new GridBagConstraints();
 			c.fill = GridBagConstraints.HORIZONTAL;
 			c.weighty = 0.0;
@@ -33,6 +37,8 @@ class IndicatorOptionsPanel extends JPanel {
 			c.anchor = GridBagConstraints.WEST;
 			c.gridy = 0;
 			indicatorDefinition.arguments.forEach(this::addComponent);
+		} else {
+			setBorder(null);
 		}
 
 		revalidate();
@@ -41,17 +47,22 @@ class IndicatorOptionsPanel extends JPanel {
 	}
 
 	private void addComponent(Argument argument) {
-		JLabel lbl = new JLabel(argument.name);
+		JLabel lbl = new JLabel(StringUtils.capitalize(argument.name));
 		JComponent input = argument.getComponent(indicatorSelector);
 
 		if (input != null) {
 			c.gridx = 0;
-			c.weightx = 1.0;
+			c.ipadx = 100;
 			if (!(input instanceof JCheckBox)) {
 				add(lbl, c);
 				c.gridx = 1;
-				c.weightx = 1.0;
 			}
+			c.weightx = 1.0;
+			if (input instanceof UserCode) {
+				c.fill = GridBagConstraints.BOTH;
+				c.weighty = 1.0;
+			}
+
 			add(input, c);
 			c.gridy++;
 		}

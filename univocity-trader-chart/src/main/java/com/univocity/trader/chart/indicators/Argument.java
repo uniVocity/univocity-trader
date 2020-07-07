@@ -31,7 +31,7 @@ public class Argument {
 		Label label = p.getAnnotation(Label.class);
 		if (label == null) {
 			if (isUserCode) {
-				this.name = "Configure input";
+				this.name = "Data feed";
 			} else {
 				if (p.isNamePresent()) {
 					this.name = p.getName();
@@ -116,20 +116,15 @@ public class Argument {
 		return new Candle(10, 10, 10.0, 20.0, 10.0, 10.0, 10.0);
 	}
 
-	private JButton getSourceCodeInput(IndicatorSelector indicatorSelector) {
-		JButton out = new JButton("...");
-
+	private UserCode<?> getSourceCodeInput(IndicatorSelector indicatorSelector) {
 		userCode = new UserCode<ToDoubleFunction<Candle>>(null);
 		componentGetter = userCode::getSourceCode;
 		componentSetter = (v) -> userCode.setSourceCode(String.valueOf(v));
 
 		userCode.setSourceCode(UserCode.CANDLE_CLOSE);
-
 		userCode.addCodeUpdateListener(indicatorSelector.previewUpdater);
 
-		out.addActionListener((e) -> new UserCodeDialog(userCode).setVisible(true));
-
-		return out;
+		return userCode;
 	}
 
 	public ArgumentValue getValue() {

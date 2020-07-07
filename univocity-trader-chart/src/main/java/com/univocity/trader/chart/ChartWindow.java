@@ -12,6 +12,7 @@ import com.univocity.trader.config.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 public class ChartWindow extends JFrame {
 
@@ -27,6 +28,10 @@ public class ChartWindow extends JFrame {
 	private SymbolSelector symbolSelector;
 	private IndicatorSelector indicatorSelector;
 
+	private JPopupMenu popup;
+	private JMenuItem addIndicatorMenuItem;
+
+
 	public ChartWindow() {
 		this.setLayout(new BorderLayout());
 		this.setTitle("No candle data loaded");
@@ -39,11 +44,28 @@ public class ChartWindow extends JFrame {
 		this.add(getTopPanel(), BorderLayout.NORTH);
 	}
 
+	private JPopupMenu getPopup() {
+		if (popup == null) {
+			popup = new JPopupMenu();
+			popup.add(getAddIndicatorMenuItem());
+		}
+		return popup;
+	}
+
+	private JMenuItem getAddIndicatorMenuItem() {
+		if (addIndicatorMenuItem == null) {
+			addIndicatorMenuItem = new JMenuItem("Indicators...");
+			addIndicatorMenuItem.setMnemonic(KeyEvent.VK_I);
+			addIndicatorMenuItem.addActionListener((e) -> getIndicatorSelector().getDialog().setVisible(true));
+		}
+		return addIndicatorMenuItem;
+	}
+
 	private JPanel getTopPanel() {
 		if (topPanel == null) {
 			topPanel = new JPanel(new GridLayout(1, 2));
 			topPanel.add(getSymbolSelector());
-			topPanel.add(getIndicatorSelector());
+//			topPanel.add(getIndicatorSelector());
 		}
 		return topPanel;
 	}
@@ -157,6 +179,24 @@ public class ChartWindow extends JFrame {
 			getCandleHistory().addDataUpdateListener((type) -> getTimeIntervalSelector().dataUpdated(type));
 			getTimeIntervalSelector().addIntervalListener(chartHistoryView::updateView);
 			chart.addPainterSelectedListener(painter -> getIndicatorSelector().displayOptionsFor(painter));
+
+			chart.canvas.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseReleased(MouseEvent e) {
+					showPopup(e);
+				}
+
+				@Override
+				public void mousePressed(MouseEvent e) {
+					showPopup(e);
+				}
+
+				private void showPopup(MouseEvent e) {
+					if (e.isPopupTrigger()) {
+						getPopup().show(e.getComponent(), e.getX(), e.getY());
+					}
+				}
+			});
 		}
 		return chart;
 	}

@@ -161,14 +161,14 @@ public class WindowUtils {
 		return ok.getColor();
 	}
 
-	public static JDialog createDialog(Container panel) {
+	public static JDialog createDialog(String title, Container panel) {
 		JDialog dialog = new JDialog();
-
-		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialog.setTitle(title);
+		dialog.setDefaultCloseOperation(JDialog.HIDE_ON_CLOSE);
 		dialog.setModal(false);
 
 		dialog.setContentPane(panel);
-		dialog.pack();
+		dialog.setBounds(0, 0, 800, 600);
 		dialog.setLocationRelativeTo(null);
 
 		return dialog;

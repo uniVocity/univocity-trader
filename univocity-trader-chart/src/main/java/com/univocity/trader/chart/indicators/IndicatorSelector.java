@@ -2,10 +2,12 @@ package com.univocity.trader.chart.indicators;
 
 import com.univocity.trader.chart.charts.painter.Painter;
 import com.univocity.trader.chart.dynamic.code.*;
+import com.univocity.trader.chart.gui.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
 import javax.swing.*;
+import javax.swing.border.*;
 import javax.swing.event.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -27,6 +29,8 @@ public class IndicatorSelector extends JPanel {
 
 	private VisualIndicator editing;
 	private VisualIndicator preview;
+
+	private JDialog dialog;
 
 	private class Updater implements ChangeListener, ItemListener, ActionListener, UserCode.CodeUpdateListener {
 		@Override
@@ -55,30 +59,30 @@ public class IndicatorSelector extends JPanel {
 
 	public IndicatorSelector(Supplier<TimeInterval> timeInterval) {
 		this.setLayout(new GridBagLayout());
+		setBorder(new TitledBorder("Indicators"));
 		GridBagConstraints c = new GridBagConstraints();
-		c.anchor = GridBagConstraints.NORTH;
-		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(5, 5, 5, 5);
-		this.add(getCmbIndicators(), c);
-
-		c.gridy = 1;
-		c.weighty = 1.0;
-		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.WEST;
-		this.add(getIndicatorOptionsPanel(), c);
-
-
-		c.gridy = 2;
 		c.fill = GridBagConstraints.HORIZONTAL;
-
+		c.gridx = 0;
+		this.add(getCmbIndicators(), c);
+		c.gridx = 1;
 		this.add(getControlPanel(), c);
+
+		c.insets = new Insets(10, 10, 10, 10);
+		c.gridx = 0;
+		c.gridy = 1;
+		c.fill = GridBagConstraints.BOTH;
+		c.weighty = 1.0;
+		c.weightx = 1.0;
+		c.gridwidth = 2;
+		this.add(getIndicatorOptionsPanel(), c);
 
 		this.timeInterval = timeInterval;
 	}
 
 	private JPanel getControlPanel() {
 		if (controlPanel == null) {
-			controlPanel = new JPanel();
+			controlPanel = new JPanel(new GridLayout(1, 2, 5, 5));
 			controlPanel.add(getBtAdd());
 			controlPanel.add(getBtRemove());
 		}
@@ -150,6 +154,7 @@ public class IndicatorSelector extends JPanel {
 	public void displayOptionsFor(Painter<?> painter) {
 		if (painter instanceof VisualIndicator) {
 			displayOptionsFor((VisualIndicator) painter);
+			getDialog().setVisible(true);
 		}
 	}
 
@@ -159,7 +164,7 @@ public class IndicatorSelector extends JPanel {
 		getCmbIndicators().setEnabled(false);
 
 		addingIndicator();
-		getBtAdd().setText("Close");
+		getBtAdd().setText("Done");
 		getBtAdd().setEnabled(true);
 		getBtRemove().setEnabled(true);
 		getBtRemove().setText("Remove");
@@ -239,6 +244,13 @@ public class IndicatorSelector extends JPanel {
 
 		preview = null;
 		editing = null;
+	}
+
+	public JDialog getDialog() {
+		if (dialog == null) {
+			dialog = WindowUtils.createDialog("Indicators", this);
+		}
+		return dialog;
 	}
 
 	public static void main(String... args) {

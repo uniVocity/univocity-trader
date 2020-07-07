@@ -24,7 +24,6 @@ public class UserCode<T> extends JSplitPane {
 
 	private JButton btSave;
 	private JButton btTest;
-	private JButton btClose;
 	private JToggleButton btLock;
 	private JPanel controlPanel;
 	private JPanel editorPanel;
@@ -59,7 +58,7 @@ public class UserCode<T> extends JSplitPane {
 	private JPanel getEditorPanel() {
 		if (editorPanel == null) {
 			editorPanel = new JPanel(new BorderLayout());
-			editorPanel.add(getControlPanel(), BorderLayout.NORTH);
+			editorPanel.add(getControlPanel(), BorderLayout.SOUTH);
 			editorPanel.add(getCodeAreaScroll(), BorderLayout.CENTER);
 		}
 		return editorPanel;
@@ -71,16 +70,8 @@ public class UserCode<T> extends JSplitPane {
 			controlPanel.add(getBtSave());
 			controlPanel.add(getBtTest());
 			controlPanel.add(getBtLock());
-			controlPanel.add(getBtClose());
 		}
 		return controlPanel;
-	}
-
-	JButton getBtClose() {
-		if (btClose == null) {
-			btClose = new JButton("Close");
-		}
-		return btClose;
 	}
 
 	private JButton getBtTest() {
