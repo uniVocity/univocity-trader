@@ -5,42 +5,35 @@ import java.util.function.*;
 public class ArgumentValue {
 
 	private final String name;
-	private final Object value;
+	private final Object argumentValue;
+	private final Object editorValue;
 
 	ArgumentValue(String name, Object value) {
 		this.name = name;
-		this.value = value;
+		this.argumentValue = value;
+		this.editorValue = value;
 	}
 
 	ArgumentValue(String name, Object argumentValue, Object editorValue) {
 		this.name = name;
-		this.value = new Object[]{argumentValue, editorValue};
+		this.argumentValue = argumentValue;
+		this.editorValue = editorValue;
 	}
 
 	public Object getArgumentValue() {
-		if (value instanceof Supplier) {
-			return ((Supplier<?>) value).get();
+		if (argumentValue instanceof Supplier) {
+			return ((Supplier<?>) argumentValue).get();
 		}
-		if (value instanceof Object[]) {
-			return ((Object[]) value)[0];
-		}
-
-		return value;
+		return argumentValue;
 	}
 
 	public Object getEditorValue() {
-		if (!(value instanceof Supplier)) {
-			if (value instanceof Object[]) {
-				return ((Object[]) value)[1];
-			}
-			return value;
-		}
-		return null;
+		return editorValue;
 	}
 
 	@Override
 	public String toString() {
-		return name + "=" + value;
+		return name + "=" + editorValue;
 	}
 
 

@@ -176,11 +176,13 @@ public class IndicatorSelector extends JPanel {
 	}
 
 	private void indicatorChanged() {
-		IndicatorDefinition indicatorDefinition = (IndicatorDefinition) cmbIndicators.getSelectedItem();
-		if (getIndicatorOptionsPanel().updateIndicator(indicatorDefinition)) {
-			updatePreview(indicatorDefinition);
-			getBtAdd().setEnabled(true);
-		}
+		SwingUtilities.invokeLater(() -> {
+			IndicatorDefinition indicatorDefinition = (IndicatorDefinition) cmbIndicators.getSelectedItem();
+			if (getIndicatorOptionsPanel().updateIndicator(indicatorDefinition)) {
+				updatePreview(indicatorDefinition);
+				getBtAdd().setEnabled(true);
+			}
+		});
 	}
 
 	void updatePreview(IndicatorDefinition indicatorDefinition) {

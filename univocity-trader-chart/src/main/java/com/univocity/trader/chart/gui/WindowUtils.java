@@ -16,23 +16,23 @@ public class WindowUtils {
 		}
 		return screens[displayIndex];
 	}
-	
-	public static boolean isOnSameScreen(Component c1, Component c2){
+
+	public static boolean isOnSameScreen(Component c1, Component c2) {
 		Point p1 = c1.getLocationOnScreen();
 		p1.x += c1.getWidth() / 2;
 		p1.y += c1.getHeight() / 2;
-		
+
 		Point p2 = c2.getLocationOnScreen();
 		p2.x += c2.getWidth() / 2;
 		p2.y += c2.getHeight() / 2;
-		
+
 		Rectangle[] screens = DisplayObserver.getInstance().getScreenSizes();
-		for(Rectangle screen : screens){
-			if(screen.contains(p1) && screen.contains(p2)){
+		for (Rectangle screen : screens) {
+			if (screen.contains(p1) && screen.contains(p2)) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
 
@@ -51,7 +51,7 @@ public class WindowUtils {
 		return new Rectangle(x, y, width, height);
 	}
 
-	public static Rectangle getWindowBoundsOnFirstScreen(int windowCount, int rows, int cols, Insets insets) {		
+	public static Rectangle getWindowBoundsOnFirstScreen(int windowCount, int rows, int cols, Insets insets) {
 		if ((windowCount - 1) / (rows * cols) <= 0) {
 			return getWindowBounds(windowCount, rows, cols, insets);
 		} else {
@@ -159,6 +159,19 @@ public class WindowUtils {
 		dialog.setVisible(true);
 
 		return ok.getColor();
+	}
+
+	public static JDialog createDialog(Container panel) {
+		JDialog dialog = new JDialog();
+
+		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		dialog.setModal(false);
+
+		dialog.setContentPane(panel);
+		dialog.pack();
+		dialog.setLocationRelativeTo(null);
+
+		return dialog;
 	}
 
 	public static void displayTestFrame(Component component) {

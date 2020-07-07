@@ -134,15 +134,19 @@ public class Argument {
 
 	public ArgumentValue getValue() {
 		Object v = componentGetter == null ? null : componentGetter.get();
-		if (userCode != null) {
-			return new ArgumentValue(name, userCode.lastInstanceBuilt(), userCode.getSourceCode());
+		if (isUserCode) {
+			return new ArgumentValue(name, userCode.lastInstanceBuilt(), userCode.getLastWorkingVersion());
 		}
 		return new ArgumentValue(name, v);
 	}
 
 	void updateComponentValue(ArgumentValue argumentValue) {
 		if (componentSetter != null && argumentValue != null) {
-			componentSetter.accept(argumentValue.getEditorValue());
+			Object value = argumentValue.getEditorValue();
+			if(value == null && isUserCode){
+				value = userCode.getSourceCode();
+			}
+			componentSetter.accept(value);
 		}
 	}
 

@@ -220,6 +220,7 @@ public class UserCode<T> extends JSplitPane {
 
 	public void setSourceCode(String sourceCode) {
 		getCodeArea().setText(sourceCode);
+		lastWorkingVersion = sourceCode;
 	}
 
 	public void addCodeUpdateListener(CodeUpdateListener l) {
