@@ -79,11 +79,11 @@ public class MockClientAccount implements ClientAccount {
 	}
 
 	@Override
-	public ConcurrentHashMap<String, Balance> updateBalances() {
+	public ConcurrentHashMap<String, Balance> updateBalances(boolean force) {
 		synchronized (account) {
 			account.accountManager.forEachTradingManager(TradingManager::updateOpenOrders);
 
-			var tmp = account.updateBalances();
+			var tmp = account.updateBalances(force);
 			var out = new ConcurrentHashMap<String, Balance>();
 			tmp.forEach((k, v) -> out.put(k, v.clone()));
 

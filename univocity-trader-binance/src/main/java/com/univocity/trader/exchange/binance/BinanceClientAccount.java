@@ -27,6 +27,7 @@ import java.util.function.*;
 import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
+import static com.univocity.trader.exchange.binance.api.client.domain.OrderType.*;
 import static com.univocity.trader.exchange.binance.api.client.domain.TimeInForce.*;
 import static com.univocity.trader.exchange.binance.api.client.domain.account.NewOrder.*;
 
@@ -71,23 +72,59 @@ class BinanceClientAccount implements ClientAccount {
 	public Order executeOrder(OrderRequest orderDetails) {
 		String symbol = orderDetails.getSymbol();
 		String price = roundStr(orderDetails.getPrice());
+		String stopPrice = null;
+		Order order = null;
+		List<OrderRequest> attachments = orderDetails.attachedOrderRequests();
+
+		if (attachments != null) {
+				for (OrderRequest attachment : attachments) {
+					if (attachment.getTriggerCondition() == Order.TriggerCondition.STOP_LOSS){
+						stopPrice = roundStr(attachment.getPrice());
+					} else {
+						price = roundStr(attachment.getPrice());
+					}
+
+				}
+			}
+
+
+		String finalPrice = price;
+		String finalStopPrice = stopPrice;
+
+
 		switch (orderDetails.getSide()) {
 			case BUY:
 				switch (orderDetails.getType()) {
 					case LIMIT:
-						return execute(orderDetails, q -> limitBuy(symbol, GTC, q, price));
+
+						if (stopPrice != null){
+
+							order = execute(orderDetails, q -> limitOCOBuy(symbol, GTC, q, finalPrice, finalStopPrice, finalStopPrice));
+						} else {
+							order = execute(orderDetails, q -> limitBuy(symbol, GTC, q, finalPrice));
+						}
+						break;
 					case MARKET:
 						return execute(orderDetails, q -> marketBuy(symbol, q));
 				}
 			case SELL:
 				switch (orderDetails.getType()) {
 					case LIMIT:
-						return execute(orderDetails, q -> limitSell(symbol, GTC, q, price));
+						if (stopPrice != null){
+							order = execute(orderDetails, q -> limitOCOSell(symbol, GTC, q, finalPrice, finalStopPrice, finalStopPrice));
+						} else {
+							order = execute(orderDetails, q -> limitSell(symbol, GTC, q, finalPrice));
+						}
+
+
+						break;
 					case MARKET:
 						return execute(orderDetails, q -> marketSell(symbol, q));
 				}
 		}
-		return null;
+
+
+		return order ;
 	}
 
 	@Override
@@ -105,7 +142,7 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	@Override
-	public synchronized ConcurrentHashMap<String, Balance> updateBalances() {
+	public ConcurrentHashMap<String, Balance> updateBalances(boolean force) {
 		Account account = client.getAccount();
 		List<AssetBalance> balances = account.getBalances();
 
@@ -123,13 +160,27 @@ class BinanceClientAccount implements ClientAccount {
 	private Order translate(OrderRequest preparation, OrderDetails response) {
 		Order out = new Order(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), Trade.Side.LONG, response.getTime());
 
-		out.setPrice(Double.parseDouble(response.getPrice()));
-		out.setAveragePrice(Double.parseDouble(response.getPrice()));
+		out.setPrice(response.getAttachments().isEmpty() ?  Double.parseDouble(response.getPrice()) : preparation.getPrice());
+		out.setAveragePrice(response.getAttachments().isEmpty() ?  Double.parseDouble(response.getPrice()) : preparation.getPrice());
 		out.setQuantity(Double.parseDouble(response.getOrigQty()));
 		out.setExecutedQuantity(Double.parseDouble(response.getExecutedQty()));
 		out.setOrderId(String.valueOf(response.getOrderId()));
 		out.setStatus(translate(response.getStatus()));
 		out.setType(translate(response.getType()));
+
+		for (OrderDetails orderDetails: response.getAttachments()){
+			Order child = new Order(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(orderDetails.getSide()), Trade.Side.LONG, orderDetails.getTime());
+
+			child.setTriggerCondition(orderDetails.getType() == STOP_LOSS_LIMIT ? Order.TriggerCondition.STOP_LOSS : Order.TriggerCondition.STOP_GAIN, Double.parseDouble(orderDetails.getPrice()));
+			child.setPrice(Double.parseDouble(orderDetails.getPrice()));
+			child.setAveragePrice(Double.parseDouble(orderDetails.getPrice()));
+			child.setQuantity(Double.parseDouble(orderDetails.getOrigQty()));
+			child.setExecutedQuantity(Double.parseDouble(orderDetails.getExecutedQty()));
+			child.setOrderId(String.valueOf(orderDetails.getOrderId()));
+			child.setStatus(translate(orderDetails.getStatus()));
+			child.setType(translate(orderDetails.getType()));
+			child.setParent(out);
+		}
 		return out;
 	}
 
@@ -164,9 +215,12 @@ class BinanceClientAccount implements ClientAccount {
 	private Order.Type translate(OrderType type) {
 		switch (type) {
 			case LIMIT:
+			case LIMIT_MAKER:
+			case STOP_LOSS_LIMIT:
 				return Order.Type.LIMIT;
 			case MARKET:
 				return Order.Type.MARKET;
+
 		}
 		throw new IllegalStateException("Can't translate " + type + " to Order.Type");
 	}
@@ -185,7 +239,7 @@ class BinanceClientAccount implements ClientAccount {
 				order = orderFunction.apply(qty.toPlainString());
 				log.info("Executing {} order: {}", order.getType(), order);
 
-				return translate(orderPreparation, client.newOrder(order.newOrderRespType(NewOrderResponseType.FULL)));
+				return translate(orderPreparation, order.getStopPrice() != null ? client.newOrderOCO(order.newOrderRespType(NewOrderResponseType.FULL)) : client.newOrder(order.newOrderRespType(NewOrderResponseType.FULL)));
 			} catch (BinanceApiException e) {
 				log.error("Error processing order " + order, e);
 			}

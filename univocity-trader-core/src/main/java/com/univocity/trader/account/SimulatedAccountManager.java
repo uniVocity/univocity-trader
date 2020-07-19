@@ -172,7 +172,7 @@ public class SimulatedAccountManager extends AccountManager implements Simulated
 	}
 
 	@Override
-	public ConcurrentHashMap<String, Balance> updateBalances() {
+	public ConcurrentHashMap<String, Balance> updateBalances(boolean force) {
 		return balances;
 	}
 
