@@ -12,18 +12,20 @@ public class WaddahAttarExplosion extends SingleValueIndicator {
 
     private BollingerBand BB ;
     private MACD macd;
-    private double sensitivity , BBmultiplier ,explosion,trend , newMACDvalue , oldMACDvalue;
-    private int  slowLength , fastLength , BBchannelLength;
-    private TimeInterval interval;
+    private double sensitivity ,explosion,trend , newMACDvalue , oldMACDvalue;
     private boolean upTrend;
     private boolean firstProcess=true;
 
-    public WaddahAttarExplosion( double sensitivity , int fastLength , int slowLength , int BBchannelLength , double BBmultiplier , TimeInterval interval , ToDoubleFunction<Candle> valueGetter ) {
-
-        BB = new BollingerBand( BBchannelLength , interval  , valueGetter);
-		macd = new MACD( fastLength , slowLength , 9 , valueGetter);
+    public WaddahAttarExplosion( double sensitivity , int fastLength , int slowLength , int BBchannelLength , double BBmultiplier , 
+    																								TimeInterval interval , ToDoubleFunction<Candle> valueGetter ) {
+    	super(interval, null);
+        BB = new BollingerBand( BBchannelLength ,BBmultiplier, interval  , valueGetter);
+		macd = new MACD( fastLength , slowLength , 9 ,interval, valueGetter);
         this.sensitivity = sensitivity;
-        this.BBmultiplier = BBmultiplier;
+	}
+    
+    public WaddahAttarExplosion( double sensitivity , int fastLength , int slowLength , int BBchannelLength , double BBmultiplier , TimeInterval interval ) {
+    	this(  sensitivity , fastLength , slowLength , BBchannelLength, BBmultiplier ,  interval ,c -> c.close);
 
 	}
 
@@ -34,9 +36,9 @@ public class WaddahAttarExplosion extends SingleValueIndicator {
 
     public boolean process(Candle candle, double value, boolean updating){
         
-
-        BB.calculateIndicatorValue(Candle candle, double value, boolean updating);
-        macd.process(Candle candle, double value, boolean updating);
+    	
+        BB.calculateIndicatorValue( candle,  value,  updating);
+        macd.process( candle,  value,  updating);
         addNewMACD(macd.getValue() );
 
         if (firstProcess){
@@ -47,11 +49,11 @@ public class WaddahAttarExplosion extends SingleValueIndicator {
             trend = ( newMACDvalue - oldMACDvalue )*sensitivity;
         }
 
-        trendUp = (trend >= 0) ;
-        if (!trendUp)
+        upTrend = (trend >= 0) ;
+        if (!upTrend)
             trend *= -1;
         
-        explosion = BB.getUpperBand - BB.getLowerBand ;
+        explosion = BB.getUpperBand() - BB.getLowerBand() ;
 
 
 		return true;
@@ -70,10 +72,13 @@ public class WaddahAttarExplosion extends SingleValueIndicator {
 
 
     public boolean isTrendUp(){
-        return trendUp;
+        return upTrend;
     }
 
-
+	@Override
+	protected Indicator[] children() {
+		return new Indicator[]{BB, macd};
+	}
 
 
 }
