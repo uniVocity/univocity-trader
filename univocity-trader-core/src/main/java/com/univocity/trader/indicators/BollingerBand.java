@@ -11,18 +11,20 @@ import java.util.function.*;
  */
 public class BollingerBand extends MovingAverage {
 
-	private double stddev;
+	private double stddev,multiplier;
 
 	public BollingerBand(TimeInterval interval) {
-		this(12, interval);
+		this(12, 2.0, interval);
 	}
 
-	public BollingerBand(int length, TimeInterval interval) {
+	public BollingerBand(int length, double multiplier , TimeInterval interval) {
 		super(length, interval);
+		this.multiplier = multiplier;
 	}
 
-	public BollingerBand(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	public BollingerBand(int length,double multiplier, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		super(length, interval, valueGetter == null ? c -> c.close : valueGetter);
+		this.multiplier = multiplier;
 	}
 
 	private double getStandardDeviation() {
@@ -52,13 +54,13 @@ public class BollingerBand extends MovingAverage {
 	public double getUpperBand() {
 		double deviation = getStandardDeviation();
 		double middle = getMiddleBand();
-		return middle + (2.0 * deviation);
+		return middle + (multiplier * deviation);
 	}
 
 	public double getLowerBand() {
 		double deviation = getStandardDeviation();
 		double middle = getMiddleBand();
-		return middle - (2.0 * deviation);
+		return middle - (multiplier * deviation);
 	}
 
 	public double getMiddleBand() {
