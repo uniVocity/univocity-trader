@@ -11,18 +11,26 @@ import java.util.function.*;
  */
 public class BollingerBand extends MovingAverage {
 
-	private double stddev,multiplier;
+	private double stddev;
+	private final double multiplier;
 
 	public BollingerBand(TimeInterval interval) {
 		this(12, 2.0, interval);
 	}
 
-	public BollingerBand(int length, double multiplier , TimeInterval interval) {
-		super(length, interval);
-		this.multiplier = multiplier;
+	public BollingerBand(int length, TimeInterval interval) {
+		this(length, 2.0, interval);
 	}
 
-	public BollingerBand(int length,double multiplier, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	public BollingerBand(int length, double multiplier, TimeInterval interval) {
+		this(length, multiplier, interval, null);
+	}
+
+	public BollingerBand(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		this(length, 2.0, interval, valueGetter);
+	}
+
+	public BollingerBand(int length, double multiplier, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		super(length, interval, valueGetter == null ? c -> c.close : valueGetter);
 		this.multiplier = multiplier;
 	}

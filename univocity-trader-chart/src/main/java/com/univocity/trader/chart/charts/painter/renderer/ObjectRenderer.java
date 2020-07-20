@@ -42,8 +42,15 @@ public abstract class ObjectRenderer<O, T extends Theme> extends AbstractRendere
 		}
 	}
 
+	public O objectAt(int i) {
+		if (i < objects.length) {
+			return objects[i];
+		}
+		return null;
+	}
+
 	@Override
-	public final void paintNext(int i, BasicChart<?> chart,Painter.Overlay overlay, Graphics2D g, AreaPainter areaPainter) {
+	public final void paintNext(int i, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter areaPainter) {
 		if (i < objects.length && objects[i] != null) {
 			paintNext(i, objects[i], chart, overlay, g, areaPainter);
 		}

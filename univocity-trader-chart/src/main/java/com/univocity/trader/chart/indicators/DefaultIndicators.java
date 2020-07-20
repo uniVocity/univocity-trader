@@ -37,7 +37,7 @@ public class DefaultIndicators {
 	@Render(value = "getUpperBand", description = "High", theme = UpperBand.class)
 	@Render(value = "getMiddleBand", description = "Middle", theme = MiddleBand.class)
 	@Render(value = "getLowerBand", description = "Low", theme = LowerBand.class)
-	public static BollingerBand BollingerBand(@PositiveDefault(12) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	public static BollingerBand BollingerBand(@PositiveDefault(12) int length, @Default(value = 2.0, increment = 0.01) double multiplier, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.BollingerBand(length, interval, valueGetter);
 	}
 
@@ -234,6 +234,13 @@ public class DefaultIndicators {
 	@Overlay
 	public static VWAP VWAP(@PositiveDefault(14) int length, TimeInterval interval) {
 		return Indicators.VWAP(length, interval);
+	}
+
+
+	@Render(value = "getExplosion", theme = GreenLine.class)
+	@Render(value = "getTrend", renderer = HistogramRenderer.class/*, args = "isTrendUp"*/)
+	public static WaddahAttarExplosion WaddahAttarExplosion(@PositiveDefault(150) double sensitivity, @PositiveDefault(20) int fastLength, @PositiveDefault(40) int slowLength, @PositiveDefault(20) int channelLength, @PositiveDefault(value = 2.0, increment = 0.01) double multiplier, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.WaddahAttarExplosion(sensitivity, fastLength, slowLength, channelLength, multiplier, interval, valueGetter);
 	}
 
 	@Overlay

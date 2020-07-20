@@ -9,76 +9,67 @@ import java.util.function.*;
 
 public class WaddahAttarExplosion extends SingleValueIndicator {
 
+	private final BollingerBand bb;
+	private final MACD macd;
+	private final double sensitivity;
+	private double trend;
+	private double newMacdValue;
+	private double oldMacdValue;
+	private boolean upTrend;
 
-    private BollingerBand BB ;
-    private MACD macd;
-    private double sensitivity ,explosion,trend , newMACDvalue , oldMACDvalue;
-    private boolean upTrend;
-    private boolean firstProcess=true;
-
-    public WaddahAttarExplosion( double sensitivity , int fastLength , int slowLength , int BBchannelLength , double BBmultiplier , 
-    																								TimeInterval interval , ToDoubleFunction<Candle> valueGetter ) {
-    	super(interval, null);
-        BB = new BollingerBand( BBchannelLength ,BBmultiplier, interval  , valueGetter);
-		macd = new MACD( fastLength , slowLength , 9 ,interval, valueGetter);
-        this.sensitivity = sensitivity;
-	}
-    
-    public WaddahAttarExplosion( double sensitivity , int fastLength , int slowLength , int BBchannelLength , double BBmultiplier , TimeInterval interval ) {
-    	this(  sensitivity , fastLength , slowLength , BBchannelLength, BBmultiplier ,  interval ,c -> c.close);
-
+	public WaddahAttarExplosion(TimeInterval interval) {
+		this(150, 20, 40, 20, 2.0, interval, null);
 	}
 
-    private void addNewMACD(double newValue){
-        oldMACDvalue = newMACDvalue;
-        newMACDvalue = newValue ;
-    }
+	public WaddahAttarExplosion(double sensitivity, int fastLength, int slowLength, int channelLength, double multiplier, TimeInterval interval) {
+		this(sensitivity, fastLength, slowLength, channelLength, multiplier, interval, null);
+	}
 
-    public boolean process(Candle candle, double value, boolean updating){
-        
-    	
-        BB.calculateIndicatorValue( candle,  value,  updating);
-        macd.process( candle,  value,  updating);
-        addNewMACD(macd.getValue() );
+	public WaddahAttarExplosion(double sensitivity, int fastLength, int slowLength, int channelLength, double multiplier, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		super(interval, null);
+		valueGetter = valueGetter == null ? c -> c.close : valueGetter;
+		bb = new BollingerBand(channelLength, multiplier, interval, valueGetter);
+		macd = new MACD(fastLength, slowLength, 9, interval, valueGetter);
+		this.sensitivity = sensitivity;
+	}
 
-        if (firstProcess){
-            trend =0;
-            firstProcess=false;
-        }
-        else{
-            trend = ( newMACDvalue - oldMACDvalue )*sensitivity;
-        }
 
-        upTrend = (trend >= 0) ;
-        if (!upTrend)
-            trend *= -1;
-        
-        explosion = BB.getUpperBand() - BB.getLowerBand() ;
+	public boolean process(Candle candle, double value, boolean updating) {
+		bb.accumulate(candle);
+		macd.accumulate(candle);
 
+		oldMacdValue = newMacdValue;
+		newMacdValue = macd.getValue();
+
+		if (getAccumulationCount() == 0) {
+			trend = 0;
+		} else {
+			trend = (newMacdValue - oldMacdValue) * sensitivity;
+		}
+
+		upTrend = (trend >= 0);
+		if (!upTrend)
+			trend *= -1;
 
 		return true;
-    }
+	}
 
 
-
-    public double getTrend(){
-        return trend;
-    }
-
-
-    public double getExplosion(){
-        return explosion;
-    }
+	public double getTrend() {
+		return trend;
+	}
 
 
-    public boolean isTrendUp(){
-        return upTrend;
-    }
+	public double getExplosion() {
+		return bb.getUpperBand() - bb.getLowerBand();
+	}
+
+	public boolean isTrendUp() {
+		return upTrend;
+	}
 
 	@Override
 	protected Indicator[] children() {
-		return new Indicator[]{BB, macd};
+		return new Indicator[]{bb, macd};
 	}
-
-
 }

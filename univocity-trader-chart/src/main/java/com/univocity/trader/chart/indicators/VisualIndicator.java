@@ -13,6 +13,7 @@ import org.apache.commons.lang3.*;
 
 import java.awt.*;
 import java.lang.reflect.*;
+import java.util.List;
 import java.util.*;
 import java.util.function.*;
 
@@ -171,7 +172,18 @@ public class VisualIndicator extends AreaPainter {
 				theme.setDisplayingLogarithmicScale(overlay != NONE);
 
 				Renderer out;
-				out = rendererType.getConstructor(String.class, constructorThemeType, DoubleSupplier.class).newInstance(description, theme, supplier);
+				String[] args = renderConfig.args();
+				List<Class<?>> argumentTypes = new ArrayList<>(Arrays.asList(String.class, constructorThemeType, DoubleSupplier.class));
+				List<Object> argumentValues = new ArrayList<>(Arrays.asList(description, theme, supplier));
+				if (!"".equals(args[0]) || args.length > 1) {
+					for (int i = 0; i < args.length; i++) {
+						argumentTypes.add(Supplier.class);
+						Method method = getIndicator().getClass().getMethod(args[i]);
+						argumentValues.add(objectSupplier(method));
+					}
+				}
+
+				out = rendererType.getConstructor(argumentTypes.toArray(Class[]::new)).newInstance(argumentValues.toArray());
 				if ((m == null || !renderConfig.displayValue()) && out instanceof AbstractRenderer) {
 					((AbstractRenderer<?>) out).displayValue(false);
 				}
@@ -182,6 +194,16 @@ public class VisualIndicator extends AreaPainter {
 		}
 		throw new IllegalStateException("Unable to to initialize visualization for indicator returned by " + m);
 
+	}
+
+	private Supplier<Object> objectSupplier(Method m) {
+		return () -> {
+			try {
+				return m.invoke(getIndicator());
+			} catch (Exception e) {
+				throw new IllegalStateException(e);
+			}
+		};
 	}
 
 	private double invoke(Method m) {

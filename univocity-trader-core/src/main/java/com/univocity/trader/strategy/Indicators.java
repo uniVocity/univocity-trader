@@ -66,6 +66,15 @@ public abstract class Indicators {
 		return register(new BollingerBand(length, interval, valueGetter), length, interval, valueGetter);
 	}
 
+
+	public static BollingerBand BollingerBand(int length, double multiplier, TimeInterval interval) {
+		return register(new BollingerBand(length, multiplier, interval), length, multiplier, interval);
+	}
+
+	public static BollingerBand BollingerBand(int length, double multiplier, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new BollingerBand(length, multiplier, interval, valueGetter), length, multiplier, interval, valueGetter);
+	}
+
 	public static ChandelierExitLong ChandelierExitLong(TimeInterval interval) {
 		return register(new ChandelierExitLong(interval), interval);
 	}
@@ -360,7 +369,19 @@ public abstract class Indicators {
 	}
 
 	public static VWAP VWAP(int length, TimeInterval interval) {
-		return register(new VWAP(length, interval), interval);
+		return register(new VWAP(length, interval), length, interval);
+	}
+
+	public static WaddahAttarExplosion WaddahAttarExplosion(TimeInterval interval) {
+		return register(new WaddahAttarExplosion(interval), interval);
+	}
+
+	public static WaddahAttarExplosion WaddahAttarExplosion(double sensitivity, int fastLength, int slowLength, int channelLength, double multiplier, TimeInterval interval) {
+		return register(new WaddahAttarExplosion(sensitivity, fastLength, slowLength, channelLength, multiplier, interval), sensitivity, fastLength, slowLength, channelLength, multiplier, interval);
+	}
+
+	public static WaddahAttarExplosion WaddahAttarExplosion(double sensitivity, int fastLength, int slowLength, int channelLength, double multiplier, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new WaddahAttarExplosion(sensitivity, fastLength, slowLength, channelLength, multiplier, interval, valueGetter), sensitivity, fastLength, slowLength, channelLength, multiplier, interval, valueGetter);
 	}
 
 	public static YoYoExitLong YoYoExitLong(TimeInterval interval) {
