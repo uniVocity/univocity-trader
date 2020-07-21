@@ -150,7 +150,7 @@ public class VisualIndicator extends AreaPainter {
 
 				if (rendererType == LineRenderer.class) {
 					constructorThemeType = LineTheme.class;
-				} else if (rendererType == HistogramRenderer.class) {
+				} else if (rendererType == HistogramRenderer.class || rendererType == ColoredHistogramRenderer.class) {
 					constructorThemeType = HistogramTheme.class;
 				} else if (rendererType == MarkerRenderer.class) {
 					constructorThemeType = MarkerTheme.class;

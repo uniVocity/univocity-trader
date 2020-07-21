@@ -33,12 +33,13 @@ public class WaddahAttarExplosion extends SingleValueIndicator {
 		this.sensitivity = sensitivity;
 	}
 
-
 	public boolean process(Candle candle, double value, boolean updating) {
 		bb.accumulate(candle);
 		macd.accumulate(candle);
 
-		oldMacdValue = newMacdValue;
+		if(!updating) {
+			oldMacdValue = newMacdValue;
+		}
 		newMacdValue = macd.getValue();
 
 		if (getAccumulationCount() == 0) {
