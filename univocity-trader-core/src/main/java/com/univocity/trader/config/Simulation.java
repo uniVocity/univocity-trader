@@ -243,7 +243,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return backfillTo().minus(backfillLength, backfillUnit);
 	}
 
-	public void backfillFrom(LocalDateTime backfillTo) {
+	public void backfillFrom(LocalDateTime backfillFrom) {
 		this.backfillFrom = backfillFrom;
 	}
 
