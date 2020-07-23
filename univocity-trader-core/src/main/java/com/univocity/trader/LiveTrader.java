@@ -271,6 +271,10 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		}
 	}
 
+	public Exchange<?,?> exchange(){
+		return exchange;
+	}
+
 	@Override
 	public void close() {
 		try {

@@ -72,10 +72,7 @@ public class ChartWindow extends JFrame {
 
 	private SymbolSelector getSymbolSelector() {
 		if (symbolSelector == null) {
-			DatabaseConfiguration databaseConfiguration = new SimulationConfiguration().database();
-			CandleRepository candleRepository = new CandleRepository(databaseConfiguration);
-
-			symbolSelector = new SymbolSelector(candleRepository, getCandleHistory());
+			symbolSelector = new SymbolSelector(getCandleHistory());
 			setGlassPane(symbolSelector.getGlassPane());
 		}
 		return symbolSelector;

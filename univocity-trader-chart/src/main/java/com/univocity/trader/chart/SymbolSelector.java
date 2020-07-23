@@ -1,6 +1,7 @@
 package com.univocity.trader.chart;
 
 
+import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.gui.*;
 import com.univocity.trader.chart.gui.components.*;
@@ -30,16 +31,18 @@ public class SymbolSelector extends JPanel {
 	private JComboBox<String> cmbSymbols;
 	private DefaultComboBoxModel<String> cmbSymbolsModel;
 
-	private final CandleRepository candleRepository;
+	private CandleRepository candleRepository;
 	private final CandleHistory candleHistory;
 
 	private DisabledGlassPane glassPane;
 	private DateEditPanel chartStart;
 	private DateEditPanel chartEnd;
 	private JButton btLoad;
+	private ExchangeSelector exchangeSelector;
+	private JButton btUpdate;
+	private JToggleButton btLive;
 
-	public SymbolSelector(CandleRepository candleRepository, CandleHistory candleHistory) {
-		this.candleRepository = candleRepository;
+	public SymbolSelector(CandleHistory candleHistory) {
 		this.candleHistory = candleHistory;
 
 		this.setLayout(new GridBagLayout());
@@ -48,20 +51,26 @@ public class SymbolSelector extends JPanel {
 
 		c.fill = GridBagConstraints.BOTH;
 		c.gridx = 0;
-		this.add(getCmbSymbols(), c);
+		this.add(getExchangeSelector(), c);
 
 		c.gridx = 1;
-		this.add(getTxtUnits(), c);
+		this.add(getCmbSymbols(), c);
 
 		c.gridx = 2;
-		this.add(getCmbUnitType(), c);
+		this.add(getTxtUnits(), c);
 
 		c.gridx = 3;
+		this.add(getCmbUnitType(), c);
+
+		c.gridx = 4;
 		this.add(getBtLoad(), c);
+
+		c.gridx = 5;
+		this.add(getBtUpdate(), c);
 
 		c.gridx = 0;
 		c.gridy = 1;
-		c.gridwidth = 2;
+		c.gridwidth = 4;
 		this.add(getChartStart(), c);
 
 		c.gridx = 2;
@@ -77,6 +86,44 @@ public class SymbolSelector extends JPanel {
 		return btLoad;
 	}
 
+	private ExchangeSelector getExchangeSelector() {
+		if (exchangeSelector == null) {
+			this.exchangeSelector = new ExchangeSelector();
+			this.exchangeSelector.addExchangeListener(this::exchangeSelected);
+		}
+		return exchangeSelector;
+	}
+
+	private void exchangeSelected(LiveTrader<?, ?, ?> liveTrader) {
+		getCmbSymbols().setEnabled(false);
+
+		String currentSymbol = getSymbol();
+		System.out.println(currentSymbol);
+
+//		liveTrader.exchange();
+		this.candleRepository = liveTrader.candleRepository();
+		getCmbSymbolsModel().removeAllElements();
+
+		Set<String> available = candleRepository.getKnownSymbols();
+		getCmbSymbolsModel().addAll(available);
+
+		if (currentSymbol != null && available.contains(currentSymbol)) {
+			System.out.println(currentSymbol);
+			getCmbSymbolsModel().setSelectedItem(currentSymbol);
+		}
+
+		getCmbSymbols().setEnabled(true);
+	}
+
+	private JButton getBtUpdate() {
+		if (btUpdate == null) {
+			btUpdate = new JButton("Update");
+			btUpdate.setEnabled(false);
+			btUpdate.addActionListener((e) -> SwingUtilities.invokeLater(this::executeBackfill));
+		}
+		return btUpdate;
+	}
+
 	private void executeLoadCandles() {
 		Thread thread = new Thread(() -> {
 			try {
@@ -88,6 +135,21 @@ public class SymbolSelector extends JPanel {
 		});
 		thread.start();
 	}
+
+	private void executeBackfill() {
+		Thread thread = new Thread(() -> {
+			try {
+				glassPane.activate("Updating history of " + getSymbol());
+				CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository);
+				backfill.fillHistory(null, getSymbol(), getChartStart().getCommittedValue(), getChartEnd().getCommittedValue(), TimeInterval.minutes(1));
+				loadCandles();
+			} finally {
+				glassPane.deactivate();
+			}
+		});
+		thread.start();
+	}
+
 
 	public String getSymbol() {
 		String symbol = (String) getCmbSymbols().getSelectedItem();
@@ -125,8 +187,8 @@ public class SymbolSelector extends JPanel {
 
 	private JComboBox<String> getCmbSymbols() {
 		if (cmbSymbols == null) {
-			cmbSymbolsModel = new DefaultComboBoxModel<>(candleRepository.getKnownSymbols().toArray(new String[0]));
-			cmbSymbols = new JComboBox<>(cmbSymbolsModel);
+			cmbSymbols = new JComboBox<>(getCmbSymbolsModel());
+			cmbSymbols.setEnabled(false);
 			cmbSymbols.setEditable(true);
 			cmbSymbols.setSelectedIndex(-1);
 			cmbSymbols.addActionListener((e) -> btLoad.setEnabled(true));
@@ -135,7 +197,15 @@ public class SymbolSelector extends JPanel {
 		return cmbSymbols;
 	}
 
+	private DefaultComboBoxModel<String> getCmbSymbolsModel() {
+		if (cmbSymbolsModel == null) {
+			cmbSymbolsModel = new DefaultComboBoxModel<>();
+		}
+		return cmbSymbolsModel;
+	}
+
 	private void loadCandles() {
+		btUpdate.setEnabled(false);
 		btLoad.setEnabled(false);
 		String symbol = validateSymbol();
 		if (symbol == null) {
@@ -170,7 +240,7 @@ public class SymbolSelector extends JPanel {
 				WindowUtils.displayWarning(this, "No history data available for symbol " + symbol);
 			}
 			candleHistory.setCandles(candles);
-
+			btUpdate.setEnabled(true);
 		} catch (Exception ex) {
 			log.error("Error loading data for symbol " + symbol, ex);
 			WindowUtils.displayError(this, "Error loading data for symbol " + symbol);
@@ -211,11 +281,11 @@ public class SymbolSelector extends JPanel {
 	}
 
 	private void fillAvailableDates() {
-		String symbol = validateSymbol();
+		String symbol = getSymbol();
 		setDateSelectionEnabled(symbol != null);
 		if (symbol != null) {
 			Candle first = candleRepository.firstCandle(symbol);
-			if(first != null) {
+			if (first != null) {
 				Candle last = candleRepository.lastCandle(symbol);
 
 				getChartStart().setMinimumValue(first.openTime);
@@ -304,7 +374,9 @@ public class SymbolSelector extends JPanel {
 		DatabaseConfiguration databaseConfiguration = new SimulationConfiguration().database();
 		CandleRepository candleRepository = new CandleRepository(databaseConfiguration);
 
-		SymbolSelector symbolSelector = new SymbolSelector(candleRepository, new CandleHistory());
+//		CandleRepository candleRepository = new CandleRepository(databaseConfiguration);
+
+		SymbolSelector symbolSelector = new SymbolSelector(new CandleHistory());
 		WindowUtils.displayTestFrame(symbolSelector);
 	}
 }

@@ -36,7 +36,6 @@ abstract class IBRequests {
 
 		this.requestHandler = new RequestHandler(reconnectionProcess);
 		this.responseProcessor = new ResponseProcessor(requestHandler);
-		connect();
 	}
 
 	abstract IBRequests newInstance(IBRequests oldInstance);
@@ -97,7 +96,7 @@ abstract class IBRequests {
 		return reader;
 	}
 
-	private synchronized void connect() {
+	synchronized void connect() {
 		boolean[] ready = new boolean[]{false};
 
 		EReader reader = null;
