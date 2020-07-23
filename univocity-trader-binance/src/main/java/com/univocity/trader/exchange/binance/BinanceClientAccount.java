@@ -99,7 +99,7 @@ class BinanceClientAccount implements ClientAccount {
 
 						if (stopPrice != null){
 
-							order = execute(orderDetails, q -> limitOCOBuy(symbol, GTC, q, finalPrice, finalStopPrice, finalStopPrice));
+							order = execute(orderDetails, q -> limitOCOBuy(symbol, GTC, q, finalStopPrice, finalPrice, finalPrice));
 						} else {
 							order = execute(orderDetails, q -> limitBuy(symbol, GTC, q, finalPrice));
 						}
@@ -107,6 +107,7 @@ class BinanceClientAccount implements ClientAccount {
 					case MARKET:
 						return execute(orderDetails, q -> marketBuy(symbol, q));
 				}
+				break;
 			case SELL:
 				switch (orderDetails.getType()) {
 					case LIMIT:
