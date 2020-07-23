@@ -68,12 +68,15 @@ public class SymbolSelector extends JPanel {
 		c.gridx = 5;
 		this.add(getBtUpdate(), c);
 
+		c.gridx = 6;
+		this.add(getBtLive(), c);
+
 		c.gridx = 0;
 		c.gridy = 1;
-		c.gridwidth = 4;
+		c.gridwidth = 3;
 		this.add(getChartStart(), c);
 
-		c.gridx = 2;
+		c.gridx = 3;
 		this.add(getChartEnd(), c);
 	}
 
@@ -86,6 +89,26 @@ public class SymbolSelector extends JPanel {
 		return btLoad;
 	}
 
+	private JToggleButton getBtLive() {
+		if (btLive == null) {
+			btLive = new JToggleButton("Connect");
+			btLive.setEnabled(false);
+			btLive.addActionListener(l -> tradeLive(btLive.isSelected()));
+		}
+		return btLive;
+	}
+
+	private void tradeLive(boolean live){
+		//TODO:
+		if(!live){
+			getBtLive().setText("Disconnect");
+			System.out.println("Disconnect from exchange");
+		} else {
+			getBtLive().setText("Connect");
+			System.out.println("Connect to exchange");
+		}
+	}
+
 	private ExchangeSelector getExchangeSelector() {
 		if (exchangeSelector == null) {
 			this.exchangeSelector = new ExchangeSelector();
@@ -96,6 +119,7 @@ public class SymbolSelector extends JPanel {
 
 	private void exchangeSelected(LiveTrader<?, ?, ?> liveTrader) {
 		getCmbSymbols().setEnabled(false);
+		getBtLive().setEnabled(false);
 
 		String currentSymbol = getSymbol();
 
@@ -136,7 +160,7 @@ public class SymbolSelector extends JPanel {
 
 	private void executeBackfill() {
 		Exchange<?, ?> exchange = getExchangeSelector().getSelectedExchange();
-		if(exchange == null){
+		if (exchange == null) {
 			getBtUpdate().setEnabled(false);
 			return;
 		}
@@ -195,7 +219,8 @@ public class SymbolSelector extends JPanel {
 			cmbSymbols.setEnabled(false);
 			cmbSymbols.setEditable(true);
 			cmbSymbols.setSelectedIndex(-1);
-			cmbSymbols.addActionListener((e) -> btLoad.setEnabled(true));
+			cmbSymbols.addActionListener((e) -> getBtLoad().setEnabled(true));
+			cmbSymbols.addActionListener((e) -> getBtLive().setEnabled(true));
 			cmbSymbols.addActionListener((e) -> fillAvailableDates());
 		}
 		return cmbSymbols;
