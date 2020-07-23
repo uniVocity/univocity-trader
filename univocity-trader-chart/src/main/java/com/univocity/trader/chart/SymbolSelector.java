@@ -98,9 +98,7 @@ public class SymbolSelector extends JPanel {
 		getCmbSymbols().setEnabled(false);
 
 		String currentSymbol = getSymbol();
-		System.out.println(currentSymbol);
 
-//		liveTrader.exchange();
 		this.candleRepository = liveTrader.candleRepository();
 		getCmbSymbolsModel().removeAllElements();
 
@@ -137,11 +135,17 @@ public class SymbolSelector extends JPanel {
 	}
 
 	private void executeBackfill() {
+		Exchange<?, ?> exchange = getExchangeSelector().getSelectedExchange();
+		if(exchange == null){
+			getBtUpdate().setEnabled(false);
+			return;
+		}
 		Thread thread = new Thread(() -> {
 			try {
 				glassPane.activate("Updating history of " + getSymbol());
 				CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository);
-				backfill.fillHistory(null, getSymbol(), getChartStart().getCommittedValue(), getChartEnd().getCommittedValue(), TimeInterval.minutes(1));
+				backfill.fillHistoryGaps(exchange, getSymbol(), getChartStart().getCommittedValue(), Instant.now(), TimeInterval.minutes(1));
+				fillAvailableDates();
 				loadCandles();
 			} finally {
 				glassPane.deactivate();

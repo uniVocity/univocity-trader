@@ -21,7 +21,7 @@ public class ExchangeSelector extends JComboBox<String> {
 	private final Set<String> disabledEntries = ConcurrentHashMap.newKeySet();
 
 	private String currentSelection;
-	private LiveTrader<?, ?, ?> currentLiveTrader = null;
+	private LiveTrader<?, ?, ?> selectedLiveTrader = null;
 
 	private List<Consumer<LiveTrader<?, ?, ?>>> exchangeSelectionListeners = new ArrayList<>();
 
@@ -49,6 +49,17 @@ public class ExchangeSelector extends JComboBox<String> {
 		}
 	}
 
+	public LiveTrader<?, ?, ?> getSelectedLiveTrader() {
+		return selectedLiveTrader;
+	}
+
+	public Exchange<?, ?> getSelectedExchange() {
+		if(selectedLiveTrader == null){
+			return null;
+		}
+		return selectedLiveTrader.exchange();
+	}
+
 	void updateSelectedExchange() {
 		String selection = (String) model.getSelectedItem();
 		if (selection != null && Objects.equals(selection, currentSelection)) {
@@ -71,7 +82,7 @@ public class ExchangeSelector extends JComboBox<String> {
 						trader = (LiveTrader<?, ?, ?>) ReflectionUtils.invokeMethod(entryPoint, "trader", true);
 						Exchange<?, ?> selected = trader.exchange();
 						if (selected != null) {
-							currentLiveTrader = trader;
+							selectedLiveTrader = trader;
 							currentSelection = selection;
 							exchangeSelected();
 						}
@@ -93,7 +104,7 @@ public class ExchangeSelector extends JComboBox<String> {
 		SwingUtilities.invokeLater(() -> {
 			for (Consumer<LiveTrader<?, ?, ?>> listener : exchangeSelectionListeners) {
 				try {
-					listener.accept(currentLiveTrader);
+					listener.accept(selectedLiveTrader);
 				} catch (Exception e) {
 					log.error("Error notifying listener " + listener + " of exchange update", e);
 				}
