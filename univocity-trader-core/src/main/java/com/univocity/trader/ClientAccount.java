@@ -58,9 +58,20 @@ public interface ClientAccount {
 	 * Updates the balances of all symbols traded by this account and returns them in a map of symbol to {@link Balance} instances, which
 	 * includes free amounts and amounts locked in one or more {@link Order}s.
 	 *
+	 * @param force If true, ignores the last time the balance was last checked
 	 * @return a map of symbols traded by the account and the corresponding {@link Balance} of each one.
 	 */
-	ConcurrentHashMap<String, Balance> updateBalances();
+	ConcurrentHashMap<String, Balance> updateBalances(boolean force);
+
+	/**
+	 * Updates the balances of all symbols traded by this account and returns them in a map of symbol to {@link Balance} instances, which
+	 * includes free amounts and amounts locked in one or more {@link Order}s.
+	 *
+	 * @return a map of symbols traded by the account and the corresponding {@link Balance} of each one.
+	 */
+	default ConcurrentHashMap<String, Balance> updateBalances() {
+		return updateBalances(false);
+	}
 
 	/**
 	 * Returns the {@link TradingFees} applied to this account as determined by the exchange. Even though the exchange generally
