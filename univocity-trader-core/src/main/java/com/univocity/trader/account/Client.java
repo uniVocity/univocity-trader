@@ -79,7 +79,7 @@ public final class Client<T> {
 	}
 
 	public void updateBalances() {
-		accountManager.updateBalances();
+		accountManager.updateBalances(false);
 	}
 
 	public void processCandle(String symbol, Candle candle, boolean initializing) {

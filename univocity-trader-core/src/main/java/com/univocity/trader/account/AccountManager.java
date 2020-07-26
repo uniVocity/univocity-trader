@@ -73,7 +73,7 @@ public class AccountManager implements ClientAccount {
 	}
 
 	ConcurrentHashMap<String, Balance> getBalances() {
-		updateBalances();
+		updateBalances(false);
 		return balances;
 	}
 
@@ -251,7 +251,7 @@ public class AccountManager implements ClientAccount {
 	@Override
 	public String toString() {
 		StringBuilder out = new StringBuilder();
-		Map<String, Balance> positions = account.updateBalances();
+		Map<String, Balance> positions = account.updateBalances(false);
 		positions.entrySet().stream()
 				.filter((e) -> e.getValue().getTotal() > 0.00001)
 				.forEach((e) -> out
@@ -266,7 +266,7 @@ public class AccountManager implements ClientAccount {
 	void executeUpdateBalances() {
 		if (balanceLock.tryLock()) {
 			try {
-				Map<String, Balance> updatedBalances = account.updateBalances();
+				Map<String, Balance> updatedBalances = account.updateBalances(true);
 				if (updatedBalances != null && updatedBalances != balances && !updatedBalances.isEmpty()) {
 					log.trace("Balances updated - available: " + new TreeMap<>(updatedBalances).values());
 					updatedBalances.keySet().retainAll(configuration.symbols());
@@ -287,8 +287,8 @@ public class AccountManager implements ClientAccount {
 	}
 
 	@Override
-	public ConcurrentHashMap<String, Balance> updateBalances() {
-		if (System.currentTimeMillis() - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL) {
+	public ConcurrentHashMap<String, Balance> updateBalances(boolean force) {
+		if (!force && (System.currentTimeMillis() - lastBalanceSync < FREQUENT_BALANCE_UPDATE_INTERVAL)) {
 			return balances;
 		}
 		executeUpdateBalances();

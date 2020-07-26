@@ -29,7 +29,7 @@ class IBAccount implements ClientAccount {
 	}
 
 	@Override
-	public ConcurrentHashMap<String, Balance> updateBalances() {
+	public ConcurrentHashMap<String, Balance> updateBalances(boolean force) {
 		return balances;
 	}
 

@@ -215,7 +215,7 @@ public final class TradingManager {
 	}
 
 	public final void updateBalances() {
-		tradingAccount.updateBalances();
+		tradingAccount.updateBalances(true);
 	}
 
 	public String getReferenceCurrencySymbol() {

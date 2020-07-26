@@ -89,6 +89,20 @@ public final class OrderTracker {
 		return false;
 	}
 
+	private void processAttached(Order order) {
+		List<Order> attachments;
+
+		if (order.getParent() != null) {
+			attachments = order.getParent().getAttachments();
+		} else {
+			attachments = order.getAttachments();
+		}
+
+		if (attachments != null && order.isFinalized() && !account.isSimulated()){
+			trader.processOrder(account.executeOrder(order));
+		}
+	}
+
 	private void orderFinalized(Order order) {
 		synchronized (pendingOrders) {
 			pendingOrders.remove(order);
@@ -143,6 +157,7 @@ public final class OrderTracker {
 				case FILLED:
 					logOrderStatus("Completed order. ", order);
 					orderFinalized(order);
+					processAttached(order);
 					break;
 				case CANCELLED:
 					logOrderStatus("Could not create order. ", order);
@@ -170,6 +185,7 @@ public final class OrderTracker {
 		if (update.isFinalized()) {
 			logOrderStatus("Order finalized. ", update);
 			orderFinalized(update);
+			processAttached(update);
 			return;
 		} else {
 			// update order status
@@ -249,8 +265,10 @@ public final class OrderTracker {
 		synchronized (pendingOrders) {
 			for (int i = pendingOrders.i - 1; i >= 0; i--) {
 				Order order = pendingOrders.elements[i];
-				order.cancel();
-				processOrderUpdate(order, order);
+				if (order != null) {
+					order.cancel();
+					processOrderUpdate(order, order);
+				}
 			}
 		}
 	}

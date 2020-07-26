@@ -27,6 +27,7 @@ import java.util.function.*;
 import static com.univocity.trader.account.Balance.*;
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.Status.*;
+import static com.univocity.trader.exchange.binance.api.client.domain.OrderType.*;
 import static com.univocity.trader.exchange.binance.api.client.domain.TimeInForce.*;
 import static com.univocity.trader.exchange.binance.api.client.domain.account.NewOrder.*;
 
@@ -68,26 +69,92 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	@Override
-	public Order executeOrder(OrderRequest orderDetails) {
-		String symbol = orderDetails.getSymbol();
-		String price = roundStr(orderDetails.getPrice());
-		switch (orderDetails.getSide()) {
-			case BUY:
-				switch (orderDetails.getType()) {
-					case LIMIT:
-						return execute(orderDetails, q -> limitBuy(symbol, GTC, q, price));
-					case MARKET:
-						return execute(orderDetails, q -> marketBuy(symbol, q));
+	public Order executeOrder(OrderRequest orderRequest) {
+		String symbol = orderRequest.getSymbol();
+		String price = roundStr(orderRequest.getPrice());
+		String stopPrice = null;
+		Order order = null;
+		List<OrderRequest> attachments = orderRequest.attachedOrderRequests();
+
+		if ( orderRequest instanceof Order && ((Order)orderRequest).getAttachments() != null) {
+			for (OrderRequest orderDetails : ((Order)orderRequest).getAttachments()) {
+
+				if (((Order)orderDetails).isFinalized()){
+					// we've entered the loop again
+					return (Order) orderDetails;
 				}
-			case SELL:
-				switch (orderDetails.getType()) {
+				double amountToSpend = orderRequest.getQuantity() * orderRequest.getPrice() * 0.99; // FIXME: get configured fee
+
+				if (orderDetails.getTriggerCondition() == Order.TriggerCondition.STOP_LOSS){
+					if (orderDetails.getSide() == SELL) {
+						// we did a buy, now we're trying to sell but we bet wrong
+						orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()) * 0.98); // FIXME: get configured fee
+					}
+
+					// we did a SELL, now we're trying to buy, but we bet wrong
+
+					stopPrice = roundStr(orderDetails.getPrice());
+
+
+				} else {
+					// we bet right
+					if (orderDetails.getSide() == Order.Side.BUY) {
+						orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()) * 0.98); // FIXME: get configured fee
+					}
+					orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()) * 0.98); // FIXME: get configured fee
+					price = roundStr(orderDetails.getPrice());
+				}
+
+			}
+		}
+
+
+		String finalPrice = price;
+		String finalStopPrice = stopPrice;
+
+
+		switch (orderRequest.getSide()) {
+			case BUY:
+				switch (orderRequest.getType()) {
 					case LIMIT:
-						return execute(orderDetails, q -> limitSell(symbol, GTC, q, price));
+
+						if (stopPrice != null){
+							order = execute(orderRequest, q -> limitOCOSell(symbol, GTC, q, finalPrice, finalStopPrice, finalStopPrice));
+						} else {
+							order = execute(orderRequest, q -> limitBuy(symbol, GTC, q, finalPrice));
+						}
+						break;
 					case MARKET:
-						return execute(orderDetails, q -> marketSell(symbol, q));
+						order = execute(orderRequest, q -> marketBuy(symbol, q));
+						break;
+				}
+				break;
+			case SELL:
+				switch (orderRequest.getType()) {
+					case LIMIT:
+						if (stopPrice != null){
+							order = execute(orderRequest, q -> limitOCOBuy(symbol, GTC, q, finalStopPrice, finalPrice, finalPrice));
+						} else {
+							order = execute(orderRequest, q -> limitSell(symbol, GTC, q, finalPrice));
+						}
+
+
+						break;
+					case MARKET:
+						order = execute(orderRequest, q -> marketSell(symbol, q));
+						break;
 				}
 		}
-		return null;
+
+
+		if (attachments != null) {
+			for (OrderRequest attachment : attachments) {
+				Order o = createOrder(attachment);
+				o.setParent(order);
+			}
+		}
+
+		return order ;
 	}
 
 	@Override
@@ -105,7 +172,7 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	@Override
-	public synchronized ConcurrentHashMap<String, Balance> updateBalances() {
+	public ConcurrentHashMap<String, Balance> updateBalances(boolean force) {
 		Account account = client.getAccount();
 		List<AssetBalance> balances = account.getBalances();
 
@@ -123,14 +190,48 @@ class BinanceClientAccount implements ClientAccount {
 	private Order translate(OrderRequest preparation, OrderDetails response) {
 		Order out = new Order(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), Trade.Side.LONG, response.getTime());
 
-		out.setPrice(Double.parseDouble(response.getPrice()));
-		out.setAveragePrice(Double.parseDouble(response.getPrice()));
+		out.setPrice(response.getAttachments().isEmpty() ?  Double.parseDouble(response.getPrice()) : preparation.getPrice());
+		out.setAveragePrice(response.getAttachments().isEmpty() ?  Double.parseDouble(response.getPrice()) : preparation.getPrice());
 		out.setQuantity(Double.parseDouble(response.getOrigQty()));
 		out.setExecutedQuantity(Double.parseDouble(response.getExecutedQty()));
 		out.setOrderId(String.valueOf(response.getOrderId()));
 		out.setStatus(translate(response.getStatus()));
 		out.setType(translate(response.getType()));
+
+		for (OrderDetails orderDetails: response.getAttachments()){
+			Order o = createOrder(preparation, orderDetails);
+			out.setParent(o);
+		}
 		return out;
+	}
+
+	private Order createOrder(OrderRequest request) {
+		Order out = new Order(id.incrementAndGet(), request);
+		initializeOrder(out, request.getPrice(), request.getQuantity(), request);
+		return out;
+	}
+
+	private void initializeOrder(Order out, double price, double quantity, OrderRequest request) {
+		out.setTriggerCondition(request.getTriggerCondition(), request.getTriggerPrice());
+		out.setPrice(price);
+		out.setQuantity(quantity);
+		out.setType(request.getType());
+		out.setStatus(Order.Status.NEW);
+		out.setExecutedQuantity(0.0);
+	}
+
+	private Order createOrder(OrderRequest preparation, OrderDetails orderDetails) {
+		Order child = new Order(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(orderDetails.getSide()), Trade.Side.LONG, orderDetails.getTime());
+
+		child.setTriggerCondition(orderDetails.getType() == STOP_LOSS_LIMIT ? Order.TriggerCondition.STOP_LOSS : Order.TriggerCondition.STOP_GAIN, Double.parseDouble(orderDetails.getPrice()));
+		child.setPrice(Double.parseDouble(orderDetails.getPrice()));
+		child.setAveragePrice(Double.parseDouble(orderDetails.getPrice()));
+		child.setQuantity(Double.parseDouble(orderDetails.getOrigQty()));
+		child.setExecutedQuantity(Double.parseDouble(orderDetails.getExecutedQty()));
+		child.setOrderId(String.valueOf(orderDetails.getOrderId()));
+		child.setStatus(translate(orderDetails.getStatus()));
+		child.setType(translate(orderDetails.getType()));
+		return child;
 	}
 
 	private Order.Side translate(OrderSide side) {
@@ -164,9 +265,12 @@ class BinanceClientAccount implements ClientAccount {
 	private Order.Type translate(OrderType type) {
 		switch (type) {
 			case LIMIT:
+			case LIMIT_MAKER:
+			case STOP_LOSS_LIMIT:
 				return Order.Type.LIMIT;
 			case MARKET:
 				return Order.Type.MARKET;
+
 		}
 		throw new IllegalStateException("Can't translate " + type + " to Order.Type");
 	}
@@ -185,7 +289,7 @@ class BinanceClientAccount implements ClientAccount {
 				order = orderFunction.apply(qty.toPlainString());
 				log.info("Executing {} order: {}", order.getType(), order);
 
-				return translate(orderPreparation, client.newOrder(order.newOrderRespType(NewOrderResponseType.FULL)));
+				return translate(orderPreparation, order.getStopPrice() != null ? client.newOrderOCO(order.newOrderRespType(NewOrderResponseType.FULL)) : client.newOrder(order.newOrderRespType(NewOrderResponseType.FULL)));
 			} catch (BinanceApiException e) {
 				log.error("Error processing order " + order, e);
 			}
@@ -209,6 +313,11 @@ class BinanceClientAccount implements ClientAccount {
 		out.setType(translate(order.getType()));
 		out.setQuantity(Double.parseDouble(order.getOrigQty()));
 		out.setTrade(original.getTrade());
+		if (original.getAttachments() != null) {
+			for (Order attachment : original.getAttachments()) {
+				attachment.setParent(out);
+			}
+		}
 		return out;
 	}
 
