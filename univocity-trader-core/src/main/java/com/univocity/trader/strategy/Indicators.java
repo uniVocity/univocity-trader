@@ -255,6 +255,10 @@ public abstract class Indicators {
 		return register(new MovingAverage(length, interval, valueGetter), length, interval, valueGetter);
 	}
 
+	public static RealBodyIndicator RealBodyIndicator(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new RealBodyIndicator(length, interval, valueGetter), length, interval, valueGetter);
+	}
+
 	public static MVWAP MVWAP(int length, int vwapLength, TimeInterval interval) {
 		return register(new MVWAP(length, vwapLength, interval), length, vwapLength, interval);
 	}
