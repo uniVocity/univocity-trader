@@ -165,6 +165,11 @@ public class DefaultIndicators {
 	}
 
 	@Overlay
+	public static RealBodyIndicator RealBodyIndicator(@PositiveDefault(12) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.RealBodyIndicator(interval);
+	}
+
+	@Overlay
 	public static MVWAP MVWAP(@PositiveDefault(24) int length, @PositiveDefault(12) int vwapLength, TimeInterval interval) {
 		return Indicators.MVWAP(length, vwapLength, interval);
 	}
