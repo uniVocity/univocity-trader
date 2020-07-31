@@ -164,7 +164,6 @@ public class DefaultIndicators {
 		return Indicators.MovingAverage(length, interval, valueGetter(valueGetter));
 	}
 
-	@Overlay
 	public static RealBodyIndicator RealBodyIndicator(TimeInterval interval) {
 		return Indicators.RealBodyIndicator(interval);
 	}
