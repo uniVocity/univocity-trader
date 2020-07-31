@@ -165,7 +165,7 @@ public class DefaultIndicators {
 	}
 
 	@Overlay
-	public static RealBodyIndicator RealBodyIndicator(@PositiveDefault(12) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	public static RealBodyIndicator RealBodyIndicator(TimeInterval interval) {
 		return Indicators.RealBodyIndicator(interval);
 	}
 
