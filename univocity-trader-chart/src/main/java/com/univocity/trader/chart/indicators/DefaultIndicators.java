@@ -164,6 +164,10 @@ public class DefaultIndicators {
 		return Indicators.MovingAverage(length, interval, valueGetter(valueGetter));
 	}
 
+	public static RealBodyIndicator RealBodyIndicator(TimeInterval interval) {
+		return Indicators.RealBodyIndicator(interval);
+	}
+
 	@Overlay
 	public static MVWAP MVWAP(@PositiveDefault(24) int length, @PositiveDefault(12) int vwapLength, TimeInterval interval) {
 		return Indicators.MVWAP(length, vwapLength, interval);

@@ -270,7 +270,6 @@ class BinanceClientAccount implements ClientAccount {
 				return Order.Type.LIMIT;
 			case MARKET:
 				return Order.Type.MARKET;
-
 		}
 		throw new IllegalStateException("Can't translate " + type + " to Order.Type");
 	}
