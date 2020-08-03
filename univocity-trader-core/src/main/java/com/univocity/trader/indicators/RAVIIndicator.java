@@ -20,10 +20,10 @@ public class RAVIIndicator extends SingleValueIndicator {
 
     @Override
     protected boolean process(Candle candle, double value, boolean updating) {
-        shortSma.calculateIndicatorValue(candle, value, updating);
+        shortSma.accumulate(candle);
         double shortMA = shortSma.getValue();
 
-        longSma.calculateIndicatorValue(candle, value, updating);
+        longSma.accumulate(candle);
         double longMA = longSma.getValue();
 
         this.value = ((shortMA - longMA) / longMA) * 100;
