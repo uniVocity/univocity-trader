@@ -256,7 +256,7 @@ public abstract class Indicators {
 	}
 
 	public static RealBodyIndicator RealBodyIndicator(TimeInterval interval) {
-		return register(new RealBodyIndicator(interval));
+		return register(new RealBodyIndicator(interval), interval);
 	}
 
 	public static MVWAP MVWAP(int length, int vwapLength, TimeInterval interval) {
