@@ -388,6 +388,14 @@ public abstract class Indicators {
 		return register(new WaddahAttarExplosion(sensitivity, fastLength, slowLength, channelLength, multiplier, interval, valueGetter), sensitivity, fastLength, slowLength, channelLength, multiplier, interval, valueGetter);
 	}
 
+	public static WilliamsRIndicator WilliamsRIndicator(TimeInterval interval) {
+		return register(new WilliamsRIndicator(interval), interval);
+	}
+
+	public static WilliamsRIndicator WilliamsRIndicator(int length, TimeInterval interval) {
+		return register(new WilliamsRIndicator(length, interval), length, interval);
+	}
+
 	public static YoYoExitLong YoYoExitLong(TimeInterval interval) {
 		return register(new YoYoExitLong(interval), interval);
 	}

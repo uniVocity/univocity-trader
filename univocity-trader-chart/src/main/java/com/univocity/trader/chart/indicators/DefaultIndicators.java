@@ -247,6 +247,10 @@ public class DefaultIndicators {
 		return Indicators.WaddahAttarExplosion(sensitivity, fastLength, slowLength, channelLength, multiplier, interval, valueGetter);
 	}
 
+	public static WilliamsRIndicator WilliamsRIndicator(@PositiveDefault(14) int length, TimeInterval interval) {
+		return Indicators.WilliamsRIndicator(length, interval);
+	}
+
 	@Overlay
 	public static YoYoExitLong YoYoExitLong(@PositiveDefault(22) int length, TimeInterval interval, @Default(value = 3.0, increment = 0.01) double k) {
 		return Indicators.YoYoExitLong(length, interval, k);
