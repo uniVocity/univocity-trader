@@ -69,6 +69,12 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	@Override
+	public TradingFees getTradingFees() {
+		//TODO: fees may change depending on account and asset traded. Futures for example may cost 0.2%, or even 0.0%
+		return SimpleTradingFees.percentage(0.1);
+	}
+
+	@Override
 	public Order executeOrder(OrderRequest orderRequest) {
 		String symbol = orderRequest.getSymbol();
 		String price = roundStr(orderRequest.getPrice());
@@ -76,35 +82,34 @@ class BinanceClientAccount implements ClientAccount {
 		Order order = null;
 		List<OrderRequest> attachments = orderRequest.attachedOrderRequests();
 
-		if ( orderRequest instanceof Order && ((Order)orderRequest).getAttachments() != null) {
-			for (OrderRequest orderDetails : ((Order)orderRequest).getAttachments()) {
+		if (orderRequest instanceof Order && ((Order) orderRequest).getAttachments() != null) {
+			for (OrderRequest orderDetails : ((Order) orderRequest).getAttachments()) {
 
-				if (((Order)orderDetails).isFinalized()){
+				if (((Order) orderDetails).isFinalized()) {
 					// we've entered the loop again
 					return (Order) orderDetails;
 				}
-				double amountToSpend = orderRequest.getQuantity() * orderRequest.getPrice() * 0.99; // FIXME: get configured fee
 
-				if (orderDetails.getTriggerCondition() == Order.TriggerCondition.STOP_LOSS){
+				double amountToSpend = orderRequest.getTotalOrderAmount();
+
+				if (orderDetails.getTriggerCondition() == Order.TriggerCondition.STOP_LOSS) {
 					if (orderDetails.getSide() == SELL) {
-						// we did a buy, now we're trying to sell but we bet wrong
-						orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()) * 0.98); // FIXME: get configured fee
+						//as we are selling, fees will be taken out of the amount directly.
+						orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()));
 					}
 
 					// we did a SELL, now we're trying to buy, but we bet wrong
-
 					stopPrice = roundStr(orderDetails.getPrice());
 
 
 				} else {
 					// we bet right
 					if (orderDetails.getSide() == Order.Side.BUY) {
-						orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()) * 0.98); // FIXME: get configured fee
+						orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()));
 					}
-					orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()) * 0.98); // FIXME: get configured fee
+					orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()));
 					price = roundStr(orderDetails.getPrice());
 				}
-
 			}
 		}
 
@@ -118,7 +123,7 @@ class BinanceClientAccount implements ClientAccount {
 				switch (orderRequest.getType()) {
 					case LIMIT:
 
-						if (stopPrice != null){
+						if (stopPrice != null) {
 							order = execute(orderRequest, q -> limitOCOSell(symbol, GTC, q, finalPrice, finalStopPrice, finalStopPrice));
 						} else {
 							order = execute(orderRequest, q -> limitBuy(symbol, GTC, q, finalPrice));
@@ -132,7 +137,7 @@ class BinanceClientAccount implements ClientAccount {
 			case SELL:
 				switch (orderRequest.getType()) {
 					case LIMIT:
-						if (stopPrice != null){
+						if (stopPrice != null) {
 							order = execute(orderRequest, q -> limitOCOBuy(symbol, GTC, q, finalStopPrice, finalPrice, finalPrice));
 						} else {
 							order = execute(orderRequest, q -> limitSell(symbol, GTC, q, finalPrice));
@@ -154,7 +159,7 @@ class BinanceClientAccount implements ClientAccount {
 			}
 		}
 
-		return order ;
+		return order;
 	}
 
 	@Override
@@ -190,15 +195,15 @@ class BinanceClientAccount implements ClientAccount {
 	private Order translate(OrderRequest preparation, OrderDetails response) {
 		Order out = new Order(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(response.getSide()), Trade.Side.LONG, response.getTime());
 
-		out.setPrice(response.getAttachments().isEmpty() ?  Double.parseDouble(response.getPrice()) : preparation.getPrice());
-		out.setAveragePrice(response.getAttachments().isEmpty() ?  Double.parseDouble(response.getPrice()) : preparation.getPrice());
+		out.setPrice(response.getAttachments().isEmpty() ? Double.parseDouble(response.getPrice()) : preparation.getPrice());
+		out.setAveragePrice(response.getAttachments().isEmpty() ? Double.parseDouble(response.getPrice()) : preparation.getPrice());
 		out.setQuantity(Double.parseDouble(response.getOrigQty()));
 		out.setExecutedQuantity(Double.parseDouble(response.getExecutedQty()));
 		out.setOrderId(String.valueOf(response.getOrderId()));
 		out.setStatus(translate(response.getStatus()));
 		out.setType(translate(response.getType()));
 
-		for (OrderDetails orderDetails: response.getAttachments()){
+		for (OrderDetails orderDetails : response.getAttachments()) {
 			Order o = createOrder(preparation, orderDetails);
 			out.setParent(o);
 		}
@@ -281,7 +286,7 @@ class BinanceClientAccount implements ClientAccount {
 		}
 
 		SymbolPriceDetails f = getPriceDetails().switchToSymbol(orderPreparation.getSymbol());
-		if (orderPreparation.getTotalOrderAmount()> f.getMinimumOrderAmount(orderPreparation.getPrice())) {
+		if (orderPreparation.getTotalOrderAmount() > f.getMinimumOrderAmount(orderPreparation.getPrice())) {
 			NewOrder order = null;
 			try {
 				BigDecimal qty = f.adjustQuantityScale(orderPreparation.getQuantity());
@@ -322,18 +327,18 @@ class BinanceClientAccount implements ClientAccount {
 
 	@Override
 	public void cancel(Order order) {
-		try{
+		try {
 			// Try to fetch existing order status
 			com.univocity.trader.exchange.binance.api.client.domain.account.Order status = client.getOrderStatus(new OrderStatusRequest(order.getSymbol(), Long.valueOf(order.getOrderId())));
 			// Order might have been cancelled manually by user
-			if (OrderStatus.CANCELED.equals(status.getStatus()) || OrderStatus.PENDING_CANCEL.equals(status.getStatus())){
+			if (OrderStatus.CANCELED.equals(status.getStatus()) || OrderStatus.PENDING_CANCEL.equals(status.getStatus())) {
 				log.info("Order {} was already cancelled or is pending cancellation", order);
 			} else {
 				CancelOrderResponse response = client.cancelOrder(new CancelOrderRequest(order.getSymbol(), Long.valueOf(order.getOrderId())));
 				log.info("Cancelled order {}. Response: {}", order, response);
 			}
-		} catch (BinanceApiException e){
-			if (!"Unknown order sent.".equals(e.getMessage())){
+		} catch (BinanceApiException e) {
+			if (!"Unknown order sent.".equals(e.getMessage())) {
 				throw e;
 			}
 			log.debug("Attempted to cancel an order that was not found on Binance (order {})", order);
