@@ -69,61 +69,90 @@ class BinanceClientAccount implements ClientAccount {
 	}
 
 	@Override
-	public Order executeOrder(OrderRequest orderDetails) {
-		String symbol = orderDetails.getSymbol();
-		String price = roundStr(orderDetails.getPrice());
+	public Order executeOrder(OrderRequest orderRequest) {
+		String symbol = orderRequest.getSymbol();
+		String price = roundStr(orderRequest.getPrice());
 		String stopPrice = null;
 		Order order = null;
-		List<OrderRequest> attachments = orderDetails.attachedOrderRequests();
+		List<OrderRequest> attachments = orderRequest.attachedOrderRequests();
 
-		if (attachments != null) {
-				for (OrderRequest attachment : attachments) {
-					if (attachment.getTriggerCondition() == Order.TriggerCondition.STOP_LOSS){
-						stopPrice = roundStr(attachment.getPrice());
-					} else {
-						price = roundStr(attachment.getPrice());
+		if ( orderRequest instanceof Order && ((Order)orderRequest).getAttachments() != null) {
+			for (OrderRequest orderDetails : ((Order)orderRequest).getAttachments()) {
+
+				if (((Order)orderDetails).isFinalized()){
+					// we've entered the loop again
+					return (Order) orderDetails;
+				}
+				double amountToSpend = orderRequest.getQuantity() * orderRequest.getPrice() * 0.99; // FIXME: get configured fee
+
+				if (orderDetails.getTriggerCondition() == Order.TriggerCondition.STOP_LOSS){
+					if (orderDetails.getSide() == SELL) {
+						// we did a buy, now we're trying to sell but we bet wrong
+						orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()) * 0.98); // FIXME: get configured fee
 					}
 
+					// we did a SELL, now we're trying to buy, but we bet wrong
+
+					stopPrice = roundStr(orderDetails.getPrice());
+
+
+				} else {
+					// we bet right
+					if (orderDetails.getSide() == Order.Side.BUY) {
+						orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()) * 0.98); // FIXME: get configured fee
+					}
+					orderRequest.setQuantity((amountToSpend / orderDetails.getPrice()) * 0.98); // FIXME: get configured fee
+					price = roundStr(orderDetails.getPrice());
 				}
+
 			}
+		}
 
 
 		String finalPrice = price;
 		String finalStopPrice = stopPrice;
 
 
-		switch (orderDetails.getSide()) {
+		switch (orderRequest.getSide()) {
 			case BUY:
-				switch (orderDetails.getType()) {
+				switch (orderRequest.getType()) {
 					case LIMIT:
 
 						if (stopPrice != null){
-
-							order = execute(orderDetails, q -> limitOCOBuy(symbol, GTC, q, finalStopPrice, finalPrice, finalPrice));
+							order = execute(orderRequest, q -> limitOCOSell(symbol, GTC, q, finalPrice, finalStopPrice, finalStopPrice));
 						} else {
-							order = execute(orderDetails, q -> limitBuy(symbol, GTC, q, finalPrice));
+							order = execute(orderRequest, q -> limitBuy(symbol, GTC, q, finalPrice));
 						}
 						break;
 					case MARKET:
-						return execute(orderDetails, q -> marketBuy(symbol, q));
+						order = execute(orderRequest, q -> marketBuy(symbol, q));
+						break;
 				}
 				break;
 			case SELL:
-				switch (orderDetails.getType()) {
+				switch (orderRequest.getType()) {
 					case LIMIT:
 						if (stopPrice != null){
-							order = execute(orderDetails, q -> limitOCOSell(symbol, GTC, q, finalPrice, finalStopPrice, finalStopPrice));
+							order = execute(orderRequest, q -> limitOCOBuy(symbol, GTC, q, finalStopPrice, finalPrice, finalPrice));
 						} else {
-							order = execute(orderDetails, q -> limitSell(symbol, GTC, q, finalPrice));
+							order = execute(orderRequest, q -> limitSell(symbol, GTC, q, finalPrice));
 						}
 
 
 						break;
 					case MARKET:
-						return execute(orderDetails, q -> marketSell(symbol, q));
+						order = execute(orderRequest, q -> marketSell(symbol, q));
+						break;
 				}
 		}
 
+
+		if (attachments != null) {
+			for (OrderRequest attachment : attachments) {
+				Order o = createOrder(attachment);
+				o.setParent(order);
+			}
+		}
 
 		return order ;
 	}
@@ -170,19 +199,39 @@ class BinanceClientAccount implements ClientAccount {
 		out.setType(translate(response.getType()));
 
 		for (OrderDetails orderDetails: response.getAttachments()){
-			Order child = new Order(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(orderDetails.getSide()), Trade.Side.LONG, orderDetails.getTime());
-
-			child.setTriggerCondition(orderDetails.getType() == STOP_LOSS_LIMIT ? Order.TriggerCondition.STOP_LOSS : Order.TriggerCondition.STOP_GAIN, Double.parseDouble(orderDetails.getPrice()));
-			child.setPrice(Double.parseDouble(orderDetails.getPrice()));
-			child.setAveragePrice(Double.parseDouble(orderDetails.getPrice()));
-			child.setQuantity(Double.parseDouble(orderDetails.getOrigQty()));
-			child.setExecutedQuantity(Double.parseDouble(orderDetails.getExecutedQty()));
-			child.setOrderId(String.valueOf(orderDetails.getOrderId()));
-			child.setStatus(translate(orderDetails.getStatus()));
-			child.setType(translate(orderDetails.getType()));
-			child.setParent(out);
+			Order o = createOrder(preparation, orderDetails);
+			out.setParent(o);
 		}
 		return out;
+	}
+
+	private Order createOrder(OrderRequest request) {
+		Order out = new Order(id.incrementAndGet(), request);
+		initializeOrder(out, request.getPrice(), request.getQuantity(), request);
+		return out;
+	}
+
+	private void initializeOrder(Order out, double price, double quantity, OrderRequest request) {
+		out.setTriggerCondition(request.getTriggerCondition(), request.getTriggerPrice());
+		out.setPrice(price);
+		out.setQuantity(quantity);
+		out.setType(request.getType());
+		out.setStatus(Order.Status.NEW);
+		out.setExecutedQuantity(0.0);
+	}
+
+	private Order createOrder(OrderRequest preparation, OrderDetails orderDetails) {
+		Order child = new Order(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(orderDetails.getSide()), Trade.Side.LONG, orderDetails.getTime());
+
+		child.setTriggerCondition(orderDetails.getType() == STOP_LOSS_LIMIT ? Order.TriggerCondition.STOP_LOSS : Order.TriggerCondition.STOP_GAIN, Double.parseDouble(orderDetails.getPrice()));
+		child.setPrice(Double.parseDouble(orderDetails.getPrice()));
+		child.setAveragePrice(Double.parseDouble(orderDetails.getPrice()));
+		child.setQuantity(Double.parseDouble(orderDetails.getOrigQty()));
+		child.setExecutedQuantity(Double.parseDouble(orderDetails.getExecutedQty()));
+		child.setOrderId(String.valueOf(orderDetails.getOrderId()));
+		child.setStatus(translate(orderDetails.getStatus()));
+		child.setType(translate(orderDetails.getType()));
+		return child;
 	}
 
 	private Order.Side translate(OrderSide side) {
@@ -221,7 +270,6 @@ class BinanceClientAccount implements ClientAccount {
 				return Order.Type.LIMIT;
 			case MARKET:
 				return Order.Type.MARKET;
-
 		}
 		throw new IllegalStateException("Can't translate " + type + " to Order.Type");
 	}
@@ -264,6 +312,11 @@ class BinanceClientAccount implements ClientAccount {
 		out.setType(translate(order.getType()));
 		out.setQuantity(Double.parseDouble(order.getOrigQty()));
 		out.setTrade(original.getTrade());
+		if (original.getAttachments() != null) {
+			for (Order attachment : original.getAttachments()) {
+				attachment.setParent(out);
+			}
+		}
 		return out;
 	}
 
