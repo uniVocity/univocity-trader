@@ -5,6 +5,8 @@ import com.univocity.trader.indicators.base.SingleValueIndicator;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.strategy.Indicator;
 
+import java.util.function.ToDoubleFunction;
+
 public class RAVIIndicator extends SingleValueIndicator {
 
     private MovingAverage shortSma;
@@ -38,7 +40,7 @@ public class RAVIIndicator extends SingleValueIndicator {
 
     @Override
     protected Indicator[] children() {
-        return new Indicator[]{};
+        return new Indicator[]{shortSma, longSma};
     }
 
 }
