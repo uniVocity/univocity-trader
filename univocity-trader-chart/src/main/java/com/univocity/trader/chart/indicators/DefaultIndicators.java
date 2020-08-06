@@ -235,6 +235,10 @@ public class DefaultIndicators {
 		return Indicators.TrueRange(interval);
 	}
 
+	public static UlcerIndex UlcerIndex(@PositiveDefault(14) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.UlcerIndex(length, interval, valueGetter);
+	}
+
 	public static VolumeRateOfChange VolumeRateOfChange(@PositiveDefault(14) int length, TimeInterval interval) {
 		return Indicators.VolumeRateOfChange(length, interval);
 	}

@@ -49,23 +49,23 @@ public class UlcerIndexTest {
 		indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
 
 		assertEquals(26, i);
-		assertEquals(1.3047, indicator.getValue(), 0.0001);
-		accumulateAndTest(1.3022, indicator, i, values[i++]);
-		accumulateAndTest(1.2156, indicator, i, values[i++]);
-		accumulateAndTest(0.9967, indicator, i, values[i++]);
-		accumulateAndTest(0.7257, indicator, i, values[i++]);
-		accumulateAndTest(0.4530, indicator, i, values[i++]);
-		accumulateAndTest(0.4284, indicator, i, values[i++]);
-		accumulateAndTest(0.4284, indicator, i, values[i++]);
-		accumulateAndTest(0.4284, indicator, i, values[i++]);
-		accumulateAndTest(0.4287, indicator, i, values[i++]);
-		accumulateAndTest(0.5089, indicator, i, values[i++]);
-		accumulateAndTest(0.6673, indicator, i, values[i++]);
-		accumulateAndTest(0.9914, indicator, i, values[i++]);
-		accumulateAndTest(1.0921, indicator, i, values[i++]);
-		accumulateAndTest(1.3161, indicator, i, values[i++]);
-		accumulateAndTest(1.5632, indicator, i, values[i++]);
-		accumulateAndTest(1.7609, indicator, i, values[i++]);
+		assertEquals(1.234009, indicator.getValue(), 0.0001);
+		accumulateAndTest(1.2340096463740846, indicator, i, values[i++]);
+		accumulateAndTest(0.560553282860879, indicator, i, values[i++]);
+		accumulateAndTest(0.39324888828140886, indicator, i, values[i++]);
+		accumulateAndTest(0.38716275079310825, indicator, i, values[i++]);
+		accumulateAndTest(0.3889794194862251, indicator, i, values[i++]);
+		accumulateAndTest(0.4114481689096125, indicator, i, values[i++]);
+		accumulateAndTest(0.42841008722557894, indicator, i, values[i++]);
+		accumulateAndTest(0.42841008722557894, indicator, i, values[i++]);
+		accumulateAndTest(0.3121617589229034, indicator, i, values[i++]);
+		accumulateAndTest(0.2464924497436544, indicator, i, values[i++]);
+		accumulateAndTest(0.4089008481549337, indicator, i, values[i++]);
+		accumulateAndTest(0.667264629592715, indicator, i, values[i++]);
+		accumulateAndTest(0.9913518177402276, indicator, i, values[i++]);
+		accumulateAndTest(1.0921325741850083, indicator, i, values[i++]);
+		accumulateAndTest(1.3156949266800984, indicator, i, values[i++]);
+		accumulateAndTest(1.5606676136361992, indicator, i, values[i++]);
 	}
 
 	private void accumulateAndTest(double expected, UlcerIndex indicator, int i, double close) {

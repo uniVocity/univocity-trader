@@ -360,6 +360,18 @@ public abstract class Indicators {
 		return register(new TrueRange(interval), interval);
 	}
 
+	public static UlcerIndex UlcerIndex(TimeInterval interval) {
+		return register(new UlcerIndex(interval), interval);
+	}
+
+	public static UlcerIndex UlcerIndex(int length, TimeInterval interval) {
+		return register(new UlcerIndex(length, interval), length, interval);
+	}
+
+	public static UlcerIndex UlcerIndex(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new UlcerIndex(length, interval, valueGetter), length, interval, valueGetter);
+	}
+
 	public static TTMTrend TTMTrend(TimeInterval interval) {
 		return register(new TTMTrend(interval), interval);
 	}
