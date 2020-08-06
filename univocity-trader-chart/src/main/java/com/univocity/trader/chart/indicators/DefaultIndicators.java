@@ -255,6 +255,11 @@ public class DefaultIndicators {
 		return Indicators.WaddahAttarExplosion(sensitivity, fastLength, slowLength, channelLength, multiplier, interval, valueGetter);
 	}
 
+	@Overlay
+	public static WeightedMovingAverage WeightedMovingAverage(@PositiveDefault(3) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.WeightedMovingAverage(length, interval, valueGetter(valueGetter));
+	}
+
 	public static WilliamsRIndicator WilliamsRIndicator(@PositiveDefault(14) int length, TimeInterval interval) {
 		return Indicators.WilliamsRIndicator(length, interval);
 	}
