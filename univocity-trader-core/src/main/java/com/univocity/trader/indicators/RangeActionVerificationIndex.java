@@ -7,14 +7,14 @@ import com.univocity.trader.strategy.Indicator;
 
 import java.util.function.ToDoubleFunction;
 
-public class RAVIIndicator extends SingleValueIndicator {
+public class RangeActionVerificationIndex extends SingleValueIndicator {
 
     private MovingAverage shortSma;
     private MovingAverage longSma;
 
     private double value;
 
-    public RAVIIndicator(int shortSmaBarCount, int longSmaBarCount, TimeInterval timeInterval) {
+    public RangeActionVerificationIndex(int shortSmaBarCount, int longSmaBarCount, TimeInterval timeInterval) {
         super(timeInterval, null);
         shortSma = new MovingAverage(shortSmaBarCount, timeInterval);
         longSma = new MovingAverage(longSmaBarCount, timeInterval);

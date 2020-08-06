@@ -6,14 +6,14 @@ import org.junit.Test;
 import static com.univocity.trader.indicators.base.TimeInterval.minutes;
 import static org.junit.Assert.assertEquals;
 
-public class RAVIIndicatorTest {
+public class RangeActionVerificationIndexTest {
 
     @Test
     public void ravi() {
 
         int i = 0;
 
-        RAVIIndicator indicator = new RAVIIndicator(3, 8, minutes(1));
+        RangeActionVerificationIndex indicator = new RangeActionVerificationIndex(3, 8, minutes(1));
 
         indicator.accumulate(CandleHelper.newCandle(i++, 0, 110, 0, 0));
         assertEquals(0D, indicator.getValue(), 0.001);

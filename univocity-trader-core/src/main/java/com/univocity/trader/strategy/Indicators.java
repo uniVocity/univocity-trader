@@ -259,8 +259,8 @@ public abstract class Indicators {
 		return register(new RealBodyIndicator(interval), interval);
 	}
 
-	public static RAVIIndicator RAVIIndicator(int shortSmaBarCount, int longSmaBarCount, TimeInterval interval) {
-		return register(new RAVIIndicator(shortSmaBarCount, longSmaBarCount, interval), interval);
+	public static RangeActionVerificationIndex RangeActionVerificationIndex(int shortSmaBarCount, int longSmaBarCount, TimeInterval interval) {
+		return register(new RangeActionVerificationIndex(shortSmaBarCount, longSmaBarCount, interval), interval, longSmaBarCount, interval);
 	}
 
 	public static MVWAP MVWAP(int length, int vwapLength, TimeInterval interval) {

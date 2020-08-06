@@ -168,8 +168,8 @@ public class DefaultIndicators {
 		return Indicators.RealBodyIndicator(interval);
 	}
 
-	public static RAVIIndicator RAVIIndicator(int shortSmaBarCount, int longSmaBarCount, TimeInterval interval) {
-		return Indicators.RAVIIndicator(shortSmaBarCount, longSmaBarCount, interval);
+	public static RangeActionVerificationIndex RangeActionVerificationIndex(int shortSmaBarCount, int longSmaBarCount, TimeInterval interval) {
+		return Indicators.RangeActionVerificationIndex(shortSmaBarCount, longSmaBarCount, interval);
 	}
 
 	@Overlay

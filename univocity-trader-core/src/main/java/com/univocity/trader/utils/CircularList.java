@@ -69,6 +69,10 @@ public class CircularList {
 		return sum;
 	}
 
+	public final int getStartingIndex() {
+		return getStartingIndex(count < values.length ? (int) count : values.length);
+	}
+
 	public final int getStartingIndex(int backwardCount) {
 		if (backwardCount == 0) {
 			throw new IllegalArgumentException("Invalid recent value index");
