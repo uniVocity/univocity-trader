@@ -168,6 +168,10 @@ public class DefaultIndicators {
 		return Indicators.RealBodyIndicator(interval);
 	}
 
+	public static RAVIIndicator RAVIIndicator(int shortSmaBarCount, int longSmaBarCount, TimeInterval interval) {
+		return Indicators.RAVIIndicator(shortSmaBarCount, longSmaBarCount, interval);
+	}
+
 	@Overlay
 	public static MVWAP MVWAP(@PositiveDefault(24) int length, @PositiveDefault(12) int vwapLength, TimeInterval interval) {
 		return Indicators.MVWAP(length, vwapLength, interval);
