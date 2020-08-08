@@ -23,25 +23,25 @@ public class DPOIndicatorTest {
 
         DPOIndicator indicator = new DPOIndicator(9, TimeInterval.minutes(1));
 
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(0.111999, indicator.getValue(), 0.0001);
 
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(-0.02, indicator.getValue(), 0.0001);
 
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(0.21142857142, indicator.getValue(), 0.0001);
 
-        indicator.accumulate(CandleHelper.newCandle(i++, values[i++]));
+        indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(0.169999999999999, indicator.getValue(), 0.0001);
     }
 
