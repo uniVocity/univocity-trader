@@ -24,7 +24,7 @@ public class MassIndexIndicator extends MultiValueIndicator {
     public MassIndexIndicator(int emaBarCount, int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
         super(length, interval, valueGetter);
         singleEma = new ExponentialMovingAverage(emaBarCount, interval, candle -> candle.high - candle.low);
-        doubleEma = new ExponentialMovingAverage(emaBarCount, interval, valueGetter);
+        doubleEma = new ExponentialMovingAverage(emaBarCount, interval);
     }
 
     @Override
@@ -33,18 +33,9 @@ public class MassIndexIndicator extends MultiValueIndicator {
         singleEma.accumulate(candle);
         doubleEma.accumulate(singleEma.getValue());
 
-        final int size = values.size();
-        int remaining = size;
-        double massIndex = 0;
+        this.value = this.value + singleEma.getValue() / doubleEma.getValue();;
 
-        while (remaining-- > 0) {
-            double emaRatio = singleEma.getValue() / doubleEma.getValue();
-            massIndex = massIndex + emaRatio;
-        }
-
-        this.value = massIndex;
-
-        return false;
+        return true;
     }
 
     @Override
