@@ -39,11 +39,13 @@ public class MassIndex extends SingleValueIndicator {
 
 	@Override
 	protected boolean process(Candle candle, double value, boolean updating) {
-		singleEma.accumulate(candle);
-		doubleEma.accumulate(candle);
+		if(singleEma.accumulate(candle)) {
+			doubleEma.accumulate(candle);
 
-		sum.add(singleEma.getValue() / doubleEma.getValue());
+			sum.add(singleEma.getValue() / doubleEma.getValue());
 
-		return true;
+			return true;
+		}
+		return false;
 	}
 }

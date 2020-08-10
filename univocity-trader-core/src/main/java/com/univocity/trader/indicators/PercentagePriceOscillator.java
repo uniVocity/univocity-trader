@@ -29,15 +29,17 @@ public class PercentagePriceOscillator extends SingleValueIndicator {
 
     @Override
     protected boolean process(Candle candle, double value, boolean updating) {
-        shortTermEma.accumulate(candle);
-        double shortEmaValue = shortTermEma.getValue();
+        if(shortTermEma.accumulate(candle)) {
+            double shortEmaValue = shortTermEma.getValue();
 
-        longTermEma.accumulate(candle);
-        double longEmaValue = longTermEma.getValue();
+            longTermEma.accumulate(candle);
+            double longEmaValue = longTermEma.getValue();
 
-        this.value = ((shortEmaValue - longEmaValue) / longEmaValue) * 100;
+            this.value = ((shortEmaValue - longEmaValue) / longEmaValue) * 100;
 
-        return true;
+            return true;
+        }
+        return false;
     }
 
     @Override
