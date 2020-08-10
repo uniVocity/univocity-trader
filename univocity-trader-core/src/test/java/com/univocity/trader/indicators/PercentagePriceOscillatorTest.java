@@ -5,7 +5,7 @@ import com.univocity.trader.indicators.base.TimeInterval;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
-public class PPOIndicatorTest {
+public class PercentagePriceOscillatorTest {
 
     private static final double[] values = {22.27, 22.19, 22.08, 22.17, 22.18, 22.13, 22.23, 22.43, 22.24,
             22.29, 22.15, 22.39, 22.38, 22.61, 23.36, 24.05, 23.75, 23.83, 23.95, 23.63, 23.82, 23.87, 23.65, 23.19,
@@ -16,7 +16,7 @@ public class PPOIndicatorTest {
 
         int i = 0;
 
-        PPOIndicator indicator = new PPOIndicator(10, 20, TimeInterval.minutes(1));
+        PercentagePriceOscillator indicator = new PercentagePriceOscillator(10, 20, TimeInterval.minutes(1));
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));

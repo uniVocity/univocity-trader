@@ -7,18 +7,18 @@ import com.univocity.trader.strategy.Indicator;
 
 import java.util.function.ToDoubleFunction;
 
-public class PPOIndicator extends SingleValueIndicator {
+public class PercentagePriceOscillator extends SingleValueIndicator {
 
     private double value;
 
     private final ExponentialMovingAverage shortTermEma;
     private final ExponentialMovingAverage longTermEma;
 
-    public PPOIndicator(int shortBarCount, int longBarCount, TimeInterval interval) {
+    public PercentagePriceOscillator(int shortBarCount, int longBarCount, TimeInterval interval) {
         this(shortBarCount, longBarCount, interval, c -> c.close);
     }
 
-    public PPOIndicator(int shortBarCount, int longBarCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+    public PercentagePriceOscillator(int shortBarCount, int longBarCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
         super(interval, valueGetter);
         if (shortBarCount > longBarCount) {
             throw new IllegalArgumentException("Long term period count must be greater than short term period count");
