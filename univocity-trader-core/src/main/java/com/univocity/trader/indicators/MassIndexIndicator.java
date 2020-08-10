@@ -1,52 +1,49 @@
 package com.univocity.trader.indicators;
 
-import com.univocity.trader.candles.Candle;
-import com.univocity.trader.indicators.base.MultiValueIndicator;
-import com.univocity.trader.indicators.base.TimeInterval;
-import com.univocity.trader.strategy.Indicator;
+import com.univocity.trader.candles.*;
+import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.strategy.*;
+import com.univocity.trader.utils.*;
 
-import java.util.function.ToDoubleFunction;
+public class MassIndexIndicator extends SingleValueIndicator {
 
-public class MassIndexIndicator extends MultiValueIndicator {
+	private final CircularList sum;
+	private final ExponentialMovingAverage singleEma;
+	private final ExponentialMovingAverage doubleEma;
 
-    private double value;
-    private final ExponentialMovingAverage singleEma;
-    private final ExponentialMovingAverage doubleEma;
+	public MassIndexIndicator(TimeInterval interval) {
+		this(25, interval);
+	}
 
-    public MassIndexIndicator(int emaBarCount, TimeInterval interval) {
-        this(emaBarCount, 8, interval);
-    }
+	public MassIndexIndicator(int length, TimeInterval interval) {
+		this(9, length, interval);
+	}
 
-    public MassIndexIndicator(int emaBarCount, int length, TimeInterval interval) {
-        this(emaBarCount, length, interval, c -> c.close);
-    }
+	public MassIndexIndicator(int emaBarCount, int length, TimeInterval interval) {
+		super(interval, null);
+		singleEma = new ExponentialMovingAverage(emaBarCount, interval, candle -> candle.high - candle.low);
+		doubleEma = new ExponentialMovingAverage(emaBarCount, interval, c -> singleEma.getValue());
+		this.sum = new CircularList(length);
 
-    public MassIndexIndicator(int emaBarCount, int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
-        super(length, interval, valueGetter);
-        singleEma = new ExponentialMovingAverage(emaBarCount, interval, candle -> candle.high - candle.low);
-        doubleEma = new ExponentialMovingAverage(emaBarCount, interval);
-    }
+	}
 
-    @Override
-    protected boolean calculateIndicatorValue(Candle candle, double value, boolean updating) {
+	@Override
+	public double getValue() {
+		return sum.sum();
+	}
 
-        singleEma.accumulate(candle);
-        doubleEma.accumulate(singleEma.getValue());
+	@Override
+	protected Indicator[] children() {
+		return new Indicator[]{singleEma, doubleEma};
+	}
 
-        this.value = this.value + singleEma.getValue() / doubleEma.getValue();;
+	@Override
+	protected boolean process(Candle candle, double value, boolean updating) {
+		singleEma.accumulate(candle);
+		doubleEma.accumulate(candle);
 
-        return true;
-    }
+		sum.add(singleEma.getValue() / doubleEma.getValue());
 
-    @Override
-    public double getValue() {
-        return value;
-    }
-
-    @Override
-    protected Indicator[] children() {
-        return new Indicator[]{singleEma, doubleEma};
-    }
-
-
+		return true;
+	}
 }
