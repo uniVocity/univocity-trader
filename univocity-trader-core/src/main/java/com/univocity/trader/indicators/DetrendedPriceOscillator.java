@@ -22,7 +22,7 @@ public class DetrendedPriceOscillator extends SingleValueIndicator {
 	}
 
 	public DetrendedPriceOscillator(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
-		super(interval, valueGetter);
+		super(interval, null);
 		ma = new MovingAverage(length, interval, valueGetter);
 		timeShift = new CircularList((length / 2) + 1);
 	}

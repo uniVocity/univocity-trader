@@ -13,7 +13,7 @@ public class MassIndexIndicatorTest {
 
         int i = 0;
 
-        MassIndexIndicator indicator = new MassIndexIndicator(3, 8, TimeInterval.minutes(1));
+        MassIndex indicator = new MassIndex(3, 8, TimeInterval.minutes(1));
 
         indicator.accumulate(CandleHelper.newCandle(i++, 44.98, 45.05, 45.17, 44.96));
         assertEquals(1, indicator.getValue(), 0.0001);

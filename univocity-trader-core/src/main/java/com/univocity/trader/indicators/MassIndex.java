@@ -5,21 +5,21 @@ import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 import com.univocity.trader.utils.*;
 
-public class MassIndexIndicator extends SingleValueIndicator {
+public class MassIndex extends SingleValueIndicator {
 
 	private final CircularList sum;
 	private final ExponentialMovingAverage singleEma;
 	private final ExponentialMovingAverage doubleEma;
 
-	public MassIndexIndicator(TimeInterval interval) {
+	public MassIndex(TimeInterval interval) {
 		this(25, interval);
 	}
 
-	public MassIndexIndicator(int length, TimeInterval interval) {
+	public MassIndex(int length, TimeInterval interval) {
 		this(9, length, interval);
 	}
 
-	public MassIndexIndicator(int emaBarCount, int length, TimeInterval interval) {
+	public MassIndex(int emaBarCount, int length, TimeInterval interval) {
 		super(interval, null);
 		singleEma = new ExponentialMovingAverage(emaBarCount, interval, candle -> candle.high - candle.low);
 		doubleEma = new ExponentialMovingAverage(emaBarCount, interval, c -> singleEma.getValue());
