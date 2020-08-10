@@ -19,12 +19,12 @@ public class PercentagePriceOscillator extends SingleValueIndicator {
     }
 
     public PercentagePriceOscillator(int shortBarCount, int longBarCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
-        super(interval, valueGetter);
+        super(interval, null);
         if (shortBarCount > longBarCount) {
             throw new IllegalArgumentException("Long term period count must be greater than short term period count");
         }
-        this.shortTermEma = new ExponentialMovingAverage(shortBarCount, interval);
-        this.longTermEma = new ExponentialMovingAverage(longBarCount, interval);
+        this.shortTermEma = new ExponentialMovingAverage(shortBarCount, interval, valueGetter);
+        this.longTermEma = new ExponentialMovingAverage(longBarCount, interval, valueGetter);
     }
 
     @Override
