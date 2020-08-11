@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class HullMovingAverageIndicatorTest {
+public class HullMovingAverageTest {
 
     private static final double[] values = {84.53, 87.39, 84.55, 82.83, 82.58, 83.74, 83.33, 84.57, 86.98, 87.10,
             83.11, 83.60, 83.66, 82.76, 79.22, 79.03, 78.18, 77.42, 74.65, 77.48, 76.87};
@@ -16,7 +16,7 @@ public class HullMovingAverageIndicatorTest {
 
         int i = 0;
 
-        HullMovingAverageIndicator indicator = new HullMovingAverageIndicator(9, TimeInterval.MINUTE, c -> c.close);
+        HullMovingAverage indicator = new HullMovingAverage(9, TimeInterval.MINUTE);
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
