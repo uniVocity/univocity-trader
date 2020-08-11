@@ -77,6 +77,10 @@ public class DefaultIndicators {
 		return out;
 	}
 
+	public static DetrendedPriceOscillator DetrendedPriceOscillator(@PositiveDefault(9) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.DetrendedPriceOscillator(length, interval, valueGetter);
+	}
+
 //	public static <T extends SingleValueIndicator> DirectionIndicator<T> DirectionIndicator(T indicator, ToDoubleFunction<T> valueGetter) {
 //		return Indicators.DirectionIndicator(indicator, valueGetter);
 //	}
@@ -108,6 +112,11 @@ public class DefaultIndicators {
 	@Overlay
 	public static HighestValueIndicator HighestValueIndicator(@PositiveDefault(12) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.HighestValueIndicator(length, interval, valueGetter(valueGetter));
+	}
+
+	@Overlay
+	public static HullMovingAverage HullMovingAverage(@PositiveDefault(9) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.HullMovingAverage(length, interval, valueGetter(valueGetter));
 	}
 
 	@Overlay
@@ -154,6 +163,10 @@ public class DefaultIndicators {
 		return Indicators.LowestValueIndicator(length, interval, valueGetter(valueGetter));
 	}
 
+	public static MassIndex MassIndex(@PositiveDefault(9) int emaBarCount, @PositiveDefault(25) int length, TimeInterval interval) {
+		return Indicators.MassIndex(emaBarCount, length, interval);
+	}
+
 	@Overlay
 	public static ModifiedMovingAverage ModifiedMovingAverage(@PositiveDefault(12) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.ModifiedMovingAverage(length, interval, valueGetter(valueGetter));
@@ -185,6 +198,13 @@ public class DefaultIndicators {
 	@Render(renderer = MarkerRenderer.class)
 	public static ParabolicSAR ParabolicSAR(@PositiveDefault(value = 0.02, increment = 0.001) double aF, @PositiveDefault(value = 0.2, increment = 0.001) double maxA, @PositiveDefault(value = 0.02, increment = 0.001) double increment, TimeInterval interval) {
 		return Indicators.ParabolicSAR(aF, maxA, increment, interval);
+	}
+
+	@Render(value = "getSignal", description = "Signal", theme = RedLine.class)
+	@Render(value = "getValue", description = "PPO", theme = BlueLine.class)
+	@Render(value = "getHistogram", renderer = HistogramRenderer.class)
+	public static PercentagePriceOscillator PercentagePriceOscillator(@PositiveDefault(12) int shortBarCount, @PositiveDefault(26) int longBarCount, @PositiveDefault(9) int signalBarCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.PercentagePriceOscillator(shortBarCount, longBarCount, signalBarCount, interval, valueGetter);
 	}
 
 	public static PVT PVT(TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {

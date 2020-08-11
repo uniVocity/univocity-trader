@@ -18,11 +18,12 @@ public class DetrendedPriceOscillator extends SingleValueIndicator {
 	}
 
 	public DetrendedPriceOscillator(int length, TimeInterval interval) {
-		this(length, interval, c -> c.close);
+		this(length, interval, null);
 	}
 
 	public DetrendedPriceOscillator(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		super(interval, null);
+		valueGetter = valueGetter == null ? c -> c.close : valueGetter;
 		ma = new MovingAverage(length, interval, valueGetter);
 		timeShift = new CircularList((length / 2) + 1);
 	}

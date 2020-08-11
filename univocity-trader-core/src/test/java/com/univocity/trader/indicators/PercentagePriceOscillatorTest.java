@@ -16,7 +16,7 @@ public class PercentagePriceOscillatorTest {
 
         int i = 0;
 
-        PercentagePriceOscillator indicator = new PercentagePriceOscillator(10, 20, TimeInterval.minutes(1));
+        PercentagePriceOscillator indicator = new PercentagePriceOscillator(10, 20, 9, TimeInterval.minutes(1));
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));

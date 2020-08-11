@@ -119,6 +119,18 @@ public abstract class Indicators {
 		return register(new ConnorsRSI(rsiLength, streakRsiLength, pctRankLength, interval), rsiLength, streakRsiLength, pctRankLength, interval);
 	}
 
+	public static DetrendedPriceOscillator DetrendedPriceOscillator(TimeInterval interval) {
+		return register(new DetrendedPriceOscillator(interval), interval);
+	}
+
+	public static DetrendedPriceOscillator DetrendedPriceOscillator(int length, TimeInterval interval) {
+		return register(new DetrendedPriceOscillator(length, interval), length, interval);
+	}
+
+	public static DetrendedPriceOscillator DetrendedPriceOscillator(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new DetrendedPriceOscillator(length, interval, valueGetter), length, interval, valueGetter);
+	}
+
 	public static <T extends SingleValueIndicator> DirectionIndicator<T> DirectionIndicator(T indicator) {
 		return register(new DirectionIndicator<>(indicator), indicator);
 	}
@@ -161,6 +173,18 @@ public abstract class Indicators {
 
 	public static HighestValueIndicator HighestValueIndicator(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return register(new HighestValueIndicator(length, interval, valueGetter), length, interval, valueGetter);
+	}
+
+	public static HullMovingAverage HullMovingAverage(TimeInterval interval) {
+		return register(new HullMovingAverage(interval), interval);
+	}
+
+	public static HullMovingAverage HullMovingAverage(int length, TimeInterval interval) {
+		return register(new HullMovingAverage(length, interval), length, interval);
+	}
+
+	public static HullMovingAverage HullMovingAverage(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new HullMovingAverage(length, interval, valueGetter), length, interval, valueGetter);
 	}
 
 	public static InstantaneousTrendline InstantaneousTrendline(TimeInterval interval) {
@@ -231,6 +255,18 @@ public abstract class Indicators {
 		return register(new MACD(shortCount, longCount, macdCount, interval, valueGetter), shortCount, longCount, macdCount, interval, valueGetter);
 	}
 
+	public static MassIndex MassIndex(TimeInterval interval) {
+		return register(new MassIndex(interval), interval);
+	}
+
+	public static MassIndex MassIndex(int length, TimeInterval interval) {
+		return register(new MassIndex(length, interval), length, interval);
+	}
+
+	public static MassIndex MassIndex(int emaBarCount, int length, TimeInterval interval) {
+		return register(new MassIndex(emaBarCount, length, interval), emaBarCount, length, interval);
+	}
+
 	public static MinusDIIndicator MinusDIIndicator(int length, TimeInterval interval) {
 		return register(new MinusDIIndicator(length, interval), length, interval);
 	}
@@ -282,6 +318,19 @@ public abstract class Indicators {
 	public static ParabolicSAR ParabolicSAR(double aF, double maxA, double increment, TimeInterval interval) {
 		return register(new ParabolicSAR(aF, maxA, increment, interval), aF, maxA, increment, interval);
 	}
+
+	public static PercentagePriceOscillator PercentagePriceOscillator(TimeInterval interval) {
+		return register(new PercentagePriceOscillator(interval), interval);
+	}
+
+	public static PercentagePriceOscillator PercentagePriceOscillator(int shortBarCount, int longBarCount, int signalBarCount, TimeInterval interval) {
+		return register(new PercentagePriceOscillator(shortBarCount, longBarCount, signalBarCount, interval), shortBarCount, longBarCount, signalBarCount, interval);
+	}
+
+	public static PercentagePriceOscillator PercentagePriceOscillator(int shortBarCount, int longBarCount, int signalBarCount, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new PercentagePriceOscillator(shortBarCount, longBarCount, signalBarCount, interval, valueGetter), shortBarCount, longBarCount, signalBarCount, interval, valueGetter);
+	}
+
 
 	public static PercentRankIndicator PercentRankIndicator(TimeInterval interval) {
 		return register(new PercentRankIndicator(interval), interval);

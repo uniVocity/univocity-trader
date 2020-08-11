@@ -17,11 +17,12 @@ public class HullMovingAverage extends SingleValueIndicator {
 	}
 
 	public HullMovingAverage(int length, TimeInterval interval) {
-		this(length, interval, c -> c.close);
+		this(length, interval, null);
 	}
 
 	public HullMovingAverage(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		super(interval, null);
+		valueGetter = valueGetter == null ? c -> c.close : valueGetter;
 		halfWma = new WeightedMovingAverage(length / 2, interval, valueGetter);
 		origWma = new WeightedMovingAverage(length, interval, valueGetter);
 		sqrtWma = new WeightedMovingAverage((int) Math.sqrt(length), interval, c -> (halfWma.getValue() * 2) - origWma.getValue());
