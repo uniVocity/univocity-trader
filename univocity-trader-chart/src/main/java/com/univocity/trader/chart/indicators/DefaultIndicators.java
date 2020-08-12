@@ -159,6 +159,11 @@ public class DefaultIndicators {
 	}
 
 	@Overlay
+	public static LinearlyWeightedMovingAverage LinearlyWeightedMovingAverage(@PositiveDefault(14)int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.LinearlyWeightedMovingAverage(length, interval, valueGetter);
+	}
+
+	@Overlay
 	public static LowestValueIndicator LowestValueIndicator(@PositiveDefault(12) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.LowestValueIndicator(length, interval, valueGetter(valueGetter));
 	}

@@ -11,15 +11,15 @@ public class LinearlyWeightedMovingAverage extends MultiValueIndicator {
 	private double value;
 
 	public LinearlyWeightedMovingAverage(TimeInterval interval) {
-		this(5, interval);
+		this(14, interval);
 	}
 
 	public LinearlyWeightedMovingAverage(int length, TimeInterval interval) {
-		this(length, interval, c -> c.close);
+		this(length, interval, null);
 	}
 
 	public LinearlyWeightedMovingAverage(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
-		super(length, interval, valueGetter);
+		super(length, interval, valueGetter == null ? c -> c.close : valueGetter);
 	}
 
 	@Override

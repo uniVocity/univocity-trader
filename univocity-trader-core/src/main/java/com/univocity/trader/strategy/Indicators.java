@@ -239,6 +239,18 @@ public abstract class Indicators {
 		return register(new KeltnerChannel(length, atrLength, interval, valueGetter), length, atrLength, interval, valueGetter);
 	}
 
+	public static LinearlyWeightedMovingAverage LinearlyWeightedMovingAverage(TimeInterval interval) {
+		return register(new LinearlyWeightedMovingAverage(interval), interval);
+	}
+
+	public static LinearlyWeightedMovingAverage LinearlyWeightedMovingAverage(int length, TimeInterval interval) {
+		return register(new LinearlyWeightedMovingAverage(length, interval), length, interval);
+	}
+
+	public static LinearlyWeightedMovingAverage LinearlyWeightedMovingAverage(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new LinearlyWeightedMovingAverage(length, interval, valueGetter), length, interval, valueGetter);
+	}
+
 	public static LowestValueIndicator LowestValueIndicator(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return register(new LowestValueIndicator(length, interval, valueGetter), length, interval, valueGetter);
 	}
