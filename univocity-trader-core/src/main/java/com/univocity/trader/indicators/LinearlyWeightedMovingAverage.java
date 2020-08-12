@@ -9,7 +9,6 @@ import java.util.function.*;
 public class LinearlyWeightedMovingAverage extends MultiValueIndicator {
 
 	private double value;
-	private final int length;
 
 	public LinearlyWeightedMovingAverage(TimeInterval interval) {
 		this(5, interval);
@@ -21,7 +20,6 @@ public class LinearlyWeightedMovingAverage extends MultiValueIndicator {
 
 	public LinearlyWeightedMovingAverage(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		super(length, interval, valueGetter);
-		this.length = length;
 	}
 
 	@Override
@@ -29,7 +27,7 @@ public class LinearlyWeightedMovingAverage extends MultiValueIndicator {
 		double sum = 0;
 		double denominator = 0;
 
-		double len = Math.min(getAccumulationCount() + 1, length);
+		double len = Math.min(getAccumulationCount() + 1, values.capacity());
 
 		for (int i = 1; i <= len; i++) {
 			double multiplier = (len - (i - 1));
