@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class CoppockCurveIndicatorTest {
+public class CoppockCurveTest {
 
     private static final double[] values = {872.81, 919.14, 919.32, 987.48, 1020.62, 1057.08, 1036.19,
             1095.63, 1115.1, 1073.87, 1104.49, 1169.43, 1186.69, 1089.41, 1030.71, 1101.6, 1049.33, 1141.2, 1183.26,
@@ -18,7 +18,7 @@ public class CoppockCurveIndicatorTest {
 
         int i = 0;
 
-        CoppockCurveIndicator indicator = new CoppockCurveIndicator(14, 11, 10, TimeInterval.MINUTE);
+        CoppockCurve indicator = new CoppockCurve(14, 11, 10, TimeInterval.MINUTE);
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
