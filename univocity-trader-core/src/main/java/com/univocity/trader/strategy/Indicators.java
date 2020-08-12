@@ -400,7 +400,6 @@ public abstract class Indicators {
 		return register(new RSI(length, interval), length, interval);
 	}
 
-
 	public static StochasticOscillatorD StochasticOscillatorD(TimeInterval interval) {
 		return register(new StochasticOscillatorD(interval), interval);
 	}
@@ -463,6 +462,14 @@ public abstract class Indicators {
 
 	public static TTMTrend TTMTrend(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return register(new TTMTrend(length, interval, valueGetter), length, interval, valueGetter);
+	}
+
+	public static Volume Volume(TimeInterval interval) {
+		return register(new Volume(interval), interval);
+	}
+
+	public static Volume Volume(int length, TimeInterval interval) {
+		return register(new Volume(length, interval), length, interval);
 	}
 
 	public static VolumeRateOfChange VolumeRateOfChange(int length, TimeInterval interval) {

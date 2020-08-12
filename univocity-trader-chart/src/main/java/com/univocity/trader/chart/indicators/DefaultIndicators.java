@@ -268,6 +268,11 @@ public class DefaultIndicators {
 		return Indicators.UlcerIndex(length, interval, valueGetter);
 	}
 
+	@Render(renderer = ColoredHistogramRenderer.class, args = "isMoveToUpside")
+	public static Volume Volume(TimeInterval interval) {
+		return Indicators.Volume(interval);
+	}
+
 	public static VolumeRateOfChange VolumeRateOfChange(@PositiveDefault(14) int length, TimeInterval interval) {
 		return Indicators.VolumeRateOfChange(length, interval);
 	}

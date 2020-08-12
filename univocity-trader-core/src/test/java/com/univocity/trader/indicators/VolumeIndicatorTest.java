@@ -17,7 +17,7 @@ public class VolumeIndicatorTest {
 
         int i = 0;
 
-        VolumeIndicator indicator = new VolumeIndicator(3, TimeInterval.MINUTE);
+        Volume indicator = new Volume(3, TimeInterval.MINUTE);
         indicator.accumulate(CandleHelper.newCandle(i, ZERO, ZERO, ZERO, ZERO, values[i++]));
         assertEquals(10, indicator.getValue(), 0.0001);
 
