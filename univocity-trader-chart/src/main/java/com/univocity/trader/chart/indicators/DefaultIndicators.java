@@ -77,6 +77,10 @@ public class DefaultIndicators {
 		return out;
 	}
 
+	public static CoppockCurve CoppockCurve(@PositiveDefault(14) int longRoCLength, @PositiveDefault(11) int shortRoCLength, @PositiveDefault(10) int wmaLength, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.CoppockCurve(longRoCLength, shortRoCLength, wmaLength, interval, valueGetter);
+	}
+
 	public static DetrendedPriceOscillator DetrendedPriceOscillator(@PositiveDefault(9) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.DetrendedPriceOscillator(length, interval, valueGetter);
 	}
@@ -159,7 +163,7 @@ public class DefaultIndicators {
 	}
 
 	@Overlay
-	public static LinearlyWeightedMovingAverage LinearlyWeightedMovingAverage(@PositiveDefault(14)int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+	public static LinearlyWeightedMovingAverage LinearlyWeightedMovingAverage(@PositiveDefault(14) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return Indicators.LinearlyWeightedMovingAverage(length, interval, valueGetter);
 	}
 

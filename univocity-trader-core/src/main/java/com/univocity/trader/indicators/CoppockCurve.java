@@ -4,6 +4,8 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
+import java.util.function.*;
+
 public class CoppockCurve extends SingleValueIndicator {
 
 	private final RateOfChange longRoC;
@@ -11,14 +13,23 @@ public class CoppockCurve extends SingleValueIndicator {
 	private final WeightedMovingAverage wma;
 
 	public CoppockCurve(TimeInterval interval) {
-		this(14, 11, 10, interval);
+		this(interval, null);
 	}
 
-	public CoppockCurve(int longRoCBarCount, int shortRoCBarCount, int wmaBarCount, TimeInterval interval) {
+	public CoppockCurve(TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		this(14, 11, 10, interval, valueGetter);
+	}
+
+	public CoppockCurve(int longRoCLength, int shortRoCLength, int wmaLength, TimeInterval interval) {
+		this(longRoCLength, shortRoCLength, wmaLength, interval, null);
+	}
+
+	public CoppockCurve(int longRoCLength, int shortRoCLength, int wmaLength, TimeInterval interval,  ToDoubleFunction<Candle> valueGetter) {
 		super(interval, null);
-		this.longRoC = new RateOfChange(longRoCBarCount, interval);
-		this.shortRoC = new RateOfChange(shortRoCBarCount, interval);
-		this.wma = new WeightedMovingAverage(wmaBarCount, interval, c -> longRoC.getValue() + shortRoC.getValue());
+		valueGetter = valueGetter == null ? c -> c.close : valueGetter;
+		this.longRoC = new RateOfChange(longRoCLength, interval, valueGetter);
+		this.shortRoC = new RateOfChange(shortRoCLength, interval, valueGetter);
+		this.wma = new WeightedMovingAverage(wmaLength, interval, c -> longRoC.getValue() + shortRoC.getValue());
 	}
 
 	@Override

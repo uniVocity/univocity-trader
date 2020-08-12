@@ -119,6 +119,22 @@ public abstract class Indicators {
 		return register(new ConnorsRSI(rsiLength, streakRsiLength, pctRankLength, interval), rsiLength, streakRsiLength, pctRankLength, interval);
 	}
 
+	public static CoppockCurve CoppockCurve(TimeInterval interval) {
+		return register(new CoppockCurve(interval), interval);
+	}
+
+	public static CoppockCurve CoppockCurve(TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new CoppockCurve(interval, valueGetter), interval, valueGetter);
+	}
+
+	public static CoppockCurve CoppockCurve(int longRoCLength, int shortRoCLength, int wmaLength, TimeInterval interval) {
+		return register(new CoppockCurve(longRoCLength, shortRoCLength, wmaLength, interval), longRoCLength, shortRoCLength, wmaLength, interval);
+	}
+
+	public static CoppockCurve CoppockCurve(int longRoCLength, int shortRoCLength, int wmaLength, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new CoppockCurve(longRoCLength, shortRoCLength, wmaLength, interval, valueGetter), longRoCLength, shortRoCLength, wmaLength, interval, valueGetter);
+	}
+
 	public static DetrendedPriceOscillator DetrendedPriceOscillator(TimeInterval interval) {
 		return register(new DetrendedPriceOscillator(interval), interval);
 	}
@@ -370,6 +386,10 @@ public abstract class Indicators {
 
 	public static RateOfChange RateOfChange(int length, TimeInterval interval) {
 		return register(new RateOfChange(length, interval), length, interval);
+	}
+
+	public static RateOfChange RateOfChange(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new RateOfChange(length, interval, valueGetter), length, interval, valueGetter);
 	}
 
 	public static RSI RSI(TimeInterval interval) {
