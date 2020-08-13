@@ -1,55 +1,41 @@
 package com.univocity.trader.indicators;
 
-import com.univocity.trader.candles.Candle;
-import com.univocity.trader.indicators.base.MultiValueIndicator;
-import com.univocity.trader.indicators.base.TimeInterval;
-import com.univocity.trader.strategy.Indicator;
+import com.univocity.trader.candles.*;
+import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.strategy.*;
 
-import java.util.function.ToDoubleFunction;
+import java.util.function.*;
 
-public class GainIndicator extends MultiValueIndicator {
+public class GainIndicator extends SingleValueCalculationIndicator {
 
-    private double value;
+	private double prev = -1;
 
-    public GainIndicator(TimeInterval interval) {
-        this(13, interval);
-    }
+	public GainIndicator(TimeInterval interval) {
+		this(interval, null);
+	}
 
-    public GainIndicator(int length, TimeInterval interval) {
-        this(length, interval, c -> c.close);
-    }
+	public GainIndicator(TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		super(interval, valueGetter == null ? c -> c.close : valueGetter);
+	}
 
-    public GainIndicator(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
-        super(length, interval, valueGetter);
-    }
+	@Override
+	protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
+		if (prev == -1) {
+			prev = value;
+			return 0;
+		}
+		double out = 0;
+		if (value > prev) {
+			out = value - prev;
+		}
+		prev = value;
+		return out;
 
-    @Override
-    protected boolean calculateIndicatorValue(Candle candle, double value, boolean updating) {
-        if(values.size() <= 1) {
-            this.value = 0;
-            return true;
-        }
+	}
 
-        double previous = values.getRecentValue(2);
-
-        if(candle.close > previous) {
-            this.value = candle.close - previous;
-            return true;
-        }
-
-        this.value = 0;
-        return true;
-
-    }
-
-    @Override
-    public double getValue() {
-        return value;
-    }
-
-    @Override
-    protected Indicator[] children() {
-        return new Indicator[]{};
-    }
+	@Override
+	protected Indicator[] children() {
+		return new Indicator[]{};
+	}
 
 }
