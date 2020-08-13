@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class ChandeMomentumOscillatorIndicatorTest {
+public class ChandeMomentumOscillatorTest {
 
     private static final double[] values = {21.27, 22.19, 22.08, 22.47, 22.48, 22.53, 22.23, 21.43, 21.24, 21.29,
             22.15, 22.39, 22.38, 22.61, 23.36, 24.05, 24.75, 24.83, 23.95, 23.63, 23.82, 23.87, 23.15, 23.19, 23.10,
@@ -17,7 +17,7 @@ public class ChandeMomentumOscillatorIndicatorTest {
 
         int i = 0;
 
-        ChandeMomentumOscillatorIndicator indicator = new ChandeMomentumOscillatorIndicator(TimeInterval.MINUTE);
+        ChandeMomentumOscillator indicator = new ChandeMomentumOscillator(TimeInterval.MINUTE);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
@@ -49,7 +49,7 @@ public class ChandeMomentumOscillatorIndicatorTest {
         assertEquals(-3.5857, indicator.getValue(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(-4.7619, indicator.getValue(), 0.0001);
+        assertEquals(4.7619, indicator.getValue(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(24.1983, indicator.getValue(), 0.0001);

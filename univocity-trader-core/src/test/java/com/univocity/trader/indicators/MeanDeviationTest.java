@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class MeanDeviationIndicatorTest {
+public class MeanDeviationTest {
 
     private static final double[] values = {1, 2, 7, 6, 3, 4, 5, 11, 3, 0, 9};
 
@@ -15,7 +15,7 @@ public class MeanDeviationIndicatorTest {
 
         int i = 0;
 
-        MeanDeviationIndicator indicator = new MeanDeviationIndicator(5, TimeInterval.MINUTE);
+        MeanDeviation indicator = new MeanDeviation(5, TimeInterval.MINUTE);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
