@@ -7,25 +7,23 @@ import com.univocity.trader.strategy.Indicator;
 
 import java.util.function.ToDoubleFunction;
 
-public class TypicalPriceIndicator extends SingleValueIndicator {
+public class TypicalPrice extends SingleValueIndicator {
 
     private double value;
 
-    public TypicalPriceIndicator(TimeInterval interval) {
-        this(interval, null);
-    }
-
-    public TypicalPriceIndicator(TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
-        super(interval, valueGetter == null ? c -> c.close : valueGetter);
+    public TypicalPrice(TimeInterval interval) {
+        super(interval, null);
     }
 
     @Override
     protected boolean process(Candle candle, double value, boolean updating) {
-        double maxPrice = candle.high;
-        double minPrice = candle.low;
-        double closePrice = candle.close;
-        this.value = (maxPrice + minPrice + closePrice) / 3;
+        this.value = (candle.high + candle.low + candle.close) / 3.0;
         return true;
+    }
+
+    @Override
+    public double getValue() {
+        return value;
     }
 
     @Override
