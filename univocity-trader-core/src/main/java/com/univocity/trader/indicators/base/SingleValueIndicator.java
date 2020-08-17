@@ -9,7 +9,7 @@ import java.util.function.*;
 public abstract class SingleValueIndicator extends AggregatedTicksIndicator {
 
 
-	private ToDoubleFunction<Candle> valueGetter;
+	protected ToDoubleFunction<Candle> valueGetter;
 	private Signal signal = null;
 
 	public SingleValueIndicator(TimeInterval timeInterval, ToDoubleFunction<Candle> valueGetter) {

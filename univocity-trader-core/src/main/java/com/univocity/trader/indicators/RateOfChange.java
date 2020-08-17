@@ -9,7 +9,7 @@ import java.util.function.*;
 public class RateOfChange extends AbstractRateOfChange {
 
 	public RateOfChange(int length, TimeInterval interval) {
-		super(length, interval, null);
+		this(length, interval, null);
 	}
 
 	public RateOfChange(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
