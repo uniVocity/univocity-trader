@@ -18,6 +18,10 @@ public class TypicalPrice extends SingleValueIndicator {
 		return true;
 	}
 
+	public double getValue(){
+		return value;
+	}
+	
 	@Override
 	protected Indicator[] children() {
 		return new Indicator[]{};

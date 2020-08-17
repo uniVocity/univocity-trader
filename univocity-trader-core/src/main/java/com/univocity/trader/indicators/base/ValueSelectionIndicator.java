@@ -21,7 +21,7 @@ public abstract class ValueSelectionIndicator extends MultiValueIndicator {
 		super(length, interval, valueGetter);
 	}
 
-	private void recalculate() {
+	private void recalculate(boolean updating) {
 		updateValue = selectedValue = initialValue();
 		final int len = values.size();
 		int tmp = len;
@@ -31,20 +31,30 @@ public abstract class ValueSelectionIndicator extends MultiValueIndicator {
 				start = len - 1;
 			}
 			double v = values.get(start--);
-
-			double selected = select(v, selectedValue);
-			if (selected == v) {
-				selectedValue = v;
-				ticksLeft = tmp;
-			}
+			updateSelection(v, tmp);
 		}
+		valueUpdated(true, updating);
+	}
+
+	private boolean updateSelection(double value, int ticksLeft) {
+		double selected = select(value, selectedValue);
+		if (selected != selectedValue) {
+			selectedValue = value;
+			this.ticksLeft = ticksLeft;
+			return true;
+		}
+		return false;
+	}
+
+	protected void valueUpdated(boolean recalculated, boolean updating) {
+
 	}
 
 	@Override
 	protected boolean calculateIndicatorValue(Candle candle, double value, boolean updating) {
 		if (updating) {
 			if (ticksLeft <= 0) {
-				recalculate();
+				recalculate(true);
 			}
 			double selected = select(value, selectedValue);
 			updateValue = selected == value ? selected : initialValue();
@@ -53,12 +63,10 @@ public abstract class ValueSelectionIndicator extends MultiValueIndicator {
 
 			ticksLeft--;
 			if (ticksLeft <= 0) {
-				recalculate();
+				recalculate(false);
 			} else {
-				double selected = select(value, selectedValue);
-				if (selected == value) {
-					selectedValue = value;
-					ticksLeft = values.size() - 1;
+				if(updateSelection(value, values.size() - 1)) {
+					valueUpdated(false, false);
 				}
 			}
 		}

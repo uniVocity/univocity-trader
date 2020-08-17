@@ -134,4 +134,20 @@ public class CircularList {
 	public final double getRecentValue(int backwardCount) {
 		return values[getStartingIndex(backwardCount)];
 	}
+
+	public String toString(){
+		StringBuilder out = new StringBuilder("[");
+		int start = getStartingIndex();
+		int len = size();
+
+		for(int i = 0; i < len; i++){
+			if(out.length() > 1){
+				out.append(", ");
+			}
+			out.append(get(i+start));
+		}
+
+		out.append(']');
+		return out.toString();
+	}
 }
