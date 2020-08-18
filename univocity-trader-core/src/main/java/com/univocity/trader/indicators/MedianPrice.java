@@ -5,11 +5,11 @@ import com.univocity.trader.indicators.base.SingleValueIndicator;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.strategy.Indicator;
 
-public class MedianPriceIndicator extends SingleValueIndicator {
+public class MedianPrice extends SingleValueIndicator {
 
     private double value;
 
-    public MedianPriceIndicator(TimeInterval interval) {
+    public MedianPrice(TimeInterval interval) {
         super(interval, null);
     }
 

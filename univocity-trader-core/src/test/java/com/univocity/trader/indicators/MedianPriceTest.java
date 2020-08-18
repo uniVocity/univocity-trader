@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class MedianPriceIndicatorTest {
+public class MedianPriceTest {
 
     private HighLow[] values = {new HighLow(16, 8),
             new HighLow(12, 6),
@@ -22,7 +22,7 @@ public class MedianPriceIndicatorTest {
     @Test
     public void median() {
 
-        MedianPriceIndicator indicator = new MedianPriceIndicator(TimeInterval.MINUTE);
+        MedianPrice indicator = new MedianPrice(TimeInterval.MINUTE);
 
         double result;
         for (int i = 0; i < 10; i++) {

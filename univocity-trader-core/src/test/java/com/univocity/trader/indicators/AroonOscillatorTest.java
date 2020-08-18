@@ -11,7 +11,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class AroonOscillatorIndicatorTest {
+public class AroonOscillatorTest {
 
     private List<Candle> candles;
 
@@ -185,12 +185,12 @@ public class AroonOscillatorIndicatorTest {
         for (int i = dataLine.length - 1, j = 0; i >= 0; i--, j++) {
             String[] tickData = dataLine[i].split(",");
 
-            double open = Double.valueOf(tickData[3]);
-            double high = Double.valueOf(tickData[4]);
-            double close = Double.valueOf(tickData[1]);
-            double low = Double.valueOf(tickData[5]);
+            double close = Double.parseDouble(tickData[1]);
+            double open = Double.parseDouble(tickData[3]);
+            double high = Double.parseDouble(tickData[4]);
+            double low = Double.parseDouble(tickData[5]);
 
-            candles.add(CandleHelper.newCandle(j, open, high, close, low));
+            candles.add(CandleHelper.newCandle(j, open, close, high, low));
 
         }
     }
@@ -200,7 +200,7 @@ public class AroonOscillatorIndicatorTest {
 
         int i = 0;
 
-        AroonOscillatorIndicator indicator = new AroonOscillatorIndicator(25, TimeInterval.MINUTE);
+        AroonOscillator indicator = new AroonOscillator(25, TimeInterval.MINUTE);
         indicator.accumulate(candles.get(i++));
         assertEquals(0, indicator.getValue(), 0.00001);
 

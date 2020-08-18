@@ -5,16 +5,16 @@ import com.univocity.trader.indicators.base.SingleValueIndicator;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.strategy.Indicator;
 
-public class AroonOscillatorIndicator extends SingleValueIndicator {
+public class AroonOscillator extends SingleValueIndicator {
 
     private final AroonDown aroonDown;
     private final AroonUp aroonUp;
 
-    public AroonOscillatorIndicator(TimeInterval interval) {
+    public AroonOscillator(TimeInterval interval) {
         this(25, interval);
     }
 
-    public AroonOscillatorIndicator(int length, TimeInterval interval) {
+    public AroonOscillator(int length, TimeInterval interval) {
         super(interval, null);
         aroonDown = new AroonDown(length, interval, c -> c.low);
         aroonUp = new AroonUp(length, interval, c -> c.high);
