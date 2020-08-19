@@ -6,14 +6,14 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class CloseLocationValueIndicatorTest {
+public class CloseLocationValueTest {
 
     @Test
     public void closeLocation() {
 
         int i = 0;
 
-        CloseLocationValueIndicator indicator = new CloseLocationValueIndicator(TimeInterval.MINUTE);
+        CloseLocationValue indicator = new CloseLocationValue(TimeInterval.MINUTE);
         indicator.accumulate(CandleHelper.newCandle(i++, 10, 18, 20, 10));
         assertEquals(0.6, indicator.getValue(), 0.0001);
 

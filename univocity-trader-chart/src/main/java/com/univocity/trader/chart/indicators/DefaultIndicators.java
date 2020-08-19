@@ -294,8 +294,8 @@ public class DefaultIndicators {
 		return Indicators.WeightedMovingAverage(length, interval, valueGetter(valueGetter));
 	}
 
-	public static WilliamsRIndicator WilliamsRIndicator(@PositiveDefault(14) int length, TimeInterval interval) {
-		return Indicators.WilliamsRIndicator(length, interval);
+	public static WilliamsR WilliamsR(@PositiveDefault(14) int length, TimeInterval interval) {
+		return Indicators.WilliamsR(length, interval);
 	}
 
 	@Overlay

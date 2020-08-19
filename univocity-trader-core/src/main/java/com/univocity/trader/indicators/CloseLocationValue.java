@@ -5,9 +5,9 @@ import com.univocity.trader.indicators.base.SingleValueCalculationIndicator;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.strategy.Indicator;
 
-public class CloseLocationValueIndicator extends SingleValueCalculationIndicator {
+public class CloseLocationValue extends SingleValueCalculationIndicator {
 
-    public CloseLocationValueIndicator(TimeInterval interval) {
+    public CloseLocationValue(TimeInterval interval) {
         super(interval, null);
     }
 
@@ -17,7 +17,7 @@ public class CloseLocationValueIndicator extends SingleValueCalculationIndicator
         final double high = candle.high;
         final double close = candle.close;
         final double diffHighLow = high - low;
-        return (Double.isNaN(diffHighLow) || diffHighLow == 0) ? 0 : ((close - low) - (high - close)) / diffHighLow;
+        return diffHighLow == 0 ? 0 : ((close - low) - (high - close)) / diffHighLow;
     }
 
     @Override

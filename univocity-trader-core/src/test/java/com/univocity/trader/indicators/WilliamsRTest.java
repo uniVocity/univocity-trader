@@ -6,13 +6,13 @@ import org.junit.*;
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static org.junit.Assert.*;
 
-public class WilliamsRIndicatorTest {
+public class WilliamsRTest {
 
 	@Test
 	public void test() {
 		int i = 0;
 
-		WilliamsRIndicator indicator = new WilliamsRIndicator(5, minutes(1));
+		WilliamsR indicator = new WilliamsR(5, minutes(1));
 
 		indicator.accumulate(CandleHelper.newCandle(i++, 44.98, 45.05, 45.17, 44.96));
 		indicator.accumulate(CandleHelper.newCandle(i++, 45.05, 45.10, 45.15, 44.99));

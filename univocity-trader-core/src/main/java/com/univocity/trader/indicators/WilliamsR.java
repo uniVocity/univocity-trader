@@ -4,18 +4,18 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
-public class WilliamsRIndicator extends SingleValueIndicator {
+public class WilliamsR extends SingleValueIndicator {
 
 	private double value;
 
 	private HighestValueIndicator highestHigh;
 	private LowestValueIndicator lowestMin;
 
-	public WilliamsRIndicator(TimeInterval interval) {
+	public WilliamsR(TimeInterval interval) {
 		this(14, interval);
 	}
 
-	public WilliamsRIndicator(int length, TimeInterval interval) {
+	public WilliamsR(int length, TimeInterval interval) {
 		super(interval, null);
 		highestHigh = new HighestValueIndicator(length, interval, c -> c.high);
 		lowestMin = new LowestValueIndicator(length, interval, c -> c.low);

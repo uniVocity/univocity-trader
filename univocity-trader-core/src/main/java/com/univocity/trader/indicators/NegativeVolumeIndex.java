@@ -28,7 +28,9 @@ public class NegativeVolumeIndex extends SingleValueCalculationIndicator {
                 toReturn = previousValue;
             }
         }
-        last = candle;
+        if(!updating) {
+            last = candle;
+        }
         return toReturn;
     }
 
