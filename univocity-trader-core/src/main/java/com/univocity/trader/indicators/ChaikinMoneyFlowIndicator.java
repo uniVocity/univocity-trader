@@ -57,12 +57,13 @@ public class ChaikinMoneyFlowIndicator extends MultiValueIndicator {
 
     @Override
     protected Indicator[] children() {
-        return new Indicator[]{};
+        return new Indicator[]{clv, volume};
     }
 
     private double getMFL(Candle candle) {
-        clv.accumulate(candle);
-        volume.accumulate(candle);
+        if(clv.accumulate(candle)) {
+            volume.accumulate(candle);
+        }
         return clv.getValue() * candle.volume;
     }
 
