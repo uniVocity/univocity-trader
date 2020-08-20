@@ -4,8 +4,6 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
-import java.util.function.*;
-
 public class Volume extends MultiValueIndicator {
 
     private boolean upside;
@@ -15,12 +13,9 @@ public class Volume extends MultiValueIndicator {
 	}
 
 	public Volume(int length, TimeInterval interval) {
-		this(length, interval, c -> c.volume);
+		super(length, interval, c -> c.volume);
 	}
 
-	public Volume(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
-		super(length, interval, valueGetter);
-	}
 
 	@Override
 	protected boolean calculateIndicatorValue(Candle candle, double value, boolean updating) {

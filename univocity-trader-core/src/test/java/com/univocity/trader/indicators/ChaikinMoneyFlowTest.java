@@ -6,15 +6,15 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class ChaikinMoneyFlowIndicatorTest {
+public class ChaikinMoneyFlowTest {
 
     @Test
     public void chaikinMoneyFlow() {
 
         int i = 0;
 
-        ChaikinMoneyFlowIndicator indicator = new ChaikinMoneyFlowIndicator(TimeInterval.MINUTE);
-        indicator.accumulate(CandleHelper.newCandle(i++, 0, 62.15, 62.34, 61.37, 78490.025));
+        ChaikinMoneyFlow indicator = new ChaikinMoneyFlow(TimeInterval.MINUTE);
+        indicator.accumulate(CandleHelper.newCandle(i++, 0, 62.15, 62.34, 61.37, 7849.025));
         assertEquals(0.6082, indicator.getValue(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i++, 0, 60.81, 62.05, 60.69, 11692.075));
