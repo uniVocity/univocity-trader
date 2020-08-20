@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class VarianceIndicatorTest {
+public class VarianceTest {
 
     private static final double[] values = {1, 2, 3, 4, 3, 4, 5, 4, 3, 0, 9};
 
@@ -15,7 +15,7 @@ public class VarianceIndicatorTest {
 
         int i = 0;
 
-        VarianceIndicator indicator = new VarianceIndicator(4, TimeInterval.MINUTE);
+        Variance indicator = new Variance(4, TimeInterval.MINUTE);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(0, indicator.getValue(), 0.0001);
@@ -57,7 +57,7 @@ public class VarianceIndicatorTest {
 
         int i = 0;
 
-        VarianceIndicator indicator = new VarianceIndicator(4, TimeInterval.MINUTE);
+        Variance indicator = new Variance(4, TimeInterval.MINUTE);
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(0, indicator.getValue(), 0.0001);
     }
@@ -67,7 +67,7 @@ public class VarianceIndicatorTest {
 
         int i = 0;
 
-        VarianceIndicator indicator = new VarianceIndicator(1, TimeInterval.MINUTE);
+        Variance indicator = new Variance(1, TimeInterval.MINUTE);
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
@@ -88,7 +88,7 @@ public class VarianceIndicatorTest {
 
         int i = 0;
 
-        VarianceIndicator indicator = new VarianceIndicator(2, TimeInterval.MINUTE);
+        Variance indicator = new Variance(2, TimeInterval.MINUTE);
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(0, indicator.getValue(), 0.0001);
 
