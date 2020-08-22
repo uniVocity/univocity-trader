@@ -44,6 +44,9 @@ public class DojiIndicatorTest {
         indicator.accumulate(CandleHelper.newCandle(i++, 15, 11, 15, 8));
         assertEquals(0, indicator.getValue(), 0.0001);
 
+        indicator.accumulate(CandleHelper.newCandle(i++, 11, 12, 12, 10));
+        assertEquals(0, indicator.getValue(), 0.0001);
+
     }
 
 }

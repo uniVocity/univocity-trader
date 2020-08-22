@@ -9,6 +9,7 @@ public class DojiIndicator extends MultiValueIndicator {
 
     private double value;
     private double bodyFactor;
+    private double prevAverageBodyHeightInd;
 
     private final RealBodyIndicator bodyHeightInd;
     private final MovingAverage averageBodyHeightInd;
@@ -22,6 +23,7 @@ public class DojiIndicator extends MultiValueIndicator {
         this.bodyHeightInd = new RealBodyIndicator(interval);
         this.averageBodyHeightInd = new MovingAverage(length, interval, c -> Math.abs(bodyHeightInd.getValue()));
         this.bodyFactor = bodyFactor;
+        this.prevAverageBodyHeightInd = 0;
     }
 
     @Override
@@ -35,10 +37,12 @@ public class DojiIndicator extends MultiValueIndicator {
                 return true;
             }
 
-            double averageBodyHeight = averageBodyHeightInd.getValue();
+            double averageBodyHeight = prevAverageBodyHeightInd;
             double currentBodyHeight = Math.abs(bodyHeightInd.getValue());
 
             this.value = currentBodyHeight < (averageBodyHeight * this.bodyFactor) ? 1 : 0;
+            this.prevAverageBodyHeightInd = averageBodyHeightInd.getValue();
+
             return true;
 
         }
