@@ -6,14 +6,14 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class UpperShadowIndicatorTest {
+public class UpperShadowTest {
 
     @Test
     public void upperShadow() {
 
         int i = 0;
 
-        UpperShadowIndicator indicator = new UpperShadowIndicator(TimeInterval.MINUTE);
+        UpperShadow indicator = new UpperShadow(TimeInterval.MINUTE);
 
         indicator.accumulate(CandleHelper.newCandle(i++, 10, 18, 20, 10));
         assertEquals(2, indicator.getValue(), 0.0001);
