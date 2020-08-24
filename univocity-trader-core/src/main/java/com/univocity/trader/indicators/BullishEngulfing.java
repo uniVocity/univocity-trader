@@ -4,12 +4,12 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 
-public class BullishEngulfingIndicator extends SingleValueIndicator {
+public class BullishEngulfing extends SingleValueIndicator {
 
 	private double value;
 	private Candle prev;
 
-	public BullishEngulfingIndicator(TimeInterval timeInterval) {
+	public BullishEngulfing(TimeInterval timeInterval) {
 		super(timeInterval, null);
 	}
 

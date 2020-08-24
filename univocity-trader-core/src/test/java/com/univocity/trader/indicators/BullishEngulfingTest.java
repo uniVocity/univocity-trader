@@ -6,14 +6,14 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class BullishEngulfingIndicatorTest {
+public class BullishEngulfingTest {
 
     @Test
     public void bullishEngulfingIndicator() {
 
         int i = 0;
 
-        BullishEngulfingIndicator indicator = new BullishEngulfingIndicator(TimeInterval.MINUTE);
+        BullishEngulfing indicator = new BullishEngulfing(TimeInterval.MINUTE);
 
         indicator.accumulate(CandleHelper.newCandle(i++, 10, 18, 20, 10));
         assertEquals(0, indicator.getValue(), 0.0001);
