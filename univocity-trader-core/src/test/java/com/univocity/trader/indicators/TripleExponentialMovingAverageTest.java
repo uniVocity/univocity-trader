@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class TripleEMAIndicatorTest {
+public class TripleExponentialMovingAverageTest {
 
     private double[] values = {0.73, 0.72, 0.86, 0.72, 0.62, 0.76, 0.84, 0.69, 0.65, 0.71,
             0.53, 0.73, 0.77, 0.67, 0.68};
@@ -16,7 +16,7 @@ public class TripleEMAIndicatorTest {
 
         int i = 0;
 
-        TripleEMAIndicator indicator = new TripleEMAIndicator(5, TimeInterval.MINUTE);
+        TripleExponentialMovingAverage indicator = new TripleExponentialMovingAverage(5, TimeInterval.MINUTE);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(0.73, indicator.getValue(), 0.0001);

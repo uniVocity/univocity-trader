@@ -5,19 +5,26 @@ import com.univocity.trader.indicators.base.SingleValueCalculationIndicator;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.strategy.Indicator;
 
-public class TripleEMAIndicator extends SingleValueCalculationIndicator {
+import java.util.function.*;
+
+public class TripleExponentialMovingAverage extends SingleValueCalculationIndicator {
 
     private final ExponentialMovingAverage ema;
     private final ExponentialMovingAverage emaEma;
     private final ExponentialMovingAverage emaEmaEma;
 
-    public TripleEMAIndicator(TimeInterval interval) {
-        this(5, interval);
+    public TripleExponentialMovingAverage(TimeInterval interval) {
+        this(5, interval, null);
     }
 
-    public TripleEMAIndicator(int length, TimeInterval interval) {
+    public TripleExponentialMovingAverage(int length, TimeInterval interval) {
+        this(length, interval, null);
+    }
+
+    public TripleExponentialMovingAverage(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
         super(interval, null);
-        this.ema = new ExponentialMovingAverage(length, interval);
+        valueGetter = valueGetter == null ? c->c.close : valueGetter;
+        this.ema = new ExponentialMovingAverage(length, interval, valueGetter);
         this.emaEma = new ExponentialMovingAverage(length, interval, c -> ema.getValue());
         this.emaEmaEma = new ExponentialMovingAverage(length, interval, c -> emaEma.getValue());
     }
