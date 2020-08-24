@@ -16,14 +16,12 @@ public class BearishHarami extends SingleValueIndicator {
 	@Override
 	protected boolean process(Candle candle, double value, boolean updating) {
 		this.value = 0;
-
 		if (prev != null && prev.isClosePositive() && !candle.isClosePositive()) {
 			this.value = (candle.open > prev.open && candle.open < prev.close && candle.close > prev.open && candle.close < prev.close) ? 1 : 0;
 		}
-
-        if(!updating || prev == null) {
-            prev = candle;
-        }
+		if (!updating || prev == null) {
+			prev = candle;
+		}
 		return true;
 	}
 
