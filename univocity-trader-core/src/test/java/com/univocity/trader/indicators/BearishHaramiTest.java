@@ -6,13 +6,13 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class BearishHaramiIndicatorTest {
+public class BearishHaramiTest {
 
     @Test
     public void bearishHaramiIndicator() {
         int i = 0;
 
-        BearishHaramiIndicator indicator = new BearishHaramiIndicator(TimeInterval.MINUTE);
+        BearishHarami indicator = new BearishHarami(TimeInterval.MINUTE);
 
         indicator.accumulate(CandleHelper.newCandle(i++, 10, 18, 20, 10));
         assertEquals(0, indicator.getValue(), 0.0001);
