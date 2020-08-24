@@ -18,6 +18,10 @@ public class AggregatedTicksIndicator implements Indicator {
 		this.timeInterval = timeInterval;
 	}
 
+	public Aggregator getAggregator() {
+		return aggregator;
+	}
+
 	@Override
 	public final void initialize(Aggregator root) {
 		if (this.aggregator == null) {
@@ -76,7 +80,7 @@ public class AggregatedTicksIndicator implements Indicator {
 	}
 
 	public final Candle getLastFullCandle() {
-		if(lastFullCandle == null){
+		if (lastFullCandle == null) {
 			return aggregator.getPartial();
 		}
 		return lastFullCandle;
