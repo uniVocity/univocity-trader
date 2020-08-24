@@ -5,9 +5,9 @@ import com.univocity.trader.indicators.base.SingleValueCalculationIndicator;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.strategy.Indicator;
 
-public class LowerShadowIndicator extends SingleValueCalculationIndicator {
+public class LowerShadow extends SingleValueCalculationIndicator {
 
-    public LowerShadowIndicator(TimeInterval interval) {
+    public LowerShadow(TimeInterval interval) {
         super(interval);
     }
 
