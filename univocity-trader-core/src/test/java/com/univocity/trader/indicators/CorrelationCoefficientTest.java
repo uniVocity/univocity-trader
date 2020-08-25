@@ -39,7 +39,7 @@ public class CorrelationCoefficientTest {
         TimeInterval interval = TimeInterval.MINUTE;
 
         Volume volume = new Volume(2, interval);
-        CorrelationCoefficient indicator = new CorrelationCoefficient(5, interval, new FunctionIndicator(interval, c -> c.close), volume);
+        CorrelationCoefficient indicator = new CorrelationCoefficient(5, new FunctionIndicator(interval, c -> c.close), volume);
 
         indicator.accumulate(candles[i].getCandle(i++));
         assertTrue(Double.isNaN(indicator.getValue()));

@@ -122,6 +122,14 @@ public class AggregatedTicksIndicator implements Indicator {
 		return 0;
 	}
 
+	public static Aggregator getAggregator(Indicator indicator) {
+		if (indicator instanceof AggregatedTicksIndicator) {
+			return ((AggregatedTicksIndicator) indicator).getAggregator();
+		}
+		return null;
+	}
+
+
 	public final void recalculateEveryTick(boolean recalculateEveryTick) {
 		this.recalculateEveryTick = recalculateEveryTick;
 		for (Indicator indicator : children()) {

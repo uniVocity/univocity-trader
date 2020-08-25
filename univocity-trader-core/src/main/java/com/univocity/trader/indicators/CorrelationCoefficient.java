@@ -1,37 +1,47 @@
 package com.univocity.trader.indicators;
 
-import com.univocity.trader.candles.Candle;
-import com.univocity.trader.indicators.base.SingleValueCalculationIndicator;
-import com.univocity.trader.indicators.base.TimeInterval;
-import com.univocity.trader.strategy.Indicator;
+import com.univocity.trader.candles.*;
+import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.strategy.*;
 
-public class CorrelationCoefficient extends SingleValueCalculationIndicator {
+import java.util.function.*;
 
-    private Variance variance1;
-    private Variance variance2;
-    private Covariance covariance;
+public class CorrelationCoefficient extends Statistic {
 
-    public CorrelationCoefficient(int length, TimeInterval interval, Indicator indicator1, Indicator indicator2) {
-        super(interval);
-        variance1 = new Variance(length, interval, c -> indicator1.getValue());
-        variance2 = new Variance(length, interval, c -> indicator2.getValue());
-        covariance = new Covariance(length, indicator1, indicator2);
-    }
+	private Variance variance1;
+	private Variance variance2;
+	private Covariance covariance;
 
-    @Override
-    protected double calculate(Candle candle, double value, double previousValue, boolean updating) {
-        if (covariance.accumulate(candle)) {
-            variance1.accumulate(candle);
-            variance2.accumulate(candle);
-            double multipliedSqrt = Math.sqrt(variance1.getValue() * variance2.getValue());
-            return covariance.getValue() / multipliedSqrt;
-        }
-        return 0;
-    }
+	public CorrelationCoefficient(int length, TimeInterval interval, ToDoubleFunction<Candle> indicator1, ToDoubleFunction<Candle> indicator2) {
+		super(length, interval, indicator1, indicator2);
+	}
 
-    @Override
-    protected Indicator[] children() {
-        return new Indicator[]{variance1, variance2, covariance};
-    }
+	public CorrelationCoefficient(int length, Indicator indicator1, ToDoubleFunction<Candle> indicator2) {
+		super(length, indicator1, indicator2);
+	}
 
+	public CorrelationCoefficient(int length, ToDoubleFunction<Candle> indicator1, Indicator indicator2) {
+		super(length, indicator1, indicator2);
+	}
+
+	public CorrelationCoefficient(int length, Indicator indicator1, Indicator indicator2) {
+		super(length, indicator1, indicator2);
+	}
+
+	@Override
+	protected void initialize(Indicator indicator1, Indicator indicator2) {
+		variance1 = new Variance(length, TimeInterval.millis(indicator1.getInterval()), c -> indicator1.getValue());
+		variance2 = new Variance(length, TimeInterval.millis(indicator2.getInterval()), c -> indicator2.getValue());
+		covariance = new Covariance(length, indicator1, indicator2);
+	}
+
+	@Override
+	protected boolean indicatorsAccumulated(Candle candle) {
+		return covariance.accumulate(candle) | variance1.accumulate(candle) | variance2.accumulate(candle);
+	}
+
+	@Override
+	protected double calculate() {
+		return covariance.getValue() / (Math.sqrt(variance1.getValue() * variance2.getValue()));
+	}
 }
