@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class StandardErrorIndicatorTest {
+public class StandardErrorTest {
 
     private static final double[] values = {10, 20, 30, 40, 50, 40, 40, 50, 40, 30, 20, 10};
 
@@ -15,7 +15,7 @@ public class StandardErrorIndicatorTest {
 
         int i = 0;
 
-        StandardErrorIndicator indicator = new StandardErrorIndicator(5, TimeInterval.MINUTE);
+        StandardError indicator = new StandardError(5, TimeInterval.MINUTE);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(0, indicator.getValue(), 0.0001);
@@ -59,7 +59,7 @@ public class StandardErrorIndicatorTest {
     public void shouldBeZeroWhenBarCountIs1() {
         int i = 0;
 
-        StandardErrorIndicator indicator = new StandardErrorIndicator(1, TimeInterval.MINUTE);
+        StandardError indicator = new StandardError(1, TimeInterval.MINUTE);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(0, indicator.getValue(), 0.0001);
