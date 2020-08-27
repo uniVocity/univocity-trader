@@ -68,11 +68,6 @@ public class ThreeBlackCrowsIndicator extends MultiValueIndicator {
             }
             whiteCandleIndex = count - 3;
 
-            System.out.println(closeList.get(whiteCandleIndex) > openList.get(whiteCandleIndex));
-            System.out.println(isBlackCrow(count - 2) && isBlackCrow(count - 1));
-            System.out.println(isBlackCrow(count));
-            System.out.println(" _________________ ");
-
             this.value = closeList.get(whiteCandleIndex) > openList.get(whiteCandleIndex)
                     && isBlackCrow(count - 2) && isBlackCrow(count - 1)
                     && isBlackCrow(count) ? 1 : 0;
