@@ -15,16 +15,16 @@ public class RWILowIndicatorTest {
 
         RWILowIndicator indicator = new RWILowIndicator(20, TimeInterval.MINUTE);
 
-        indicator.accumulate(CandleHelper.newCandle(i++, 229.35, 224.8,  229.7, 219.5, 121888889));
+        indicator.accumulate(CandleHelper.newCandle(i++, 229.35, 224.8, 229.7, 219.5, 121888889));
         assertEquals(Double.NaN, indicator.getValue(), 0.0001);
 
-        indicator.accumulate(CandleHelper.newCandle(i++, 225.7, 219.4,  228, 217.5, 150522222));
+        indicator.accumulate(CandleHelper.newCandle(i++, 225.7, 219.4, 228, 217.5, 150522222));
         assertEquals(Double.NaN, indicator.getValue(), 0.0001);
 
-        indicator.accumulate(CandleHelper.newCandle(i++, 220.15, 237,  237.5, 216.6, 152477778));
+        indicator.accumulate(CandleHelper.newCandle(i++, 220.15, 237, 237.5, 216.6, 152477778));
         assertEquals(Double.NaN, indicator.getValue(), 0.0001);
 
-        indicator.accumulate(CandleHelper.newCandle(i++, 237.5, 240.2,  243.2, 234, 168800000));
+        indicator.accumulate(CandleHelper.newCandle(i++, 237.5, 240.2, 243.2, 234, 168800000));
         assertEquals(Double.NaN, indicator.getValue(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i++, 240.25, 242.5, 243.5, 232, 149655556));
@@ -74,6 +74,12 @@ public class RWILowIndicatorTest {
 
         indicator.accumulate(CandleHelper.newCandle(i++, 250.1, 274.4, 274.9, 250.1, 149033332));
         assertEquals(0.218, indicator.getValue(), 0.0001);
+
+        indicator.accumulate(CandleHelper.newCandle(i++, 275.4, 275.3, 281.5, 267.5, 155400001));
+        assertEquals(0.3391, indicator.getValue(), 0.0001);
+
+        indicator.accumulate(CandleHelper.newCandle(i++, 275.85, 276.9, 282, 269.5, 123500000));
+        assertEquals(0.6076, indicator.getValue(), 0.0001);
 
 
     }
