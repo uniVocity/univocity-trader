@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class BollingerBandWidthIndicatorTest {
+public class BollingerBandWidthTest {
 
     private double values[] = {10, 12, 15, 14, 17, 20, 21, 20, 20, 19, 20, 17, 12, 12, 9, 8, 9, 10, 9, 10};
 
@@ -16,8 +16,7 @@ public class BollingerBandWidthIndicatorTest {
         int i = 0;
         TimeInterval interval = TimeInterval.MINUTE;
 
-        BollingerBand bb = new BollingerBand(5, 2, interval);
-        BollingerBandWidthIndicator indicator = new BollingerBandWidthIndicator(bb, interval);
+        BollingerBandWidth indicator = new BollingerBandWidth(5, 2, interval);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
         assertEquals(0, indicator.getValue(), 0.0001);
