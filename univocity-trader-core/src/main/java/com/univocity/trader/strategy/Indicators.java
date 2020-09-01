@@ -203,6 +203,18 @@ public abstract class Indicators {
 		return register(new HullMovingAverage(length, interval, valueGetter), length, interval, valueGetter);
 	}
 
+	public static IchimokuChikouSpan IchimokuChikouSpan(TimeInterval interval) {
+		return register(new IchimokuChikouSpan(interval), interval);
+	}
+
+	public static IchimokuChikouSpan IchimokuChikouSpan(int length, TimeInterval interval) {
+		return register(new IchimokuChikouSpan(length, interval), length, interval);
+	}
+
+	public static IchimokuChikouSpan IchimokuChikouSpan(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return register(new IchimokuChikouSpan(length, interval, valueGetter), length, interval, valueGetter);
+	}
+
 	public static InstantaneousTrendline InstantaneousTrendline(TimeInterval interval) {
 		return register(new InstantaneousTrendline(interval), interval);
 	}

@@ -124,6 +124,11 @@ public class DefaultIndicators {
 	}
 
 	@Overlay
+	public static IchimokuChikouSpan IchimokuChikouSpan(@PositiveDefault(26) int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		return Indicators.IchimokuChikouSpan(length, interval, valueGetter(valueGetter));
+	}
+
+	@Overlay
 	@Compose(
 			renderer = AreaRenderer.class,
 			elements = {
