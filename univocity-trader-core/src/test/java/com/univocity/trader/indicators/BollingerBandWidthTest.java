@@ -16,67 +16,67 @@ public class BollingerBandWidthTest {
         int i = 0;
         TimeInterval interval = TimeInterval.MINUTE;
 
-        BollingerBandWidth indicator = new BollingerBandWidth(5, 2, interval);
+        BollingerBand indicator = new BollingerBand(5, 2, interval);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(0, indicator.getValue(), 0.0001);
+        assertEquals(0, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-//        assertEquals(36.3636, indicator.getValue(), 0.0001);
+//        assertEquals(36.3636, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-//        assertEquals(66.6423, indicator.getValue(), 0.0001);
+//        assertEquals(66.6423, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-//        assertEquals(60.2443, indicator.getValue(), 0.0001);
+//        assertEquals(60.2443, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(71.0767, indicator.getValue(), 0.0001);
+        assertEquals(71.0767, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(69.9394, indicator.getValue(), 0.0001);
+        assertEquals(69.9394, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(62.7043, indicator.getValue(), 0.0001);
+        assertEquals(62.7043, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(56.0178, indicator.getValue(), 0.0001);
+        assertEquals(56.0178, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(27.683, indicator.getValue(), 0.0001);
+        assertEquals(27.683, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(12.6491, indicator.getValue(), 0.0001);
+        assertEquals(12.6491, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(12.6491, indicator.getValue(), 0.0001);
+        assertEquals(12.6491, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(24.2956, indicator.getValue(), 0.0001);
+        assertEquals(24.2956, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(68.3332, indicator.getValue(), 0.0001);
+        assertEquals(68.3332, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(85.1469, indicator.getValue(), 0.0001);
+        assertEquals(85.1469, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(112.8481, indicator.getValue(), 0.0001);
+        assertEquals(112.8481, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(108.1682, indicator.getValue(), 0.0001);
+        assertEquals(108.1682, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(66.9328, indicator.getValue(), 0.0001);
+        assertEquals(66.9328, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(56.5194, indicator.getValue(), 0.0001);
+        assertEquals(56.5194, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(28.1091, indicator.getValue(), 0.0001);
+        assertEquals(28.1091, indicator.getWidth(), 0.0001);
 
         indicator.accumulate(CandleHelper.newCandle(i, values[i++]));
-        assertEquals(32.5362, indicator.getValue(), 0.0001);
+        assertEquals(32.5362, indicator.getWidth(), 0.0001);
     }
 
 }

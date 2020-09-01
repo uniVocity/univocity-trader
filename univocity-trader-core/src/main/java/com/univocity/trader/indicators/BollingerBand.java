@@ -75,4 +75,7 @@ public class BollingerBand extends MovingAverage {
 		return super.getValue();
 	}
 
+	public double getWidth(){
+		return ((getUpperBand() - getLowerBand()) / getMiddleBand()) * 100.0;
+	}
 }

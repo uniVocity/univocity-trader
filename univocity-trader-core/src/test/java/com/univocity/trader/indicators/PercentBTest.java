@@ -1,7 +1,6 @@
 package com.univocity.trader.indicators;
 
 import com.univocity.trader.candles.CandleHelper;
-import com.univocity.trader.indicators.PercentB;
 import com.univocity.trader.indicators.base.TimeInterval;
 import org.junit.Test;
 
