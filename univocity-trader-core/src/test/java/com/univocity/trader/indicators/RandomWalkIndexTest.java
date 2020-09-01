@@ -47,8 +47,8 @@ public class RandomWalkIndexTest {
 
 		indicator.accumulate(CandleHelper.newCandle(i++, 275.85, 276.9, 282, 269.5, 123500000));
 		assertEquals(0.6403, indicator.getRwiLow(), 0.0001);
-		assertEquals(1.5789, indicator.getRwiHigh(), 0.0001);
-        assertEquals(0.4229, indicator.getOscillator(), 0.0001);
+		assertEquals(1.4823, indicator.getRwiHigh(), 0.0001);
+        assertEquals(0.3966, indicator.getOscillator(), 0.0001);
 
 	}
 

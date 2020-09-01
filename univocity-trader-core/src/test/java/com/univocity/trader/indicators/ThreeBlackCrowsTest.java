@@ -6,14 +6,14 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class ThreeBlackCrowsIndicatorTest {
+public class ThreeBlackCrowsTest {
 
     @Test
     public void threeBlackCrowsIndicator() {
 
         int i = 0;
 
-        ThreeBlackCrowsIndicator indicator = new ThreeBlackCrowsIndicator(3, 0.1, TimeInterval.MINUTE);
+        ThreeBlackCrows indicator = new ThreeBlackCrows(3, 0.1, TimeInterval.MINUTE);
 
         indicator.accumulate(CandleHelper.newCandle(i++, 19, 19, 22, 15));
         assertEquals(Signal.NEUTRAL, indicator.getSignal(null));

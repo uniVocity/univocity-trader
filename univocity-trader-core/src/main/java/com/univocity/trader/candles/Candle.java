@@ -151,7 +151,7 @@ public final class Candle implements Comparable<Candle>, Cloneable {
 	}
 
 	public boolean isRed() {
-		return this.open >= this.close;
+		return this.open > this.close;
 	}
 
 	public LocalDateTime localCloseDateTime() {

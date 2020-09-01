@@ -6,7 +6,7 @@ import com.univocity.trader.utils.*;
 
 import static com.univocity.trader.indicators.Signal.*;
 
-public class ThreeBlackCrowsIndicator extends MovingAverage {
+public class ThreeBlackCrows extends MovingAverage {
 
 	private final CircularList averageLowerShadowList;
 	private final double factor;
@@ -15,19 +15,19 @@ public class ThreeBlackCrowsIndicator extends MovingAverage {
 	private Candle c1;
 	private Candle c2;
 
-	public ThreeBlackCrowsIndicator(TimeInterval interval) {
+	public ThreeBlackCrows(TimeInterval interval) {
 		this(3, 0.3, interval);
 	}
 
-	public ThreeBlackCrowsIndicator(double factor, TimeInterval interval) {
+	public ThreeBlackCrows(double factor, TimeInterval interval) {
 		this(3, factor, interval);
 	}
 
-	public ThreeBlackCrowsIndicator(int length, TimeInterval interval) {
+	public ThreeBlackCrows(int length, TimeInterval interval) {
 		this(length, 0.3, interval);
 	}
 
-	public ThreeBlackCrowsIndicator(int length, double factor, TimeInterval interval) {
+	public ThreeBlackCrows(int length, double factor, TimeInterval interval) {
 		super(length, interval, c -> c.close > c.open ? c.open - c.low : c.close - c.low);
 		this.averageLowerShadowList = new CircularList(4);
 		this.factor = factor;
@@ -42,7 +42,7 @@ public class ThreeBlackCrowsIndicator extends MovingAverage {
 		return false;
 	}
 
-	private boolean hasVeryShortLowerShadow(Candle candle, Candle prev) {
+	private boolean hasVeryShortLowerShadow(Candle candle) {
 		double currentLowerShadow = valueGetter.applyAsDouble(candle);
 		double averageLowerShadow = averageLowerShadowList.first();
 		return currentLowerShadow < (averageLowerShadow * factor);
@@ -55,9 +55,9 @@ public class ThreeBlackCrowsIndicator extends MovingAverage {
 	private boolean isBlackCrow(Candle candle, Candle prev) {
 		if (candle.isRed()) {
 			if (prev.isGreen()) {
-				return hasVeryShortLowerShadow(candle, prev) && candle.open < prev.high;
+				return hasVeryShortLowerShadow(candle) && candle.open < prev.high;
 			} else {
-				return hasVeryShortLowerShadow(candle, prev) && isDeclining(candle, prev);
+				return hasVeryShortLowerShadow(candle) && isDeclining(candle, prev);
 			}
 		}
 		return false;

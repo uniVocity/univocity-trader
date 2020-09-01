@@ -443,20 +443,36 @@ public abstract class Indicators {
 		return register(new StreakIndicator(interval, valueGetter), interval, valueGetter);
 	}
 
-	public static ThreeBlackCrowsIndicator ThreeBlackCrowsIndicator(TimeInterval interval) {
-		return register(new ThreeBlackCrowsIndicator(interval), interval);
+	public static ThreeBlackCrows ThreeBlackCrows(TimeInterval interval) {
+		return register(new ThreeBlackCrows(interval), interval);
 	}
 
-	public static ThreeBlackCrowsIndicator ThreeBlackCrowsIndicator(int length, TimeInterval interval) {
-		return register(new ThreeBlackCrowsIndicator(length, interval), length, interval);
+	public static ThreeBlackCrows ThreeBlackCrows(int length, TimeInterval interval) {
+		return register(new ThreeBlackCrows(length, interval), length, interval);
 	}
 
-	public static ThreeBlackCrowsIndicator ThreeBlackCrowsIndicator(double factor, TimeInterval interval) {
-		return register(new ThreeBlackCrowsIndicator(factor, interval), factor, interval);
+	public static ThreeBlackCrows ThreeBlackCrows(double factor, TimeInterval interval) {
+		return register(new ThreeBlackCrows(factor, interval), factor, interval);
 	}
 
-	public static ThreeBlackCrowsIndicator ThreeBlackCrowsIndicator(int length, double factor, TimeInterval interval) {
-		return register(new ThreeBlackCrowsIndicator(length, factor, interval), length, factor, interval);
+	public static ThreeBlackCrows ThreeBlackCrows(int length, double factor, TimeInterval interval) {
+		return register(new ThreeBlackCrows(length, factor, interval), length, factor, interval);
+	}
+
+	public static ThreeWhiteSoldiers ThreeWhiteSoldiers(TimeInterval interval) {
+		return register(new ThreeWhiteSoldiers(interval), interval);
+	}
+
+	public static ThreeWhiteSoldiers ThreeWhiteSoldiers(int length, TimeInterval interval) {
+		return register(new ThreeWhiteSoldiers(length, interval), length, interval);
+	}
+
+	public static ThreeWhiteSoldiers ThreeWhiteSoldiers(double factor, TimeInterval interval) {
+		return register(new ThreeWhiteSoldiers(factor, interval), factor, interval);
+	}
+
+	public static ThreeWhiteSoldiers ThreeWhiteSoldiers(int length, double factor, TimeInterval interval) {
+		return register(new ThreeWhiteSoldiers(length, factor, interval), length, factor, interval);
 	}
 
 	public static TrueRange TrueRange(TimeInterval interval) {

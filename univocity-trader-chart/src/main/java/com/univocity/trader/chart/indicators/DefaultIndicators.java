@@ -272,8 +272,12 @@ public class DefaultIndicators {
 		return out;
 	}
 
-	public static ThreeBlackCrowsIndicator ThreeBlackCrowsIndicator(@PositiveDefault(3) int length, @PositiveDefault(value = 0.3, increment = 0.01) double factor, TimeInterval interval) {
-		return Indicators.ThreeBlackCrowsIndicator(length, factor, interval);
+	public static ThreeBlackCrows ThreeBlackCrows(@PositiveDefault(3) int length, @PositiveDefault(value = 0.3, increment = 0.01) double factor, TimeInterval interval) {
+		return Indicators.ThreeBlackCrows(length, factor, interval);
+	}
+
+	public static ThreeWhiteSoldiers ThreeWhiteSoldiers(@PositiveDefault(3) int length, @PositiveDefault(value = 0.3, increment = 0.01) double factor, TimeInterval interval) {
+		return Indicators.ThreeWhiteSoldiers(length, factor, interval);
 	}
 
 	public static TrueRange TrueRange(TimeInterval interval) {
