@@ -220,8 +220,20 @@ public class DefaultIndicators {
 		return Indicators.PVT(interval, valueGetter(valueGetter));
 	}
 
+	@Render(value = "getRwiHigh", description = "High", theme = RedLine.class)
+	@Render(value = "getRwiLow", description = "Low", theme = BlueLine.class)
+	public static RandomWalkIndex RandomWalkIndex(@PositiveDefault(8) int length, TimeInterval interval) {
+		return Indicators.RandomWalkIndex(length, interval);
+	}
+
+	@Render(value = "getOscillator", description = "RWI Oscillator", theme = BlueLine.class)
+	@Render(constant = 0.0)
+	public static RandomWalkIndex RandomWalkIndexOscillator(@PositiveDefault(8) int length, TimeInterval interval) {
+		return Indicators.RandomWalkIndex(length, interval);
+	}
+
+	@Render(constant = 0.0)
 	@Render(value = "getValue", theme = BlueLine.class)
-	@Render(constant = 0.0, theme = BoundaryLineTheme.class)
 	public static RateOfChange RateOfChange(@PositiveDefault(12) int length, TimeInterval interval) {
 		return Indicators.RateOfChange(length, interval);
 	}

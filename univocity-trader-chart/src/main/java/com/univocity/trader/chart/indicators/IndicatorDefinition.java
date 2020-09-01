@@ -81,7 +81,11 @@ class IndicatorDefinition implements Comparable<IndicatorDefinition> {
 
 		String displayName = overlay != null ? overlay.label() : underlay != null ? underlay.label() : "";
 		if (displayName.isBlank()) {
-			displayName = indicatorType.getSimpleName();
+			if(factoryMethod != null){
+				displayName = factoryMethod.getName();
+			} else {
+				displayName = indicatorType.getSimpleName();
+			}
 		}
 		description = displayName + tmp.toString();
 		this.overlay = overlay != null;

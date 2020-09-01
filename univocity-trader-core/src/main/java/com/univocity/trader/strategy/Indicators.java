@@ -384,6 +384,14 @@ public abstract class Indicators {
 		return register(new PVT(interval, valueGetter), interval, valueGetter);
 	}
 
+	public static RandomWalkIndex RandomWalkIndex(TimeInterval interval) {
+		return register(new RandomWalkIndex(interval), interval);
+	}
+
+	public static RandomWalkIndex RandomWalkIndex(int length, TimeInterval interval) {
+		return register(new RandomWalkIndex(length, interval), length, interval);
+	}
+
 	public static RateOfChange RateOfChange(int length, TimeInterval interval) {
 		return register(new RateOfChange(length, interval), length, interval);
 	}
