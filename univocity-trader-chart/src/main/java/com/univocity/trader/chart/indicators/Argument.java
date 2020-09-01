@@ -54,7 +54,7 @@ public class Argument {
 			this.defaultValue = defaults.value();
 			this.maximum = defaults.maximum();
 			this.increment = defaults.increment();
-			this.minimum = 1.0;
+			this.minimum = Math.min(defaults.increment(), 1.0);
 		} else {
 			this.defaultValue = 0.0;
 			this.maximum = 0.0;

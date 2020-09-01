@@ -359,7 +359,6 @@ public abstract class Indicators {
 		return register(new PercentagePriceOscillator(shortBarCount, longBarCount, signalBarCount, interval, valueGetter), shortBarCount, longBarCount, signalBarCount, interval, valueGetter);
 	}
 
-
 	public static PercentRankIndicator PercentRankIndicator(TimeInterval interval) {
 		return register(new PercentRankIndicator(interval), interval);
 	}
@@ -442,6 +441,22 @@ public abstract class Indicators {
 
 	public static StreakIndicator StreakIndicator(TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
 		return register(new StreakIndicator(interval, valueGetter), interval, valueGetter);
+	}
+
+	public static ThreeBlackCrowsIndicator ThreeBlackCrowsIndicator(TimeInterval interval) {
+		return register(new ThreeBlackCrowsIndicator(interval), interval);
+	}
+
+	public static ThreeBlackCrowsIndicator ThreeBlackCrowsIndicator(int length, TimeInterval interval) {
+		return register(new ThreeBlackCrowsIndicator(length, interval), length, interval);
+	}
+
+	public static ThreeBlackCrowsIndicator ThreeBlackCrowsIndicator(double factor, TimeInterval interval) {
+		return register(new ThreeBlackCrowsIndicator(factor, interval), factor, interval);
+	}
+
+	public static ThreeBlackCrowsIndicator ThreeBlackCrowsIndicator(int length, double factor, TimeInterval interval) {
+		return register(new ThreeBlackCrowsIndicator(length, factor, interval), length, factor, interval);
 	}
 
 	public static TrueRange TrueRange(TimeInterval interval) {
