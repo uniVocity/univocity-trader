@@ -783,11 +783,6 @@ improvement of this project.
 
 Thank you!
 
-# We build custom strategies for you
-
-If you are a trader looking for a coder to implement your strategy, send an e-mail to jbax@univocity.com
-and I'll gladly work with you.
-
 ## More to come (a.k.a. ROADMAP)
  
 This is my personal TODO list of what is going to come to this library (in order):
