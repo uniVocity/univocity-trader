@@ -1,11 +1,11 @@
 package com.univocity.trader.notification;
 
-import com.univocity.parsers.annotations.*;
-import com.univocity.trader.*;
+import com.univocity.parsers.annotations.Parsed;
+import com.univocity.trader.SymbolPriceDetails;
 import com.univocity.trader.account.*;
-import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.indicators.base.TimeInterval;
 
-import java.sql.*;
+import java.sql.Timestamp;
 
 public class OrderExecutionLine {
 
@@ -27,117 +27,121 @@ public class OrderExecutionLine {
 	Integer ticks;
 	@Parsed
 	String fundSymbol;
-	@Parsed
-	String minPrice;
-	@Parsed
-	String minChangePct;
-	@Parsed
-	String maxChangePct;
-	@Parsed
-	String maxPrice;
-	@Parsed
-	String price;
+
+	double minPrice;
+	double minChangePct;
+	double maxChangePct;
+	double maxPrice;
+	double price;
+	double averagePrice;
 	@Parsed
 	String priceChangePct;
-	@Parsed
-	String quantity;
+	double quantity;
 	@Parsed
 	String referenceCurrency;
 	@Parsed
 	Order.Status status;
 	@Parsed
 	Order.Type orderType;
-	@Parsed
-	String orderAmount;
-	@Parsed
-	String executedQuantity;
-	@Parsed
-	String valueTransacted;
-	@Parsed
-	String freeBalance;
-	@Parsed
-	String shortedQuantity;
-	@Parsed
-	String marginReserve;
-	@Parsed
-	String freeBalanceReferenceCurrency;
+	double orderAmount;
+	double executedQuantity;
+	double valueTransacted;
+	double freeBalance;
+	double shortedQuantity;
+	double marginReserve;
+	Double freeBalanceReferenceCurrency;
 	@Parsed
 	String estimatedProfitLossPct;
 	@Parsed
-	String profitLoss;
+	Double profitLoss;
 	@Parsed
 	String profitLossPct;
 	@Parsed
-	String profitLossReferenceCurrency;
+	Double profitLossReferenceCurrency;
 	@Parsed
 	String holdings;
 	@Parsed
 	String duration;
 	@Parsed
 	String orderFillPercentage;
+	@Parsed
+	Order.TriggerCondition trigger;
+	double triggerPrice;
 
 	double fillPct;
 	boolean isShort;
 	boolean isBuy;
 
+	private Order order;
+	private final Trade trade;
+	private final Trader trader;
+
+
 	public OrderExecutionLine(Order order, Trade trade, Trader trader, Client client) {
 		SymbolPriceDetails priceDetails = trader.priceDetails();
 		SymbolPriceDetails refPriceDetails = trader.referencePriceDetails();
 
-		clientId = client.getId();
+		this.order = order;
+		this.trade = trade;
+		this.trader = trader;
+
+		clientId = client == null ? "N/A" : client.getId();
 		referenceCurrency = trader.referenceCurrencySymbol();
 
-		freeBalanceReferenceCurrency = refPriceDetails.priceToString(trader.balance().getFree());
+		freeBalanceReferenceCurrency = Double.parseDouble(refPriceDetails.priceToString(trader.freeBalance()));
 		holdings = refPriceDetails.priceToString(trader.holdings());
 
+		double priceAmount = order == null || order.getPrice() == 0.0 ? trader.latestCandle().close : order.getPrice();
+
 		if (order != null) {
-			price = priceDetails.priceToString(trader.latestCandle().close);
 			fundSymbol = trader.fundSymbol();
-			closeTime = trader.latestCandle().closeTimestamp();
 			assetSymbol = trader.assetSymbol();
+			closeTime = trader.latestCandle().closeTimestamp();
 
 			Balance balance = trader.balanceOf(fundSymbol);
-			shortedQuantity = priceDetails.quantityToString(trader.balance(assetSymbol).getShortedAmount());
+			shortedQuantity = trader.shortedQuantity();
 
 			SymbolPriceDetails amountDetails = fundSymbol.equals(referenceCurrency) ? refPriceDetails : priceDetails;
 
-			freeBalance = amountDetails.priceToString(balance.getFree());
-			marginReserve = amountDetails.priceToString(balance.getMarginReserve(trader.assetSymbol()));
-			valueTransacted = amountDetails.priceToString(order.getTotalTraded());
-			price = order.isBuy() ? amountDetails.priceToString(order.getPrice()) : price;
+			freeBalance = balance.getFree();
+			marginReserve = balance.getMarginReserve(trader.assetSymbol());
+			valueTransacted = order.getTotalTraded();
+			price = order.isBuy() ? order.getPrice() : priceAmount;
+			averagePrice = order.getAveragePrice();
 
 			orderId = order.getOrderId();
-			quantity = priceDetails.quantityToString(order.getQuantity());
+			quantity = order.getQuantity();
 			status = order.getStatus();
 			operation = order.sideDescription();
 			isShort = order.isShort();
 			isBuy = order.isBuy();
 			orderType = order.getType();
-			executedQuantity = priceDetails.quantityToString(order.getExecutedQuantity());
+			executedQuantity = order.getExecutedQuantity();
 			fillPct = order.getFillPct();
 			orderFillPercentage = order.getFormattedFillPct();
 
 			if (orderType == Order.Type.MARKET && fillPct == 0.0) {
-				orderAmount = amountDetails.priceToString(order.getQuantity().doubleValue() * trader.lastClosingPrice());
+				orderAmount = order.getQuantity() * trader.lastClosingPrice();
 			} else {
-				orderAmount = amountDetails.priceToString(order.getTotalOrderAmount());
+				orderAmount = order.getTotalOrderAmount();
 			}
-
+			this.trigger = order.getTriggerCondition();
+			this.triggerPrice = order.getTriggerPrice();
 		} else {
 			operation = "END";
 		}
 		if (trade != null) {
 			tradeId = trade.id();
 			priceChangePct = trade.formattedPriceChangePct();
-			if(trade.isFinalized()) {
-				profitLoss = priceDetails.priceToString(trade.actualProfitLoss());
+			if (trade.isFinalized()) {
+				profitLoss = Double.parseDouble(priceDetails.priceToString(trade.actualProfitLoss()));
 				profitLossPct = trade.formattedProfitLossPct();
-				profitLossReferenceCurrency = refPriceDetails.priceToString(trade.actualProfitLossInReferenceCurrency());
+				profitLossReferenceCurrency = Double.parseDouble(refPriceDetails.priceToString(trade.actualProfitLossInReferenceCurrency()));
 			}
-			minChangePct = trade.formattedMinChangePct();
-			maxChangePct = trade.formattedMaxChangePct();
-			minPrice = priceDetails.priceToString(trade.minPrice());
-			maxPrice = priceDetails.priceToString(trade.maxPrice());
+			minChangePct = trade.minChange();
+			maxChangePct = trade.maxChange();
+			minPrice = trade.minPrice();
+			maxPrice = trade.maxPrice();
 			ticks = trade.ticks();
 			exitReason = trade.exitReason();
 
@@ -149,31 +153,35 @@ public class OrderExecutionLine {
 	}
 
 	public String printMinChange() {
-		return isShort ? maxChangePct : minChangePct;
+		return isShort ? getFormattedMaxChangePct() : getFormattedMinChangePct();
 	}
 
 	public String printMaxChange() {
-		return isShort ? minChangePct : maxChangePct;
+		return isShort ? getFormattedMinChangePct() : getFormattedMaxChangePct();
 	}
 
 	public String printMaxPriceAndChange() {
-		return concat(maxPrice, printMaxChange());
+		return concat(getFormattedMaxPrice(), printMaxChange());
 	}
 
 	public String printMinPriceAndChange() {
-		return concat(maxPrice, printMinChange());
+		return concat(getFormattedMaxPrice(), printMinChange());
 	}
 
 	public String printLastPriceAndChange() {
-		return concat(price, priceChangePct);
+		return concat(getFormattedPrice(), getFormattedPriceChangePct());
+	}
+
+	private String getFormattedPriceChangePct() {
+		return priceChangePct;
 	}
 
 	public String printProfitLossAndChange() {
-		return concat(profitLoss, profitLossPct);
+		return concat(getFormattedProfitLoss(), profitLossPct);
 	}
 
 	public String printReferenceCurrencyProfitLossAndChange() {
-		return referenceCurrency + " " + concat(profitLossReferenceCurrency, profitLossPct);
+		return referenceCurrency + " " + concat(profitLossReferenceCurrency.toString(), profitLossPct);
 	}
 
 	public String printHoldingsAndReferenceCurrency() {
@@ -186,5 +194,174 @@ public class OrderExecutionLine {
 
 	private String concat(String amount, String percentage) {
 		return amount + " (" + percentage + ')';
+	}
+
+	@Override
+	public String toString() {
+		return "{" +
+				"tradeId=" + tradeId +
+				", orderId='" + orderId + '\'' +
+				", closeTime=" + closeTime +
+				", clientId='" + clientId + '\'' +
+				", assetSymbol='" + assetSymbol + '\'' +
+				", operation='" + operation + '\'' +
+				", exitReason='" + exitReason + '\'' +
+				", ticks=" + ticks +
+				", fundSymbol='" + fundSymbol + '\'' +
+				", minPrice='" + getFormattedMinPrice() + '\'' +
+				", minChangePct='" + getFormattedMinChangePct() + '\'' +
+				", maxChangePct='" + getFormattedMaxChangePct() + '\'' +
+				", maxPrice='" + getFormattedMaxPrice() + '\'' +
+				", price='" + getFormattedPrice() + '\'' +
+				", averagePrice='" + getFormattedAveragePrice() + '\'' +
+				", priceChangePct='" + getFormattedPriceChangePct() + '\'' +
+				", quantity='" + getFormattedQuantity() + '\'' +
+				", referenceCurrency='" + referenceCurrency + '\'' +
+				", status=" + status +
+				", orderType=" + orderType +
+				", orderAmount='" + getFormattedOrderAmount() + '\'' +
+				", executedQuantity='" + getFormattedExecutedQuantity() + '\'' +
+				", valueTransacted='" + getFormattedValueTransacted() + '\'' +
+				", freeBalance='" + getFormattedFreeBalance() + '\'' +
+				", shortedQuantity='" + getFormattedShortedQuantity() + '\'' +
+				", marginReserve='" + getFormattedMarginReserve() + '\'' +
+				", freeBalanceReferenceCurrency='" + getFormattedFreeBalanceReferenceCurrency() + '\'' +
+				", estimatedProfitLossPct='" + estimatedProfitLossPct + '\'' +
+				", profitLoss='" + getFormattedProfitLoss() + '\'' +
+				", profitLossPct='" + profitLossPct + '\'' +
+				", profitLossReferenceCurrency='" + profitLossReferenceCurrency.toString() + '\'' +
+				", holdings='" + holdings + '\'' +
+				", duration='" + duration + '\'' +
+				", orderFillPercentage='" + orderFillPercentage + '\'' +
+				", trigger=" + trigger +
+				", triggerPrice='" + getFormattedTriggerPrice() + '\'' +
+				", fillPct=" + fillPct +
+				", isShort=" + isShort +
+				", isBuy=" + isBuy +
+				'}';
+	}
+
+
+	@Parsed(field = "executedQuantity")
+	public String getFormattedExecutedQuantity(){
+		SymbolPriceDetails priceDetails = trader.priceDetails();
+		return order == null ? null : priceDetails.quantityToString(order.getExecutedQuantity());
+	}
+
+	@Parsed(field = "minPrice")
+	public String getFormattedMinPrice(){
+		SymbolPriceDetails priceDetails = trader.priceDetails();
+
+		return trade == null ? null : priceDetails.priceToString(trade.minPrice());
+	}
+
+	@Parsed(field = "maxPrice")
+	public String getFormattedMaxPrice(){
+		SymbolPriceDetails priceDetails = trader.priceDetails();
+		return trade == null ? null : priceDetails.priceToString(trade.maxPrice());
+	}
+
+	@Parsed(field = "quantity")
+	public String getFormattedQuantity() {
+
+		SymbolPriceDetails priceDetails = this.trader.priceDetails();
+		return order == null ? null : priceDetails.quantityToString(order.getQuantity());
+	}
+
+	@Parsed(field = "averagePrice")
+	public String getFormattedAveragePrice(){
+		SymbolPriceDetails details = getAmountDetails();
+		return order == null || details == null? null : details.priceToString(order.getAveragePrice());
+	}
+
+	@Parsed(field = "price")
+	public String getFormattedPrice() {
+
+		if (order == null){
+			return null;
+		}
+		SymbolPriceDetails priceDetails = this.trader.priceDetails();
+		SymbolPriceDetails refPriceDetails = trader.referencePriceDetails();
+
+		SymbolPriceDetails amountDetails = fundSymbol.equals(referenceCurrency) ? refPriceDetails : priceDetails;
+		double priceAmount = order.getPrice() == 0.0 ? trader.latestCandle().close : order.getPrice();
+
+		return this.order.isBuy() ? amountDetails.priceToString(order.getPrice()) : priceDetails.priceToString(priceAmount);
+	}
+
+	@Parsed(field = "freeBalance")
+	public String getFormattedFreeBalance() {
+		if (order == null){
+			return null;
+		}
+		SymbolPriceDetails amountDetails = getAmountDetails();
+		return amountDetails != null ? amountDetails.priceToString(freeBalance) : null;
+	}
+
+	@Parsed(field = "freeBalanceReferenceCurrency")
+	public String getFormattedFreeBalanceReferenceCurrency() {
+		return freeBalanceReferenceCurrency.toString();
+	}
+
+	@Parsed(field = "shortedQuantity")
+	public String getFormattedShortedQuantity() {
+
+		SymbolPriceDetails priceDetails = this.trader.priceDetails();
+		return trade == null || order == null ? null : priceDetails.quantityToString(trader.shortedQuantity());
+	}
+
+	@Parsed(field = "marginReserve")
+	public String getFormattedMarginReserve() {
+		if (order == null){
+			return null;
+		}
+		SymbolPriceDetails amountDetails = getAmountDetails();
+		Balance balance = trader.balanceOf(fundSymbol);
+		return amountDetails != null ? amountDetails.priceToString(balance.getMarginReserve(trader.assetSymbol())) : null;
+	}
+
+	private SymbolPriceDetails getAmountDetails() {
+		if (fundSymbol == null){
+			return null;
+		}
+		SymbolPriceDetails priceDetails = this.trader.priceDetails();
+		SymbolPriceDetails refPriceDetails = trader.referencePriceDetails();
+		return fundSymbol.equals(referenceCurrency) ? refPriceDetails : priceDetails;
+	}
+
+	@Parsed(field = "orderAmount")
+	public String getFormattedOrderAmount(){
+		SymbolPriceDetails details = getAmountDetails();
+		return order == null || details == null ? null : details.priceToString(orderAmount);
+	}
+
+	@Parsed(field = "valueTransacted")
+	public String getFormattedValueTransacted() {
+		if (order == null){
+			return null;
+		}
+		SymbolPriceDetails amountDetails = getAmountDetails();
+		return amountDetails != null ? amountDetails.priceToString(order.getTotalTraded()) : null;
+	}
+
+	@Parsed(field = "triggerPrice")
+	public String getFormattedTriggerPrice(){
+		SymbolPriceDetails priceDetails = this.trader.priceDetails();
+		return priceDetails.priceToString(triggerPrice);
+
+	}
+
+	@Parsed(field = "minChangePct")
+	public String getFormattedMinChangePct(){
+		return trade == null ? null : trade.formattedMinChangePct();
+	}
+
+	@Parsed(field = "maxChangePct")
+	public String getFormattedMaxChangePct(){
+		return trade == null ? null : trade.formattedMaxChangePct();
+	}
+
+	public String getFormattedProfitLoss(){
+		return profitLoss.toString();
 	}
 }

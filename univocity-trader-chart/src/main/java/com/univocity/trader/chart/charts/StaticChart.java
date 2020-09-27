@@ -2,39 +2,29 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.controls.*;
 import com.univocity.trader.chart.charts.painter.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 import java.awt.image.*;
-import java.util.List;
-import java.util.*;
 
-public abstract class StaticChart<C extends BasicChartController> {
-
-	private final EnumMap<Painter.Z, List<Painter<?>>> painters = new EnumMap<>(Painter.Z.class);
+public abstract class StaticChart<T extends PainterTheme<?>> extends CoordinateManager implements Repaintable {
 
 	private double horizontalIncrement = 0.0;
-	private double maximum = -1.0;
-	private double minimum = Double.MAX_VALUE;
-
-	private double logLow;
-	private double logRange;
 
 	private Candle selectedCandle;
 	private Candle currentCandle;
 
-	private C controller;
+	private Candle firstVisibleCandle;
+	private Candle lastVisibleCandle;
+
+	private T theme;
 
 	public final CandleHistoryView candleHistory;
 
 	private BufferedImage image;
 	private long lastPaint;
-	private boolean firstRun = true; //repaint on first run to use correct font sizes (first run computes them, second uses them to lay out things correctly).
-
 	public final ChartCanvas canvas;
-
-	private int height = -1;
 
 	public StaticChart(CandleHistoryView candleHistory) {
 		this(new ChartCanvas(), candleHistory);
@@ -42,19 +32,18 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 	public StaticChart(ChartCanvas canvas, CandleHistoryView candleHistory) {
 		this.canvas = canvas;
-		this.canvas.addChart(this);
+		this.canvas.setChart(this);
 		this.candleHistory = candleHistory;
-		painters.put(Painter.Z.BACK, new ArrayList<>());
-		painters.put(Painter.Z.FRONT, new ArrayList<>());
 		candleHistory.addDataUpdateListener(this::dataUpdated);
+		canvas.addScrollPositionListener(this::onScrollPositionUpdate);
 	}
 
 	protected Color getBackgroundColor() {
-		return getController().getBackgroundColor();
+		return theme().getBackgroundColor();
 	}
 
 	protected boolean isAntialiased() {
-		return getController().isAntialiased();
+		return theme().isAntialiased();
 	}
 
 	protected void clearGraphics(Graphics g, int width) {
@@ -84,14 +73,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 		applyAntiAliasing(ig);
 		clearGraphics(ig, width);
 
-		runPainters(ig, Painter.Z.BACK, width);
 		draw(ig, width);
-		runPainters(ig, Painter.Z.FRONT, width);
-
-		if (firstRun) {
-			firstRun = false;
-			invokeRepaint();
-		}
 	}
 
 	public final void paintComponent(Graphics2D g) {
@@ -101,73 +83,88 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 		paintImage();
 
-		g.drawImage(image, 0, 0, getWidth(), getHeight(), getBoundaryLeft(), 0, getBoundaryRight(), getHeight(), null);
+		int imgTo = getBoundaryRight();
+		int imgFrom = imgTo - getWidth();
+		g.drawImage(image, 0, 0, getWidth(), getHeight(), imgFrom, 0, imgTo, getHeight(), null);
+
+		paintOver(g);
 
 		lastPaint = System.currentTimeMillis();
 	}
 
-	public int getBoundaryLeft(){
+	protected void paintOver(Graphics2D g){
+
+	};
+
+	public int getBoundaryLeft() {
 		return canvas.getBoundaryLeft();
 	}
 
-	public int getBoundaryRight(){
+	public int getBoundaryRight() {
 		return canvas.getBoundaryRight();
 	}
 
-	private void runPainters(Graphics2D g, Painter.Z z, int width) {
-		for (Painter<?> painter : painters.get(z)) {
-			painter.paintOn(g, width);
-			canvas.insets.right = Math.max(painter.insets().right, canvas.insets.right);
-			canvas.insets.left = Math.max(painter.insets().left, canvas.insets.left);
-		}
-	}
+	void onScrollPositionUpdate(int newPosition) {
+		onScrollPositionUpdate();
 
+		int from = firstVisibleCandle == null ? 0 : candleHistory.indexOf(firstVisibleCandle);
+		int to = lastVisibleCandle == null ? candleHistory.size() : candleHistory.indexOf(lastVisibleCandle);
 
-	private void dataUpdated() {
-		maximum = 0;
-		minimum = Double.MAX_VALUE;
-
-		updateEdgeValues();
+		updateEdgeValues(theme.isDisplayingLogarithmicScale(), from, to);
 		invokeRepaint();
 	}
 
-	public double getMaximum() {
-		return maximum;
+	private void onScrollPositionUpdate() {
+		if (canvas.isScrollingView()) {
+			updateIncrements();
+			this.firstVisibleCandle = getCandleAtCoordinate(canvas.scrollBar.getBoundaryLeft());
+			this.lastVisibleCandle = getCandleAtCoordinate(canvas.scrollBar.getBoundaryRight());
+		} else {
+			this.firstVisibleCandle = null;
+			this.lastVisibleCandle = null;
+		}
 	}
 
-	private void updateEdgeValues() {
-		maximum = 0;
-		minimum = Integer.MAX_VALUE;
+	private void dataUpdated(CandleHistory.UpdateType type) {
+		canvas.updateScroll();
+		onScrollPositionUpdate(-1);
+	}
 
-		for (Candle c : candleHistory) {
-			updateEdgeValues(c);
+	double getMaximum(int from, int to) {
+		return getMaximum();
+	}
+
+	double getMinimum(int from, int to) {
+		return getMinimum();
+	}
+
+	@Override
+	protected final void updateMinAndMax(boolean logScale, int from, int to) {
+		onScrollPositionUpdate();
+		for (int i = from; i < to; i++) {
+			Candle candle = candleHistory.get(i);
+			if (candle == null) {
+				continue;
+			}
+
+			double value = getHighestPlottedValue(candle);
+			if (maximum < value) {
+				maximum = value;
+			}
+			value = getLowestPlottedValue(candle);
+			if (minimum > value) {
+				minimum = value;
+			}
+		}
+
+		if (firstVisibleCandle != null && lastVisibleCandle != null) {
+			maximum = Math.max(maximum, getMaximum(from, to));
+			minimum = Math.min(minimum, getMinimum(from, to));
 		}
 		updateIncrements();
-
-		// avoids touching upper and lower limits of the chart
-		minimum = minimum * 0.99;
-		maximum = maximum * 1.01;
-
-		updateLogarithmicData();
 	}
 
-	private void updateLogarithmicData() {
-		logLow = Math.log10(minimum);
-		logRange = Math.log10(maximum) - logLow;
-	}
-
-	private void updateEdgeValues(Candle candle) {
-		double value = getHighestPlottedValue(candle);
-		if (maximum < value) {
-			maximum = value;
-		}
-		value = getLowestPlottedValue(candle);
-		if (minimum > value && value != 0.0) {
-			minimum = value;
-		}
-	}
-
-	public int getRequiredWidth(){
+	public int getRequiredWidth() {
 		return canvas.getRequiredWidth();
 	}
 
@@ -197,27 +194,20 @@ public abstract class StaticChart<C extends BasicChartController> {
 		return x;
 	}
 
-	private int getXCoordinate(int currentPosition) {
-		return (int) (currentPosition * horizontalIncrement);
+	public int getXCoordinate(int currentPosition) {
+		return (int) Math.round(currentPosition * horizontalIncrement);
 	}
 
 	private int getLogarithmicYCoordinate(double value) {
-		return getHeight() - (int) ((Math.log10(value) - logLow) * getHeight() / logRange);
+		return getLogarithmicYCoordinate(value, getAvailableHeight());
 	}
 
 	private int getLinearYCoordinate(double value) {
-		double linearRange = getHeight() - (getHeight() * minimum / maximum);
-		double proportion = (getHeight() - (getHeight() * value / maximum)) / linearRange;
-
-		return (int) (getHeight() * proportion);
+		return getLinearYCoordinate(value, getAvailableHeight());
 	}
 
 	public double getValueAtY(int y) {
-		if (displayLogarithmicScale()) {
-			return Math.pow(10, (y + logLow * getHeight() / logRange) / getHeight() * logRange);
-		} else {
-			return maximum * y / (getHeight() - getLinearYCoordinate(maximum));
-		}
+		return getValueAtY(y, getAvailableHeight());
 	}
 
 	public final int getYCoordinate(double value) {
@@ -225,7 +215,7 @@ public abstract class StaticChart<C extends BasicChartController> {
 	}
 
 	private boolean displayLogarithmicScale() {
-		return getController().isDisplayingLogarithmicScale();
+		return theme().isDisplayingLogarithmicScale();
 	}
 
 	public final void layoutComponents() {
@@ -250,11 +240,12 @@ public abstract class StaticChart<C extends BasicChartController> {
 		}
 	}
 
-	public final void invokeRepaint(){
+	@Override
+	public final void invokeRepaint() {
 		canvas.invokeRepaint();
 	}
 
-	public final int getWidth(){
+	public final int getWidth() {
 		return canvas.getWidth();
 	}
 
@@ -264,11 +255,11 @@ public abstract class StaticChart<C extends BasicChartController> {
 
 	protected Point createCandleCoordinate(int candleIndex) {
 		Candle candle = candleHistory.get(candleIndex);
-
 		Point p = new Point();
-		p.x = getXCoordinate(candleIndex);
-		p.y = getYCoordinate(getCentralValue(candle));
-
+		if (candle != null) {
+			p.x = getXCoordinate(candleIndex);
+			p.y = getYCoordinate(getCentralValue(candle));
+		}
 		return p;
 	}
 
@@ -301,28 +292,25 @@ public abstract class StaticChart<C extends BasicChartController> {
 	}
 
 	public final int calculateBarWidth() {
-		return getController().getBarWidth();
+		return theme().getBarWidth();
 	}
 
-	private int getSpaceBetweenCandles() {
-		return getController().getSpaceBetweenBars();
+	public int getSpaceBetweenCandles() {
+		return theme().getSpaceBetweenBars();
 	}
 
 	public int calculateRequiredWidth() {
 		return (canvas.getBarWidth() + getSpaceBetweenCandles()) * candleHistory.size() + canvas.getInsetsWidth();
 	}
 
-	protected abstract C newController();
+	protected abstract T newTheme();
 
-	public final C getController() {
-		if (controller == null) {
-			this.controller = newController();
+	@Override
+	public final T theme() {
+		if (theme == null) {
+			this.theme = newTheme();
 		}
-		return controller;
-	}
-
-	public void register(Painter<?> painter) {
-		painters.get(painter.getZ()).add(painter);
+		return theme;
 	}
 
 	public double getHighestPlottedValue(Candle candle) {
@@ -340,14 +328,18 @@ public abstract class StaticChart<C extends BasicChartController> {
 	protected abstract void draw(Graphics2D g, int width);
 
 	public int getHeight() {
-		return height < 0 ? canvas.getHeight() : height;
+		return canvas.getHeight();
 	}
 
-	public final void setHeight(int height) {
-		this.height = height;
+	public int getAvailableHeight() {
+		return getHeight() - getReservedHeight();
 	}
 
-	public int getBarWidth(){
+	protected int getReservedHeight() {
+		return 0;
+	}
+
+	public int getBarWidth() {
 		return canvas.getBarWidth();
 	}
 }

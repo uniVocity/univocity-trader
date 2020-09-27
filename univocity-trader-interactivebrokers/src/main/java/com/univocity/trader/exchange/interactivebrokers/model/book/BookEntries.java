@@ -16,4 +16,8 @@ class BookEntries {
 	public BookEntry[] getEntries() {
 		return entries.values().toArray(new BookEntry[0]);
 	}
+
+	public int size(){
+		return entries.size();
+	}
 }

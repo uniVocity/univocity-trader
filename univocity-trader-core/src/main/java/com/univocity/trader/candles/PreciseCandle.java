@@ -2,7 +2,7 @@ package com.univocity.trader.candles;
 
 import java.math.*;
 
-public class PreciseCandle {
+public final class PreciseCandle {
 
 	public long openTime;
 	public long closeTime;

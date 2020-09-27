@@ -17,9 +17,10 @@ public class KDJ extends StochasticOscillatorD {
 	}
 
 	public double getValue() {
-		double d = super.getValue();
-		double k = super.k.getValue();
+		return (3 * k()) - (2 * d());
+	}
 
-		return (3 * k) - (2 * d);
+	public double j(){
+		return getValue();
 	}
 }

@@ -5,14 +5,14 @@ import java.text.*;
 import java.time.*;
 import java.time.format.*;
 
-public class Candle implements Comparable<Candle>, Cloneable {
+public final class Candle implements Comparable<Candle>, Cloneable {
 	private static final ThreadLocal<DateTimeFormatter> DATE_FORMAT = ThreadLocal.withInitial(() -> DateTimeFormatter.ofPattern("MMM dd HH:mm"));
 	private static final ThreadLocal<DateTimeFormatter> DATE_YEAR_FORMAT = ThreadLocal.withInitial(() -> DateTimeFormatter.ofPattern("yyyy MMM dd HH:mm"));
 
 	public static final ThreadLocal<DecimalFormat> MONEY_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00"));
 	public static final ThreadLocal<DecimalFormat> PRICE_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00000000"));
 	public static final ThreadLocal<DecimalFormat> CHANGE_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00%"));
-	public static final ThreadLocal<DecimalFormat> VOLUME_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,###"));
+	public static final ThreadLocal<DecimalFormat> VOLUME_FORMAT = ThreadLocal.withInitial(() -> new DecimalFormat("#,##0.00000000"));
 
 	public long openTime;
 	public long closeTime;
@@ -25,6 +25,10 @@ public class Candle implements Comparable<Candle>, Cloneable {
 
 	public Candle(long openTime, long closeTime, double open, double high, double low, double close, double volume) {
 		this(openTime, closeTime, open, high, low, close, volume, false);
+	}
+
+	public Candle(PreciseCandle c){
+		this(c.openTime, c.closeTime, c.open.doubleValue(), c.high.doubleValue(), c.low.doubleValue(), c.close.doubleValue(), c.volume.doubleValue());
 	}
 
 	private Candle(long openTime, long closeTime, double open, double high, double low, double close, double volume, boolean merged) {
@@ -103,8 +107,8 @@ public class Candle implements Comparable<Candle>, Cloneable {
 
 		if (this.merged) {
 			this.closeTime = o.closeTime;
-			this.high = Math.max(this.high, o.high);
-			this.low = Math.min(this.low, o.low);
+			this.high = (this.high > o.high) ? this.high : o.high;
+			this.low = (this.low < o.low) ? this.low : o.low;
 			this.close = o.close;
 			this.volume = this.volume + o.volume;
 			return this;
@@ -114,8 +118,8 @@ public class Candle implements Comparable<Candle>, Cloneable {
 				/* openTime  */ this.openTime,
 				/* closeTime */ o.closeTime,
 				/* open      */ this.open,
-				/* high      */ Math.max(this.high, o.high),
-				/* low       */ Math.min(this.low, o.low),
+				/* high      */ (this.high > o.high) ? this.high : o.high,
+				/* low       */ (this.low < o.low) ? this.low : o.low,
 				/* close     */ o.close,
 				/* volume    */this.volume + o.volume,
 				/* merged?   */ true
@@ -147,7 +151,7 @@ public class Candle implements Comparable<Candle>, Cloneable {
 	}
 
 	public boolean isRed() {
-		return this.open >= this.close;
+		return this.open > this.close;
 	}
 
 	public LocalDateTime localCloseDateTime() {

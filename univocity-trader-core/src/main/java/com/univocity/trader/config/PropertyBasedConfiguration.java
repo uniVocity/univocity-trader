@@ -93,7 +93,7 @@ public class PropertyBasedConfiguration {
 			if (inputProperties instanceof InputStream) {
 				properties.load((InputStream) inputProperties);
 			} else if (inputProperties instanceof Reader) {
-				properties.load((Reader) inputProperties);
+				properties.load((Reader)inputProperties);
 			}
 
 			if (log.isDebugEnabled()) {

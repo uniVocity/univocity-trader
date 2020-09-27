@@ -18,8 +18,7 @@ import java.util.concurrent.*;
  * An {@code Exchange} implementation provides information about available instruments and their prices in a live
  * trading broker or exchange.
  *
- * @param <T> the {@code Exchange}-specific candle/tick type, which will be converted to a {@link Candle} via
- *            {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
+ * @param <T> the {@code Exchange}-specific candle/tick type, which will be converted to a {@link Candle} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
  *            for storage.
  *
  * @see Candle
@@ -41,8 +40,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *                 (typically with open and close time, open and close prices, highest and lowest prices, and traded volume).
 	 *                 Not every bit of information is required, but at least the closing price and the close time should be provided.
 	 *
-	 * @return the recent {@code Exchange}-specific candles/ticks, which will be converted to a {@link Candle} via
-	 * {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
+	 * @return the recent {@code Exchange}-specific candles/ticks, which will be converted to a {@link Candle} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
 	 * for storage.
 	 */
 	IncomingCandles<T> getLatestTicks(String symbol, TimeInterval interval);
@@ -63,22 +61,10 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 * @param startTime the starting time (in milliseconds) of the historical data to be returned.
 	 * @param endTime   the end time (in milliseconds) of the historical data to be returned.
 	 *
-	 * @return candles with historical {@code Exchange}-specific candles/ticks, for the given period (or less), which will be converted to a {@link Candle} via
-	 * {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
+	 * @return candles with historical {@code Exchange}-specific candles/ticks, for the given period (or less), which will be converted to a {@link Candle} vi     * for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
 	 * for storage.
 	 */
 	IncomingCandles<T> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime);
-
-	/**
-	 * Converts an {@code Exchange}-specific candle/tick to a {@link Candle} that is used by the framework for fast in-memory calculations.
-	 *
-	 * At least the closing price and open/close times in the returned {@link Candle} should be populated.
-	 *
-	 * @param exchangeCandle the {@code Exchange}-specific candle/tick details whose data need to be converted into a {@link Candle}.
-	 *
-	 * @return a {@link Candle} populated with all details available from the given exchange-specific candle
-	 */
-	Candle generateCandle(T exchangeCandle);
 
 	/**
 	 * Converts an {@code Exchange}-specific candle/tick to a {@link PreciseCandle} that is used by the framework for database storage with
@@ -94,6 +80,11 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	PreciseCandle generatePreciseCandle(T exchangeCandle);
 
 	/**
+	 * Starts a thread that periodically sends a keep-alive message to the underlying connection.
+	 */
+    default void startKeepAlive() { }
+
+    /**
 	 * Connects to the live exchange stream to receive real time signals which will be delegated to a given {@link TickConsumer}.
 	 *
 	 * On top of the live stream, the {@link LiveTrader} will continuously check for updates on the signals of the symbols subscribed to with this method.
@@ -103,7 +94,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 * @param symbols      a comma separated list of symbols to subscribe to.
 	 * @param tickInterval the frequency of the signals to be received such as every 1 minute, 1 hour, 5 seconds, etc (whichever is supported by the exchange)
 	 * @param consumer     a consumer of {@code Exchange}-specific candle/tick details whose data need to be converted into a {@link Candle} and then submitted
-	 *                     for further processing (i.e. {@link Strategy} analysis, {@link Signal} generation and potential trading by {@link ExchangeClient})
+	 *                     for further processing (i.e. {@link Strategy} analysis, {@link Signal} generation and potential trading by {@link Client})
 	 */
 	void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<T> consumer);
 
@@ -120,7 +111,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *
 	 * @return a map of symbols traded by the exchange and their corresponding prices
 	 */
-	Map<String, Double> getLatestPrices();
+	Map<String, double[]> getLatestPrices();
 
 	/**
 	 * Returns the details about each traded symbol, such as minimum order size and decimal places to use for correct formatting and proper order
@@ -145,11 +136,11 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	double getLatestPrice(String assetSymbol, String fundSymbol);
 
 	/**
-	 * Opens a client account with the given {@code apiKey} and {@code secret}, which authorizes the {@link ExchangeClient} to trade and update their account balance.
+	 * Opens a client account with the given {@code apiKey} and {@code secret}, which authorizes the {@link Client} to trade and update their account balance.
 	 *
 	 * @param accountConfiguration the configuration of a client account (typically with API key and secret) to be used to connect to the desired account.
 	 *
-	 * @return an exchange-specific implementation of the {@link ClientAccount} interface, which allows the {@link ExchangeClient} to trade through this framework.
+	 * @return an exchange-specific implementation of the {@link ClientAccount} interface, which allows the {@link Client} to trade through this framework.
 	 */
 	ClientAccount connectToAccount(C accountConfiguration);
 
@@ -165,8 +156,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	 *                 (typically with open and close time, open and close prices, highest and lowest prices, and traded volume).
 	 *                 Not every bit of information is required, but at least the closing price and the close time should be provided.
 	 *
-	 * @return the {@code Exchange}-specific candle/tick type, which will be converted to a {@link Candle} via
-	 * {@link #generateCandle(Object)} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
+	 * @return the {@code Exchange}-specific candle/tick type, which will be converted to a {@link Candle} for in-memory calculations and {@link PreciseCandle} with {@link #generatePreciseCandle(Object)}
 	 * for storage.
 	 */
 	default T getLatestTick(String symbol, TimeInterval interval) {

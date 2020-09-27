@@ -21,12 +21,6 @@ public class DonchianChannel extends SingleValueCalculationIndicator {
 	private double upperBandValue = 0.0;
 	private double lowerBandValue = 0.0;
 
-	private int hitsDown = 0;
-	private double downPrice;
-
-	private int hitsUp = 0;
-	private double upPrice;
-
 	public DonchianChannel(int length, TimeInterval interval) {
 		super(interval);
 		upperBand = new HighestValueIndicator(length, millis(1), null);

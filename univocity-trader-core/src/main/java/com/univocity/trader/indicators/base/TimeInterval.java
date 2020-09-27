@@ -62,7 +62,8 @@ public class TimeInterval {
 	}
 
 	public static TimeInterval months(long duration) {
-		return new TimeInterval(duration * 30, TimeUnit.DAYS);
+		double minutesInMonth = 525600.0 / 12.0;
+		return new TimeInterval((long) (duration * minutesInMonth), TimeUnit.MINUTES);
 	}
 
 	@Override

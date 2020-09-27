@@ -5,6 +5,7 @@ import com.univocity.trader.chart.charts.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.function.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -50,8 +51,7 @@ public class ScrollBar extends MouseAdapter {
 		double required = canvas.getRequiredWidth();
 		double available = canvas.getWidth();
 
-		double scrollingArea = available < ScrollHandle.MIN_WIDTH ? ScrollHandle.MIN_WIDTH : available;
-		double handleWidth = scrollingArea * (available / required);
+		double handleWidth = available * (available / required);
 		scrollStep = (required - available) / (available - handleWidth);
 		scrollHandle.setWidth((int) handleWidth);
 
@@ -100,7 +100,7 @@ public class ScrollBar extends MouseAdapter {
 	}
 
 	public int getBoundaryLeft() {
-		return (int) Math.round(scrollHandle.getPosition() * scrollStep);
+		return getBoundaryRight() - canvas.getWidth();
 	}
 
 	@Override
@@ -142,5 +142,9 @@ public class ScrollBar extends MouseAdapter {
 
 	public boolean isDraggingScroll(){
 		return scrollRequired && dragging;
+	}
+
+	public void addScrollPositionListener(IntConsumer positionUpdateListener){
+		scrollHandle.addScrollPositionListener(positionUpdateListener);
 	}
 }

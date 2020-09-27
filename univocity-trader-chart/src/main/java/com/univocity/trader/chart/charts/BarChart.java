@@ -3,11 +3,11 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 
-public class BarChart extends BasicChart<BarChartController> {
+public class BarChart extends BasicChart<BarChartTheme> {
 
 	public BarChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
@@ -16,8 +16,11 @@ public class BarChart extends BasicChart<BarChartController> {
 	@Override
 	protected void draw(Graphics2D g, int width) {
 		for (int i = 0; i < candleHistory.size(); i++) {
-			Point location = createCandleCoordinate(i);
 			Candle candle = candleHistory.get(i);
+			if(candle == null){
+				return;
+			}
+			Point location = createCandleCoordinate(i);
 			drawBar(getLineColor(candle), candle, location, g);
 		}
 
@@ -41,16 +44,25 @@ public class BarChart extends BasicChart<BarChartController> {
 	}
 
 	private Color getLineColor(Candle candle) {
-		return getController().getLineColor(candle);
+		return getLineColor(candle.getChange());
+	}
+
+	private Color getLineColor(double value) {
+		return theme().getLineColor(value);
 	}
 
 	private Color getLineSelectionColor(Candle candle) {
-		return getController().getSelectionLineColor(candle);
+		return getLineSelectionColor(candle.getChange());
+	}
+
+
+	private Color getLineSelectionColor(double value) {
+		return theme().getSelectionLineColor(value);
 	}
 
 	@Override
-	public BarChartController newController() {
-		return new BarChartController(this);
+	public BarChartTheme newTheme() {
+		return new BarChartTheme(this);
 	}
 
 	@Override

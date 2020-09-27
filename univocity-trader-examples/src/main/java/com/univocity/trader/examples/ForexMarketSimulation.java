@@ -1,12 +1,13 @@
 package com.univocity.trader.examples;
 
 import com.univocity.trader.account.*;
+import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.*;
+import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
-
-import java.time.*;
+import com.univocity.trader.strategy.*;
 
 import static com.univocity.trader.exchange.interactivebrokers.SecurityType.*;
 
@@ -26,16 +27,32 @@ public class ForexMarketSimulation {
 
 		//you can test with one or more accounts at the same time
 		Account account = simulator.configure().account();
+		account.enableShorting();
 
 		account
 				.referenceCurrency("GBP") //Balances will be calculated using the reference currency.
 				.tradeWith(FOREX, "EUR", "GBP");
 
 		account
-				.minimumInvestmentAmountPerTrade(500.0);
+				.minimumInvestmentAmountPerTrade(100.0)
+				.maximumInvestmentAmountPerTrade(100.0);
 
-		account.strategies().add(ScalpingStrategy::new);
-		account.monitors().add(ScalpingStrategyMonitor::new);
+
+		//produces random signals.
+		Strategy random = new Strategy() {
+			@Override
+			public Signal getSignal(Candle candle) {
+				double v = Math.random();
+				return v < 0.3 ? Signal.SELL : v > 0.7 ? Signal.BUY : Signal.NEUTRAL;
+			}
+
+			@Override
+			public boolean exitOnOppositeSignal() {
+				return false;
+			}
+		};
+
+		account.strategies().add(() -> random);
 
 		account.listeners()
 				.add(new OrderExecutionToLog())
@@ -47,7 +64,8 @@ public class ForexMarketSimulation {
 				.tradingFees(SimpleTradingFees.percentage(0.0)) // NO FEE WARNING!!
 				.fillOrdersOnPriceMatch()
 				.resumeBackfill(false)
-				.simulateTo(LocalDateTime.now());
+				.simulateFrom("2019-10-10")
+				.simulateTo("2019-10-15");
 
 		simulator.symbolInformation("GBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
 		simulator.symbolInformation("EURGBP").priceDecimalPlaces(5).quantityDecimalPlaces(2);
@@ -55,9 +73,17 @@ public class ForexMarketSimulation {
 		//Interval of 1ms = REAL TIME TICKS
 		simulator.configure().tickInterval(TimeInterval.millis(1));
 
-//		execute simulation
-//		simulator.run();
+		account.orderManager(new OrderManager() {
+			@Override
+			public void prepareOrder(OrderBook book, OrderRequest order, Context context) {
+				order.attachToPriceChange(Order.Type.LIMIT, 0.025);
+				order.attachToPriceChange(Order.Type.MARKET, -0.015);
+			}
+		});
 
-		simulator.backfillHistory("EURGBP");
+//		execute simulation
+		simulator.run();
+
+//		simulator.backfillHistory("EURGBP");
 	}
 }

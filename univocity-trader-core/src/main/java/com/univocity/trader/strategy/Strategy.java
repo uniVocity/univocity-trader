@@ -48,4 +48,8 @@ public interface Strategy {
 	default Trade.Side tradeSide() {
 		return null;
 	}
+
+	default boolean exitOnOppositeSignal(){
+		return true;
+	}
 }

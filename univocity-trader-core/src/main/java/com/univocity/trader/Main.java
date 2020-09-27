@@ -88,7 +88,7 @@ public class Main {
 					 * update market history
 					 */
 					if (simulator instanceof MarketSimulator) {
-						((MarketSimulator) simulator).backfillHistory();
+						((MarketSimulator)simulator).backfillHistory();
 					} else {
 						throw new IllegalArgumentException(BACKFILL_OPTION + " is not supported by " + exchangeName);
 					}

@@ -10,11 +10,15 @@ public abstract class Parameters {
 			return "{}";
 		}
 	};
+	private String myString = null;
 
 	protected abstract String printParameters();
 
 	public final String toString() {
-		return printParameters();
+		if(myString == null){
+			myString = printParameters();
+		}
+		return myString;
 	}
 
 	public Parameters fromString(String s) {

@@ -1,5 +1,6 @@
 package com.univocity.trader;
 
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 
 import java.math.*;
@@ -9,7 +10,7 @@ import java.util.function.*;
 
 import static com.univocity.trader.candles.SymbolInformation.*;
 
-public class SymbolPriceDetails {
+public final class SymbolPriceDetails {
 
 	private static final SymbolPriceDetails NOOP = new SymbolPriceDetails(null, Collections.emptyMap());
 
@@ -79,8 +80,28 @@ public class SymbolPriceDetails {
 		return defaultValue;
 	}
 
+	private double getDoubleOrDefault(SymbolInformation info, ToDoubleFunction<SymbolInformation> function, double defaultValue) {
+		if (info != null) {
+			info = this.info;
+			if (info != null) {
+				return function.applyAsDouble(info);
+			}
+		}
+		return defaultValue;
+	}
+
+	private int getIntOrDefault(SymbolInformation info, ToIntFunction<SymbolInformation> function, int defaultValue) {
+		if (info != null) {
+			info = this.info;
+			if (info != null) {
+				return function.applyAsInt(info);
+			}
+		}
+		return defaultValue;
+	}
+
 	private int getPriceDecimals(SymbolInformation info) {
-		return getOrDefault(info, SymbolInformation::priceDecimalPlaces, 8);
+		return getIntOrDefault(info, SymbolInformation::priceDecimalPlaces, Balance.ROUND_MC.getPrecision());
 	}
 
 	public BigDecimal getMinimumOrderAmount(BigDecimal unitPrice) {
@@ -88,11 +109,11 @@ public class SymbolPriceDetails {
 	}
 
 	public double getMinimumOrderAmount(double unitPrice) {
-		return getOrDefault(info, SymbolInformation::minimumAssetsPerOrderAmount, DEFAULT_MINIMUM_ASSETS_PER_ORDER_AMOUNT) * unitPrice;
+		return getDoubleOrDefault(info, SymbolInformation::minimumAssetsPerOrderAmount, DEFAULT_MINIMUM_ASSETS_PER_ORDER_AMOUNT) * unitPrice;
 	}
 
 	private int getQuantityDecimals(SymbolInformation info) {
-		return getOrDefault(info, SymbolInformation::quantityDecimalPlaces, 8);
+		return getIntOrDefault(info, SymbolInformation::quantityDecimalPlaces, Balance.ROUND_MC.getPrecision());
 	}
 
 	public String quantityToString(double quantity) {
@@ -116,10 +137,16 @@ public class SymbolPriceDetails {
 	}
 
 	public static String toString(int decimals, BigDecimal value) {
+		if (value == null) {
+			return null;
+		}
 		return value.setScale(decimals, RoundingMode.FLOOR).toPlainString();
 	}
 
 	public static BigDecimal toBigDecimal(int decimals, double quantity) {
+		if (Double.isInfinite(quantity) || Double.isNaN(quantity)) {
+			return BigDecimal.ZERO;
+		}
 		BigDecimal bd = BigDecimal.valueOf(quantity);
 		bd = bd.setScale(decimals, RoundingMode.FLOOR);
 		return bd;
@@ -146,6 +173,6 @@ public class SymbolPriceDetails {
 	}
 
 	public int pipSize() {
-		return getOrDefault(info, SymbolInformation::priceDecimalPlaces, 0);
+		return getIntOrDefault(info, SymbolInformation::priceDecimalPlaces, 0);
 	}
 }

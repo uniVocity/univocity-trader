@@ -1,6 +1,7 @@
 package com.univocity.trader.exchange.interactivebrokers.api;
 
 import com.ib.client.*;
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.exchange.interactivebrokers.model.account.*;
@@ -8,6 +9,8 @@ import com.univocity.trader.exchange.interactivebrokers.model.book.*;
 import org.slf4j.*;
 
 import java.util.*;
+
+import static com.univocity.trader.exchange.interactivebrokers.api.InteractiveBrokersApi.*;
 
 /**
  * {@link EWrapper} implementation of methods that are being currently used or have some logic in them
@@ -21,9 +24,6 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	private final RequestHandler requestHandler;
 	private AccountBalance accountBalance = new AccountBalance();
-
-	private Map<Integer, TradingBook> marketBooks = new HashMap<>();
-	private Map<Integer, TradingBook> smartBooks = new HashMap<>();
 
 	private boolean disconnecting = false;
 
@@ -53,9 +53,12 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	@Override
 	public final void updateMktDepth(int tickerId, int position, int operation, int side, double price, int size) {
-		TradingBook depthDialog = marketBooks.get(tickerId);
-		if (depthDialog != null) {
-			depthDialog.updateBook(tickerId, position, "", operation, side, price, size);
+		TradingBook book = requestHandler.getBook(tickerId, false);
+		if (book != null) {
+			book.updateBook(tickerId, position, "", operation, side, price, size);
+			if(book.isReady()) {
+				requestHandler.handleResponse(tickerId, book, () -> EWrapperMsgGenerator.updateMktDepth(tickerId, position, operation, side, price, size));
+			}
 		} else {
 			log.warn("No book information associated with request {}", tickerId);
 		}
@@ -63,15 +66,12 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	@Override
 	public final void updateMktDepthL2(int tickerId, int position, String marketMaker, int operation, int side, double price, int size, boolean isSmartDepth) {
-		TradingBook book;
-
-		if (isSmartDepth) {
-			book = smartBooks.get(tickerId);
-		} else {
-			book = marketBooks.get(tickerId);
-		}
+		TradingBook book = requestHandler.getBook(tickerId, isSmartDepth);
 		if (book != null) {
 			book.updateBook(tickerId, position, marketMaker, operation, side, price, size);
+			if(book.isReady()) {
+				requestHandler.handleResponse(tickerId, book, () -> EWrapperMsgGenerator.updateMktDepthL2(tickerId, position, marketMaker, operation, side, price, size, isSmartDepth));
+			}
 		} else {
 			log.warn("No book information associated with request {}", tickerId);
 		}
@@ -192,5 +192,29 @@ public class ResponseProcessor extends IgnoredResponseProcessor {
 
 	public final void updatePortfolio(Contract contract, double position, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, String accountName) {
 		accountBalance.updatePortfolio(contract, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName);
+	}
+
+	public final void accountSummary(int reqId, String account, String tag, String value, String currency) {
+		requestHandler.handleResponse(reqId, new Balance(null, tag),
+				() -> EWrapperMsgGenerator.accountSummary(reqId, account, tag, value, currency));
+	}
+
+	public final void accountSummaryEnd(int reqId) {
+		requestHandler.responseFinalized(reqId);
+	}
+
+	public final void position(String account, Contract contract, double pos, double avgCost) {
+		requestHandler.handleResponse(POSITION_UPDATE_REQUEST_ID, new Balance(null, contract.symbol()).setFree(pos),
+				() -> EWrapperMsgGenerator.position(account, contract, pos, avgCost));
+	}
+
+	public final void positionEnd() {
+		requestHandler.responseFinalized(POSITION_UPDATE_REQUEST_ID);
+	}
+
+	@Override
+	public final void tickByTickMidPoint(int reqId, long time, double midPoint) {
+		requestHandler.handleResponse(reqId, new Candle(time, time, midPoint, midPoint, midPoint, midPoint, -1),
+				() -> EWrapperMsgGenerator.tickByTickMidPoint(reqId, time, midPoint));
 	}
 }

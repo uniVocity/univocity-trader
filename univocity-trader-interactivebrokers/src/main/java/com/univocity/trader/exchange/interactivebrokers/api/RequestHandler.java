@@ -1,6 +1,7 @@
 package com.univocity.trader.exchange.interactivebrokers.api;
 
 import com.univocity.trader.candles.*;
+import com.univocity.trader.exchange.interactivebrokers.model.book.*;
 import org.slf4j.*;
 
 import java.text.*;
@@ -25,13 +26,15 @@ class RequestHandler {
 	private Map<Integer, Consumer> pendingRequests = new ConcurrentHashMap<>();
 	private Set<Integer> awaitingResponse = ConcurrentHashMap.newKeySet();
 	private Map<Integer, IBIncomingCandles> activeFeeds = new ConcurrentHashMap<>();
+	private Map<Integer, TradingBook> marketBooks = new ConcurrentHashMap<>();
+	private Map<Integer, TradingBook> smartBooks = new ConcurrentHashMap<>();
 
 	private final Object syncLock = new Object();
 	private boolean twsDisconnected = false;
 
 	Runnable reconnectProcess;
 
-	public RequestHandler(Runnable reconnectProcess){
+	public RequestHandler(Runnable reconnectProcess) {
 		this.reconnectProcess = reconnectProcess;
 	}
 
@@ -39,14 +42,18 @@ class RequestHandler {
 		orderId.set(nextOrder);
 	}
 
-	int prepareRequest(Consumer consumer) {
+	int prepareRequest(int requestId, Consumer consumer) {
 		if (twsDisconnected) {
 			log.warn("Last request failed. Check if TWS is connected.");
 		}
-		int reqId = requestId.incrementAndGet();
-		pendingRequests.put(reqId, consumer);
-		awaitingResponse.add(reqId);
-		return reqId;
+		int reqId = requestId == 0 ? this.requestId.getAndIncrement() : requestId;
+
+		if (!pendingRequests.containsKey(requestId)) {
+			pendingRequests.put(reqId, consumer);
+			awaitingResponse.add(reqId);
+			return reqId;
+		}
+		return 0;
 	}
 
 	void responseFinalized(int requestId) {
@@ -62,9 +69,15 @@ class RequestHandler {
 	}
 
 	void closeOpenFeed(int requestId) {
-		IBIncomingCandles feed = activeFeeds.remove(requestId);
+		IBIncomingCandles feed = activeFeeds.get(requestId);
+		if (feed instanceof LiveIBIncomingCandles) { //live feed
+			if (!feed.consumerStopped()) {
+				return;
+			}
+		}
 		if (feed != null) {
 			log.info("Closing active feed opened by request {}", requestId);
+			activeFeeds.remove(requestId);
 			feed.stopProducing();
 		}
 		responseFinalized(requestId);
@@ -83,7 +96,7 @@ class RequestHandler {
 					cancelAllPendingRequests();
 					try {
 						Thread.sleep(30_000);
-					} catch (InterruptedException e){
+					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
 //					reconnectProcess.run();
@@ -153,9 +166,11 @@ class RequestHandler {
 
 			handler.accept(consumer);
 		} finally {
-			awaitingResponse.remove(requestId);
-			synchronized (syncLock) {
-				syncLock.notifyAll();
+			if (requestId > 0) {
+				awaitingResponse.remove(requestId);
+				synchronized (syncLock) {
+					syncLock.notifyAll();
+				}
 			}
 		}
 	}
@@ -189,7 +204,7 @@ class RequestHandler {
 	}
 
 	public void waitForResponse(int requestId, int maxSecondsToWait) {
-		if (!awaitingResponse.contains(requestId)) {
+		if (!awaitingResponse.contains(requestId) || requestId == 0) {
 			return;
 		}
 
@@ -232,17 +247,15 @@ class RequestHandler {
 		}
 	}
 
-	public IBIncomingCandles openFeed(Function<Consumer<Candle>, Integer> request) {
-		return doOpenFeed(request, null);
+	public <T extends IBIncomingCandles> T openFeed(T out, Function<Consumer<Candle>, Integer> request) {
+		return doOpenFeed(out, request, null);
 	}
 
-	public IBIncomingCandles openFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
-		return doOpenFeed(request, cancelRequestHandler);
+	public <T extends IBIncomingCandles> T openFeed(T out, Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
+		return doOpenFeed(out, request, cancelRequestHandler);
 	}
 
-	private IBIncomingCandles doOpenFeed(Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
-		IBIncomingCandles out = new IBIncomingCandles();
-
+	public <T extends IBIncomingCandles> T doOpenFeed(T out, Function<Consumer<Candle>, Integer> request, Consumer<Integer> cancelRequestHandler) {
 		int[] reqId = new int[1];
 		reqId[0] = request.apply((candle) -> {
 					if (!out.consumerStopped()) {
@@ -262,5 +275,31 @@ class RequestHandler {
 		);
 		activeFeeds.put(reqId[0], out);
 		return out;
+	}
+
+	TradingBook getBook(int tickerId, boolean isSmartDepth) {
+		if (isSmartDepth) {
+			return smartBooks.get(tickerId);
+		} else {
+			return marketBooks.get(tickerId);
+		}
+	}
+
+	void openBook(int reqId, int depth, boolean isSmartDepth) {
+		TradingBook book = new TradingBook(reqId, depth, isSmartDepth);
+		if (isSmartDepth) {
+			smartBooks.put(reqId, book);
+		} else {
+			marketBooks.put(reqId, book);
+		}
+	}
+
+	void closeBook(int reqId, boolean isSmartDepth) {
+		if (isSmartDepth) {
+			smartBooks.remove(reqId);
+		} else {
+			marketBooks.remove(reqId);
+		}
+		responseFinalized(reqId);
 	}
 }

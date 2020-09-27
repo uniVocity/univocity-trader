@@ -2,6 +2,7 @@ package com.univocity.trader.candles;
 
 import com.univocity.trader.config.*;
 import org.slf4j.*;
+import org.springframework.dao.*;
 import org.springframework.jdbc.core.*;
 
 import java.sql.*;
@@ -53,26 +54,28 @@ public class CandleRepository {
 		return ps;
 	}
 
-	private final ConcurrentHashMap<String, long[]> recentCandles = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, PreciseCandle> processingCandles = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, PreciseCandle> fullCandles = new ConcurrentHashMap<>();
 
 	public boolean addToHistory(String symbol, PreciseCandle tick, boolean initializing) {
 		candleCounts.clear();
 		try {
-			long[] times = recentCandles.get(symbol);
-			if (times != null && times[0] == tick.openTime && times[1] == tick.closeTime) {
-				return false; //duplicate, skip
+			PreciseCandle processingCandle = processingCandles.get(symbol);
+			if (processingCandle != null && processingCandle.openTime == tick.openTime && processingCandle.closeTime == tick.closeTime) {
+				processingCandles.put(symbol, tick); //saving update of latest candle
+				return true;
 			} else {
-				if (times == null) {
-					times = new long[2];
-					recentCandles.put(symbol, times);
+				try {
+					if (processingCandle != null) { //save fully populated candle
+						if (db().execute(INSERT, (PreparedStatementCallback<Integer>) ps -> prepareInsert(ps, symbol, processingCandle).executeUpdate()) == 0) {
+							log.warn("Could not persist " + symbol + " Tick: " + processingCandle);
+							return false;
+						}
+						fullCandles.put(symbol, processingCandle);
+					}
+				} finally {
+					processingCandles.put(symbol, tick);
 				}
-				times[0] = tick.openTime;
-				times[1] = tick.closeTime;
-			}
-
-			if (db().execute(INSERT, (PreparedStatementCallback<Integer>) ps -> prepareInsert(ps, symbol, tick).executeUpdate()) == 0) {
-				log.warn("Could not persist " + symbol + " Tick: " + tick);
-				return false;
 			}
 		} catch (Exception ex) {
 			if (ex.getMessage().contains("Duplicate entry")) {
@@ -99,7 +102,10 @@ public class CandleRepository {
 		}
 
 		final BlockingQueue<Candle> queue = (BlockingQueue<Candle>) out;
-		new Thread(readingProcess).start();
+		Thread process = new Thread(readingProcess);
+		process.setDaemon(true);
+		process.start();
+
 		return new Enumeration<>() {
 			@Override
 			public boolean hasMoreElements() {
@@ -140,19 +146,37 @@ public class CandleRepository {
 		Runnable readingProcess = () -> {
 			Thread.currentThread().setName(symbol + " candle reader");
 			log.debug("Executing SQL query: [{}]", query);
+
 			int count = 0;
+			try {
+				boolean retry = false;
+				do {
+					count = 0;
+					if (retry) {
+						try {
+							log.info("Waiting 5 seconds before retrying to read candles of {}", symbol);
+							Thread.sleep(5_000);
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+						}
+					}
 
-			try (Connection c = db().getDataSource().getConnection();
-				 final PreparedStatement s = c.prepareStatement(query);
-				 ResultSet rs = executeQuery(s)) {
+					try (Connection c = db().getDataSource().getConnection();
+						 final PreparedStatement s = c.prepareStatement(query);
+						 ResultSet rs = executeQuery(s)) {
 
-				while (rs.next()) {
-					Candle candle = CANDLE_MAPPER.mapRow(rs, 0);
-					storeCandle(symbol, from, to, out, candle);
-					count++;
-				}
-			} catch (SQLException e) {
-				log.error("Error reading " + symbol + " Candle from db().", e);
+						while (rs.next()) {
+							Candle candle = CANDLE_MAPPER.mapRow(rs, 0);
+							storeCandle(symbol, from, to, out, candle);
+							count++;
+						}
+
+						retry = false;
+					} catch (SQLException e) {
+						log.error("Error reading " + symbol + " candles from database.", e);
+						retry = e.getMessage().contains("Too many open files");
+					}
+				} while (retry);
 			} finally {
 				log.trace("Read all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
 				ended(symbol, ended);
@@ -164,17 +188,15 @@ public class CandleRepository {
 
 	private boolean isDatabaseMySQL() {
 		if (databaseName == null) {
-			synchronized (this) {
-				try {
-					databaseName = db().execute((ConnectionCallback<String>) connection -> connection.getMetaData().getDatabaseProductName());
-				} catch (Exception e) {
-					log.warn("Unable to determine database name", e);
-				}
-				if (databaseName == null) {
-					databaseName = "";
-				}
-				databaseName = databaseName.trim().toLowerCase();
+			try {
+				databaseName = db().execute((ConnectionCallback<String>) connection -> connection.getMetaData().getDatabaseProductName());
+			} catch (Exception e) {
+				log.warn("Unable to determine database name", e);
 			}
+			if (databaseName == null) {
+				databaseName = "";
+			}
+			databaseName = databaseName.trim().toLowerCase();
 		}
 		return databaseName.contains("mysql") || databaseName.contains("maria");
 	}
@@ -192,7 +214,9 @@ public class CandleRepository {
 	}
 
 	public void evictFromCache(String symbol) {
-		log.trace("Evicting cached candles of {}", symbol);
+		if (log.isTraceEnabled()) {
+			log.trace("Evicting cached candles of {}", symbol);
+		}
 		Collection<Candle> candles = cachedResults.remove(symbol);
 		if (candles != null) {
 			candles.clear();
@@ -321,8 +345,24 @@ public class CandleRepository {
 	}
 
 	public Candle lastCandle(String symbol) {
+		return loadCandle(symbol, "DESC");
+	}
+
+	public Candle firstCandle(String symbol) {
+		return loadCandle(symbol, "ASC");
+	}
+
+	private Candle loadCandle(String symbol, String ordering) {
 		String query = buildCandleQuery(symbol);
-		query += " ORDER BY close_time DESC LIMIT 1";
-		return db().queryForObject(query, CANDLE_MAPPER);
+		query += " ORDER BY close_time " + ordering + " LIMIT 1";
+		try {
+			return db().queryForObject(query, CANDLE_MAPPER);
+		} catch (EmptyResultDataAccessException e) {
+			return null;
+		}
+	}
+
+	public PreciseCandle lastFullCandle(String symbol) {
+		return fullCandles.remove(symbol);
 	}
 }

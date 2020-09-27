@@ -2,6 +2,8 @@ package com.univocity.trader.exchange.binance.api.client.domain.account;
 
 import com.univocity.trader.exchange.binance.api.client.domain.*;
 
+import java.util.*;
+
 public interface OrderDetails {
 	String getSymbol();
 
@@ -24,4 +26,8 @@ public interface OrderDetails {
 	Long getTime();
 
 	String getCummulativeQuoteQty();
+
+	default List<OrderDetails> getAttachments() {
+		return new LinkedList<>();
+	}
 }

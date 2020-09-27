@@ -1,114 +1,185 @@
 package com.univocity.trader.account;
 
+import org.slf4j.*;
+
 import java.math.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
-public class Balance implements Cloneable {
+import static com.univocity.trader.config.Allocation.*;
 
-	public static final Balance ZERO = new Balance(null);
+public final class Balance implements Cloneable {
 
+	private static final Logger log = LoggerFactory.getLogger(Balance.class);
+	public static final Balance ZERO = new Balance(null, "");
+
+	private final Map<String, AtomicLong> balanceUpdateCounts;
 	private final String symbol;
-	private BigDecimal free = BigDecimal.ZERO;
-	private BigDecimal locked = BigDecimal.ZERO;
-	private BigDecimal shorted = BigDecimal.ZERO;
-	private Map<String, BigDecimal> marginReserves = new ConcurrentHashMap<>();
-	private double freeAmount = -1.0;
-	private double shortedAmount = -1.0;
+	private double free = 0.0;
+	private double locked = 0.0;
+	private double shorted = 0.0;
+	private final Map<String, Double> marginReserves = new ConcurrentHashMap<>();
+	private String[] shortedAssetSymbols;
+	private boolean tradingLocked = false;
 
-	public static final MathContext ROUND_MC = new MathContext(8, RoundingMode.HALF_EVEN);
+	public static final MathContext ROUND_MC_STR = new MathContext(8, RoundingMode.HALF_EVEN);
+	public static final MathContext ROUND_MC = new MathContext(12, RoundingMode.HALF_EVEN);
 
-	public Balance(String symbol) {
+	public Balance(AccountManager accountManager, String symbol) {
+		this.balanceUpdateCounts = accountManager != null ? accountManager.balanceUpdateCounts : new ConcurrentHashMap<>();
 		this.symbol = symbol;
 	}
 
-	public Balance(String symbol, double free) {
+	public Balance(AccountManager accountManager, String symbol, double free) {
+		this.balanceUpdateCounts = accountManager != null ? accountManager.balanceUpdateCounts : new ConcurrentHashMap<>();
 		this.symbol = symbol;
-		this.free = BigDecimal.valueOf(free);
+		this.free = ensurePositive(free, "free balance");
 	}
 
 	public String getSymbol() {
 		return symbol;
 	}
 
-	public BigDecimal getFree() {
+	public double getFree() {
 		return free;
 	}
 
-	public double getFreeAmount() {
-		if (freeAmount < 0.0) {
-			freeAmount = free.doubleValue();
-		}
-		return freeAmount;
+	public Balance setFree(double free) {
+		this.free = ensurePositive(free, "free balance");
+		return this;
 	}
 
-	public void setFree(BigDecimal free) {
-		this.free = round(free == null ? BigDecimal.ZERO : free);
-		this.freeAmount = -1.0;
-	}
-
-	public BigDecimal getLocked() {
+	public double getLocked() {
 		return locked;
 	}
 
-	public void setLocked(BigDecimal locked) {
-		this.locked = round(locked == null ? BigDecimal.ZERO : locked);
+	public Balance setLocked(double locked) {
+		this.locked = ensurePositive(locked, "locked balance");
+		return this;
 	}
 
-	public double getShortedAmount() {
-		if (shortedAmount < 0.0) {
-			shortedAmount = shorted.doubleValue();
-		}
-		return shortedAmount;
-	}
-
-	public BigDecimal getShorted() {
+	public double getShorted() {
 		return shorted;
 	}
 
-	public void setShorted(BigDecimal shorted) {
-		this.shorted = round(shorted == null ? BigDecimal.ZERO : shorted);
-		this.shortedAmount = -1.0;
+	public Balance setShorted(double shorted) {
+		this.shorted = ensurePositive(shorted, "shorted balance");
+		return this;
 	}
 
-	public BigDecimal getMarginReserve(String assetSymboll) {
-		return round(marginReserves.getOrDefault(assetSymboll, BigDecimal.ZERO));
+	public double getMarginReserve(String assetSymbol) {
+		return marginReserves.getOrDefault(assetSymbol, 0.0);
 	}
 
-	public Set<String> getShortedAssetSymbols() {
-		return marginReserves.keySet();
+	public String[] getShortedAssetSymbols() {
+		if (shortedAssetSymbols == null) {
+			shortedAssetSymbols = marginReserves.keySet().toArray(new String[0]);
+		}
+		return shortedAssetSymbols;
 	}
 
-	public void setMarginReserve(String assetSymbol, BigDecimal marginReserve) {
-		marginReserve = round(marginReserve == null ? BigDecimal.ZERO : marginReserve);
-		if (marginReserve.compareTo(BigDecimal.ZERO) <= 0) {
+	public Balance setMarginReserve(String assetSymbol, double marginReserve) {
+		marginReserve = ensurePositive(marginReserve, "margin reserve");
+		if (marginReserve <= 0) {
 			this.marginReserves.remove(assetSymbol);
 		} else {
 			this.marginReserves.put(assetSymbol, marginReserve);
 		}
+		shortedAssetSymbols = null;
+		return this;
 	}
 
-	public BigDecimal getTotal() {
-		return round(free.add(locked));
+	private double ensurePositive(double bd, String field) {
+//		String msg = symbol + " " + field + " = " + roundStr(bd);
+//		System.out.println(msg);
+
+		//bd = round(bd);
+		if (bd >= 0) {
+			balanceUpdateCounts.computeIfAbsent(symbol, (s) -> new AtomicLong(1)).incrementAndGet();
+			return bd;
+		}
+		if (bd >= -EFFECTIVELY_ZERO) {
+			balanceUpdateCounts.computeIfAbsent(symbol, (s) -> new AtomicLong(1)).incrementAndGet();
+			return 0.0;
+		} else {
+			throw new IllegalStateException(symbol + ": can't set " + field + " to  " + bd);
+		}
+	}
+
+	public double getTotal() {
+		return free + locked;
 	}
 
 	@Override
 	public String toString() {
-		return "{" +
-				"'" + symbol + '\'' +
-				", free=" + getFree() +
-				", locked=" + getLocked() +
-				", shorted=" + getShorted() +
-				", margin reserves=" + marginReserves +
-				'}';
+		StringBuilder out = new StringBuilder(symbol);
+
+		double free = getFree();
+		double locked = getLocked();
+		double shorted = getShorted();
+
+		out.append('(');
+		if (free > 0 || locked > 0 || shorted > 0) {
+			out.append(roundStr(free));
+			if (locked > 0) {
+				out.append(", ").append(roundStr(locked)).append(" locked");
+			}
+			if (shorted > 0) {
+				out.append(", ").append(roundStr(locked)).append(" shorted");
+				if (!marginReserves.isEmpty()) {
+					out.append(" - margin: {");
+					boolean first = true;
+					Map<String, Double> sorted = new TreeMap<>(marginReserves);
+					for (var entry : sorted.entrySet()) {
+						if (first) {
+							first = false;
+						} else {
+							out.append(", ");
+						}
+						out.append(entry.getKey()).append('=').append(roundStr(entry.getValue()));
+					}
+					out.append('}');
+				}
+			}
+		} else {
+			out.append("0.0");
+		}
+		out.append(')');
+		return out.toString();
 	}
 
-	public static final BigDecimal round(BigDecimal bd) {
-		return bd.setScale(ROUND_MC.getPrecision(), ROUND_MC.getRoundingMode());
+	private static final BigDecimal round(BigDecimal bd, MathContext mc) {
+		if (bd.scale() != mc.getPrecision()) {
+			return bd.setScale(mc.getPrecision(), mc.getRoundingMode());
+		}
+		return bd;
 	}
 
-	public static final String roundStr(BigDecimal bd) {
-		return round(bd).toPlainString();
+	public static final String roundStr(double bd) {
+		return round(BigDecimal.valueOf(bd), ROUND_MC_STR).toPlainString();
+	}
+
+	public static final double round(double bd) {
+		return round(BigDecimal.valueOf(bd), ROUND_MC).doubleValue();
+	}
+
+	public final boolean isTradingLocked() {
+		return tradingLocked;
+	}
+
+	public final void lockTrading() {
+		if (log.isTraceEnabled()) {
+			log.trace("Locking trading on {}", symbol);
+		}
+		tradingLocked = true;
+	}
+
+	public final void unlockTrading() {
+		if (log.isTraceEnabled()) {
+			log.trace("Unlocking trading on {}", symbol);
+		}
+		tradingLocked = false;
 	}
 
 	public Balance clone() {

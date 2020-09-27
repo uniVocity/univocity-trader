@@ -20,8 +20,6 @@ public class ContainerUtils {
 		setBorderEnabled(enabled, c, borderColor);
 		for (Component component : c.getComponents()) {
 			if (component instanceof Container) {
-				setBorderEnabled(enabled, (Container) component, borderColor);
-			} else {
 				setBorderEnabled(enabled, component, borderColor);
 			}
 		}
@@ -32,10 +30,10 @@ public class ContainerUtils {
 			borderColor = Color.GRAY;
 		}
 		if (c instanceof JComponent) {
-			Border border = ((JComponent) c).getBorder();
+			Border border = ((JComponent)c).getBorder();
 			if (border != null) {
 				if (border instanceof TitledBorder) {
-					TitledBorder titledBorder = ((TitledBorder) border);
+					TitledBorder titledBorder = (TitledBorder) border;
 					titledBorder.setTitleColor(borderColor);
 					border = titledBorder.getBorder();
 				}
@@ -53,49 +51,49 @@ public class ContainerUtils {
 			}
 		}
 	}
-	
-	public static JPanel createVerticalPanel(Component ... components){
+
+	public static JPanel createVerticalPanel(Component... components) {
 		JPanel out = new JPanel(new GridBagLayout());
 		addComponents(out, components);
 		return out;
 	}
-	
-	public static void clearPanel(JPanel panel){
+
+	public static void clearPanel(JPanel panel) {
 		panel.removeAll();
 		panel.setBorder(null);
 		panel.revalidate();
-		panel.repaint();		
+		panel.repaint();
 	}
-	
-	public static void addComponents(JPanel panel, Component ... components){
+
+	public static void addComponents(JPanel panel, Component... components) {
 		panel.removeAll();
 		panel.setLayout(new GridBagLayout());
-		
+
 		GridBagConstraints c = new GridBagConstraints();
-		
+
 		c.gridx = 0;
 		c.gridy = 0;
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.weightx = 1;
 		c.anchor = GridBagConstraints.NORTH;
-		
-		if(components.length >= 1){
+
+		if (components.length >= 1) {
 			panel.add(components[0], c);
 		}
-		
-		for(int i = 1; i < components.length -1; i++){
+
+		for (int i = 1; i < components.length - 1; i++) {
 			c.gridy++;
 			panel.add(components[i], c);
 		}
-		
-		if(components.length > 1){
+
+		if (components.length > 1) {
 			c.gridy++;
-			c.weighty = 1.0;		
+			c.weighty = 1.0;
 			panel.add(components[components.length - 1], c);
 		}
-		
+
 		panel.revalidate();
 		panel.repaint();
 	}
-	
+
 }

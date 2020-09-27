@@ -4,7 +4,7 @@ import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 
-import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * A {@code ClientAccount} implementation controls the account of a user on an exchange or broker,
@@ -46,11 +46,11 @@ public interface ClientAccount {
 	 * If no changes occurred after polling the exchange for an update on the status of the order, {@link OrderManager#unchanged(Order)}
 	 * will be called.
 	 *
-	 * An {@link Order} can be cancelled at any time after from the {@link OrderManager} by invoking {@link Order#cancel()}
+	 * An {@link Order } can be cancelled at any time after from the {@link OrderManager} by invoking {@link Order#cancel()}
 	 *
 	 * @param orderDetails details of the order: buy/sell quantities of some instrument for a given unit price
 	 *
-	 * @return an {@link Order} with the current status of the order: e.g. filled, executed quantity and price, etc.
+	 * @return an {@link Order } with the current status of the order: e.g. filled, executed quantity and price, etc.
 	 */
 	Order executeOrder(OrderRequest orderDetails);
 
@@ -58,9 +58,20 @@ public interface ClientAccount {
 	 * Updates the balances of all symbols traded by this account and returns them in a map of symbol to {@link Balance} instances, which
 	 * includes free amounts and amounts locked in one or more {@link Order}s.
 	 *
+	 * @param force If true, ignores the last time the balance was last checked
 	 * @return a map of symbols traded by the account and the corresponding {@link Balance} of each one.
 	 */
-	Map<String, Balance> updateBalances();
+	ConcurrentHashMap<String, Balance> updateBalances(boolean force);
+
+	/**
+	 * Updates the balances of all symbols traded by this account and returns them in a map of symbol to {@link Balance} instances, which
+	 * includes free amounts and amounts locked in one or more {@link Order}s.
+	 *
+	 * @return a map of symbols traded by the account and the corresponding {@link Balance} of each one.
+	 */
+	default ConcurrentHashMap<String, Balance> updateBalances() {
+		return updateBalances(false);
+	}
 
 	/**
 	 * Returns the {@link TradingFees} applied to this account as determined by the exchange. Even though the exchange generally
@@ -118,18 +129,6 @@ public interface ClientAccount {
 	 * @param order the order to be cancelled.
 	 */
 	void cancel(Order order);
-
-	/**
-	 * Tries filling any open orders of a symbol based on its latest candle. Used in simulations only.
-	 *
-	 * @param symbol a symbol that might have open an open {@link Order} which has not been completed yet.
-	 * @param candle the latest candle of the given symbol.
-	 *
-	 * @return {@code true} if any order of the given symbol was finalized (i.e. FILLED or CANCELLED) by this method, otherwise {@code false}
-	 */
-	default boolean updateOpenOrders(String symbol, Candle candle) {
-		return false;
-	}
 
 	/**
 	 * Identifies whether this account is a simulated account or a live one connected to a live exchange with real funds.

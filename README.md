@@ -51,7 +51,7 @@ update a database of historical data and start trading.
 
 Make sure you have the following installed:
 
- * Java 11
+ * Java 14
  
  * MySQL or MariaDB (you can change this to something else, just adapt the database setup instructions below to your needs)
  
@@ -316,7 +316,7 @@ simulator.run();
 
 Here we test with data from July 2018 to July 2019, and you should see each trade when they happen as the
 [OrderExecutionToLog](./univocity-trader-core/src/main/java/com/univocity/trader/notification/OrderExecutionToLog.java) 
-will print each trade made to the log.
+will print each trade made to the log, you may also log to a Google Sheet via [OrderExecutionToGoogleSheet](./univocity-trader-core/src/main/java/com/univocity/trader/notification/OrderExecutionToGoogleSheet.java).
 
 The last line will show something like this:
 
@@ -511,8 +511,8 @@ public ExampleStrategy(Parameters params) {
  int length = 12; //default bollinger length
  int interval = 5; //default interval  
  //if we receive parameters as an array of integers
- if (params instanceof IntParameters) { 
- int[] p = ((IntParameters) params).params;
+ if (params instanceof LongParameters lp) { 
+ int[] p = lp.params;
  length = p[0];
  interval = p[1];
  }
@@ -550,7 +550,7 @@ simulation.cacheCandles(true);
 for (int interval = 1; interval <= 15; interval++) {
   // with length varying from 5 to 25 bars
   for (int length = 5; length <= 25; length++) {
-    simulation.parameters().add(new IntParameters(length, interval));
+    simulation.addParameters(new LongParameters(length, interval));
   }
 }
 
@@ -782,11 +782,6 @@ you find it useful, any contribution will help me a lot to continue working on t
 improvement of this project.
 
 Thank you!
-
-# We build custom strategies for you
-
-If you are a trader looking for a coder to implement your strategy, send an e-mail to jbax@univocity.com
-and I'll gladly work with you.
 
 ## More to come (a.k.a. ROADMAP)
  

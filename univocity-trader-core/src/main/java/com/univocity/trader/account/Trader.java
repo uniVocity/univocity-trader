@@ -7,17 +7,13 @@ import com.univocity.trader.indicators.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.strategy.*;
-import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
-import java.math.*;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 import static com.univocity.trader.account.Trade.Side.*;
 import static com.univocity.trader.indicators.Signal.*;
-import static com.univocity.trader.utils.NewInstances.*;
 
 /**
  * A {@code Trader} is responsible for the lifecycle of a trade (or multiple) and provides all information
@@ -31,39 +27,30 @@ import static com.univocity.trader.utils.NewInstances.*;
  * @see StrategyMonitor
  * @see Strategy
  */
-public class Trader {
+public final class Trader {
 	private static final Logger log = LoggerFactory.getLogger(Trader.class);
-
-	final TradingManager tradingManager;
-	private Candle latestCandle;
-	private Parameters parameters;
+	public final TradingManager tradingManager;
+	private AccountManager accountManager;
 
 	private StrategyMonitor[] monitors;
 
-	private final Set<Trade> trades = new ConcurrentSkipListSet<>();
-	private final Set<Trade> pastTrades = new ConcurrentSkipListSet<>();
+	private final TradeSet trades = new TradeSet();
 	final boolean allowMixedStrategies;
 	final OrderListener[] notifications;
 	private int pipSize;
 	private final List<Trade> stoppedOut = new ArrayList<>();
-	private AtomicLong id = new AtomicLong(1);
+	private final AtomicLong id;
+	boolean liquidating = false;
+	public final Context context;
 
-	/**
-	 * Creates a new trader for a given symbol. For internal use only.
-	 *
-	 * @param tradingManager the object responsible for managing the entire trading workflow of a symbol
-	 * @param params         optional parameter set used for parameter optimization which is passed on to the
-	 *                       {@link StrategyMonitor} instances created by the given monitorProvider
-	 * @param allInstances   all known instances of {@link StrategyMonitor} that have been created so far, used
-	 *                       to validate no single {@link StrategyMonitor} instance is shared among different
-	 *                       {@code Trader} instances.
-	 */
-	public Trader(TradingManager tradingManager, Parameters params, Set<Object> allInstances) {
-		this.parameters = params;
+	Trader(TradingManager tradingManager, StrategyMonitor[] strategyMonitors) {
+		this.id = tradingManager.getAccount().getTradeIdGenerator();
 		this.tradingManager = tradingManager;
-		this.tradingManager.trader = this;
 
-		this.monitors = createStrategyMonitors(allInstances);
+		this.context = tradingManager.context;
+		this.context.trader = this;
+
+		this.monitors = strategyMonitors;
 		List<OrderListener> tmp = new ArrayList<>();
 		for (StrategyMonitor monitor : monitors) {
 			if (monitor instanceof OrderListener) {
@@ -78,6 +65,7 @@ public class Trader {
 			allowMixedStrategies &= this.monitors[i].allowMixedStrategies();
 		}
 		this.allowMixedStrategies = allowMixedStrategies;
+		this.accountManager = tradingManager.getAccount();
 	}
 
 	/**
@@ -87,7 +75,7 @@ public class Trader {
 	 * @return the parameters tested in the {@link StrategyMonitor} instances of this {@code Trader}.
 	 */
 	public Parameters parameters() {
-		return parameters;
+		return context.parameters;
 	}
 
 
@@ -121,7 +109,7 @@ public class Trader {
 	 * <li>signal = {@code NEUTRAL}: Will simply update the statistics of any open trades.</li>
 	 * </ul>
 	 * When there is a trade open, regardless of the signal received, all strategy monitors (from
-	 * {@link #monitors()} will have their {@link StrategyMonitor#handleStop(Trade, Signal, Strategy)} method called
+	 * {@link #monitors()} will have their {@link StrategyMonitor#handleStop(Trade)} method called
 	 * to determine whether or not to exit the trade. If any one of these calls return
 	 * an exit message, the assets will be sold, {@link Trade#stopped()} will evaluate to {@code true} and {@link Trade#exitReason()}
 	 * will return the reason for exiting the trade.
@@ -133,7 +121,11 @@ public class Trader {
 	 * @return a signal indicating the action taken by this {@code Trader}, i.e. {@code BUY} if it bought assets,
 	 */
 	public void trade(Candle candle, Signal signal, Strategy strategy) {
-		latestCandle = candle;
+		context.latestCandle(candle);
+		context.signal = signal;
+		context.strategy = strategy;
+		context.strategyMonitor = null;
+		context.exitReason = null;
 
 		removeFinalizedTrades();
 
@@ -141,67 +133,73 @@ public class Trader {
 
 		if (hasPosition) {
 			stoppedOut.clear();
-			for (Trade trade : trades) {
-				if (trade.tick(candle, signal, strategy) != null) {
+			for (int i = trades.i - 1; i >= 0; i--) {
+				Trade trade = trades.elements[i];
+				if (trade.tick(candle, strategy) != null) {
 					stoppedOut.add(trade);
 				}
 			}
 		}
 		if (!stoppedOut.isEmpty()) {
 			for (Trade stoppedTrade : stoppedOut) {
-				exit(stoppedTrade, candle, strategy, stoppedTrade.exitReason());
+				context.trade = stoppedTrade;
+				exit();
 			}
 		}
 
 		if (signal == BUY) {
-			processBuy(candle, strategy);
+			processBuy();
 		} else if (signal == SELL) {
-			processSell(candle, strategy);
+			processSell();
 		}
 		stoppedOut.clear();
 	}
 
-	private void processBuy(Candle candle, Strategy strategy) {
-		boolean isShort = isShort(strategy);
-		boolean isLong = isLong(strategy);
+	private void processBuy() {
+		boolean isShort = isShort(context.strategy);
+		boolean isLong = isLong(context.strategy);
 
 		boolean bought = false;
 
-		for (Trade trade : trades) {
+		for (int i = trades.i - 1; i >= 0; i--) {
+			Trade trade = trades.elements[i];
 			if (stoppedOut.contains(trade)) {
 				continue;
 			}
-			if (isShort && trade.isShort()) {
-				bought |= exit(trade, candle, strategy, "Buy signal");
+			if (isShort && trade.isShort() && trade.exitOnOppositeSignal()) {
+				context.exitReason = "Buy signal";
+				context.trade = trade;
+				bought |= exit();
 			} else if (isLong && trade.isLong()) {
-				bought |= buy(LONG, candle, strategy); //increment position on existing trade
+				context.trade = trade;
+				bought |= buy(LONG); //increment position on existing trade
 			}
 		}
-
 		if (!bought) {
 			if (isLong) {
-				buy(LONG, candle, strategy); //opens new trade. Can only go long here.
+				buy(LONG); //opens new trade. Can only go long here.
 			}
 			if (isShort) {
-				boolean hasShortPosition = tradingManager.hasPosition(candle, false, false, true);
+				boolean hasShortPosition = tradingManager.hasPosition(context.latestCandle, false, false, true);
 				if (hasShortPosition) {
 					// Buys without having a short trade open. Might happen after starting up
 					// with short order in the account. Will generate a warning in the log.
-					buy(SHORT, candle, strategy);
+					buy(SHORT);
 				}
 			}
 		}
 	}
 
-	private void processSell(Candle candle, Strategy strategy) {
-		boolean isShort = isShort(strategy);
-		boolean isLong = isLong(strategy);
+	private void processSell() {
+		boolean isShort = isShort(context.strategy);
+		boolean isLong = isLong(context.strategy);
 
 		boolean sold = false;
 		boolean noLongs = true;
 		boolean noShorts = true;
 
-		for (Trade trade : trades) {
+		for (int i = trades.i - 1; i >= 0; i--) {
+			Trade trade = trades.elements[i];
 			if (stoppedOut.contains(trade)) {
 				if (trade.isShort()) {
 					noShorts = false;
@@ -213,62 +211,74 @@ public class Trader {
 			}
 			if (isShort && trade.isShort()) {
 				noShorts = false;
-				sold |= sellShort(trade, candle, strategy);
-			} else if (isLong && trade.isLong()) {
+				context.trade = trade;
+				sold |= sellShort();
+			} else if (isLong && trade.isLong() && trade.exitOnOppositeSignal()) {
 				noLongs = false;
-				sold |= exit(trade, candle, strategy, "Sell signal");
+				context.trade = trade;
+				context.exitReason = "Sell signal";
+				sold |= exit();
 			}
 		}
-
 		if (!sold) {
 			if (isShort && noShorts) {
-				sellShort(null, candle, strategy);
+				sellShort();
 			}
 			if (isLong && noLongs) {
-				boolean hasLongPosition = tradingManager.hasPosition(candle, false, true, false);
+				boolean hasLongPosition = tradingManager.hasPosition(context.latestCandle, false, true, false);
 				if (hasLongPosition) {
+					if (accountManager.hasOtherOpenTrades(tradingManager)) {
+						return; //another trading group is managing trades for this symbol.
+					}
 					// Sell without having a trade open. Might happen after starting up
 					// with assets in the account. Will generate a warning in the log.
-					Trade trade = Trade.createPlaceholder(-1, this, LONG);
-					sellAssets(trade, strategy, "Sell signal");
+					context.trade = Trade.createPlaceholder(-1, this, LONG);
+					context.exitReason = "Sell signal";
+					sellAssets();
 				}
 			}
 		}
 	}
 
-	private boolean exit(Trade trade, Candle candle, Strategy strategy, String exitReason) {
-		if (trade.canExit(strategy)) {
-			for (Order order : trade.position()) {
-				tradingManager.cancelOrder(order);
+	private boolean exit() {
+		Trade trade = context.trade;
+		if (trade.canExit(context.strategy)) {
+			boolean notEmptyBeforeCancellations = !trade.isEmpty();
+			for (int i = trade.position.i - 1; i >= 0; i--) {
+				Order order = getOrder(trade.position, i);
+				if (!order.isFinalized()) {
+					tradingManager.cancelOrder(order);
+				}
+			}
+			if (notEmptyBeforeCancellations && trade.isEmpty()) {
+				return false;
 			}
 
-			if (!tradingManager.hasPosition(candle, false, trade.isLong(), trade.isShort())) {
-				log.trace("Ignoring exit signal of {}: no assets ({})", symbol(), tradingManager.getAssets());
+			//tradingManager.getAccount().executeUpdateBalances();
+
+			if (!tradingManager.hasPosition(context.latestCandle, false, trade.isLong(), trade.isShort())) {
+				if (tradingManager.hasPosition(context.latestCandle, true, trade.isLong(), trade.isShort())) {
+					if (log.isTraceEnabled()) {
+						log.trace("Ignoring exit signal of {}: no free assets ({}) as {} are already locked in order", symbol(), tradingManager.getAssets(), tradingManager.getTotalAssets());
+					}
+				} else if (!trade.isEmpty()) {
+					if (log.isTraceEnabled()) {
+						log.trace("Ignoring exit signal of {}: no assets ({}). Sold manually? Closing trade", symbol(), tradingManager.getAssets());
+					}
+					//no assets available to sell, cancel any pending orders.
+					trade.finalizeTrade();
+				} // else trade object is empty and reused from previous attempt to create order which was cancelled.
 				return false;
 			}
 
 			if (trade.isLong()) {
-				return sellAssets(trade, strategy, exitReason);
-			} else if (trade.isShort()) {
-				return closeShort(trade, strategy, exitReason);
+				return sellAssets();
+			} else if (trade.isShort() && trade.exitOrders.isEmpty()) {
+				return closeShort();
 			}
 		}
 		return false;
 
-	}
-
-	StrategyMonitor[] createStrategyMonitors() {
-		return createStrategyMonitors(new HashSet<>());
-	}
-
-	private StrategyMonitor[] createStrategyMonitors(Set<Object> allInstances) {
-		NewInstances<StrategyMonitor> monitorProvider = tradingManager.getAccount().configuration().monitors();
-		StrategyMonitor[] out = monitorProvider == null ? new StrategyMonitor[0] : getInstances(tradingManager.getSymbol(), parameters, monitorProvider, "StrategyMonitor", false, allInstances);
-
-		for (int i = 0; i < out.length; i++) {
-			out[i].setTrader(this);
-		}
-		return out;
 	}
 
 	boolean isLong(Strategy strategy) {
@@ -279,64 +289,76 @@ public class Trader {
 		return tradingManager.canShortSell() && (strategy == null || (strategy.tradeSide() == SHORT || strategy.tradeSide() == null));
 	}
 
-	private double prepareTrade(Trade.Side side, Candle candle, Strategy strategy) {
+	private double prepareTrade(Trade.Side side) {
+		Strategy strategy = context.strategy;
 		boolean isLong = side == LONG && isLong(strategy);
 		boolean isShort = side == SHORT && isShort(strategy);
 
 		for (int i = 0; i < monitors.length; i++) {
+			context.strategyMonitor = monitors[i];
 			if ((isLong && monitors[i].discardBuy(strategy)) || (isShort && monitors[i].discardShortSell(strategy))) {
 				return -1.0;
 			}
 		}
-		if (!trades.isEmpty()) {
-			for (Trade trade : trades) {
-				if (trade.tryingToExit() && ((trade.isLong() && isLong) || (trade.isShort() && isShort))) {
+		for (int i = trades.i - 1; i >= 0; i--) {
+			Trade trade = trades.elements[i];
+			if (trade.tryingToExit() && ((trade.isLong() && isLong) || (trade.isShort() && isShort))) {
+				if (log.isTraceEnabled()) {
 					if (isLong) {
-						log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), candle.close, tradingManager.getAssets());
+						log.trace("Discarding buy of {} @ {}: attempting to sell current {} units", tradingManager.getSymbol(), context.latestCandle.close, trade.quantityInPosition());
 					} else {
-						log.trace("Discarding short sell of {} @ {}: attempting to buy more", tradingManager.getSymbol(), candle.close);
+						log.trace("Discarding short sell of {} @ {}: attempting to buy more", tradingManager.getSymbol(), context.latestCandle.close);
+					}
+				}
+				return -1.0;
+			}
+		}
+
+		if (strategy != null && strategy.exitOnOppositeSignal()) {
+			if ((isLong && tradingManager.waitingForBuyOrderToFill(side)) || (isShort && tradingManager.waitingForSellOrderToFill(side))) {
+				tradingManager.cancelStaleOrdersFor(side, this);
+				if ((isLong && tradingManager.waitingForBuyOrderToFill(side)) || (isShort && tradingManager.waitingForSellOrderToFill(side))) {
+					if (log.isTraceEnabled()) {
+						if (isLong) {
+							log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), context.latestCandle.close);
+						} else {
+							log.trace("Discarding short sell of {} @ {}: got sell order waiting to be filled", tradingManager.getSymbol(), context.latestCandle.close);
+						}
 					}
 					return -1.0;
 				}
 			}
 		}
-
-		if ((isLong && tradingManager.waitingForBuyOrderToFill()) || (isShort && tradingManager.waitingForSellOrderToFill())) {
-			tradingManager.cancelStaleOrdersFor(side, this);
-			if ((isLong && tradingManager.waitingForBuyOrderToFill()) || (isShort && tradingManager.waitingForSellOrderToFill())) {
-				if (isLong) {
-					log.trace("Discarding buy of {} @ {}: got buy order waiting to be filled", tradingManager.getSymbol(), candle.close);
-				} else {
-					log.trace("Discarding short sell of {} @ {}: got sell order waiting to be filled", tradingManager.getSymbol(), candle.close);
-				}
-				return -1.0;
-			}
-		}
 		if ((isLong && tradingManager.isBuyLocked()) || (isShort && tradingManager.isShortSellLocked())) {
-			if (isLong) {
-				log.trace("Discarding buy of {} @ {}: purchase order already being processed", tradingManager.getSymbol(), candle.close);
-			} else {
-				log.trace("Discarding short sell of {} @ {}: sell order already being processed", tradingManager.getSymbol(), candle.close);
+			if (log.isTraceEnabled()) {
+				if (isLong) {
+					log.trace("Discarding buy of {} @ {}: purchase order already being processed", tradingManager.getSymbol(), context.latestCandle.close);
+				} else {
+					log.trace("Discarding short sell of {} @ {}: sell order already being processed", tradingManager.getSymbol(), context.latestCandle.close);
+				}
 			}
 			return -1.0;
 		}
 		double amountToSpend = tradingManager.allocateFunds(side);
-		final double minimum = priceDetails().getMinimumOrderAmount(candle.close);
+		final double minimum = priceDetails().getMinimumOrderAmount(context.latestCandle.close);
+
 		if (amountToSpend <= minimum) {
 			tradingManager.cancelStaleOrdersFor(side, this);
 			amountToSpend = tradingManager.allocateFunds(side);
 			if (amountToSpend <= minimum) {
-				if (tradingManager.exitExistingPositions(tradingManager.assetSymbol, candle, strategy)) {
+				if (tradingManager.exitExistingPositions(tradingManager.assetSymbol, context.latestCandle)) {
 					tradingManager.updateBalances();
 					return amountToSpend;
-				} else {
+				} else if (!tradingManager.getAccount().isSimulated()) {
 					tradingManager.updateBalances();
 					amountToSpend = tradingManager.allocateFunds(side);
 					if (amountToSpend <= minimum) {
-						if (isLong) {
-							log.trace("Discarding buy of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
-						} else {
-							log.trace("Discarding short selling of {} @ {}: not enough funds to allocate (${})", symbol(), candle.close, tradingManager.getCash());
+						if (log.isTraceEnabled()) {
+							if (isLong) {
+								log.trace("Discarding buy of {} @ {}: not enough funds to allocate (${})", symbol(), context.latestCandle.close, tradingManager.getCash());
+							} else {
+								log.trace("Discarding short selling of {} @ {}: not enough funds to allocate (${})", symbol(), context.latestCandle.close, tradingManager.getCash());
+							}
 						}
 						return amountToSpend;
 					}
@@ -346,40 +368,47 @@ public class Trader {
 		return amountToSpend;
 	}
 
-	private boolean sellShort(Trade trade, Candle candle, Strategy strategy) {
-		double amountToSpend = prepareTrade(SHORT, candle, strategy);
+	private boolean sellShort() {
+		double amountToSpend = prepareTrade(SHORT);
 		if (amountToSpend > 0) {
-			Order order = tradingManager.sell(amountToSpend / candle.close, SHORT);
+			Order order = tradingManager.sell(amountToSpend / context.latestCandle.close, SHORT);
 			if (order != null) {
-				processOrder(trade, order, strategy, null);
+				processOrder(order);
 				return true;
 			}
-			log.trace("Could not short {} @ {}", tradingManager.getSymbol(), candle.close);
+			if (log.isTraceEnabled()) {
+				log.trace("Could not short {} @ {}", tradingManager.getSymbol(), context.latestCandle.close);
+			}
 		}
 		return false;
 	}
 
 
-	private boolean buy(Trade.Side tradeSide, Candle candle, Strategy strategy) {
+	private boolean buy(Trade.Side tradeSide) {
 		Order order = null;
 		if (tradeSide == LONG) {
-			double amountToSpend = prepareTrade(tradeSide, candle, strategy);
-			order = tradingManager.buy(amountToSpend / candle.close, LONG);
+			double amountToSpend = prepareTrade(tradeSide);
+			if (amountToSpend <= 0) {
+				return false;
+			}
+			order = tradingManager.buy(LONG, amountToSpend / context.latestCandle.close);
 		} else if (tradeSide == SHORT) {
-			double shortedQuantity = balance().getShortedAmount();
-			order = tradingManager.buy(shortedQuantity, SHORT);
+			double shortedQuantity = accountManager.getBalance(referenceCurrencySymbol(), Balance::getShorted);
+			order = tradingManager.buy(SHORT, shortedQuantity);
 		}
 		if (order != null) {
-			processOrder(null, order, strategy, null);
+			processOrder(order);
 			return true;
 		}
-		log.trace("Could not buy {} @ {}", tradingManager.getSymbol(), candle.close);
+		if (log.isTraceEnabled()) {
+			log.trace("Could not buy {} @ {}", tradingManager.getSymbol(), context.latestCandle.close);
+		}
 
 		return false;
 	}
 
 	public double allocateFunds(Trade.Side tradeSide) {
-		final double minimum = priceDetails().getMinimumOrderAmount(latestCandle.close);
+		final double minimum = priceDetails().getMinimumOrderAmount(context.latestCandle.close);
 		double funds = tradingManager.allocateFunds(tradeSide);
 		if (funds < minimum) {
 			return 0.0;
@@ -387,37 +416,38 @@ public class Trader {
 		return funds;
 	}
 
-	private boolean sellAssets(Trade trade, Strategy strategy, String reason) {
+	private boolean sellAssets() {
 		double quantity;
+		Trade trade = context.trade;
 		if (trade != null) {
-			quantity = trade.quantityInPosition().doubleValue();
-			if (quantity > tradingManager.getAssets() || quantity == 0.0 && trade.isPlaceholder) {
+			quantity = trade.quantityInPosition();
+			if (quantity > tradingManager.getAssets() || quantity == 0.0) {
 				quantity = tradingManager.getAssets();
 			}
 		} else {
 			quantity = tradingManager.getAssets();
 		}
 
-
 		Order order = tradingManager.sell(quantity, trade.getSide());
 		if (order != null) {
-			processOrder(trade, order, strategy, reason);
+			processOrder(order);
 			return true;
 		}
 		return false;
 	}
 
-	private boolean closeShort(Trade trade, Strategy strategy, String exitReason) {
-		BigDecimal reserveFunds = tradingManager.getBalance(fundSymbol()).getMarginReserve(assetSymbol());
-		BigDecimal shortToCover = tradingManager.getBalance(assetSymbol()).getShorted();
-		if (shortToCover.compareTo(BigDecimal.ZERO) > 0) {
-			if (shortToCover.doubleValue() * trade.lastClosingPrice() > reserveFunds.doubleValue()) {
-				log.warn("Not enough funds in margin reserve to cover short of {} {} @ {} {} per unit", assetSymbol(), shortToCover, reserveFunds, fundSymbol());
+	private boolean closeShort() {
+		double reserveFunds = accountManager.getBalance(fundSymbol(), b -> b.getMarginReserve(assetSymbol()));
+		double shortToCover = accountManager.getBalance(assetSymbol(), Balance::getShorted);
+		if (shortToCover > 0) {
+			Trade trade = context.trade;
+			if (shortToCover * trade.lastClosingPrice() > reserveFunds) {
+				log.warn("Not enough funds in margin reserve to cover short of {} {} @ {} {} per unit. Reserve: {}, required {} {}", assetSymbol(), shortToCover, trade.lastClosingPrice(), fundSymbol(), reserveFunds, shortToCover * trade.lastClosingPrice(), fundSymbol());
 			}
 
-			Order order = tradingManager.buy(shortToCover.doubleValue(), SHORT);
+			Order order = tradingManager.buy(SHORT, shortToCover);
 			if (order != null) {
-				processOrder(trade, order, strategy, exitReason);
+				processOrder(order);
 				return true;
 			}
 		}
@@ -426,15 +456,18 @@ public class Trader {
 
 
 	private void cancelOpenBuyOrders(Strategy strategy) {
-		for (Trade trade : trades) {
-			cancelOpenBuyOrders(trade, strategy);
+		for (int i = trades.i - 1; i >= 0; i--) {
+			cancelOpenBuyOrders(trades.elements[i], strategy);
 		}
 	}
 
 	private void cancelOpenBuyOrders(Trade trade, Strategy strategy) {
 		if (trade.canExit(strategy)) {
-			for (Order order : trade.position()) {
-				tradingManager.cancelOrder(order);
+			for (int i = trade.position.i - 1; i >= 0; i--) {
+				Order order = getOrder(trade.position, i);
+				if (!order.isFinalized()) {
+					tradingManager.cancelOrder(order);
+				}
 			}
 		}
 	}
@@ -454,8 +487,8 @@ public class Trader {
 	 *
 	 * @return the most recent tick received for the symbol being traded.
 	 */
-	public Candle latestCandle() {
-		return latestCandle;
+	public final Candle latestCandle() {
+		return context.latestCandle;
 	}
 
 	public void notifySimulationEnd() {
@@ -463,43 +496,58 @@ public class Trader {
 	}
 
 	public void liquidateOpenPositions() {
-		for (Trade t : trades) {
-			if (!t.isFinalized()) {
-				if (t.isLong()) {
-					if (!sellAssets(t, null, "Liquidate position")) {
-						log.warn("Could not liquidate open trade: " + t);
-					} else {
-						t.liquidate();
-					}
-				} else if (t.isShort()) {
-					if (!closeShort(t, null, "Liquidate position")) {
-						log.warn("Could not liquidate open trade: " + t);
-					} else {
-						t.liquidate();
+		liquidating = true;
+		try {
+			for (int i = trades.i - 1; i >= 0; i--) {
+				Trade t = trades.elements[i];
+				if (!t.isFinalized()) {
+					if (t.isLong()) {
+						context.exitReason = "Liquidate position";
+						context.trade = t;
+						if (!sellAssets()) {
+							accountManager.consumeBalance(assetSymbol(), b -> {
+								if (b.getFree() + b.getLocked() > 0) {
+									log.warn("Could not liquidate open trade: " + t);
+								}
+							});
+						} else {
+							t.liquidate();
+						}
+					} else if (t.isShort()) {
+						context.exitReason = "Liquidate position";
+						context.trade = t;
+						if (!closeShort()) {
+							accountManager.consumeBalance(assetSymbol(), b -> {
+								if (b.getShorted() > 0) {
+									log.warn("Could not liquidate open trade: " + t);
+								}
+							});
+						} else {
+							t.liquidate();
+						}
 					}
 				}
 			}
+		} finally {
+			liquidating = false;
 		}
 	}
 
 	public Order submitOrder(Order.Type type, Order.Side side, Trade.Side tradeSide, double quantity) {
-		return tradingManager.getAccount().submitOrder(this, quantity, side, tradeSide, type);
+		return tradingManager.submitOrder(this, quantity, side, tradeSide, type);
 	}
 
-	void processOrder(Trade trade, Order order, Strategy strategy, String reason) {
+	void processOrder(Order order) {
 		if (order == null || (order.isCancelled() && order.getFillPct() == 0.0)) {
 			return;
 		}
 		try {
 			try {
+				context.trade = null;
 				if (order.isBuy()) {
-					trade = processBuyOrder(order, strategy, reason);
+					context.trade = processBuyOrder(order);
 				} else if (order.isSell()) {
-					trade = processSellOrder(trade, order, strategy, reason);
-				}
-
-				if (trade != null) {
-					trades.add(trade);
+					context.trade = processSellOrder(order);
 				}
 			} finally {
 				tradingManager.updateBalances();
@@ -507,46 +555,63 @@ public class Trader {
 		} catch (Exception e) {
 			log.error("Error processing " + order.getSide() + " order: " + order, e);
 		} finally {
-			tradingManager.notifyOrderSubmitted(order, trade);
+			tradingManager.notifyOrderSubmitted(order, context.trade);
 		}
 	}
 
-	private Trade processBuyOrder(Order order, Strategy strategy, String reason) {
+	private void attachOrdersToTrade(Trade trade, Order parent) {
+		if (parent.getAttachments() != null) {
+			if (trade == null) {
+				throw new IllegalStateException("Can't process buy order without a valid trade instance");
+			}
+
+			for (Order attached : parent.getAttachments()) {
+				trade.decreasePosition(attached, "Stop order");
+			}
+		}
+	}
+
+	private Trade processBuyOrder(Order order) {
 		Trade trade = null;
-		for (Trade t : trades) {
+		for (int i = trades.i - 1; i >= 0; i--) {
+			Trade t = trades.elements[i];
 			if (!t.isFinalized() && t.getSide() == order.getTradeSide()) {
-				trade = t;
-				break;
+				if (order.isLong()) {
+					if (t.increasePosition(order)) {
+						trade = t;
+						break;
+					}
+				} else if (order.isShort()) {
+					t.decreasePosition(order, context.exitReason);
+					trade = t;
+					break;
+				}
+
 			}
 		}
 
+
 		if (trade == null) {
 			if (order.isLong()) {
-				trade = new Trade(id.incrementAndGet(), order, this, strategy);
-				trades.add(trade);
+				trade = new Trade(id.incrementAndGet(), order, this, context.strategy);
+				trades.addOrReplace(trade);
 			} else if (order.isShort()) {
 				trade = Trade.createPlaceholder(-1, this, order.getTradeSide());
 				trade.decreasePosition(order, "Exit short position");
 				log.warn("Received a short-covering buy order without an open trade: " + order);
 			}
-		} else {
-			if (order.isLong()) {
-				if (!trade.increasePosition(order)) {
-					trade = new Trade(id.incrementAndGet(), order, this, strategy);
-					trades.add(trade);
-				}
-			} else if (order.isShort()) {
-				trade.decreasePosition(order, reason);
-			}
 		}
+		attachOrdersToTrade(trade, order);
 		return trade;
 	}
 
 
-	private Trade processSellOrder(Trade trade, Order order, Strategy strategy, String reason) {
+	private Trade processSellOrder(Order order) {
+		Trade trade = context.trade;
 		if (trade == null) {
-			for (Trade t : trades) {
-				if (!t.isFinalized() && t.canExit(strategy)) {
+			for (int i = trades.i - 1; i >= 0; i--) {
+				Trade t = trades.elements[i];
+				if (!t.isFinalized() && t.canExit(context.strategy)) {
 					trade = t;
 					break;
 				}
@@ -556,16 +621,16 @@ public class Trader {
 		if (trade != null) {
 			if (trade.isShort()) {
 				if (!trade.increasePosition(order)) {
-					trade = new Trade(id.incrementAndGet(), order, this, strategy);
-					trades.add(trade);
+					trade = new Trade(id.incrementAndGet(), order, this, context.strategy);
+					trades.addOrReplace(trade);
 				}
 			} else {
-				trade.decreasePosition(order, reason);
+				trade.decreasePosition(order, context.exitReason);
 			}
 		} else {
 			if (order.isShort()) {
-				trade = new Trade(id.incrementAndGet(), order, this, strategy);
-				trades.add(trade);
+				trade = new Trade(id.incrementAndGet(), order, this, context.strategy);
+				trades.addOrReplace(trade);
 			} else {
 				trade = Trade.createPlaceholder(-1, this, order.getTradeSide());
 				trade.decreasePosition(order, "Exit long position");
@@ -573,33 +638,41 @@ public class Trader {
 				log.warn("Received a sell order without an open trade: " + order);
 			}
 		}
+		attachOrdersToTrade(trade, order);
 		return trade;
 	}
 
 	/**
-	 * Tries to exit a current trade to immediately buy into another instrument. In cases where it's supported, such as currencies and crypto, a "direct" switch will be executed to save trading fees;
-	 * i.e. if there's an open position on BTCUSDT, and the exit symbol is ETH, a single SELL order of symbol BTCETH will be executed, selling BTC to open a position in ETH. If no compatible trading
-	 * symbols exists, or the market operates just with stocks, the current position will be sold in order to make funds available for buying into the next instrument. Using the previous example, BTC
-	 * would be sold back into USDT, and another BUY order would be made using the USDT funds to buy ETH. If any call {@link StrategyMonitor#allowTradeSwitch(Trade, String, Candle, String)} evaluates to
-	 * {@code false}, the "switch" operation will be cancelled, otherwise the current open position will be closed to release funds for the trader to BUY into the exitSymbol.
+	 * Tries to exit a current trade to immediately buy into another instrument. In cases where it's supported, such as currencies and crypto, a "direct" switch
+	 * will be executed to save trading fees;
+	 * i.e. if there's an open position on BTCUSDT, and the exit symbol is ETH, a single SELL order of symbol BTCETH will be executed, selling BTC to open a
+	 * position in ETH. If no compatible trading
+	 * symbols exists, or the market operates just with stocks, the current position will be sold in order to make funds available for buying into the next
+	 * instrument. Using the previous example, BTC
+	 * would be sold back into USDT, and another BUY order would be made using the USDT funds to buy ETH. If any call {@link
+	 * StrategyMonitor#allowTradeSwitch(Trade, String, Candle, String)} evaluates to
+	 * {@code false}, the "switch" operation will be cancelled, otherwise the current open position will be closed to release funds for the trader to BUY into
+	 * the exitSymbol.
 	 *
 	 * @param exitSymbol   the new instrument to be bought into using the funds allocated by the current open order (in {@link #symbol()}.
 	 * @param candle       the latest candle of the exitSymbol that's been received from the exchange.
 	 * @param candleTicker the ticker of the received candle (not the same as {@link #symbol()}).
-	 * @param strategy     the strategy that identified an opportunity to open a position on the given exitSymbol.
 	 *
-	 * @return a flag indicating whether an order for a direct switch was opened. If {@code true}, the trader won't try to create a BUY order for the given exitSymbol. When {@code false} the trader
+	 * @return a flag indicating whether an order for a direct switch was opened. If {@code true}, the trader won't try to create a BUY order for the given
+	 * exitSymbol. When {@code false} the trader
 	 * will try to buy into the exitSymbol regardless of whether the current position was closed or not.
 	 */
-	boolean switchTo(String exitSymbol, Candle candle, String candleTicker, Strategy strategy) {
+	boolean switchTo(String exitSymbol, Candle candle, String candleTicker) {
 		try {
 			if (exitSymbol.equals(tradingManager.fundSymbol) || exitSymbol.equals(tradingManager.assetSymbol)) {
 				return false;
 			}
-
-			for (Trade trade : trades) {
+			for (int i = trades.i - 1; i >= 0; i--) {
+				Trade trade = trades.elements[i];
 				if (!trade.isFinalized() && trade.allowTradeSwitch(exitSymbol, candle, candleTicker)) {
-					if (exit(trade, trade.latestCandle(), strategy, "exit to buy " + exitSymbol)) {
+					context.trade = trade;
+					context.exitReason = "exit to buy " + exitSymbol;
+					if (exit()) {
 						return true;
 					}
 				}
@@ -617,10 +690,10 @@ public class Trader {
 	 * @return the {@link Candle#close} of the latest candle (returned via {@link #latestCandle()}.
 	 */
 	public double lastClosingPrice() {
-		if (latestCandle == null) {
+		if (context.latestCandle == null) {
 			return 0.0;
 		}
-		return latestCandle.close;
+		return context.latestCandle.close;
 	}
 
 	public double assetQuantity() {
@@ -663,16 +736,16 @@ public class Trader {
 		return tradingManager.getTotalFundsIn(symbol);
 	}
 
-	public Balance balance(String symbol) {
-		return tradingManager.getBalance(symbol).clone();
+	public double freeBalance() {
+		return accountManager.getBalance(referenceCurrencySymbol(), Balance::getFree);
 	}
 
-	public Balance balance() {
-		return tradingManager.getBalance(referenceCurrencySymbol()).clone();
+	public double shortedQuantity() {
+		return accountManager.getBalance(assetSymbol(), Balance::getShorted);
 	}
 
 	public Balance balanceOf(String symbol) {
-		return tradingManager.getBalance(symbol).clone();
+		return accountManager.queryBalance(symbol, Balance::clone);
 	}
 
 	public SymbolPriceDetails priceDetails() {
@@ -687,43 +760,29 @@ public class Trader {
 		return "Trader{" + symbol() + "}";
 	}
 
-	void orderFinalized(Order order) {
-		Trade trade = tradeOf(order);
+	boolean orderFinalized(Order order) {
+		Trade trade = order.getTrade();
 		if (trade != null) {
 			trade.orderFinalized(order);
+			return true;
 		}
+		return false;
 	}
 
 	void removeFinalizedTrades() {
-		for (Trade trade : trades) {
-			if (trade.isFinalized()) {
-				pastTrades.add(trade);
-				trades.remove(trade);
+		if (!trades.isEmpty()) {
+			for (int i = trades.i - 1; i >= 0; i--) {
+				Trade trade = trades.elements[i];
+				if (trade.isFinalized()) {
+					trades.remove(trade);
+				}
 			}
 		}
-	}
-
-	public Trade tradeOf(Order order) {
-		for (Trade trade : trades) {
-			if (trade.hasOrder(order)) {
-				return trade;
-			}
-		}
-		for (Trade trade : pastTrades) {
-			if (trade.hasOrder(order)) {
-				return trade;
-			}
-		}
-		return null;
 	}
 
 	public Strategy strategyOf(Order order) {
 		if (!allowMixedStrategies) {
-			for (Trade trade : trades) {
-				if (trade.hasOrder(order)) {
-					return trade.openingStrategy();
-				}
-			}
+			return order.getTrade().openingStrategy();
 		}
 		return null;
 	}
@@ -739,7 +798,15 @@ public class Trader {
 	}
 
 	public Set<Trade> trades() {
-		return new TreeSet<>(trades);
+		return trades.asSet();
+	}
+
+	public boolean hasOpenTrades() {
+		return !trades.isEmpty();
+	}
+
+	Order getOrder(OrderSet set, int i) {
+		return set.elements[i] = tradingManager.orderTracker.getOrder(set.elements[i]);
 	}
 
 	public int pipSize() {

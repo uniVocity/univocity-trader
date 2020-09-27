@@ -3,12 +3,12 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 import java.util.function.*;
 
-public class HistogramChart extends FilledBarChart<HistogramChartController> {
+public class HistogramChart extends FilledBarChart<HistogramTheme<HistogramChart>> {
 
 	private final Function<Candle, Double> valueReader;
 
@@ -23,17 +23,18 @@ public class HistogramChart extends FilledBarChart<HistogramChartController> {
 
 	@Override
 	protected void drawBar(Candle trade, Point location, Graphics2D g, Color lineColor, Color fillColor) {
-		int h = getHeight() - getYCoordinate(getCentralValue(trade));
+		int height = getAvailableHeight();
+		int h = height - getYCoordinate(getCentralValue(trade));
 		g.setColor(fillColor);
-		g.fillRect(location.x - getBarWidth() / 2, getHeight() - h, getBarWidth(), h);
+		g.fillRect(location.x - getBarWidth() / 2, height - h, getBarWidth(), h);
 
 		g.setColor(lineColor);
-		g.drawRect(location.x - getBarWidth() / 2, getHeight() - h, getBarWidth(), h);
+		g.drawRect(location.x - getBarWidth() / 2, height - h, getBarWidth(), h);
 	}
 
 	@Override
-	public HistogramChartController newController() {
-		return new HistogramChartController(this);
+	public HistogramTheme<HistogramChart> newTheme() {
+		return new HistogramTheme<>(this);
 	}
 
 	public double getHighestPlottedValue(Candle candle) {

@@ -3,6 +3,7 @@ package com.univocity.trader.chart;
 import com.univocity.trader.candles.*;
 
 import java.util.*;
+import java.util.function.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -46,14 +47,21 @@ public class CandleHistoryView implements Iterable<Candle> {
 			end = history.size();
 		}
 		atEnd = end == history.size();
-		notifyUpdateListeners();
+		notifyUpdateListeners(CandleHistory.UpdateType.SELECTION);
 	}
 
-	public void addDataUpdateListener(Runnable r) {
-		history.addDataUpdateListener(r);
+	public void addDataUpdateListener(Consumer<CandleHistory.UpdateType> l) {
+		history.addDataUpdateListener(l);
+	}
+
+	public void removeDataUpdateListener(Consumer<CandleHistory.UpdateType> l) {
+		history.removeDataUpdateListener(l);
 	}
 
 	public int size() {
+		if(start > end){
+			return 0;
+		}
 		return end - start;
 	}
 
@@ -117,8 +125,8 @@ public class CandleHistoryView implements Iterable<Candle> {
 		history.add(candle);
 	}
 
-	public void notifyUpdateListeners() {
-		history.notifyUpdateListeners();
+	public void notifyUpdateListeners(CandleHistory.UpdateType updateType) {
+		history.notifyUpdateListeners(updateType);
 	}
 
 	public Candle getFirst() {
@@ -126,6 +134,6 @@ public class CandleHistoryView implements Iterable<Candle> {
 	}
 
 	public Candle getLast() {
-		return history.get(start + size()-1);
+		return history.get(start + size() - 1);
 	}
 }

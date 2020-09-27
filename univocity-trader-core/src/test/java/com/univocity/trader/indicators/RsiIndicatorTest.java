@@ -1,11 +1,8 @@
 package com.univocity.trader.indicators;
 
 
-
-
 import com.univocity.trader.candles.*;
 import org.junit.*;
-
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static org.junit.Assert.*;
@@ -33,27 +30,27 @@ public class RsiIndicatorTest {
 			b.accumulate(newCandle(i));
 		}
 
-		assertEquals(68.4746, b.getValue(), 0.001);
+		assertEquals(35.777901460618764, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(64.7836, b.getValue(), 0.001);
+		assertEquals(34.7436041543112, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(72.0776, b.getValue(), 0.001);
+		assertEquals(42.76239976930923, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(60.7800, b.getValue(), 0.001);
+		assertEquals(38.51503293636092, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(63.6439, b.getValue(), 0.001);
+		assertEquals(41.438263768223955, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(72.3433, b.getValue(), 0.001);
+		assertEquals(51.39315031803166, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(67.3822, b.getValue(), 0.001);
+		assertEquals(48.83866844885807, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(68.5438, b.getValue(), 0.001);
+		assertEquals(50.172261873525684, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(76.2770, b.getValue(), 0.001);
+		assertEquals(59.771183961971296, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(77.9908, b.getValue(), 0.001);
+		assertEquals(62.08469518910162, b.getValue(), 0.001);
 		b.accumulate(newCandle(i));
-		assertEquals(67.4895, b.getValue(), 0.001);
+		assertEquals(55.24212283343575, b.getValue(), 0.001);
 
 	}
 }

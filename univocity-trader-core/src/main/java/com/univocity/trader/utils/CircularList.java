@@ -12,7 +12,7 @@ public class CircularList {
 		this.values = new double[length];
 	}
 
-	public double first() {
+	public final double first() {
 		if (updating) {
 			return getRecentValue(Math.min(size(), values.length));
 		} else if (size() < values.length) {
@@ -22,7 +22,7 @@ public class CircularList {
 		}
 	}
 
-	public double last() {
+	public final double last() {
 		return last;
 	}
 
@@ -30,7 +30,7 @@ public class CircularList {
 		update(value, true);
 	}
 
-	private void update(double value, boolean updating) {
+	protected void update(double value, boolean updating) {
 		sum -= values[i];
 		sum += value;
 		values[i] = value;
@@ -38,7 +38,7 @@ public class CircularList {
 		this.updating = updating;
 	}
 
-	public void accumulate(double value, boolean updating) {
+	public final void accumulate(double value, boolean updating) {
 		if (updating) {
 			update(value, true);
 		} else {
@@ -57,19 +57,23 @@ public class CircularList {
 		return Math.min(values.length, (int) (updating ? count + 1 : count));
 	}
 
-	public double get(int i) {
+	public final double get(int i) {
 		return values[i % values.length];
 	}
 
-	public int capacity() {
+	public final int capacity() {
 		return values.length;
 	}
 
-	public double sum() {
+	public final double sum() {
 		return sum;
 	}
 
-	public int getStartingIndex(int backwardCount) {
+	public final int getStartingIndex() {
+		return getStartingIndex(count < values.length ? (int) count : values.length);
+	}
+
+	public final int getStartingIndex(int backwardCount) {
 		if (backwardCount == 0) {
 			throw new IllegalArgumentException("Invalid recent value index");
 		}
@@ -88,7 +92,7 @@ public class CircularList {
 		return backwardCount;
 	}
 
-	public double avg() {
+	public final double avg() {
 		return sum / size();
 	}
 
@@ -109,7 +113,7 @@ public class CircularList {
 				out = v;
 			}
 		}
-		for (int i = len; i >= 0 && backwardCount > 0; i--, backwardCount--) {
+		for (int i = len - 1; i >= 0 && backwardCount > 0; i--, backwardCount--) {
 			double v = values[i];
 			if (v != 0.0 && (out == 0.0 || predicate.test(out, v))) {
 				out = v;
@@ -119,15 +123,31 @@ public class CircularList {
 		return out;
 	}
 
-	public double getMin(int backwardCount) {
+	public final double getMin(int backwardCount) {
 		return calculateOnSection(backwardCount, (min, v) -> v < min);
 	}
 
-	public double getMax(int backwardCount) {
+	public final double getMax(int backwardCount) {
 		return calculateOnSection(backwardCount, (max, v) -> v > max);
 	}
 
-	public double getRecentValue(int backwardCount) {
+	public final double getRecentValue(int backwardCount) {
 		return values[getStartingIndex(backwardCount)];
+	}
+
+	public String toString(){
+		StringBuilder out = new StringBuilder("[");
+		int start = getStartingIndex();
+		int len = size();
+
+		for(int i = 0; i < len; i++){
+			if(out.length() > 1){
+				out.append(", ");
+			}
+			out.append(get(i+start));
+		}
+
+		out.append(']');
+		return out.toString();
 	}
 }

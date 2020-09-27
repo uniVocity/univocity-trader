@@ -5,6 +5,7 @@ import com.univocity.trader.config.*;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.*;
 
 /**
  * InteractiveBrokers doesn't require an account login. We simply connect to their Trader Workstation
@@ -26,17 +27,29 @@ public class Account extends AccountConfiguration<Account> {
 
 	}
 
-	public Contract tradeWith(SecurityType securityType, String symbol) {
-		return tradeWith(securityType, symbol, referenceCurrency());
+	public Account tradeWith(SecurityType securityType, String symbol, Consumer<Contract> contractConfigurer) {
+		return tradeWith(securityType, symbol, referenceCurrency(), contractConfigurer);
 	}
 
-	public Contract tradeWith(SecurityType securityType, String symbol, String currency) {
-		return tradeWith(securityType, symbol, currency, tradeTypes.getOrDefault(symbol + currency, securityType.defaultTradeType()));
+	public Account tradeWith(SecurityType securityType, String symbol) {
+		return tradeWith(securityType, symbol, (Consumer) null);
 	}
 
-	public Contract tradeWith(SecurityType securityType, String symbol, String currency, TradeType tradeType) {
+	public Account tradeWith(SecurityType securityType, String symbol, String currency) {
+		return tradeWith(securityType, symbol, currency, (Consumer) null);
+	}
+
+	public Account tradeWith(SecurityType securityType, String symbol, String currency, Consumer<Contract> contractConfigurer) {
+		return tradeWith(securityType, symbol, currency, tradeTypes.getOrDefault(symbol + currency, securityType.defaultTradeType()), contractConfigurer);
+	}
+
+	public Account tradeWith(SecurityType securityType, String symbol, String currency, TradeType tradeType) {
+		return tradeWith(securityType, symbol, currency, tradeType, null);
+	}
+
+	public Account tradeWith(SecurityType securityType, String symbol, String currency, TradeType tradeType, Consumer<Contract> contractConfigurer) {
 		String pair = symbol + currency;
-		if(tradeTypes.containsKey(pair)){
+		if (tradeTypes.containsKey(pair)) {
 			tradeTypes.get(pair);
 		}
 
@@ -51,7 +64,10 @@ public class Account extends AccountConfiguration<Account> {
 			tradedContracts.put(pair, contract);
 		}
 		tradeTypes.put(pair, tradeType);
-		return contract;
+		if (contractConfigurer != null) {
+			contractConfigurer.accept(contract);
+		}
+		return this;
 	}
 
 	public Map<String, Contract> tradedContracts() {

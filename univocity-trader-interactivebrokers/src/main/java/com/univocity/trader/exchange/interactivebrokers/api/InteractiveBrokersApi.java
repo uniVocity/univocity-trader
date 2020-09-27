@@ -1,8 +1,11 @@
 package com.univocity.trader.exchange.interactivebrokers.api;
 
 import com.ib.client.*;
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
+import com.univocity.trader.exchange.interactivebrokers.TickType;
 import com.univocity.trader.exchange.interactivebrokers.*;
+import com.univocity.trader.exchange.interactivebrokers.model.book.*;
 import com.univocity.trader.indicators.base.*;
 
 import java.time.*;
@@ -18,6 +21,7 @@ import static java.util.concurrent.TimeUnit.*;
  */
 public class InteractiveBrokersApi extends IBRequests {
 
+	public static final int POSITION_UPDATE_REQUEST_ID = -999;
 	private static final Map<TimeUnit, Set<Integer>> validBarSizes = new ConcurrentHashMap<>();
 
 	static {
@@ -44,10 +48,10 @@ public class InteractiveBrokersApi extends IBRequests {
 
 	public IBIncomingCandles loadHistoricalData(Contract contract, long startTime, long endTime, TimeInterval interval, TradeType tradeType) {
 		if (interval.ms <= 1) {
-			return requestHandler.openFeed(
+			return requestHandler.openFeed(new IBIncomingCandles(),
 					(consumer) -> loadHistoricalData(contract, startTime, endTime, interval, tradeType, consumer));
 		} else {
-			return requestHandler.openFeed(
+			return requestHandler.openFeed(new IBIncomingCandles(),
 					(consumer) -> loadHistoricalData(contract, startTime, endTime, interval, tradeType, consumer),
 					(requestId) -> client.cancelHistoricalData(requestId));
 		}
@@ -108,8 +112,6 @@ public class InteractiveBrokersApi extends IBRequests {
 
 	private int loadHistoricalData(Contract contract, long startTime, long endTime, TimeInterval interval, TradeType tradeType, Consumer<Candle> candleConsumer) {
 		String durationStr = toDurationString(startTime, endTime);
-
-
 		boolean requestTicks = interval.ms <= 1;
 
 		String candleStr = requestTicks ? "" : getBarSizeString(interval);
@@ -153,4 +155,56 @@ public class InteractiveBrokersApi extends IBRequests {
 	IBRequests newInstance(IBRequests old) {
 		return new InteractiveBrokersApi(old.ip, old.port, old.clientID, old.optionalCapabilities, old.requestHandler.reconnectProcess);
 	}
+
+	public int loadAccountBalances(String referenceCurrency, Consumer<Balance> balanceConsumer) {
+		Consumer<Integer> request = (reqId) -> client.reqAccountSummary(reqId, "All", "$LEDGER:" + referenceCurrency);
+		return submitRequest("Updating account balances", balanceConsumer, request);
+	}
+
+	public int loadAccountPositions(Consumer<Balance> balanceConsumer) {
+		return submitRequest(POSITION_UPDATE_REQUEST_ID, "Updating account balances (positions)", balanceConsumer, (reqId) -> client.reqPositions());
+	}
+
+	public LiveIBIncomingCandles openFeed(String symbol, Contract contract, TimeInterval interval, TradeType tradeType, TickType tickType, Types.WhatToShow whatToShow, TickConsumer<Candle> candleConsumer) {
+		if (contract == null) {
+			throw new IllegalArgumentException("Contract for " + symbol + " cannot be null");
+		}
+
+		client.reqMarketDataType(3);
+		Consumer<Integer> request;
+		Consumer<Integer> cancelRequest;
+
+		if (interval.ms >= 5000L) {//requesting candles of at least 5 seconds.
+			String candleStr = getBarSizeString(interval);
+
+			//The keepUpToDate functionality can only be used with bar sizes 5 seconds or greater and requires the endDate is set as the empty string.
+			//https://interactivebrokers.github.io/tws-api/historical_bars.html
+			request = (reqId) -> client.reqHistoricalData(reqId, contract, "", "60 S", candleStr, tradeType.toString(), 1, 1, true, null);
+			cancelRequest = (reqId) -> client.cancelHistoricalData(reqId);
+
+			// unsure about this one.
+			// request = (reqId) -> client.reqRealTimeBars(reqId, contract, 5, whatToShow.toString(), true, Collections.emptyList());
+			// cancelRequest = (reqId) -> client.cancelRealTimeBars(reqId);
+		} else if (interval.ms <= 1) { //requesting ticks
+			request = (reqId) -> client.reqTickByTickData(reqId, contract, tickType.toString(), 1000, true);
+			cancelRequest = (reqId) -> client.cancelTickByTickData(reqId);
+		} else {
+			throw new IllegalArgumentException("Can't use interval '" + interval + "'. Only the following candle intervals are allowed: " + validBarSizes);
+		}
+
+		return requestHandler.openFeed(new LiveIBIncomingCandles(symbol, candleConsumer), (consumer) -> submitRequest("Real time bars for " + symbol, consumer, request), cancelRequest);
+	}
+
+	public int populateTradingBook(String symbol, boolean isSmartDepth, Contract contract, int depth, Consumer<TradingBook> resultConsumer) {
+		if(contract == null){
+			throw new IllegalArgumentException("No contract defined for symbol " + symbol);
+		}
+		return submitRequest("Getting market depth data for '" + symbol + "'", resultConsumer,
+				(reqId) -> {
+					requestHandler.openBook(reqId, depth, isSmartDepth);
+					client.reqMktDepth(reqId, contract, depth, false, null);
+				});
+	}
 }
+
+

@@ -11,11 +11,13 @@ public class TradingBook {
 	private final BookEntries bids = new BookEntries();
 	private final BookEntries asks = new BookEntries();
 	private final int id;
+	private final int depth;
 	private final boolean isSmartDepth;
 
-	public TradingBook(int id, boolean isSmartDepth) {
+	public TradingBook(int id, int depth, boolean isSmartDepth) {
 		this.isSmartDepth = isSmartDepth;
 		this.id = id;
+		this.depth = depth;
 	}
 
 	public void updateBook(int tickerId, int position, String marketMaker, int operation, int side, double price, int size) {
@@ -25,6 +27,10 @@ public class TradingBook {
 		} else if (operation == DELETE) {
 			book.remove(position);
 		}
+	}
+
+	public boolean isReady(){
+		 return bids.size() >= depth && asks.size() >= depth;
 	}
 
 	public BookEntry[] bids() {

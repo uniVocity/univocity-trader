@@ -144,6 +144,15 @@ public interface BinanceApiRestClient {
 	 */
 	NewOrderResponse newOrder(NewOrder order);
 
+
+	/**
+	 * Send in a new One-Cancels-Other order.
+	 *
+	 * @param order the new order to submit.
+	 * @return a response containing details about the newly placed order.
+	 */
+	NewOCOOrderResponse newOrderOCO(NewOrder order);
+
 	/**
 	 * Test new order creation and signature/recvWindow long. Creates and validates a new order but does not send it into the matching engine.
 	 *

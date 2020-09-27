@@ -3,19 +3,19 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 
-public class LineChart extends BasicChart<LineChartController> {
+public class LineChart extends BasicChart<LineTheme<LineChart>> {
 
 	public LineChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
 	}
 
 	@Override
-	protected LineChartController newController() {
-		return new LineChartController(this);
+	protected LineTheme<LineChart> newTheme() {
+		return new LineTheme<>(this);
 	}
 
 	@Override
@@ -59,15 +59,15 @@ public class LineChart extends BasicChart<LineChartController> {
 	}
 
 	private int getMarkerWidth(){
-		return getController().getMarkerWidth();
+		return theme().getMarkerWidth();
 	}
 
 	private Color getMarkerColor(){
-		return getController().getMarkerColor();
+		return theme().getMarkerColor();
 	}
 
 	protected final Color getLineColor() {
-		return getController().getLineColor();
+		return theme().getLineColor();
 	}
 
 	private void drawCircle(Color color, Point location, Graphics2D g){

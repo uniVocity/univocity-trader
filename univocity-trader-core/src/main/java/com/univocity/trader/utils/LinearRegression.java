@@ -1,6 +1,6 @@
 package com.univocity.trader.utils;
 
-public class LinearRegression {
+public final class LinearRegression {
 
 	private long count;
 	private double last;

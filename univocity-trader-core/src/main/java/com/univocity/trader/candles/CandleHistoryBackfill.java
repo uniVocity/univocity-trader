@@ -14,7 +14,7 @@ import static com.univocity.trader.candles.Candle.*;
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class CandleHistoryBackfill {
+public final class CandleHistoryBackfill {
 
 	private static final Logger log = LoggerFactory.getLogger(CandleRepository.class);
 	private final CandleRepository candleRepository;
@@ -249,7 +249,7 @@ public class CandleHistoryBackfill {
 		if(received > 0 && persisted == 0){
 			// deleting then inserting on purpose to avoid using a database-specific function to update the
 			// timestamp is column `candle.ts`. This allows people to use the database they prefer.
-			var delete = "DELETE FROM CANDLE WHERE symbol = ? AND open_time = ? AND close_time = ?";
+			var delete = "DELETE FROM candle WHERE symbol = ? AND open_time = ? AND close_time = ?";
 			candleRepository.db().update(delete, symbol, firstCandleReceived.openTime, firstCandleReceived.closeTime);
 
 			if (candleRepository.addToHistory(symbol, firstCandleReceived, true)) {

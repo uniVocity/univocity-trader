@@ -3,11 +3,11 @@ package com.univocity.trader.chart.charts;
 
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.*;
-import com.univocity.trader.chart.charts.controls.*;
+import com.univocity.trader.chart.charts.theme.*;
 
 import java.awt.*;
 
-public class CandleChart extends FilledBarChart<CandleChartController> {
+public class CandleChart extends FilledBarChart<CandleTheme> {
 
 	public CandleChart(CandleHistoryView candleHistory) {
 		super(candleHistory);
@@ -26,7 +26,7 @@ public class CandleChart extends FilledBarChart<CandleChartController> {
 		int bodyWidth = getBarWidth();
 
 		if (trade.isClosePositive()) {
-			if (getController().getPositiveClosingFilled()) {
+			if (theme().getPositiveClosingFilled()) {
 				g.setColor(fillColor);
 				g.fillRect(x - (bodyWidth / 2), close, bodyWidth + 1, open - close + 1);
 			}
@@ -36,7 +36,7 @@ public class CandleChart extends FilledBarChart<CandleChartController> {
 			g.drawLine(x, close, x, high);
 			g.drawLine(x, open, x, low);
 		} else {
-			if (getController().getNegativeClosingFilled()) {
+			if (theme().getNegativeClosingFilled()) {
 				g.setColor(fillColor);
 				g.fillRect(x - (bodyWidth / 2), open, bodyWidth + 1, close - open + 1);
 			}
@@ -50,7 +50,7 @@ public class CandleChart extends FilledBarChart<CandleChartController> {
 	}
 
 	@Override
-	public CandleChartController newController() {
-		return new CandleChartController(this);
+	public CandleTheme newTheme() {
+		return new CandleTheme(this);
 	}
 }

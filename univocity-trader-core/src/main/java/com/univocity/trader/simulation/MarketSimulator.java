@@ -12,6 +12,7 @@ import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
+import java.util.stream.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
@@ -32,7 +33,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	}
 
 
-	private void initialize() {
+	protected void initialize() {
 		resetBalances();
 	}
 
@@ -41,65 +42,61 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	}
 
 	@Override
-	protected final void executeSimulation(Collection<Parameters> parameters) {
-		candleRepository = createCandleRepository();
+	protected final void executeSimulation(Stream<Parameters> parameters) {
+		getCandleRepository();
 		executor = Executors.newCachedThreadPool();
 		try {
-			for (Parameters p : parameters) {
-				initialize();
-				executeSimulation(p);
-				reportResults(p);
-			}
+			executeWithParameters(parameters);
 		} finally {
 			executor.shutdown();
 			candleRepository.clearCaches();
 		}
-
 	}
 
-	protected final void executeSimulation(Parameters parameters) {
-		Set<Object> allInstances = new HashSet<>();
-		Map<String, Engine[]> symbolHandlers = new HashMap<>();
-
-		getAllPairs().forEach((symbol, pair) -> {
-			String assetSymbol = pair[0];
-			String fundSymbol = pair[1];
-
-			if(assetSymbol.equals(fundSymbol)){
-				return;
-			}
-
-			List<AccountManager> accountsTradingSymbol = new ArrayList<>();
-			for (AccountManager account : accounts()) {
-				if (account.configuration().symbolPairs().keySet().contains(symbol)) {
-					accountsTradingSymbol.add(account);
-				}
-			}
-
-			Engine[] engines = new Engine[accountsTradingSymbol.size()];
-			for (int i = 0; i < engines.length; i++) {
-				AccountManager accountManager = accountsTradingSymbol.get(i);
-				SimulatedExchange exchange = new SimulatedExchange(accountManager);
-				exchange.setSymbolInformation(this.symbolInformation);
-				SymbolPriceDetails symbolPriceDetails = new SymbolPriceDetails(exchange, accountManager.getReferenceCurrencySymbol());
-
-				TradingManager tradingManager = new TradingManager(exchange, symbolPriceDetails, accountManager, assetSymbol, fundSymbol, parameters);
-
-				Engine engine = new Engine(tradingManager, parameters, allInstances);
-				engines[i] = engine;
-			}
-
-			if (engines.length > 0) {
-				symbolHandlers.put(symbol, engines);
-			}
+	protected void executeWithParameters(Stream<Parameters> parameters) {
+		parameters.forEach(p -> {
+			initialize();
+			executeSimulation(createEngines(p));
+//			liquidateOpenPositions();
+			reportResults(p);
 		});
+	}
+
+	protected final Map<String, Engine[]> createEngines(Parameters parameters) {
+		Set<Object> allInstances = new HashSet<>();
+
+		Map<String, List<Engine>> tmp = new HashMap<>();
+
+		for (AccountManager account : accounts()) {
+			SimulatedExchange exchange = new SimulatedExchange(account);
+
+			for (String symbol : account.getAllSymbolPairs().keySet()) {
+				account.createTradingManager(symbol, exchange, null, parameters);
+			}
+
+			account.forEachTradingManager(tradingManager -> {
+				Engine engine = new TradingEngine(tradingManager, parameters, allInstances);
+				tmp.computeIfAbsent(engine.getSymbol(), s -> new ArrayList<>()).add(engine);
+			});
+		}
 
 		allInstances.clear();
 
+		Map<String, Engine[]> symbolHandlers = new HashMap<>();
+		tmp.forEach((k, v) -> symbolHandlers.put(k, v.toArray(Engine[]::new)));
+
+		return symbolHandlers;
+	}
+
+	protected final void executeSimulation(Map<String, Engine[]> symbolHandlers) {
 		ConcurrentHashMap<String, Enumeration<Candle>> markets = new ConcurrentHashMap<>();
 
 		LocalDateTime start = getSimulationStart();
 		LocalDateTime end = getSimulationEnd();
+		start = start.minus(configuration.warmUpPeriod());
+
+		Instant from = start.toInstant(ZoneOffset.UTC);
+		Instant to = end.toInstant(ZoneOffset.UTC);
 
 		int activeQueries = 0;
 		Map<String, CompletableFuture<Enumeration<Candle>>> futures = new HashMap<>();
@@ -108,7 +105,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			boolean loadAllDataFirst = simulation.cacheCandles() || activeQueries > simulation.activeQueryLimit();
 
 			futures.put(symbol, CompletableFuture.supplyAsync(
-					() -> candleRepository.iterate(symbol, start.toInstant(ZoneOffset.UTC), end.toInstant(ZoneOffset.UTC), loadAllDataFirst), executor)
+					() -> candleRepository.iterate(symbol, from, to, loadAllDataFirst), executor)
 			);
 		}
 
@@ -120,31 +117,69 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			}
 		});
 
-		//TODO: allow the original randomized candle processing to happen via configuration.
 		final var sortedMarkets = new TreeMap<>(markets);
 		MarketReader[] readers = buildMarketReaderList(sortedMarkets, symbolHandlers);
 
 		executeSimulation(readers);
 	}
 
-	private void executeSimulation(MarketReader[] readers) {
+	private void determineStartTimes(MarketReader[] readers) {
 		LocalDateTime start = getSimulationStart();
 		LocalDateTime end = getSimulationEnd();
 
-		final long startTime = getStartTime();
+		final long warmUpStart = getStartTime(configuration.warmUpPeriod());
+		final long simulationStart = getStartTime(null);
+
+		boolean hasCandles = false;
+		for (MarketReader reader : readers) {
+			if (reader.pending == null) {
+				if (reader.input.hasMoreElements()) {
+					Candle next = reader.input.nextElement();
+					if (next != null) {
+						reader.pending = next;
+					}
+				}
+			}
+			if (reader.pending != null) {
+				hasCandles = true;
+				long openTime = reader.pending.openTime;
+
+				long actualStart;
+				if (openTime >= simulationStart) {
+					actualStart = simulationStart + (simulationStart - warmUpStart);
+				} else {
+					actualStart = simulationStart + (openTime - warmUpStart);
+				}
+				reader.startTime = actualStart;
+			}
+		}
+
+		if (!hasCandles) {
+			throw new IllegalStateException("No candles processed in real time trading simulation from " + start + " to " + end);
+		}
+	}
+
+	protected void executeSimulation(MarketReader[] readers) {
+		final long startTime = getStartTime(configuration.warmUpPeriod());
 		final long endTime = getEndTime();
 
-		long candlesProcessed = 0;
+		boolean randomize = configuration.simulation().randomizeTicks();
+
+		determineStartTimes(readers);
+
 
 		for (long clock = startTime; clock <= endTime; clock += MINUTE.ms) {
+			if (randomize) {
+				ArrayUtils.shuffle(readers);
+			}
 			boolean resetClock = false;
 			for (int i = 0; i < readers.length; i++) {
 				MarketReader reader = readers[i];
 				Candle candle = reader.pending;
-				if (candle != null) {
+				if (candle != null && candle.close > 0) {
 					if (candle.openTime + 1 >= clock && candle.openTime <= clock + MINUTE.ms - 1) {
 						for (int j = 0; j < reader.engines.length; j++) {
-							reader.engines[j].process(candle, false);
+							reader.engines[j].process(candle, clock <= reader.startTime);
 						}
 
 						reader.pending = null;
@@ -162,7 +197,6 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 					if (reader.input.hasMoreElements()) {
 						Candle next = reader.input.nextElement();
 						if (next != null) {
-							candlesProcessed++;
 							reader.pending = next;
 						}
 					}
@@ -171,9 +205,6 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 			if (resetClock) {
 				clock -= MINUTE.ms;
 			}
-		}
-		if (candlesProcessed == 0) {
-			throw new IllegalStateException("No candles processed in real time trading simulation from " + start + " to " + end);
 		}
 	}
 
@@ -191,42 +222,49 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		return out.toArray(new MarketReader[0]);
 	}
 
-	private void reportResults(Parameters parameters) {
+	protected void liquidateOpenPositions() {
 		for (AccountManager account : accounts()) {
-			account.getAllTradingManagers().forEach(t -> t.getTrader().liquidateOpenPositions());
-		}
-
-		for (AccountManager account : accounts()) {
-			String id = account.getClient().getId();
-			System.out.print("-------");
-			if (parameters != null && parameters != Parameters.NULL) {
-				System.out.print(" | Parameters: " + parameters);
-			}
-			if (StringUtils.isNotBlank(id)) {
-				System.out.print(" | Client: " + id);
-			}
-			System.out.println(" | -------");
-			System.out.print(account.toString());
-			System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
-
-			account.getAllTradingManagers().forEach(t -> t.getTrader().notifySimulationEnd());
+			account.forEachTradingManager(t -> t.getTrader().liquidateOpenPositions());
 		}
 	}
 
-	public void backfillHistory() {
+	protected void reportResults(Parameters parameters) {
+		for (AccountManager account : accounts()) {
+			reportResults(account, parameters);
+		}
+	}
+
+	protected void reportResults(AccountManager account, Parameters parameters) {
+		String id = account.getClient().getId();
+		System.out.print("-------");
+		if (parameters != null && parameters != Parameters.NULL) {
+			System.out.print(" | Parameters: " + parameters);
+		}
+		if (StringUtils.isNotBlank(id)) {
+			System.out.print(" | Client: " + id);
+		}
+		System.out.println(" | -------");
+		System.out.print(account.toString());
+		System.out.println("Approximate holdings: $" + account.getTotalFundsInReferenceCurrency() + " " + account.getReferenceCurrencySymbol());
+
+		account.forEachTradingManager(t -> t.getTrader().notifySimulationEnd());
+	}
+
+
+	public final void backfillHistory() {
 		TreeSet<String> allSymbols = new TreeSet<>();
 		configuration.accounts().forEach(a -> allSymbols.addAll(a.symbolPairs().keySet()));
 		allSymbols.addAll(new CandleRepository(configure().database()).getKnownSymbols());
 		backfillHistory(allSymbols);
 	}
 
-	public void backfillHistory(String... symbolsToUpdate) {
+	public final void backfillHistory(String... symbolsToUpdate) {
 		LinkedHashSet<String> allSymbols = new LinkedHashSet<>();
 		Collections.addAll(allSymbols, symbolsToUpdate);
 		backfillHistory(allSymbols);
 	}
 
-	public void backfillHistory(Collection<String> symbols) {
+	public final void backfillHistory(Collection<String> symbols) {
 		Exchange<?, A> exchange = exchangeSupplier.get();
 		backfillHistory(exchange, symbols);
 	}
@@ -242,14 +280,18 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		}
 	}
 
-	private static class MarketReader {
+	protected static class MarketReader {
 		String symbol;
 		Enumeration<Candle> input;
 		Candle pending;
 		Engine[] engines;
+		long startTime;
 	}
 
-	public CandleRepository getCandleRepository() {
+	public final CandleRepository getCandleRepository() {
+		if (candleRepository == null) {
+			candleRepository = createCandleRepository();
+		}
 		return candleRepository;
 	}
 }

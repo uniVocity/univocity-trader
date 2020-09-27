@@ -6,6 +6,12 @@ import com.univocity.trader.strategy.*;
 
 public class RSI extends SingleValueIndicator {
 
+	public static final double UPPER_BOUND = 70.0;
+	public static final double LOWER_BOUND = 30.0;
+	private double upperBound = UPPER_BOUND;
+	private double lowerBound = LOWER_BOUND;
+
+
 	private final ModifiedMovingAverage averageGainIndicator;
 	private final ModifiedMovingAverage averageLossIndicator;
 
@@ -49,8 +55,6 @@ public class RSI extends SingleValueIndicator {
 	protected boolean process(Candle candle, double v, boolean updating) {
 		if (prev == null) {
 			prev = candle;
-			averageGainIndicator.accumulate(0.0);
-			averageLossIndicator.accumulate(0.0);
 			return false;
 		}
 
@@ -84,5 +88,21 @@ public class RSI extends SingleValueIndicator {
 	@Override
 	protected Indicator[] children() {
 		return new Indicator[]{averageLossIndicator, averageGainIndicator};
+	}
+
+	public double getUpperBound() {
+		return upperBound;
+	}
+
+	public void setUpperBound(double upperBound) {
+		this.upperBound = upperBound;
+	}
+
+	public double getLowerBound() {
+		return lowerBound;
+	}
+
+	public void setLowerBound(double lowerBound) {
+		this.lowerBound = lowerBound;
 	}
 }

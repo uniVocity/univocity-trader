@@ -1,7 +1,6 @@
 package com.univocity.trader.examples;
 
 import com.univocity.trader.account.*;
-import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.strategy.*;
 import org.slf4j.*;
@@ -39,7 +38,7 @@ public class MartingaleStrategyMonitor extends StrategyMonitor {
 	}
 
 	@Override
-	public String handleStop(Trade trade, Signal signal, Strategy strategy) {
+	public String handleStop(Trade trade) {
 		if (trade.priceChangePct() > 3.0) {
 			return "take profit";
 		}

@@ -19,9 +19,9 @@
 		<dependency>
 			<groupId>com.interactivebrokers</groupId>
 			<artifactId>twsapi</artifactId>
-			<version>7.96.01</version>
+			<version>9.76</version>
 			<scope>system</scope>
-			<systemPath>${user.home}/dev/IBJts/source/JavaClient/TwsApi.jar</systemPath>
+			<systemPath>${user.home}/dev/IBJts/source/JavaClient/TwsApi_debug.jar</systemPath>
 		</dependency>
 	
 

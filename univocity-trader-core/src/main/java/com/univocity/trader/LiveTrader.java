@@ -24,13 +24,13 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 
 	private static final Logger log = LoggerFactory.getLogger(LiveTrader.class);
 
-	private List<ExchangeClient<T>> clients = new ArrayList<>();
+	private List<Client<T>> clients = new ArrayList<>();
 
 	private String allClientPairs;
 	private final Map<String, Long> symbols = new ConcurrentHashMap<>();
 	private final Exchange<T, A> exchange;
 	private TimeInterval tickInterval;
-	private final SmtpMailSender mailSender;
+	private SmtpMailSender mailSender;
 	private long lastHour;
 	private Map<String, String[]> allPairs;
 	private C configuration;
@@ -48,7 +48,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 					if (now - lastHour > HOUR.ms) {
 						lastHour = System.currentTimeMillis();
 						log.info("Updating balances");
-						clients.forEach(ExchangeClient::updateBalances);
+						clients.forEach(Client::updateBalances);
 					}
 
 					int[] count = new int[]{0};
@@ -100,38 +100,52 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		this.configuration = configuration;
 		Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 		this.exchange = exchange;
-		EmailConfiguration mail = configuration.mailSender();
-		this.mailSender = mail.isConfigured() ? new SmtpMailSender(mail) : null;
+
+	}
+
+	private final SmtpMailSender mailSender() {
+		if (mailSender == null) {
+			EmailConfiguration mail = configuration.mailSender();
+			this.mailSender = mail.isConfigured() ? new SmtpMailSender(mail) : null;
+		}
+		return mailSender;
 	}
 
 	public C configure() {
 		return configuration;
 	}
 
-	private void initialize() {
-		this.tickInterval = configuration.tickInterval();
+	public CandleRepository candleRepository() {
 		if (candleRepository == null) {
 			candleRepository = new CandleRepository(configuration.database());
 		}
+		return candleRepository;
+	}
+
+	private void initialize() {
+		this.tickInterval = configuration.tickInterval();
 
 		if (clients.isEmpty()) {
 			for (var account : configuration.accounts()) {
 				ClientAccount clientAccount = exchange.connectToAccount(account);
-				AccountManager accountManager = new AccountManager(clientAccount, account, null);
-				var client = new ExchangeClient<T>(accountManager);
+				var client = new Client<T>(createAccountManager(clientAccount, account));
 				clients.add(client);
 			}
 		}
 
 		if (allPairs == null) {
 			allPairs = new TreeMap<>();
-			for (ExchangeClient client : clients) {
-				client.initialize(candleRepository, exchange, mailSender);
-				allPairs.putAll(client.getSymbolPairs());
+			for (Client client : clients) {
+				client.initialize(candleRepository(), exchange, mailSender());
+				allPairs.putAll(client.getAllSymbolPairs());
 			}
 		}
 
 		updateDatabase();
+	}
+
+	protected AccountManager createAccountManager(ClientAccount clientAccount, A account) {
+		return new AccountManager(clientAccount, account);
 	}
 
 	private void updateDatabase() {
@@ -145,36 +159,47 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 			}
 			tmp.append(symbol);
 		}
-		CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository);
+		CandleHistoryBackfill backfill = new CandleHistoryBackfill(candleRepository());
 
 		this.allClientPairs = tmp.toString().toLowerCase();
-		//fill history with last 30 days of data
-		for (String symbol : allPairs.keySet()) {
-			backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
-		}
 
-		//quick update for the last 30 minutes in case the previous step takes too long and we miss a few ticks
-		for (String symbol : allPairs.keySet()) {
-			backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
-			symbols.put(symbol, System.currentTimeMillis());
-		}
+		if (configuration.updateHistoryBeforeLiveTrading()) {
+			//fill history with last 30 days of data
+			for (String symbol : allPairs.keySet()) {
+				backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.DAYS), tickInterval);
+			}
 
-		//loads last 30 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
-		for (String symbol : allPairs.keySet()) {
-			Enumeration<Candle> it = candleRepository.iterate(symbol, Instant.now().minus(30, ChronoUnit.DAYS), Instant.now(), false);
-			while (it.hasMoreElements()) {
-				Candle candle = it.nextElement();
-				if (candle != null) {
-					clients.forEach(c -> c.processCandle(symbol, candle, true));
+			//quick update for the last 30 minutes in case the previous step takes too long and we miss a few ticks
+			for (String symbol : allPairs.keySet()) {
+				backfill.fillHistoryGaps(exchange, symbol, Instant.now().minus(30, ChronoUnit.MINUTES), tickInterval);
+				symbols.put(symbol, System.currentTimeMillis());
+			}
+
+			//loads last 60 day history of every symbol to initialize indicators (such as moving averages et al) in a useful state
+			for (String symbol : allPairs.keySet()) {
+				Period warmUpPeriod = configuration.warmUpPeriod();
+				Instant warmUpStart = Instant.now();
+				if (warmUpPeriod != null) {
+					warmUpStart = warmUpStart.minus(warmUpPeriod);
+				} else {
+					warmUpStart = warmUpStart.minus(60, ChronoUnit.DAYS);
+				}
+
+				Enumeration<Candle> it = candleRepository().iterate(symbol, warmUpStart, Instant.now(), false);
+				while (it.hasMoreElements()) {
+					Candle candle = it.nextElement();
+					if (candle != null) {
+						clients.forEach(c -> c.processCandle(symbol, candle, true));
+					}
 				}
 			}
-		}
 
-		//loads the very latest ticks and process them before we can finally connect to the live stream and trade for real.
-		for (String symbol : allPairs.keySet()) {
-			IncomingCandles<T> candles = exchange.getLatestTicks(symbol, tickInterval);
-			for (T candle : candles) {
-				clients.forEach(c -> c.processCandle(symbol, candle, true));
+			//loads the very latest ticks and process them before we can finally connect to the live stream and trade for real.
+			for (String symbol : allPairs.keySet()) {
+				IncomingCandles<T> candles = exchange.getLatestTicks(symbol, tickInterval);
+				for (T candle : candles) {
+					clients.forEach(c -> c.processCandle(symbol, candle, true));
+				}
 			}
 		}
 	}
@@ -184,6 +209,11 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 	public void run() {
 		initialize();
 		runLiveStream();
+		runKeepAlive();
+	}
+
+	private void runKeepAlive() {
+		exchange.startKeepAlive();
 	}
 
 
@@ -197,12 +227,15 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 					log.error("Error closing socket", e);
 				}
 			} else {
-				new PollThread().start();
+				if (configuration.pollCandles()) {
+					new PollThread().start();
+				}
 			}
 
 			exchange.openLiveStream(allClientPairs, tickInterval, new TickConsumer<T>() {
 				@Override
-				public void tickReceived(String symbol, T tick) {
+				public void tickReceived(String s, T tick) {
+					String symbol = s.trim().toUpperCase();
 					long now = System.currentTimeMillis();
 					symbols.put(symbol, now);
 					clients.forEach(c -> c.processCandle(symbol, tick, false));
@@ -230,8 +263,16 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 	}
 
 	private void retryRunWebsocket() {
-		retryCount.incrementAndGet();
-		runLiveStream();
+		try {
+			close();
+		} finally {
+			retryCount.incrementAndGet();
+			runLiveStream();
+		}
+	}
+
+	public Exchange<?,?> exchange(){
+		return exchange;
 	}
 
 	@Override

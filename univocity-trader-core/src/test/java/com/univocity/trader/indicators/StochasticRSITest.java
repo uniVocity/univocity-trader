@@ -1,11 +1,8 @@
 package com.univocity.trader.indicators;
 
 
-
-
 import com.univocity.trader.candles.*;
 import org.junit.*;
-
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 import static org.junit.Assert.*;
@@ -35,19 +32,19 @@ public class StochasticRSITest {
 
 		assertEquals(100.0, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(94.6096, b.getValue(), 0.001);
+		assertEquals(97.10911690154317, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
 		assertEquals(100.0, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(83.6538, b.getValue(), 0.001);
+		assertEquals(89.9358415444569, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(86.1045, b.getValue(), 0.001);
+		assertEquals(96.68901901082249, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
 		assertEquals(100.0, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(91.8617, b.getValue(), 0.001);
+		assertEquals(94.74635149460414, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
-		assertEquals(93.0583, b.getValue(), 0.001);
+		assertEquals(97.35719258439879, b.getValue(), 0.001);
 		b.accumulate(newCandle(i++));
 		assertEquals(100.0, b.getValue(), 0.001);
 		b.accumulate(newCandle(i));

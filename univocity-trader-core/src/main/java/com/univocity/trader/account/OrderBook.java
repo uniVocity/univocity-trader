@@ -4,12 +4,12 @@ import com.univocity.trader.*;
 
 import java.util.*;
 
-public class OrderBook {
+public final class OrderBook {
 
 	private final String symbol;
 	private final int depth;
-	private final Map<Double, Double> bids = new TreeMap<>(Comparator.reverseOrder());
-	private final Map<Double, Double> asks = new TreeMap<>(Comparator.naturalOrder());
+	private final TreeMap<Double, Double> bids = new TreeMap<>(Comparator.reverseOrder());
+	private final TreeMap<Double, Double> asks = new TreeMap<>(Comparator.naturalOrder());
 	private ClientAccount account;
 
 	public OrderBook(ClientAccount account, String symbol, int depth) {
@@ -18,12 +18,19 @@ public class OrderBook {
 		this.account = account;
 	}
 
-	public void addBid(double price, double quantity){
-		bids.put(price, quantity);
+	public void addBid(double price, double quantity) {
+		add(price, quantity, bids);
 	}
 
-	public void addAsk(double price, double quantity){
-		asks.put(price, quantity);
+	public void addAsk(double price, double quantity) {
+		add(price, quantity, asks);
+	}
+
+	private void add(double price, double quantity, TreeMap<Double, Double> map) {
+		map.put(price, quantity);
+		while (map.size() > depth) {
+			map.remove(map.lastKey());
+		}
 	}
 
 	public double getAverageAskAmount(int depth) {
@@ -62,7 +69,7 @@ public class OrderBook {
 			double quantity = quantityToFill;
 			quantityToFill -= maxQuantity;
 
-			if(quantityToFill > 0){
+			if (quantityToFill > 0) {
 				quantity = maxQuantity;
 			}
 
@@ -118,7 +125,20 @@ public class OrderBook {
 		return asks;
 	}
 
-	public OrderBook update(int depth){
+	public OrderBook update(int depth) {
 		return account.getOrderBook(this.symbol, depth);
+	}
+
+	@Override
+	public String toString() {
+		return "OrderBook{" +
+				"symbol='" + symbol + '\'' +
+				", bids=" + bids +
+				", asks=" + asks +
+				'}';
+	}
+
+	public boolean isEmpty() {
+		return bids.isEmpty() || asks.isEmpty();
 	}
 }

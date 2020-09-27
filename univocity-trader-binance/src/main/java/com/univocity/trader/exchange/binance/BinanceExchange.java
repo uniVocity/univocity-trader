@@ -31,11 +31,20 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
 	private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536);
+	private String listenKey;
+	private Timer timer;
+	private BinanceClientAccount binanceClientAccount;
+	private char[] apiSecret;
+	private String apiKey;
+	private final double[] NO_PRICE = new double[]{-1.0};
 
 
 	@Override
 	public BinanceClientAccount connectToAccount(Account clientConfiguration) {
-		return new BinanceClientAccount(clientConfiguration.apiKey(), new String(clientConfiguration.secret()), this);
+		this.apiKey = clientConfiguration.apiKey();
+		this.apiSecret = clientConfiguration.secret();
+		this.binanceClientAccount = new BinanceClientAccount(clientConfiguration.apiKey(), new String(clientConfiguration.secret()), this);
+		return this.binanceClientAccount;
 	}
 
 	@Override
@@ -62,19 +71,6 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	}
 
 	@Override
-	public Candle generateCandle(Candlestick exchangeCandle) {
-		return new Candle(
-				exchangeCandle.getOpenTime(),
-				exchangeCandle.getCloseTime(),
-				Double.parseDouble(exchangeCandle.getOpen()),
-				Double.parseDouble(exchangeCandle.getHigh()),
-				Double.parseDouble(exchangeCandle.getLow()),
-				Double.parseDouble(exchangeCandle.getClose()),
-				Double.parseDouble(exchangeCandle.getVolume())
-		);
-	}
-
-	@Override
 	public PreciseCandle generatePreciseCandle(Candlestick exchangeCandle) {
 		return new PreciseCandle(
 				exchangeCandle.getOpenTime(),
@@ -88,12 +84,22 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	}
 
 	@Override
+	public void startKeepAlive(){
+		new KeepAliveUserDataStream(restClient()).start();
+	}
+	@Override
 	public void openLiveStream(String symbols, TimeInterval tickInterval, TickConsumer<Candlestick> consumer) {
 		CandlestickInterval interval = CandlestickInterval.fromTimeInterval(tickInterval);
 		log.info("Opening Binance {} live stream for: {}", tickInterval, symbols);
 		socketClientCloseable = socketClient().onCandlestickEvent(symbols, interval, new BinanceApiCallback<>() {
 			@Override
 			public void onResponse(CandlestickEvent response) {
+				try {
+					priceReceived(response.getSymbol(), Double.parseDouble(response.getClose()));
+				} catch (Exception e){
+					log.warn("Error updating latest price of " + response.getSymbol(), e);
+				}
+
 				consumer.tickReceived(response.getSymbol(), response);
 			}
 
@@ -115,19 +121,40 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 		}
 	}
 
+	private final Map<String, double[]> latestPrices = new HashMap<>();
+
+	private void priceReceived(String symbol, double price){
+		latestPrices.compute(symbol, (s, v) -> {
+			if (v == null) {
+				return new double[]{price};
+			} else {
+				v[0] = price;
+				return v;
+			}
+		});
+	}
+
 	@Override
-	public Map<String, Double> getLatestPrices() {
-		return restClient().getAllPrices().stream().collect(Collectors.toMap(TickerPrice::getSymbol, TickerPrice::getPriceAmount));
+	public Map<String, double[]> getLatestPrices() {
+		try {
+			List<TickerPrice> allPrices = restClient().getAllPrices();
+			allPrices.forEach(ticker -> priceReceived(ticker.getSymbol(), ticker.getPriceAmount()));
+		} catch (Exception e){
+			log.warn("Unable to load latest prices from Binance", e);
+		}
+		return Collections.unmodifiableMap(latestPrices);
 	}
 
 	@Override
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
+		double price = latestPrices.getOrDefault(assetSymbol, NO_PRICE)[0];
 		try {
-			return Double.parseDouble(restClient().getPrice(assetSymbol + fundSymbol).getPrice());
+			price = Double.parseDouble(restClient().getPrice(assetSymbol + fundSymbol).getPrice());
+			priceReceived(assetSymbol + fundSymbol, price);
 		} catch (Exception e) {
 			log.error("Error getting latest price of " + assetSymbol + fundSymbol, e);
-			return -1.0;
 		}
+		return price;
 	}
 
 	@Override
@@ -162,15 +189,17 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private BinanceApiWebSocketClient socketClient() {
 		if (socketClient == null) {
-			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(asyncHttpClient);
+			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient);
 			socketClient = factory.newWebSocketClient();
 		}
 		return socketClient;
 	}
 
+
+
 	private BinanceApiRestClient restClient() {
 		if (restClient == null) {
-			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(asyncHttpClient);
+			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient);
 			restClient = factory.newRestClient();
 		}
 		return restClient;

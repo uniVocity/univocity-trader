@@ -17,14 +17,14 @@ import java.util.*;
  */
 public abstract class IndicatorGroup {
 
-	private Indicator[] indicators;
+	public Indicator[] indicators;
 
 	/**
 	 * Initializes all indicators of this group (returned via {@link #getAllIndicators()}) to use the same {@link Aggregator}
 	 *
 	 * @param parent the aggregator to be used by all indicators in this group
 	 */
-	final void initialize(Aggregator parent) {
+	public final void initialize(Aggregator parent) {
 		if (indicators != null) {
 			return;
 		}
@@ -61,7 +61,7 @@ public abstract class IndicatorGroup {
 	 *
 	 * @param candle the latest price details returned by an {@link com.univocity.trader.Exchange}
 	 */
-	protected void candleAccumulated(Candle candle) {
+	public void candleAccumulated(Candle candle) {
 
 	}
 

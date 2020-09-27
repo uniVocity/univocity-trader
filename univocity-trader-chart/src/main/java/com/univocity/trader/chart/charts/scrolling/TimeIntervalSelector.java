@@ -36,7 +36,7 @@ public class TimeIntervalSelector extends ChartCanvas {
 	public TimeIntervalSelector(CandleHistory fullCandleHistory, BasicChart<?> chart) {
 		this.candleHistory = fullCandleHistory;
 		this.chart = chart;
-		super.addChart(chart);
+		super.setChart(chart);
 		this.setPreferredSize(new Dimension(100, 100));
 
 		addMouseMotionListener(new MouseAdapter() {
@@ -211,7 +211,7 @@ public class TimeIntervalSelector extends ChartCanvas {
 		g.fillRect(start, 0, end, getHeight());
 	}
 
-	public void dataUpdated() {
+	public void dataUpdated(CandleHistory.UpdateType updateType) {
 		this.dataUpdated = true;
 
 		Candle first = candleHistory.getFirst();
@@ -222,6 +222,15 @@ public class TimeIntervalSelector extends ChartCanvas {
 		Candle last = candleHistory.getLast();
 		if (endHandle.candle == null) {
 			endHandle.candle = last;
+		}
+
+		if(updateType == CandleHistory.UpdateType.NEW_HISTORY) {
+			if (candleHistory.size() > 1000) {
+				startHandle.candle = candleHistory.get(candleHistory.size() - 1000);
+			} else {
+				startHandle.candle = candleHistory.getFirst();
+				endHandle.candle = candleHistory.getLast();
+			}
 		}
 
 		//looking at most recent history, update view

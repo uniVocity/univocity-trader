@@ -25,7 +25,7 @@ public class ScalpingStrategyMonitor extends StrategyMonitor {
 	}
 
 	@Override
-	public String handleStop(Trade trade, Signal signal, Strategy strategy) {
+	public String handleStop(Trade trade) {
 		double averagePricePaid = trade.averagePrice();
 		double currentTickerPrice = trade.lastClosingPrice();
 

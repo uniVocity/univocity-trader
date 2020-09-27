@@ -13,6 +13,7 @@ import java.time.temporal.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
+import java.util.stream.*;
 
 import static com.univocity.trader.config.Utils.*;
 
@@ -51,9 +52,10 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 	private LocalDateTime backfillFrom = null;
 	private LocalDateTime backfillTo = null;
 	private boolean resumeBackfill = false;
+	private boolean randomizeTicks;
 
 	private Map<String, Double> initialFunds = new ConcurrentHashMap<>();
-	private final List<Parameters> parameters = new ArrayList<>();
+	private Stream<Parameters> parameters = null;
 
 	public final LocalDateTime simulateFrom() {
 		return simulationStart != null ? simulationStart : LocalDateTime.now().minusYears(1);
@@ -124,6 +126,15 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return this;
 	}
 
+	public boolean randomizeTicks() {
+		return randomizeTicks;
+	}
+
+	public Simulation randomizeTicks(boolean randomizeTicks) {
+		this.randomizeTicks = randomizeTicks;
+		return this;
+	}
+
 	@Override
 	public void readProperties(PropertyBasedConfiguration properties) {
 		simulateFrom(parseDateTime(properties, "simulation.start"));
@@ -147,6 +158,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		backfillFrom(parseDateTime(properties, "simulation.history.backfill.from"));
 		backfillTo(parseDateTime(properties, "simulation.history.backfill.to"));
 		resumeBackfill(properties.getBoolean("simulation.history.backfill.resume", false));
+		randomizeTicks(properties.getBoolean("simulation.randomize.ticks", false));
 
 		parseInitialFunds(properties);
 
@@ -231,7 +243,7 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		return backfillTo().minus(backfillLength, backfillUnit);
 	}
 
-	public void backfillFrom(LocalDateTime backfillTo) {
+	public void backfillFrom(LocalDateTime backfillFrom) {
 		this.backfillFrom = backfillFrom;
 	}
 
@@ -347,24 +359,29 @@ public class Simulation implements ConfigurationGroup, Cloneable {
 		//TODO: load with univocity-parsers
 	}
 
-	public List<Parameters> parameters() {
+	public Stream<Parameters> parameters() {
 		return parameters;
 	}
 
 	public Simulation addParameters(Collection<Parameters> parameters) {
 		if (parameters != null) {
-			this.parameters.addAll(parameters);
+			this.parameters = this.parameters == null ? parameters.stream() : Stream.concat(this.parameters, parameters.stream());
 		}
 		return this;
 	}
 
+	public Simulation setParameters(Stream<Parameters> parameters) {
+		this.parameters = parameters;
+		return this;
+	}
+
 	public Simulation addParameters(Parameters parameters) {
-		this.parameters.add(parameters);
+		this.parameters = this.parameters == null ? Stream.of(parameters) : Stream.concat(this.parameters, Stream.of(parameters));
 		return this;
 	}
 
 	public Simulation clearParameters() {
-		this.parameters.clear();
+		this.parameters = null;
 		return this;
 	}
 

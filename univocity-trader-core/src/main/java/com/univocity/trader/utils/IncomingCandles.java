@@ -48,12 +48,12 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 		notifyNotEmpty();
 	}
 
-	public void stopConsuming() {
+	public final void stopConsuming() {
 		consuming = false;
 		notifyNotEmpty();
 	}
 
-	public boolean consumerStopped() {
+	public final boolean consumerStopped() {
 		return !consuming;
 	}
 
@@ -67,12 +67,12 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 	}
 
 	@Override
-	public boolean hasMoreElements() {
+	public final boolean hasMoreElements() {
 		return consuming && (!noMoreCandles || !input.isEmpty());
 	}
 
 	@Override
-	public T nextElement() {
+	public final T nextElement() {
 		T out = input.poll();
 		while (out == null && consuming && !noMoreCandles) {
 			waitWhileEmpty();
@@ -106,12 +106,12 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 
 
 	@Override
-	public Iterator<T> iterator() {
+	public final Iterator<T> iterator() {
 		return new Iterator<>() {
 			T next;
 
 			@Override
-			public boolean hasNext() {
+			public final boolean hasNext() {
 				if (next == null) {
 					next = nextElement();
 				}
@@ -119,7 +119,7 @@ public class IncomingCandles<T> implements Enumeration<T>, Iterable<T> {
 			}
 
 			@Override
-			public T next() {
+			public final T next() {
 				if (next == null) {
 					throw new IllegalStateException("Can't invoke next() without checking if there are more elements with hasNext()");
 				}

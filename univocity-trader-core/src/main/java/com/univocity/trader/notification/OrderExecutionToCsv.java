@@ -8,7 +8,6 @@ import java.io.*;
 import java.nio.charset.*;
 import java.util.*;
 import java.util.function.*;
-import java.util.stream.*;
 
 public class OrderExecutionToCsv implements OrderListener {
 
@@ -31,46 +30,63 @@ public class OrderExecutionToCsv implements OrderListener {
 
 	public OrderExecutionToCsv(File outputDir, String fileName) {
 		this.outputDir = outputDir;
-		this.fileNameSupplier = () -> fileName + "_" + System.currentTimeMillis();
+		this.fileNameSupplier = () -> fileName;
+	}
+
+	public OrderExecutionToCsv(File outputDir, Supplier<String> fileName) {
+		this.outputDir = outputDir;
+		this.fileNameSupplier = fileName;
+	}
+
+	public OrderExecutionToCsv(Supplier<String> fileName) {
+		this.fileNameSupplier = fileName;
 	}
 
 	@Override
 	public void orderSubmitted(Order order, Trade trade, Client client) {
-		logDetails(order, trade, client);
+		logDetails(order, client);
 	}
 
 	@Override
 	public void orderFinalized(Order order, Trade trade, Client client) {
-		logDetails(order, trade, client);
+		logDetails(order, client);
 	}
 
 
-	private void logDetails(Order order, Trade trade, Client client) {
-		lines.add(new OrderExecutionLine(order, trade, trade.trader(), client));
+	private void logDetails(Order order, Client client) {
+		if (order.getTrade() != null) {
+			lines.add(new OrderExecutionLine(order, order.getTrade(), order.getTrade().trader(), client));
+		}
 	}
 
 	private List<OrderExecutionLine> filterLines() {
 		Set<String> toRemove = new HashSet<>();
+		List<OrderExecutionLine> lines = new ArrayList<>(this.lines);
 		if (omitZeroTrades) {
 			lines.forEach(l -> toRemove.add(l.fillPct == 0.0 && l.status != Order.Status.NEW ? l.orderId : ""));
 		}
-
-		return lines.stream()
-				.filter(l -> (omitOrderOpening && l.status != Order.Status.NEW))
-				.filter(l -> !toRemove.contains(l.orderId))
-				.collect(Collectors.toList());
+		lines.removeIf(l -> (omitOrderOpening && l.status != Order.Status.NEW) || !toRemove.contains(l.orderId));
+		return lines;
 	}
 
 	@Override
 	public void simulationEnded(Trader trader, Client client) {
-		File out = new File(outputDir.getAbsolutePath() + "/" + fileNameSupplier.get() + ".csv");
+		String dirPath = "";
+		if (outputDir != null) {
+			dirPath = outputDir.getAbsolutePath() + "/";
+		}
+		String fileName = fileNameSupplier.get();
+		if (fileName.indexOf('.') < 0) {
+			fileName += ".csv";
+		}
+		File out = new File(dirPath + fileName);
 
 		CsvRoutines routines = new CsvRoutines(Csv.writeExcel());
 		routines.getWriterSettings().setHeaderWritingEnabled(true);
 
 		String[] headers = new String[]{
 				"closeTime", "clientId", "tradeId", "operation",
-				"quantity", "assetSymbol", "price", "fundSymbol", "orderAmount",
+				"quantity", "assetSymbol", "price", "averagePrice", "fundSymbol", "orderAmount",
 				"orderType", "status", "duration",
 				"orderFillPercentage", "executedQuantity", "valueTransacted",
 				"estimatedProfitLossPct", "exitReason", "ticks",

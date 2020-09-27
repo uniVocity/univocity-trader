@@ -7,94 +7,93 @@ import com.univocity.trader.chart.charts.painter.*;
 
 import java.awt.*;
 
-public abstract class Ruler<C extends RulerController<?>> implements Painter<C> {
+public abstract class Ruler<T extends RulerTheme<?>> implements Painter<T> {
 
-	protected final Insets insets = new Insets(0, 0, 0, 0);
-	protected final BasicChart<?> chart;
-	private C controller;
+	Insets insets = new Insets(0, 0, 0, 0);
+	private T theme;
+	private BasicChart<?> chart;
 
 	public Ruler(BasicChart<?> chart) {
-		this.chart = chart;
-		chart.register(this);
+		chart.addPainter(overlay(), this);
 	}
 
-	private void updateFontSize(Graphics2D g){
-		getController().updateFontSize(g);
+	private void updateFontSize(Graphics2D g) {
+		this.theme().updateFontSize(g);
 	}
 
-	public final void paintOn(Graphics2D g, int width) {
+	public final void paintOn(BasicChart<?> chart, Graphics2D g, int width, Overlay overlay) {
 		updateFontSize(g);
 
-		drawBackground(g, width);
+		drawBackground(chart, g, width);
 
 		Candle candle = chart.getCurrentCandle();
 		Point location = chart.getCurrentCandleLocation();
 
 		if (candle != null && location != null) {
-			drawSelection(g, width, candle, location);
+			drawSelection(chart, g, width, candle, location);
 		}
 
-		highlightMousePosition(g, width);
+		highlightMousePosition(chart, g, width);
+	}
+
+	protected abstract void drawBackground(BasicChart<?> chart, Graphics2D g, int width);
+
+	protected abstract void drawSelection(BasicChart<?> chart, Graphics2D g, int width, Candle selectedCandle, Point location);
+
+	protected abstract void highlightMousePosition(BasicChart<?> chart, Graphics2D g, int width);
+
+	public final T theme() {
+		if (theme == null) {
+			theme = newTheme();
+		}
+		return theme;
 	}
 
 	@Override
-	public final Insets insets() {
+	public Insets insets() {
 		return insets;
 	}
 
-	protected abstract void drawBackground(Graphics2D g, int width);
-
-	protected abstract void drawSelection(Graphics2D g, int width, Candle selectedCandle, Point location);
-
-	protected abstract void highlightMousePosition(Graphics2D g, int width);
-
-	public final C getController() {
-		if (controller == null) {
-			controller = newController();
-		}
-		return controller;
-	}
-
-	protected abstract C newController();
+	protected abstract T newTheme();
 
 	protected final int getFontHeight() {
-		return getController().getFontHeight();
+		return this.theme().getFontHeight();
 	}
 
-	protected final boolean isShowingGrid(){
-		return getController().isShowingGrid();
+	protected final boolean isShowingGrid() {
+		return this.theme().isShowingGrid();
 	}
 
 	protected Color getGridColor() {
-		return getController().getGridColor();
+		return this.theme().getGridColor();
 	}
 
 	protected final void setProfile(DrawingProfile.Profile profile) {
-		getController().setProfile(profile);
+		this.theme().setProfile(profile);
 	}
 
 	protected final int getStringWidth(String str, Graphics2D g) {
-		return getController().getStringWidth(str, g);
+		return this.theme().getStringWidth(str, g);
 	}
 
 	protected final void text(Graphics2D g) {
-		getController().text(g);
+		this.theme().text(g);
 	}
 
 	protected final void drawing(Graphics2D g) {
-		getController().drawing(g);
+		this.theme().drawing(g);
 	}
 
 	protected Color getBackgroundColor() {
-		return getController().getBackgroundColor();
+		return this.theme().getBackgroundColor();
 	}
 
-	protected final Color getProfitBackground(){
-		return getController().getProfitBackground();
+	protected final Color getProfitBackground() {
+		return this.theme().getProfitBackground();
 	}
 
-	protected final Color getLossBackground(){
-		return getController().getLossBackground();
+	protected final Color getLossBackground() {
+		return this.theme().getLossBackground();
 	}
 
 	protected void drawStringInBox(int x, int y, int width, String string, Graphics2D g, int stroke, Color background) {
@@ -113,4 +112,20 @@ public abstract class Ruler<C extends RulerController<?>> implements Painter<C> 
 		g.drawString(string, x + stroke * 2, y + getFontHeight() - stroke * 2);
 	}
 
+	@Override
+	public final void invokeRepaint() {
+		if (chart != null) {
+			chart.invokeRepaint();
+		}
+	}
+
+	@Override
+	public void install(BasicChart<?> chart) {
+		this.chart = chart;
+	}
+
+	@Override
+	public void uninstall(BasicChart<?> chart) {
+		chart = null;
+	}
 }

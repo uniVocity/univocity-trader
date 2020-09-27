@@ -61,13 +61,13 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 	}
 
 	@Override
-	public Map<String, Double> getLatestPrices() {
+	public Map<String, double[]> getLatestPrices() {
 		return new HashMap<>();
 	}
 
 	@Override
 	public double getLatestPrice(String assetSymbol, String fundSymbol) {
-		return new Double(0);
+		return 0;
 	}
 
 	@Override
@@ -120,19 +120,6 @@ class IQFeedExchange implements Exchange<IQFeedCandle, Account> {
 		return IncomingCandles.fromCollection(socketClient.getHistoricalCandlestickBars(request));
 	}
 	// TODO: add callback for connection login via IQFeed
-
-	@Override
-	public Candle generateCandle(IQFeedCandle c) {
-		return new Candle(
-				c.getOpenTime(),
-				c.getCloseTime(),
-				c.getOpen(),
-				c.getHigh(),
-				c.getLow(),
-				c.getClose(),
-				c.getVolume()
-		);
-	}
 
 	public PreciseCandle generatePreciseCandle(IQFeedCandle c) {
 		return new PreciseCandle(

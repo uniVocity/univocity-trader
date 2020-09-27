@@ -1262,6 +1262,10 @@ public class Utils {
 		return (Class<? extends T>) search(scanClasses(), parent, Collections.singleton(classToFind)).iterator().next();
 	}
 
+	public static <T> Set<Class<? extends T>> findClassesImplementing(Class<T> parentInterface) {
+		return (Set) search(scanClasses(), parentInterface, Collections.emptySet());
+	}
+
 	private static WeakReference<ScanResult> classesScanned;
 
 	private static synchronized ScanResult scanClasses() {
@@ -1308,7 +1312,21 @@ public class Utils {
 		}
 	}
 
+	public static <T> T instantiate(Class<T> clazz) {
+		try {
+			return Utils.getDefaultConstructor(clazz).newInstance();
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
 	private static void doSearch(boolean caseInsensitive, List<Class<?>> loadedClasses, Set<String> classNames, LinkedHashSet<Class<?>> sorted) {
+		if (classNames.isEmpty()) {
+			sorted.addAll(loadedClasses);
+			return;
+		}
 		Iterator<String> names = classNames.iterator();
 		while (names.hasNext()) {
 			String name = names.next();
@@ -1340,7 +1358,7 @@ public class Utils {
 
 		List<Class<?>> loadedClasses = subclasses.stream()
 				.filter(subClass -> subClass.isStandardClass() && !subClass.isAbstract() && !subClass.isAnonymousInnerClass())
-				.filter(subClass -> StringUtils.endsWithAny(subClass.getName().toLowerCase(), lowerCasedNames))
+				.filter(subClass -> lowerCasedNames.length == 0 || StringUtils.endsWithAny(subClass.getName().toLowerCase(), lowerCasedNames))
 				.map(ClassInfo::loadClass)
 				.collect(Collectors.toList());
 		;
@@ -1348,7 +1366,11 @@ public class Utils {
 		LinkedHashSet<Class<?>> sorted = new LinkedHashSet<>();
 		classNames = new LinkedHashSet<>(classNames);
 		doSearch(false, loadedClasses, classNames, sorted);
-		doSearch(true, loadedClasses, classNames, sorted);
+		if (lowerCasedNames.length != 0) {
+			doSearch(true, loadedClasses, classNames, sorted);
+		} else {
+			return sorted;
+		}
 
 		if (!loadedClasses.isEmpty()) {
 			StringBuilder simpleNames = new StringBuilder();

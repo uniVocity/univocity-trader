@@ -1,11 +1,9 @@
 package com.univocity.trader.account;
 
 import com.univocity.trader.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 import org.slf4j.*;
 
-import java.math.*;
 import java.util.function.*;
 
 public class DefaultOrderManager implements OrderManager {
@@ -22,23 +20,24 @@ public class DefaultOrderManager implements OrderManager {
 	}
 
 	@Override
-	public void prepareOrder(SymbolPriceDetails priceDetails, OrderBook book, OrderRequest order, Candle latestCandle) {
-		BigDecimal originalPrice = order.getPrice();
+	public void prepareOrder(OrderBook book, OrderRequest order, Context context) {
+		double originalPrice = order.getPrice();
 
-		double availableQuantity = order.getQuantity().doubleValue();
+		double availableQuantity = order.getQuantity();
 
-		if (book != null) {
+		if (book != null && !book.isEmpty()) {
 			double spread = book.getSpread(availableQuantity);
 			double ask = book.getAverageAskAmount(availableQuantity);
 			double bid = book.getAverageBidAmount(availableQuantity);
 
 			//aims price at central price point of the spread.
 			if (order.getSide() == Order.Side.BUY) {
-				order.setPrice(BigDecimal.valueOf(bid + (spread / 2.0)));
+				order.setPrice(bid + (spread / 2.0));
 			} else {
-				order.setPrice(BigDecimal.valueOf(ask - (spread / 2.0)));
+				order.setPrice(ask - (spread / 2.0));
 			}
 
+			SymbolPriceDetails priceDetails = context.priceDetails();
 			log.debug("{} - spread of {}: Ask {}, Bid {}. Closed at {}. Going to {} at ${}.",
 					order.getSymbol(),
 					priceDetails.priceToString(spread),
@@ -49,7 +48,7 @@ public class DefaultOrderManager implements OrderManager {
 					priceDetails.priceToString(order.getPrice())
 			);
 		}
-	}
+ 	}
 
 	@Override
 	public void finalized(Order order, Trader trader) {
@@ -63,17 +62,23 @@ public class DefaultOrderManager implements OrderManager {
 
 	@Override
 	public void unchanged(Order order, Trader trader, Consumer<Order> resubmission) {
-		if (order.getTimeElapsed(trader.latestCandle().closeTime) >= maxTimeToKeepOrderOpen.ms) {
+		if (isCancellable(order) && order.getTimeElapsed(trader.latestCandle().closeTime) >= maxTimeToKeepOrderOpen.ms) {
 			order.cancel();
 		}
 	}
 
 	@Override
 	public boolean cancelToReleaseFundsFor(Order order, Trader currentTrader, Trader newSymbolTrader) {
-		if (order.getTimeElapsed(currentTrader.latestCandle().closeTime) > maxTimeToKeepOrderOpen.ms / 2) {
+		if (isCancellable(order) && order.getTimeElapsed(currentTrader.latestCandle().closeTime) > maxTimeToKeepOrderOpen.ms / 2) {
 			order.cancel();
-			return true;
+			if(order.isCancelled()) {
+				return true;
+			}
 		}
 		return false;
+	}
+
+	protected boolean isCancellable(Order order) {
+		return order.getParent() == null && order.getTriggerCondition() == Order.TriggerCondition.NONE;
 	}
 }

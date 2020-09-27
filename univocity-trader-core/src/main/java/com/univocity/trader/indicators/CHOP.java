@@ -20,6 +20,9 @@ public class CHOP extends SingleValueCalculationIndicator {
 	private final LowestValueIndicator lvi;
 	private final double scaleUpTo;
 
+	private double highChoppinessValue = HIGH_CHOPPINESS_VALUE;
+	private double lowChoppinessValue = LOW_CHOPPINESS_VALUE;
+
 	@Override
 	protected Indicator[] children() {
 		return new Indicator[]{atrIndicator, hvi, lvi};
@@ -62,19 +65,35 @@ public class CHOP extends SingleValueCalculationIndicator {
 		return scaleUpTo * (Math.log10(atrIndicators.sum() / (hvi.getValue() - lvi.getValue()))) / log10n;
 	}
 
-	public boolean isMarketTrending(double lowChopinessValue) {
-		return getValue() < lowChopinessValue;
+	public boolean isMarketTrending(double lowChoppinessValue) {
+		return getValue() < lowChoppinessValue;
 	}
 
 	public boolean isMarketTrending() {
-		return isMarketTrending(LOW_CHOPPINESS_VALUE);
+		return isMarketTrending(lowChoppinessValue);
 	}
 
 	public boolean isMarketSideways() {
-		return isMarketSideways(HIGH_CHOPPINESS_VALUE);
+		return isMarketSideways(highChoppinessValue);
 	}
 
-	public boolean isMarketSideways(double highChopinessValue) {
-		return getValue() > highChopinessValue;
+	public boolean isMarketSideways(double highChoppinessValue) {
+		return getValue() > highChoppinessValue;
+	}
+
+	public double getHighChoppinessValue() {
+		return highChoppinessValue;
+	}
+
+	public void setHighChoppinessValue(double highChoppinessValue) {
+		this.highChoppinessValue = highChoppinessValue;
+	}
+
+	public double getLowChoppinessValue() {
+		return lowChoppinessValue;
+	}
+
+	public void setLowChoppinessValue(double lowChoppinessValue) {
+		this.lowChoppinessValue = lowChoppinessValue;
 	}
 }

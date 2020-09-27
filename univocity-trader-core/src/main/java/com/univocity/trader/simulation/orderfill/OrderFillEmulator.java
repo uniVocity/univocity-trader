@@ -18,5 +18,5 @@ public interface OrderFillEmulator {
 	 * @param order  the order to fill
 	 * @param candle the latest candle received from history.
 	 */
-	void fillOrder(DefaultOrder order, Candle candle);
+	void fillOrder(Order order, Candle candle);
 }

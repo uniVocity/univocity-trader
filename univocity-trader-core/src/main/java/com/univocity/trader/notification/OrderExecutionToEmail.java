@@ -47,8 +47,7 @@ public class OrderExecutionToEmail implements OrderListener {
 			email.setFrom(mailSender.getSenderAddress());
 			email.setTitle(title);
 
-			Map<String, Balance> balances = tradingManager.updateBalances();
-			String body = printTotalBalances(balances);
+			String body = printTotalBalances();
 
 			email.setBody(body);
 			email.setTo(new String[]{client.getEmail()});
@@ -58,13 +57,15 @@ public class OrderExecutionToEmail implements OrderListener {
 		}
 	}
 
-	private synchronized String printTotalBalances(Map<String, Balance> balances) {
+	private synchronized String printTotalBalances() {
 		SymbolPriceDetails f = tradingManager.getPriceDetails();
 		StringBuilder out = new StringBuilder("\nActual balances:\n");
 		var total = new AtomicReference<>(0.0);
+
+		Map<String, Balance> balances = tradingManager.getBalanceSnapshot();
 		printTotalBalances(balances, new HashSet<>(), out, total, this.tradingManager);
 		out.append("\n\t* ").append(f.priceToString(tradingManager.getCash())).append(' ').append(tradingManager.getFundSymbol());
-		double holdings = total.get() + balances.getOrDefault(referenceCurrencySymbol, ZERO).getTotal().doubleValue();
+		double holdings = total.get() + balances.getOrDefault(referenceCurrencySymbol, ZERO).getTotal();
 		out.append("\n\nApproximate holdings ~$").append(f.switchToSymbol(referenceCurrencySymbol).priceToString(holdings)).append(" ").append(referenceCurrencySymbol);
 		return out.toString();
 	}
@@ -79,7 +80,7 @@ public class OrderExecutionToEmail implements OrderListener {
 		String fundSymbol = trader.fundSymbol();
 		try {
 			SymbolPriceDetails f = trader.priceDetails();
-			String balances = printTotalBalances(tradingManager.updateBalances());
+			String balances = printTotalBalances();
 
 			String timeLong = " at " + trader.latestCandle().getFormattedCloseTime("h:mma, MMMM dd, yyyy", client.getTimezone());
 			String timeShort = " - " + trader.latestCandle().getFormattedCloseTime("EEEE hh:mma", client.getTimezone());
@@ -110,7 +111,7 @@ public class OrderExecutionToEmail implements OrderListener {
 			} else {
 				title += " @ " + f.priceToString(order.getPrice()) + " (" + trade.formattedPriceChangePct(order.getPrice()) + ")" + timeShort;
 				details = "Sold " + qty + " " + assetSymbol + " " + typeDescription + " when price reached " + f.priceToString(trader.lastClosingPrice()) + " " + fundSymbol + timeLong + ".";
-				if(trade.exitReason() != null) {
+				if (trade.exitReason() != null) {
 					details += "\nExit reason: " + trade.exitReason();
 				}
 				details += "\nOrder status: " + order.getStatus();
@@ -159,37 +160,39 @@ public class OrderExecutionToEmail implements OrderListener {
 		if (visited.contains(next)) {
 			return;
 		}
+
 		visited.add(next);
 
 		Balance instrument = balances.getOrDefault(next.getAssetSymbol(), ZERO);
 
-		double assets = instrument.getFreeAmount();
-		double locked = instrument.getLocked().doubleValue();
-
-		if (assets != 0 || locked != 0) {
+		double assets = instrument.getFree();
+		double locked = instrument.getLocked();
+		double allAssets = assets + locked;
+		if (allAssets != 0) {
 			SymbolPriceDetails f = next.getPriceDetails();
 			double lastPrice = next.getLatestPrice();
 			boolean printing = false;
-			if (assets > 0.0) {
+			if (allAssets > 0.0) {
 				Trader trader = next.getTrader();
-				double worth = assets * lastPrice;
+
+				double worth = allAssets * lastPrice;
 				total.set(total.get() + convertToReferenceCurrency(worth, next));
-				if (worth > 0.5) {
+				if (worth > next.getPriceDetails().getMinimumOrderAmount(lastPrice)) {
 					printing = true;
 					msg.append("\n\t* ").append(f.quantityToString(assets)).append(" ").append(next.getAssetSymbol());
 					msg.append(", ");
-					msg.append("trading at ").append(f.priceToString(trader.lastClosingPrice()));
+					msg.append("trading at ").append(f.priceToString(lastPrice));
 					msg.append(". Holding ").append(f.quantityToString(trader.assetQuantity())).append(" units");
 					msg.append(", worth ~").append(f.switchToSymbol(trader.assetSymbol() + referenceCurrencySymbol).priceToString(worth)).append(" ").append(next.getFundSymbol());
 
 					Set<Trade> trades = trader.trades();
-					if(!trades.isEmpty()){
+					if (!trades.isEmpty()) {
 						String indent = ". ";
-						if(trades.size() > 1){
+						if (trades.size() > 1) {
 							msg.append(". Trades:");
 							indent = ".\n\t\t + ";
 						}
-						for(Trade trade : trades) {
+						for (Trade trade : trades) {
 							msg.append(indent);
 							if (trade.averagePrice() > 0) {
 								msg.append("Paid ").append(f.priceToString(trade.averagePrice()));
@@ -225,9 +228,7 @@ public class OrderExecutionToEmail implements OrderListener {
 			}
 		}
 		if (visited.size() <= 1) {
-			for (TradingManager other : tradingManager.getAccount().getAllTradingManagers()) {
-				printTotalBalances(balances, visited, msg, total, other);
-			}
+			tradingManager.getAccount().forEachTradingManager(tradingManager -> printTotalBalances(balances, visited, msg, total, tradingManager));
 		}
 	}
 

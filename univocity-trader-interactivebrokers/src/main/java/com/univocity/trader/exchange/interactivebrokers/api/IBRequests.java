@@ -36,7 +36,6 @@ abstract class IBRequests {
 
 		this.requestHandler = new RequestHandler(reconnectionProcess);
 		this.responseProcessor = new ResponseProcessor(requestHandler);
-		connect();
 	}
 
 	abstract IBRequests newInstance(IBRequests oldInstance);
@@ -63,6 +62,7 @@ abstract class IBRequests {
 					if (client.isConnected()) {
 						log.info("Connected to TWS server (version {}})", client.serverVersion());
 					} else {
+						client = null;
 						throw new IllegalStateException("Could not connect to TWS. Make sure it's running on " + (StringUtils.isBlank(ip) ? "localhost" : ip) + ":" + port);
 					}
 				}
@@ -87,6 +87,7 @@ abstract class IBRequests {
 		if (reader == null) {
 			synchronized (this) {
 				if (reader == null) {
+					log.info("Connecting to IB...");
 					reader = new EReader(getClient(), getSignal());
 					reader.start();
 				}
@@ -95,9 +96,27 @@ abstract class IBRequests {
 		return reader;
 	}
 
-	private synchronized void connect() {
+	synchronized void connect() {
 		boolean[] ready = new boolean[]{false};
-		getReader();
+
+		EReader reader = null;
+		int retryCount = 0;
+		while (reader == null && ++retryCount <= 10) {
+			try {
+				reader = getReader();
+			} catch (RuntimeException e) {
+				if (retryCount == 10) {
+					log.error("Unable to connect after " + retryCount + " attempts. Aborting.", e);
+					throw e;
+				}
+				log.error("Unable to connect. Will retry in 30 seconds", e);
+				try {
+					Thread.sleep(30_000);
+				} catch (InterruptedException ie) {
+					Thread.currentThread().interrupt();
+				}
+			}
+		}
 
 		new Thread(() -> {
 			Thread.currentThread().setName("IB live stream");
@@ -152,14 +171,24 @@ abstract class IBRequests {
 		}
 	}
 
-	public int submitRequest(String description, Consumer resultConsumer, Consumer<Integer> action) {
-		int requestId = requestHandler.prepareRequest(resultConsumer);
-		log.debug("New request [" + requestId + "]: " + description);
-		action.accept(requestId);
+	protected final <T> int submitRequest(String description, Consumer<T> resultConsumer, Consumer<Integer> action) {
+		return submitRequest(0, description, resultConsumer, action);
+	}
+
+	protected final <T> int submitRequest(int requestId, String description, Consumer<T> resultConsumer, Consumer<Integer> action) {
+		requestId = requestHandler.prepareRequest(requestId, resultConsumer);
+		if (requestId != 0) {
+			log.debug("New request [" + requestId + "]: " + description);
+			action.accept(requestId);
+		}
 		return requestId;
 	}
 
 	public void waitForResponse(int requestId) {
+		if (requestId == 0) {
+			log.warn("Previous request was ignored as a similar one is already being processed");
+			return;
+		}
 		waitForResponse(requestId, 10);
 	}
 
@@ -173,5 +202,14 @@ abstract class IBRequests {
 
 	public void waitForResponses(Collection<Integer> requestIds, int maxSecondsToWait) {
 		requestHandler.waitForResponses(requestIds, maxSecondsToWait);
+	}
+
+	public void closeOrderBook(int requestId, boolean smartDepth) {
+		client.cancelMktDepth(requestId, smartDepth);
+		requestHandler.closeBook(requestId, smartDepth);
+	}
+
+	public void closeAccountListener() {
+		client.cancelPositions();
 	}
 }

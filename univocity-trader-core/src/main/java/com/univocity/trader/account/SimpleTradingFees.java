@@ -2,7 +2,7 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 
-public class SimpleTradingFees implements TradingFees {
+public final class SimpleTradingFees implements TradingFees {
 
 	private final double makerFeeAmount;
 	private final double makerFeePercentage;

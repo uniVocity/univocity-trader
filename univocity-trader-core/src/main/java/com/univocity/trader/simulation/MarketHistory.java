@@ -21,38 +21,43 @@ public class MarketHistory {
 		this.candleRepository = candleRepository;
 	}
 
-	public String getSymbol() {
+	public final String getSymbol() {
 		return symbol;
 	}
 
-	public void simulate(Consumer<Candle> consumer, boolean cache) {
+	public final void simulate(Consumer<Candle> consumer, boolean cache) {
 		simulate(consumer, null, null, cache);
 	}
 
-	public void simulate(Consumer<Candle> consumer, Instant from, boolean cache) {
+	public final void simulate(Consumer<Candle> consumer, Instant from, boolean cache) {
 		simulate(consumer, from, null, cache);
 	}
 
-	public void simulate(Consumer<Candle> consumer, Instant from, Instant to, boolean cache) {
+	public final void simulate(Consumer<Candle> consumer, Instant from, Instant to, boolean cache) {
 		Enumeration<Candle> result = candleRepository.iterate(symbol, from, to, cache);
-		final long start = System.currentTimeMillis();
-		int count = 0;
-		while (result.hasMoreElements()) {
-			Candle candle = result.nextElement();
-			if (candle == null) {
-				break;
+		Candle candle;
+		if (log.isTraceEnabled()) {
+			final long start = System.currentTimeMillis();
+			int count = 0;
+
+			while (result.hasMoreElements() && (candle = result.nextElement()) != null) {
+				consumer.accept(candle);
+				count++;
 			}
-			consumer.accept(candle);
-			count++;
+			log.trace("Processed all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
+		} else {
+			while (result.hasMoreElements() && (candle = result.nextElement()) != null) {
+				consumer.accept(candle);
+			}
 		}
-		log.trace("Processed all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
+
 	}
 
-	public Candle last() {
+	public final Candle last() {
 		return candleRepository.lastCandle(symbol);
 	}
 
-	public long size() {
+	public final  long size() {
 		return candleRepository.countCandles(symbol);
 	}
 }

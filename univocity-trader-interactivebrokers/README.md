@@ -4,10 +4,11 @@ To trade using [Interactive Brokers](https://www.interactivebrokers.com/), the f
 
 1. Open an account or start a free trial
 
-2. Download and install their *Trader Workstation* software (TWS).
+2. Download and install their [*IB Gateway* software](https://www.interactivebrokers.com/en/index.php?f=16457)
+ or the full [*Trader Workstation* (TWS)](https://www.interactivebrokers.com/en/index.php?f=16042).
 
 3. Download the latest *IB API* zip file from http://interactivebrokers.github.io 
-(currently `twsapi_macunix.976.01.zip` for MacOS and Linux, and `TWS API Install 976.01.msi` for Windows)
+(currently `twsapi_macunix.979.01.zip` for MacOS and Linux, and `TWS API Install 979.01.msi` for Windows)
 
    1. Unzip or install this file somewhere in your computer.
    

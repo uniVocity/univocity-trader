@@ -1,5 +1,6 @@
 package com.univocity.trader.chart.charts;
 
+import com.univocity.trader.chart.charts.painter.*;
 import com.univocity.trader.chart.charts.scrolling.*;
 
 import javax.swing.*;
@@ -7,8 +8,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 import java.util.*;
+import java.util.function.*;
 
-public class ChartCanvas extends JPanel {
+public class ChartCanvas extends JPanel implements Repaintable {
 
 	final Insets insets = new Insets(0, 0, 0, 0);
 	protected ScrollBar scrollBar;
@@ -21,7 +23,9 @@ public class ChartCanvas extends JPanel {
 	private int requiredWidth = -1;
 	private int barWidth;
 
-	private List<StaticChart<?>> charts = new ArrayList<>();
+	private StaticChart<?> chart;
+	private final List<IntConsumer> scrollPositionListeners = new ArrayList<>();
+	private boolean repainting;
 
 	public ChartCanvas() {
 		this.setLayout(null);
@@ -43,8 +47,8 @@ public class ChartCanvas extends JPanel {
 		});
 	}
 
-	public void addChart(StaticChart<?> chart) {
-		this.charts.add(chart);
+	public void setChart(StaticChart<?> chart) {
+		this.chart = chart;
 	}
 
 	public void paintComponent(Graphics g1d) {
@@ -54,16 +58,12 @@ public class ChartCanvas extends JPanel {
 		Graphics2D g = (Graphics2D) g1d;
 
 
-		for (StaticChart<?> chart : charts) {
-			this.requiredWidth = Math.max(chart.calculateRequiredWidth(), requiredWidth);
-			this.barWidth = Math.max(chart.calculateBarWidth(), barWidth);
-		}
+		this.requiredWidth = chart.calculateRequiredWidth();
+		this.barWidth = chart.calculateBarWidth();
 
 		updateScroll();
 
-		for (StaticChart<?> chart : charts) {
-			chart.paintComponent(g);
-		}
+		chart.paintComponent(g);
 
 		if (scrollBar != null) {
 			scrollBar.draw(g);
@@ -74,9 +74,7 @@ public class ChartCanvas extends JPanel {
 		if (isPanelBeingShown || boundsChanged) {
 			height = getHeight();
 			width = getWidth();
-			for (StaticChart<?> chart : charts) {
-				chart.layoutComponents();
-			}
+			chart.layoutComponents();
 
 			boundsChanged = false;
 		}
@@ -87,11 +85,15 @@ public class ChartCanvas extends JPanel {
 	}
 
 	public void enableScrolling() {
-		if(scrollBar == null) {
+		if (scrollBar == null) {
 			scrollBar = new ScrollBar(this);
+			scrollPositionListeners.forEach(l -> scrollBar.addScrollPositionListener(l));
 		}
 	}
 
+	public int getAvailableHeight(){
+		return chart.getAvailableHeight();
+	}
 
 	public final boolean isDraggingScroll() {
 		return isScrollingView() && scrollBar.isDraggingScroll();
@@ -108,7 +110,7 @@ public class ChartCanvas extends JPanel {
 		return scrollBar != null ? scrollBar.getHeight() : 0;
 	}
 
-	private void updateScroll() {
+	void updateScroll() {
 		if (scrollBar != null) {
 			scrollBar.updateScroll();
 		}
@@ -144,7 +146,7 @@ public class ChartCanvas extends JPanel {
 		return point.y < getHeight() - scrollBar.getHeight() && (isOverDisabledSectionAtRight(getWidth(), point.x) || point.x < insets.left + getBarWidth());
 	}
 
-	public int getBarWidth(){
+	public int getBarWidth() {
 		return barWidth;
 	}
 
@@ -157,8 +159,21 @@ public class ChartCanvas extends JPanel {
 		return (Graphics2D) super.getGraphics();
 	}
 
+	@Override
 	public final void invokeRepaint() {
+		if (repainting) {
+			return;
+		}
+		repainting = true;
 		SwingUtilities.invokeLater(this::repaint);
 	}
 
+	public void repaint() {
+		super.repaint();
+		repainting = false;
+	}
+
+	public void addScrollPositionListener(IntConsumer scrollPositionListener) {
+		scrollPositionListeners.add(scrollPositionListener);
+	}
 }

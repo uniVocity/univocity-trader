@@ -72,6 +72,15 @@ public class NewOrder {
 	private long timestamp;
 
 	/**
+	 * Limit iceberg qty
+	 */
+	private String limitIcebergQty;
+	/**
+	 * For stop-limit price
+	 */
+	private String stopLimitPrice;
+
+	/**
 	 * Creates a new order with all required parameters.
 	 */
 	public NewOrder(String symbol, OrderSide side, OrderType type, TimeInForce timeInForce, String quantity) {
@@ -93,6 +102,13 @@ public class NewOrder {
 		this.price = price;
 	}
 
+
+	public NewOrder(String symbol, OrderSide side, OrderType type, TimeInForce timeInForce, String quantity, String price, String stopLimitPrice, String stopPrice) {
+		this(symbol, side, type, timeInForce, quantity, price);
+		this.stopLimitPrice = stopLimitPrice;
+		this.stopPrice = stopPrice;
+	}
+
 	public String getSymbol() {
 		return symbol;
 	}
@@ -109,6 +125,10 @@ public class NewOrder {
 	public NewOrder side(OrderSide side) {
 		this.side = side;
 		return this;
+	}
+
+	public String getLimitIcebergQty() {
+		return limitIcebergQty;
 	}
 
 	public OrderType getType() {
@@ -165,12 +185,27 @@ public class NewOrder {
 		return this;
 	}
 
+
+	public String getStopLimitPrice() {
+		return stopLimitPrice;
+	}
+
+	public NewOrder stopLimitPrice(String stopLimitPrice) {
+		this.stopLimitPrice = stopLimitPrice;
+		return this;
+	}
+
 	public String getIcebergQty() {
 		return icebergQty;
 	}
 
 	public NewOrder icebergQty(String icebergQty) {
 		this.icebergQty = icebergQty;
+		return this;
+	}
+
+	public NewOrder limitIcebergQty(String limitIcebergQty) {
+		this.limitIcebergQty = limitIcebergQty;
 		return this;
 	}
 
@@ -226,6 +261,20 @@ public class NewOrder {
 	 */
 	public static NewOrder limitBuy(String symbol, TimeInForce timeInForce, String quantity, String price) {
 		return new NewOrder(symbol, OrderSide.BUY, OrderType.LIMIT, timeInForce, quantity, price);
+	}
+
+	/**
+	 * Places a OCO LIMIT buy order for the given <code>quantity</code> and <code>price</code> with given <code>stop limit</code>.
+	 *
+	 * @return a new order which is pre-configured with LIMIT as the order type and BUY as the order side.
+	 */
+
+	public static NewOrder limitOCOBuy(String symbol, TimeInForce timeInForce, String quantity, String price, String stopLimitPrice, String stopPrice) {
+		return new NewOrder(symbol, OrderSide.BUY, OrderType.LIMIT, timeInForce, quantity, price, stopLimitPrice, stopPrice);
+	}
+
+	public static NewOrder limitOCOSell(String symbol, TimeInForce timeInForce, String quantity, String price, String stopLimitPrice, String stopPrice) {
+		return new NewOrder(symbol, OrderSide.SELL, OrderType.LIMIT, timeInForce, quantity, price, stopLimitPrice, stopPrice);
 	}
 
 	/**

@@ -4,7 +4,7 @@ package com.univocity.trader.indicators;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.base.*;
 
-import static com.univocity.trader.indicators.Signal.*;
+import java.util.function.*;
 
 /**
  * @author uniVocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
@@ -12,13 +12,27 @@ import static com.univocity.trader.indicators.Signal.*;
 public class BollingerBand extends MovingAverage {
 
 	private double stddev;
+	private final double multiplier;
 
 	public BollingerBand(TimeInterval interval) {
-		this(12, interval);
+		this(12, 2.0, interval);
 	}
 
 	public BollingerBand(int length, TimeInterval interval) {
-		super(length, interval);
+		this(length, 2.0, interval);
+	}
+
+	public BollingerBand(int length, double multiplier, TimeInterval interval) {
+		this(length, multiplier, interval, null);
+	}
+
+	public BollingerBand(int length, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		this(length, 2.0, interval, valueGetter);
+	}
+
+	public BollingerBand(int length, double multiplier, TimeInterval interval, ToDoubleFunction<Candle> valueGetter) {
+		super(length, interval, valueGetter == null ? c -> c.close : valueGetter);
+		this.multiplier = multiplier;
 	}
 
 	private double getStandardDeviation() {
@@ -27,8 +41,8 @@ public class BollingerBand extends MovingAverage {
 
 	@Override
 	protected boolean calculateIndicatorValue(Candle candle, double value, boolean updating) {
-		boolean out = super.calculateIndicatorValue(candle,value, updating);
-		if(out){
+		boolean out = super.calculateIndicatorValue(candle, value, updating);
+		if (out) {
 			updateStandardDeviation();
 		}
 		return out;
@@ -48,17 +62,20 @@ public class BollingerBand extends MovingAverage {
 	public double getUpperBand() {
 		double deviation = getStandardDeviation();
 		double middle = getMiddleBand();
-		return middle + (2.0 * deviation);
+		return middle + (multiplier * deviation);
 	}
 
 	public double getLowerBand() {
 		double deviation = getStandardDeviation();
 		double middle = getMiddleBand();
-		return middle - (2.0 * deviation);
+		return middle - (multiplier * deviation);
 	}
 
 	public double getMiddleBand() {
 		return super.getValue();
 	}
 
+	public double getWidth(){
+		return ((getUpperBand() - getLowerBand()) / getMiddleBand()) * 100.0;
+	}
 }

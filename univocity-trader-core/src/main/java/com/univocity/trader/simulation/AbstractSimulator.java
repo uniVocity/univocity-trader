@@ -7,13 +7,14 @@ import com.univocity.trader.indicators.base.*;
 
 import java.time.*;
 import java.util.*;
+import java.util.stream.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
 public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends AccountConfiguration<A>> {
 
 	protected Map<String, SymbolInformation> symbolInformation = new TreeMap<>();
-	private AccountManager[] accounts;
+	private SimulatedAccountManager[] accounts;
 	protected final Simulation simulation;
 	protected final C configuration;
 	private Map<String, String[]> allPairs;
@@ -23,13 +24,13 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		simulation = configuration.simulation();
 	}
 
-	protected AccountManager[] accounts() {
+	protected SimulatedAccountManager[] accounts() {
 		if (accounts == null) {
 			List<A> accountConfigs = configuration.accounts();
 			if (accountConfigs.isEmpty()) {
 				throw new IllegalStateException("No account configuration defined");
 			}
-			this.accounts = new AccountManager[accountConfigs.size()];
+			this.accounts = new SimulatedAccountManager[accountConfigs.size()];
 			int i = 0;
 			for (A accountConfig : accountConfigs) {
 				this.accounts[i++] = createAccountInstance(accountConfig).getAccount();
@@ -38,7 +39,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		return accounts;
 	}
 
-	private SimulatedClientAccount createAccountInstance(A accountConfiguration) {
+	protected SimulatedClientAccount createAccountInstance(A accountConfiguration) {
 		return new SimulatedClientAccount(accountConfiguration, configuration.simulation());
 	}
 
@@ -64,22 +65,24 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		return end != null ? end : LocalDateTime.now();
 	}
 
-	protected final long getStartTime() {
-		return getSimulationStart().toInstant(ZoneOffset.UTC).toEpochMilli() - MINUTE.ms;
+	protected final long getStartTime(Period warmUp) {
+		LocalDateTime start = getSimulationStart();
+		if(warmUp != null){
+			start = start.minus(warmUp);
+		}
+
+		return start.toInstant(ZoneOffset.UTC).toEpochMilli() - MINUTE.ms;
 	}
 
 	protected final long getEndTime() {
 		return getSimulationEnd().toInstant(ZoneOffset.UTC).toEpochMilli();
 	}
 
-	protected void resetBalances() {
-		for (AccountManager account : accounts()) {
+	protected final void resetBalances() {
+		for (SimulatedAccountManager account : accounts()) {
 			account.resetBalances();
 			double[] total = new double[]{0};
 			simulation.initialAmounts().forEach((symbol, amount) -> {
-				if (symbol.equals("")) {
-					symbol = account.configuration().referenceCurrency();
-				}
 				account.setAmount(symbol, amount);
 				total[0] += amount;
 			});
@@ -88,18 +91,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 				throw new IllegalStateException("Cannot execute simulation without initial funds to trade with");
 			}
 		}
-	}
-
-//	public A account() {
-//		return configuration.account();
-//	}
-//
-//	public A account(String accountId) {
-//		return configuration.account(accountId);
-//	}
-
-	public Map<String, String[]> allPairs() {
-		return populateAllPairs();
+		populateAllPairs();
 	}
 
 	protected Map<String, String[]> getAllPairs() {
@@ -111,34 +103,30 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 
 	private Map<String, String[]> populateAllPairs() {
 		TreeMap<String, String[]> out = new TreeMap<>();
-		for (AccountManager account : accounts()) {
-			out.putAll(account.configuration().symbolPairs());
+		for (SimulatedAccountManager account : accounts()) {
+			out.putAll(account.getAllSymbolPairs());
 		}
 		return out;
 	}
 
 	private Set<String> populateAllReferenceCurrencies() {
 		TreeSet<String> out = new TreeSet<>();
-		for (AccountManager account : accounts()) {
+		for (SimulatedAccountManager account : accounts()) {
 			out.add(account.getReferenceCurrencySymbol());
 		}
 		return out;
 	}
 
-	protected Collection<String[]> getTradePairs() {
-		return getAllPairs().values();
-	}
-
-	public C configure() {
+	public final C configure() {
 		return configuration;
 	}
 
 	public final void run() {
-		List<Parameters> parameters = simulation.parameters();
-		if (parameters.isEmpty()) {
-			parameters = Collections.singletonList(Parameters.NULL);
+		Stream<Parameters> parameters = simulation.parameters();
+		if (parameters == null) {
+			parameters = Stream.of(Parameters.NULL);
 		} else {
-			System.out.println("Running simulation with " + parameters.size() + " parameters");
+			System.out.println("Running simulation with parameters - " + new Date());
 		}
 
 		long start = System.currentTimeMillis();
@@ -149,5 +137,5 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		}
 	}
 
-	protected abstract void executeSimulation(Collection<Parameters> parameters);
+	protected abstract void executeSimulation(Stream<Parameters> parameters);
 }
