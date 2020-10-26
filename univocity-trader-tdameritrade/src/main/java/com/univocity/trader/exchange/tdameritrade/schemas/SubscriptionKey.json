@@ -1,0 +1,14 @@
+//SubscriptionKey:
+{
+  "keys": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

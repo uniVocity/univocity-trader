@@ -1,0 +1,46 @@
+//Hours:
+{
+  "category": {
+    "type": "string"
+  },
+  "date": {
+    "type": "string"
+  },
+  "exchange": {
+    "type": "string"
+  },
+  "isOpen": {
+    "type": "boolean"
+  },
+  "marketType": {
+    "type": "string",
+    "enum": [
+      "BOND",
+      "EQUITY",
+      "ETF",
+      "FOREX",
+      "FUTURE",
+      "FUTURE_OPTION",
+      "INDEX",
+      "INDICATOR",
+      "MUTUAL_FUND",
+      "OPTION",
+      "UNKNOWN"
+    ]
+  },
+  "product": {
+    "type": "string"
+  },
+  "productName": {
+    "type": "string"
+  },
+  "sessionHours": {
+    "type": "object",
+    "additionalProperties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

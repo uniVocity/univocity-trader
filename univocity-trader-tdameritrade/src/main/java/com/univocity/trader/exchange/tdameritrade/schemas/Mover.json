@@ -1,0 +1,28 @@
+//Mover:
+{
+  "change": {
+    "type": "number",
+    "format": "double"
+  },
+  "description": {
+    "type": "string"
+  },
+  "direction": {
+    "type": "string",
+    "enum": [
+      "up",
+      "down"
+    ]
+  },
+  "last": {
+    "type": "number",
+    "format": "double"
+  },
+  "symbol": {
+    "type": "string"
+  },
+  "totalVolume": {
+    "type": "integer",
+    "format": "int64"
+  }
+}

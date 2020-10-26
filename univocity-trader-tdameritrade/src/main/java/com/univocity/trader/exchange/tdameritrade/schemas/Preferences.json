@@ -1,0 +1,136 @@
+//Preferences:
+{
+  "expressTrading": {
+    "type": "boolean",
+    "default": false,
+    "required": true
+  },
+  "directOptionsRouting": {
+    "type": "boolean",
+    "default": false
+  },
+  "directEquityRouting": {
+    "type": "boolean",
+    "default": false
+  },
+  "defaultEquityOrderLegInstruction": {
+    "type": "string",
+    "enum": [
+      "BUY",
+      "SELL",
+      "BUY_TO_COVER",
+      "SELL_SHORT",
+      "NONE"
+    ],
+    "required": true
+  },
+  "defaultEquityOrderType": {
+    "type": "string",
+    "enum": [
+      "MARKET",
+      "LIMIT",
+      "STOP",
+      "STOP_LIMIT",
+      "TRAILING_STOP",
+      "MARKET_ON_CLOSE",
+      "NONE"
+    ],
+    "required": true
+  },
+  "defaultEquityOrderPriceLinkType": {
+    "type": "string",
+    "enum": [
+      "VALUE",
+      "PERCENT",
+      "NONE"
+    ],
+    "required": true
+  },
+  "defaultEquityOrderDuration": {
+    "type": "string",
+    "enum": [
+      "DAY",
+      "GOOD_TILL_CANCEL",
+      "NONE"
+    ],
+    "required": true
+  },
+  "defaultEquityOrderMarketSession": {
+    "type": "string",
+    "enum": [
+      "AM",
+      "PM",
+      "NORMAL",
+      "SEAMLESS",
+      "NONE"
+    ],
+    "required": true
+  },
+  "defaultEquityQuantity": {
+    "type": "integer",
+    "format": "int32",
+    "minimum": 0,
+    "required": true
+  },
+  "mutualFundTaxLotMethod": {
+    "type": "string",
+    "enum": [
+      "FIFO",
+      "LIFO",
+      "HIGH_COST",
+      "LOW_COST",
+      "MINIMUM_TAX",
+      "AVERAGE_COST",
+      "NONE"
+    ],
+    "required": true
+  },
+  "optionTaxLotMethod": {
+    "type": "string",
+    "enum": [
+      "FIFO",
+      "LIFO",
+      "HIGH_COST",
+      "LOW_COST",
+      "MINIMUM_TAX",
+      "AVERAGE_COST",
+      "NONE"
+    ],
+    "required": true
+  },
+  "equityTaxLotMethod": {
+    "type": "string",
+    "enum": [
+      "FIFO",
+      "LIFO",
+      "HIGH_COST",
+      "LOW_COST",
+      "MINIMUM_TAX",
+      "AVERAGE_COST",
+      "NONE"
+    ],
+    "required": true
+  },
+  "defaultAdvancedToolLaunch": {
+    "type": "string",
+    "enum": [
+      "TA",
+      "N",
+      "Y",
+      "TOS",
+      "NONE",
+      "CC2"
+    ],
+    "required": true
+  },
+  "authTokenTimeout": {
+    "type": "string",
+    "enum": [
+      "FIFTY_FIVE_MINUTES",
+      "TWO_HOURS",
+      "FOUR_HOURS",
+      "EIGHT_HOURS"
+    ],
+    "required": true
+  }
+}

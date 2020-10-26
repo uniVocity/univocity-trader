@@ -1,0 +1,40 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.univocity</groupId>
+		<artifactId>univocity-trader</artifactId>
+		<version>${revision}</version>
+	</parent>
+
+	<artifactId>univocity-trader-tdameritrade</artifactId>
+	<version>${revision}</version>
+
+	<name>univocity-trader-tdameritrade</name>
+	<packaging>jar</packaging>
+
+	<dependencies>
+<!--		<dependency>-->
+<!--			<groupId>com.tdameritrade</groupId>-->
+<!--			<artifactId>tdameritrade</artifactId>-->
+<!--			<version>9.76</version>-->
+<!--			<scope>system</scope>-->
+<!--			<systemPath>${user.home}/dev/IBJts/source/JavaClient/TwsApi_debug.jar</systemPath>-->
+<!--		</dependency>-->
+	
+		<dependency>
+			<groupId>com.univocity</groupId>
+			<artifactId>univocity-trader-core</artifactId>
+			<version>${revision}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-firefox-driver</artifactId>
+			<version>3.141.59</version>
+		</dependency>
+	</dependencies>
+
+</project>

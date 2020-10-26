@@ -1,0 +1,187 @@
+//Transaction:
+{
+  "type": {
+    "type": "string",
+    "enum": [
+      "TRADE",
+      "RECEIVE_AND_DELIVER",
+      "DIVIDEND_OR_INTEREST",
+      "ACH_RECEIPT",
+      "ACH_DISBURSEMENT",
+      "CASH_RECEIPT",
+      "CASH_DISBURSEMENT",
+      "ELECTRONIC_FUND",
+      "WIRE_OUT",
+      "WIRE_IN",
+      "JOURNAL",
+      "MEMORANDUM",
+      "MARGIN_CALL",
+      "MONEY_MARKET",
+      "SMA_ADJUSTMENT"
+    ]
+  },
+  "clearingReferenceNumber": {
+    "type": "string"
+  },
+  "subAccount": {
+    "type": "string"
+  },
+  "settlementDate": {
+    "type": "string",
+    "format": "date-time"
+  },
+  "orderId": {
+    "type": "string"
+  },
+  "sma": {
+    "type": "number",
+    "format": "double"
+  },
+  "requirementReallocationAmount": {
+    "type": "number",
+    "format": "double"
+  },
+  "dayTradeBuyingPowerEffect": {
+    "type": "number",
+    "format": "double"
+  },
+  "netAmount": {
+    "type": "number",
+    "format": "double"
+  },
+  "transactionDate": {
+    "type": "string",
+    "format": "date-time"
+  },
+  "orderDate": {
+    "type": "string",
+    "format": "date-time"
+  },
+  "transactionSubType": {
+    "type": "string"
+  },
+  "transactionId": {
+    "type": "integer",
+    "format": "int64"
+  },
+  "cashBalanceEffectFlag": {
+    "type": "boolean",
+    "default": false
+  },
+  "description": {
+    "type": "string"
+  },
+  "achStatus": {
+    "type": "string",
+    "enum": [
+      "Approved",
+      "Rejected",
+      "Cancel",
+      "Error"
+    ]
+  },
+  "accruedInterest": {
+    "type": "number",
+    "format": "double"
+  },
+  "fees": {
+    "type": "object",
+    "additionalProperties": {
+      "type": "number",
+      "format": "double"
+    }
+  },
+  "transactionItem": {
+    "type": "object",
+    "properties": {
+      "accountId": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "amount": {
+        "type": "number",
+        "format": "double"
+      },
+      "price": {
+        "type": "number",
+        "format": "double"
+      },
+      "cost": {
+        "type": "number",
+        "format": "double"
+      },
+      "parentOrderKey": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "parentChildIndicator": {
+        "type": "string"
+      },
+      "instruction": {
+        "type": "string",
+        "enum": [
+          "BUY",
+          "SELL"
+        ]
+      },
+      "positionEffect": {
+        "type": "string",
+        "enum": [
+          "OPENING",
+          "CLOSING",
+          "AUTOMATIC"
+        ]
+      },
+      "instrument": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "underlyingSymbol": {
+            "type": "string"
+          },
+          "optionExpirationDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "optionStrikePrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "putCall": {
+            "type": "string",
+            "enum": [
+              "PUT",
+              "CALL"
+            ]
+          },
+          "cusip": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "assetType": {
+            "type": "string",
+            "enum": [
+              "EQUITY",
+              "MUTUAL_FUND",
+              "OPTION",
+              "FIXED_INCOME",
+              "CASH_EQUIVALENT"
+            ]
+          },
+          "bondMaturityDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bondInterestRate": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      }
+    }
+  }
+}

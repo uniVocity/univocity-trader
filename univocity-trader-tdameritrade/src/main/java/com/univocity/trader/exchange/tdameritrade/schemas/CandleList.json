@@ -1,0 +1,49 @@
+//CandleList:
+{
+  "candles": {
+    "type": "array",
+    "description": "List of candles",
+    "items": {
+      "type": "object",
+      "properties": {
+        "close": {
+          "type": "number",
+          "format": "double",
+          "description": "Close"
+        },
+        "datetime": {
+          "type": "integer",
+          "format": "int64",
+          "description": "DateTime"
+        },
+        "high": {
+          "type": "number",
+          "format": "double",
+          "description": "High"
+        },
+        "low": {
+          "type": "number",
+          "format": "double",
+          "description": "Low"
+        },
+        "open": {
+          "type": "number",
+          "format": "double",
+          "description": "Open"
+        },
+        "volume": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Volume"
+        }
+      }
+    }
+  },
+  "empty": {
+    "type": "boolean"
+  },
+  "symbol": {
+    "type": "string",
+    "description": "Symbol"
+  }
+}

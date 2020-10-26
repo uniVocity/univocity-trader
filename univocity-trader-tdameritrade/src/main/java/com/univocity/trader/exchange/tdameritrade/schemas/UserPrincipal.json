@@ -1,0 +1,329 @@
+//UserPrincipal:
+{
+  "authToken": {
+    "type": "string"
+  },
+  "userId": {
+    "type": "string"
+  },
+  "userCdDomainId": {
+    "type": "string"
+  },
+  "primaryAccountId": {
+    "type": "string"
+  },
+  "lastLoginTime": {
+    "type": "string",
+    "format": "date-time"
+  },
+  "tokenExpirationTime": {
+    "type": "string",
+    "format": "date-time"
+  },
+  "loginTime": {
+    "type": "string",
+    "format": "date-time"
+  },
+  "accessLevel": {
+    "type": "string"
+  },
+  "stalePassword": {
+    "type": "boolean",
+    "default": false
+  },
+  "streamerInfo": {
+    "type": "object",
+    "properties": {
+      "streamerBinaryUrl": {
+        "type": "string"
+      },
+      "streamerSocketUrl": {
+        "type": "string"
+      },
+      "token": {
+        "type": "string"
+      },
+      "tokenTimestamp": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "userGroup": {
+        "type": "string"
+      },
+      "accessLevel": {
+        "type": "string"
+      },
+      "acl": {
+        "type": "string"
+      },
+      "appId": {
+        "type": "string"
+      }
+    }
+  },
+  "professionalStatus": {
+    "type": "string",
+    "enum": [
+      "PROFESSIONAL",
+      "NON_PROFESSIONAL",
+      "UNKNOWN_STATUS"
+    ]
+  },
+  "quotes": {
+    "type": "object",
+    "properties": {
+      "isNyseDelayed": {
+        "type": "boolean",
+        "default": false
+      },
+      "isNasdaqDelayed": {
+        "type": "boolean",
+        "default": false
+      },
+      "isOpraDelayed": {
+        "type": "boolean",
+        "default": false
+      },
+      "isAmexDelayed": {
+        "type": "boolean",
+        "default": false
+      },
+      "isCmeDelayed": {
+        "type": "boolean",
+        "default": false
+      },
+      "isIceDelayed": {
+        "type": "boolean",
+        "default": false
+      },
+      "isForexDelayed": {
+        "type": "boolean",
+        "default": false
+      }
+    }
+  },
+  "streamerSubscriptionKeys": {
+    "type": "object",
+    "properties": {
+      "keys": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "accounts": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "accountCdDomainId": {
+          "type": "string"
+        },
+        "company": {
+          "type": "string"
+        },
+        "segment": {
+          "type": "string"
+        },
+        "surrogateIds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "expressTrading": {
+              "type": "boolean",
+              "default": false
+            },
+            "directOptionsRouting": {
+              "type": "boolean",
+              "default": false
+            },
+            "directEquityRouting": {
+              "type": "boolean",
+              "default": false
+            },
+            "defaultEquityOrderLegInstruction": {
+              "type": "string",
+              "enum": [
+                "BUY",
+                "SELL",
+                "BUY_TO_COVER",
+                "SELL_SHORT",
+                "NONE"
+              ]
+            },
+            "defaultEquityOrderType": {
+              "type": "string",
+              "enum": [
+                "MARKET",
+                "LIMIT",
+                "STOP",
+                "STOP_LIMIT",
+                "TRAILING_STOP",
+                "MARKET_ON_CLOSE",
+                "NONE"
+              ]
+            },
+            "defaultEquityOrderPriceLinkType": {
+              "type": "string",
+              "enum": [
+                "VALUE",
+                "PERCENT",
+                "NONE"
+              ]
+            },
+            "defaultEquityOrderDuration": {
+              "type": "string",
+              "enum": [
+                "DAY",
+                "GOOD_TILL_CANCEL",
+                "NONE"
+              ]
+            },
+            "defaultEquityOrderMarketSession": {
+              "type": "string",
+              "enum": [
+                "AM",
+                "PM",
+                "NORMAL",
+                "SEAMLESS",
+                "NONE"
+              ]
+            },
+            "defaultEquityQuantity": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            },
+            "mutualFundTaxLotMethod": {
+              "type": "string",
+              "enum": [
+                "FIFO",
+                "LIFO",
+                "HIGH_COST",
+                "LOW_COST",
+                "MINIMUM_TAX",
+                "AVERAGE_COST",
+                "NONE"
+              ]
+            },
+            "optionTaxLotMethod": {
+              "type": "string",
+              "enum": [
+                "FIFO",
+                "LIFO",
+                "HIGH_COST",
+                "LOW_COST",
+                "MINIMUM_TAX",
+                "AVERAGE_COST",
+                "NONE"
+              ]
+            },
+            "equityTaxLotMethod": {
+              "type": "string",
+              "enum": [
+                "FIFO",
+                "LIFO",
+                "HIGH_COST",
+                "LOW_COST",
+                "MINIMUM_TAX",
+                "AVERAGE_COST",
+                "NONE"
+              ]
+            },
+            "defaultAdvancedToolLaunch": {
+              "type": "string",
+              "enum": [
+                "TA",
+                "N",
+                "Y",
+                "TOS",
+                "NONE",
+                "CC2"
+              ]
+            },
+            "authTokenTimeout": {
+              "type": "string",
+              "enum": [
+                "FIFTY_FIVE_MINUTES",
+                "TWO_HOURS",
+                "FOUR_HOURS",
+                "EIGHT_HOURS"
+              ]
+            }
+          }
+        },
+        "acl": {
+          "type": "string"
+        },
+        "authorizations": {
+          "type": "object",
+          "properties": {
+            "apex": {
+              "type": "boolean",
+              "default": false
+            },
+            "levelTwoQuotes": {
+              "type": "boolean",
+              "default": false
+            },
+            "stockTrading": {
+              "type": "boolean",
+              "default": false
+            },
+            "marginTrading": {
+              "type": "boolean",
+              "default": false
+            },
+            "streamingNews": {
+              "type": "boolean",
+              "default": false
+            },
+            "optionTradingLevel": {
+              "type": "string",
+              "enum": [
+                "COVERED",
+                "FULL",
+                "LONG",
+                "SPREAD",
+                "NONE"
+              ]
+            },
+            "streamerAccess": {
+              "type": "boolean",
+              "default": false
+            },
+            "advancedMargin": {
+              "type": "boolean",
+              "default": false
+            },
+            "scottradeAccount": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    }
+  }
+}
