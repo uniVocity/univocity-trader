@@ -35,6 +35,42 @@
 			<artifactId>selenium-firefox-driver</artifactId>
 			<version>3.141.59</version>
 		</dependency>
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-support</artifactId>
+			<version>3.141.59</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.5.4</version>
+		</dependency>
 	</dependencies>
-
+	<build>
+	<plugins>
+		<plugin>
+			<groupId>org.jsonschema2pojo</groupId>
+			<artifactId>jsonschema2pojo-maven-plugin</artifactId>
+			<version>1.0.2</version>
+			<configuration>
+				<sourceDirectory>src/main/resources/schemas</sourceDirectory>
+				<outputDirectory>src/main/resources/models</outputDirectory>
+                <useLongIntegers>true</useLongIntegers>
+                <serializable>true</serializable>
+			</configuration>
+			<executions>
+				<execution>
+					<goals>
+						<goal>generate</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+	</plugins>
+	</build>
 </project>

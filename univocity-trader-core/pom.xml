@@ -91,28 +91,28 @@
     </dependencies>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <!-- Excludes external configuration from jar.-->
-                    <excludes>
-                        <exclude>**/*.bat</exclude>
-                        <exclude>**/*.sh</exclude>
-                        <exclude>**/*.properties</exclude>
-                        <exclude>**/*.xml</exclude>
-                        <exclude>**/*.sql</exclude>
-                        <exclude>**/*.csv</exclude>
-                    </excludes>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.univocity.trader.Main</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-        </plugins>
+<!--        <plugins>-->
+<!--            <plugin>-->
+<!--                <groupid>org.apache.maven.plugins</groupid>-->
+<!--                <artifactid>maven-jar-plugin</artifactid>-->
+<!--                <version>3.2.1</version>-->
+<!--                <configuration>-->
+<!--                    &lt;!&ndash; excludes external configuration from jar.&ndash;&gt;-->
+<!--                    <excludes>-->
+<!--                        <exclude>**/*.bat</exclude>-->
+<!--                        <exclude>**/*.sh</exclude>-->
+<!--                        <exclude>**/*.properties</exclude>-->
+<!--                        <exclude>**/*.xml</exclude>-->
+<!--                        <exclude>**/*.sql</exclude>-->
+<!--                        <exclude>**/*.csv</exclude>-->
+<!--                    </excludes>-->
+<!--                    <archive>-->
+<!--                        <manifest>-->
+<!--                            <mainclass>com.univocity.trader.main</mainclass>-->
+<!--                        </manifest>-->
+<!--                    </archive>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+<!--        </plugins>-->
     </build>
 </project>
