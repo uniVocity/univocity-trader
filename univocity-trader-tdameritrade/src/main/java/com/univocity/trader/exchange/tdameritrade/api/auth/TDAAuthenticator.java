@@ -46,7 +46,7 @@ public class TDAAuthenticator {
         WebDriverWait wait = new WebDriverWait(driver, 120);
         String encodedAuthToken = null;
         try {
-            wait.until(ExpectedConditions.urlContains(this.redirectURL));
+            wait.until(ExpectedConditions.urlContains(this.redirectURL + "ZZZZ"));
             Pattern authCodePattern = Pattern.compile("(code=)(.*)");
             Matcher matcher = authCodePattern.matcher(driver.getCurrentUrl());
             if (matcher.find())

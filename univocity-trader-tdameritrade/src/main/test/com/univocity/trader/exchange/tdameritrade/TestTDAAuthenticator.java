@@ -12,11 +12,11 @@ public class TestTDAAuthenticator {
         String driverPath = "src\\main\\java\\com\\univocity\\trader\\exchange\\tdameritrade\\utils\\geckodriver.exe";
         String consumerKey = "3RRAXALGIMFS42LCPCVO9GVKMVAMVOW2";
         TDAAuthenticator authenticator = new TDAAuthenticator(redirectURL, consumerKey, driverPath);
-        String authCode = authenticator.authenticateAndGetAuthCode();
+        String authCode = authenticator.getAuthCode();
         System.out.println(authCode);
-
-        RequestOptions options = new RequestOptions();
-        SyncRequestClient syncRequestClient = SyncRequestClient.create(options);
-        syncRequestClient.postAccessToken();
+//
+//        RequestOptions options = new RequestOptions();
+//        SyncRequestClient syncRequestClient = SyncRequestClient.create(options);
+//        syncRequestClient.postAccessToken();
     }
 }
