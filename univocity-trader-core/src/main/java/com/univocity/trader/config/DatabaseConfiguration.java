@@ -106,7 +106,7 @@ public class DatabaseConfiguration implements ConfigurationGroup {
 	private DataSource defaultDataSource() {
 		if (!isConfigured()) {
 			jdbcDriver("com.mysql.jdbc.Driver")
-					.jdbcUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull&useSSL=false")
+					.jdbcUrl("jdbc:mysql://localhost:3306/trading?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true")
 					.user("root");
 		}
 

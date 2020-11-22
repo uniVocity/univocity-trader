@@ -53,16 +53,50 @@ Make sure you have the following installed:
 
  * Java 14
  
- * MySQL or MariaDB (you can change this to something else, just adapt the database setup instructions below to your needs)
+ * MySQL or MariaDB (or Docker) (you can change this to something else, just adapt the database setup instructions below to your needs)
  
  * Apache maven (if your IDE doesn't come with it) 
+ 
 
 With that ready you can clone this repository and open it in your favorite IDE, with all sub-projects.
 
 ### Database setup
+#### Run MySQL in Docker:
+Create a variable to your project:
+```
+UNIVOCITY_PROJECT_PATH=/Users/univocity-dev/Source/investment/univocity-trader/
+```
+Then you can run Docker container (be aware, it is not instant, takes couple of minutes to initialize the first time):
+```
+docker run --name mysql-container-name \
+-v ${UNIVOCITY_PROJECT_PATH}/univocity-trader-core/src/main/resources/db/mysql:/docker-entrypoint-initdb.d \
+-v ${UNIVOCITY_PROJECT_PATH}/mysql:/var/lib/mysql \
+-p 3306:3306  \
+-e MYSQL_ALLOW_EMPTY_PASSWORD=yes \
+-e MYSQL_DATABASE=trading \
+-e MYSQL_USER=univocity-dev \
+-e MYSQL_PASSWORD=univocity-dev \
+-d mysql:8.0.22
+```
+Where parameters:
+`--name mysql-container-name` - name of the container
+`-v /home/user/mysql:/var/lib/mysql` - mapping of host directory to internal to keep database between restarts
+The first parameter `/home/user/mysql` is local folder on host machine 
+
+#### Connect to dockerized MySQL:
+```
+docker exec -it mysql-container-name mysql --user=univocity-dev --password=univocity-dev trading
+```
+
+Or connect as root:
+```
+docker exec -it mysql-container-name  mysql
+```
+Password is exact that you provided earlier in `MYSQL_ROOT_PASSWORD
+
 
 Create a database in `MySQL` to store candles (and statistics generated from your backtests):
-
+(not needed in case of Docker)
 ```sql
 CREATE DATABASE trading;
 
