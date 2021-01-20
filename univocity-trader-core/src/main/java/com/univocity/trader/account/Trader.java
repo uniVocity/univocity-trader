@@ -42,6 +42,8 @@ public final class Trader {
 	private final AtomicLong id;
 	boolean liquidating = false;
 	public final Context context;
+	private final SignalRepository signalRepository;
+
 
 	Trader(TradingManager tradingManager, StrategyMonitor[] strategyMonitors) {
 		this.id = tradingManager.getAccount().getTradeIdGenerator();
@@ -66,6 +68,7 @@ public final class Trader {
 		}
 		this.allowMixedStrategies = allowMixedStrategies;
 		this.accountManager = tradingManager.getAccount();
+		this.signalRepository = accountManager.signalRepository.get();
 	}
 
 	/**
@@ -548,6 +551,9 @@ public final class Trader {
 					context.trade = processBuyOrder(order);
 				} else if (order.isSell()) {
 					context.trade = processSellOrder(order);
+				}
+				if (signalRepository != null) {
+					signalRepository.add(symbol(), order.isBuy() ? BUY : SELL, latestCandle());
 				}
 			} finally {
 				tradingManager.updateBalances();

@@ -5,6 +5,7 @@ import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
 import com.univocity.trader.notification.*;
+import com.univocity.trader.simulation.*;
 import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
@@ -14,6 +15,7 @@ import java.time.temporal.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
 
@@ -124,11 +126,12 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 
 	private void initialize() {
 		this.tickInterval = configuration.tickInterval();
+		SignalRepository signalRepository = configuration.signalRepositoryDir() == null ? null : new SignalRepository(configuration.signalRepositoryDir());
 
 		if (clients.isEmpty()) {
 			for (var account : configuration.accounts()) {
 				ClientAccount clientAccount = exchange.connectToAccount(account);
-				var client = new Client<T>(createAccountManager(clientAccount, account));
+				var client = new Client<T>(createAccountManager(clientAccount, account, () -> signalRepository));
 				clients.add(client);
 			}
 		}
@@ -144,8 +147,8 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		updateDatabase();
 	}
 
-	protected AccountManager createAccountManager(ClientAccount clientAccount, A account) {
-		return new AccountManager(clientAccount, account);
+	protected AccountManager createAccountManager(ClientAccount clientAccount, A account, Supplier<SignalRepository> signalRepository) {
+		return new AccountManager(clientAccount, account, signalRepository);
 	}
 
 	private void updateDatabase() {
@@ -271,7 +274,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		}
 	}
 
-	public Exchange<?,?> exchange(){
+	public Exchange<?, ?> exchange() {
 		return exchange;
 	}
 

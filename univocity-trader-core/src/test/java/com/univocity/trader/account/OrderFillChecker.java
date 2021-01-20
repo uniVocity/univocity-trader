@@ -42,7 +42,7 @@ public class OrderFillChecker {
 
 		configure(configuration);
 
-		SimulatedClientAccount clientAccount = new SimulatedClientAccount(accountCfg, configuration.simulation());
+		SimulatedClientAccount clientAccount = new SimulatedClientAccount(accountCfg, configuration.simulation(), () -> null);
 		SimulatedAccountManager account = clientAccount.getAccount();
 		SimulatedExchange exchange = new SimulatedExchange(account);
 		account.getAllSymbolPairs().keySet().forEach(s -> account.createTradingManager(s, exchange, null, Parameters.NULL));

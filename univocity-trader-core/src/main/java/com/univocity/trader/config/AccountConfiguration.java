@@ -235,6 +235,7 @@ public abstract class AccountConfiguration<T extends AccountConfiguration<T>> ex
 
 	Set<String> getRequiredPropertyNames() {
 		requiredPropertyNames.add("reference.currency");
+		requiredPropertyNames.add("strategies");
 		return requiredPropertyNames;
 	}
 

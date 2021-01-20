@@ -7,6 +7,7 @@ import com.univocity.trader.indicators.base.*;
 
 import java.time.*;
 import java.util.*;
+import java.util.function.*;
 import java.util.stream.*;
 
 import static com.univocity.trader.indicators.base.TimeInterval.*;
@@ -18,6 +19,8 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 	protected final Simulation simulation;
 	protected final C configuration;
 	private Map<String, String[]> allPairs;
+	private Supplier<SignalRepository> signalRepositorySupplier;
+	private SignalRepository signalRepository;
 
 	public AbstractSimulator(C configuration) {
 		this.configuration = configuration;
@@ -40,7 +43,7 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 	}
 
 	protected SimulatedClientAccount createAccountInstance(A accountConfiguration) {
-		return new SimulatedClientAccount(accountConfiguration, configuration.simulation());
+		return new SimulatedClientAccount(accountConfiguration, configuration.simulation(), this::getSignalRepository);
 	}
 
 	public final SymbolInformation symbolInformation(String symbol) {
@@ -135,6 +138,19 @@ public abstract class AbstractSimulator<C extends Configuration<C, A>, A extends
 		} finally {
 			System.out.println("Total simulation time: " + TimeInterval.getFormattedDuration(System.currentTimeMillis() - start));
 		}
+	}
+
+	protected void reportResults(Parameters parameters){
+		if(signalRepository != null) {
+			signalRepository.save();
+		}
+	}
+
+	private SignalRepository getSignalRepository() {
+		if(signalRepository == null && configuration.signalRepositoryDir() != null){
+			signalRepository = new SignalRepository(configuration.signalRepositoryDir());
+		}
+		return signalRepository;
 	}
 
 	protected abstract void executeSimulation(Stream<Parameters> parameters);

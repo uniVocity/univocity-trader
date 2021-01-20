@@ -5,14 +5,15 @@ import com.univocity.trader.config.*;
 import com.univocity.trader.simulation.*;
 
 import java.util.concurrent.*;
+import java.util.function.*;
 
 public class SimulatedAccountManager extends AccountManager implements SimulatedAccountConfiguration {
 
 	private final TradingFees tradingFees;
 	protected final SimulatedClientAccount account;
 
-	public SimulatedAccountManager(SimulatedClientAccount account, AccountConfiguration<?> configuration, TradingFees tradingFees) {
-		super(account, configuration);
+	public SimulatedAccountManager(SimulatedClientAccount account, AccountConfiguration<?> configuration, TradingFees tradingFees, Supplier<SignalRepository> signalRepository) {
+		super(account, configuration, signalRepository);
 		this.account = account;
 
 		if (tradingFees == null) {

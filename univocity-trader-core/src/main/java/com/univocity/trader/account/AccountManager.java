@@ -2,6 +2,7 @@ package com.univocity.trader.account;
 
 import com.univocity.trader.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.indicators.*;
 import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.utils.*;
@@ -44,8 +45,9 @@ public class AccountManager implements ClientAccount {
 	final Map<String, double[]> latestPrices = new HashMap<>();
 	private static final double[] DEFAULT = new double[]{-1.0};
 	Map<String, TradingManager[]> tradingManagers;
+	final Supplier<SignalRepository> signalRepository;
 
-	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration) {
+	public AccountManager(ClientAccount account, AccountConfiguration<?> configuration, Supplier<SignalRepository> signalRepository) {
 		if (StringUtils.isBlank(configuration.referenceCurrency())) {
 			throw new IllegalConfigurationException("Please configure the reference currency symbol for the account");
 		}
@@ -66,6 +68,7 @@ public class AccountManager implements ClientAccount {
 		if (account.marginReservePercentage() < 100) {
 			throw new IllegalStateException("Margin reserve percentage must be at least 100%");
 		}
+		this.signalRepository = signalRepository;
 	}
 
 	public Client getClient() {

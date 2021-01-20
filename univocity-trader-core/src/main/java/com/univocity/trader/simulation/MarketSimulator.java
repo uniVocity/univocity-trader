@@ -56,9 +56,12 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	protected void executeWithParameters(Stream<Parameters> parameters) {
 		parameters.forEach(p -> {
 			initialize();
-			executeSimulation(createEngines(p));
-//			liquidateOpenPositions();
-			reportResults(p);
+			try {
+				executeSimulation(createEngines(p));
+				//			liquidateOpenPositions();
+			} finally {
+				reportResults(p);
+			}
 		});
 	}
 
@@ -229,6 +232,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	}
 
 	protected void reportResults(Parameters parameters) {
+		super.reportResults(parameters);
 		for (AccountManager account : accounts()) {
 			reportResults(account, parameters);
 		}

@@ -37,7 +37,7 @@ public class MockClientAccount implements ClientAccount {
 	};
 
 	public MockClientAccount(AccountConfiguration<?> accountConfiguration) {
-		account = new SimulatedClientAccount(accountConfiguration, mockOrderFill, SimpleTradingFees.percentage(0.0));
+		account = new SimulatedClientAccount(accountConfiguration, mockOrderFill, SimpleTradingFees.percentage(0.0), null);
 		account.accountManager.setAmount("USDT", 100);
 		SimulatedExchange exchange = new SimulatedExchange(account.accountManager);
 		accountConfiguration.getAllSymbolPairs().keySet().forEach(s -> account.accountManager.createTradingManager(s, exchange, null, Parameters.NULL));

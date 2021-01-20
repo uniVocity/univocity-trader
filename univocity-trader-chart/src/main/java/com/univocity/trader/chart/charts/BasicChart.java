@@ -337,7 +337,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	protected int getReservedHeight() {
 		if (reservedHeight < 0) {
 			reservedHeight = 0;
-			List<Painter<?>> all = painters.get(NONE);
+			List<Painter<?>> all = new ArrayList<>(painters.get(NONE));
 			if (all.size() == 0) {
 				return 0;
 			}

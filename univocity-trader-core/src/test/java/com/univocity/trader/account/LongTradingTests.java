@@ -513,5 +513,4 @@ public class LongTradingTests extends OrderFillChecker {
 		assertEquals(0.0, account.getBalance("USDT").getLocked(), DELTA);
 	}
 
-
 }

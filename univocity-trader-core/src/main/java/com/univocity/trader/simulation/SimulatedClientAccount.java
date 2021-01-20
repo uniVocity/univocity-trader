@@ -9,6 +9,7 @@ import com.univocity.trader.simulation.orderfill.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.function.*;
 
 import static com.univocity.trader.config.Allocation.*;
 
@@ -20,13 +21,13 @@ public class SimulatedClientAccount implements ClientAccount {
 	private final OrderFillEmulator orderFillEmulator;
 	private final int marginReservePercentage;
 
-	public SimulatedClientAccount(AccountConfiguration<?> accountCfg, Simulation simulationCfg) {
-		this(accountCfg, simulationCfg.orderFillEmulator(), simulationCfg.tradingFees());
+	public SimulatedClientAccount(AccountConfiguration<?> accountCfg, Simulation simulationCfg, Supplier<SignalRepository> signalRepository) {
+		this(accountCfg, simulationCfg.orderFillEmulator(), simulationCfg.tradingFees(), signalRepository);
 	}
 
-	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, OrderFillEmulator orderFillEmulator, TradingFees tradingFees) {
+	public SimulatedClientAccount(AccountConfiguration<?> accountConfiguration, OrderFillEmulator orderFillEmulator, TradingFees tradingFees, Supplier<SignalRepository> signalRepository) {
 		this.marginReservePercentage = accountConfiguration.marginReservePercentage();
-		this.accountManager = new SimulatedAccountManager(this, accountConfiguration, tradingFees);
+		this.accountManager = new SimulatedAccountManager(this, accountConfiguration, tradingFees, signalRepository);
 		this.orderFillEmulator = orderFillEmulator;
 	}
 
