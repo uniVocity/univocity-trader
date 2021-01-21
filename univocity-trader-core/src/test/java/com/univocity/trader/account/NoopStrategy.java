@@ -7,7 +7,7 @@ import com.univocity.trader.strategy.*;
 public class NoopStrategy implements Strategy {
 
 	@Override
-	public Signal getSignal(Candle candle) {
+	public Signal getSignal(Candle candle, Context context) {
 		return Signal.NEUTRAL;
 	}
 }

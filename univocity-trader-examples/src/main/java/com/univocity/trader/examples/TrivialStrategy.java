@@ -2,6 +2,7 @@ package com.univocity.trader.examples;
 
 import java.util.*;
 
+import com.univocity.trader.account.*;
 import org.slf4j.*;
 
 import com.univocity.trader.candles.*;
@@ -55,7 +56,7 @@ public class TrivialStrategy extends IndicatorStrategy {
 	}
 
 	@Override
-	public Signal getSignal(Candle candle) {
+	public Signal getSignal(Candle candle, Context context) {
 		if (ma1day.getValue() > 0) {
 			final double deltaH = delta(candle.high, ma1day.getValue());
 			final double deltaL = delta(candle.low, ma1day.getValue());

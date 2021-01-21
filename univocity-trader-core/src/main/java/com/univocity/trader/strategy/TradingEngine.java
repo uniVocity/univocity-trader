@@ -72,7 +72,7 @@ public final class TradingEngine implements Engine {
 
 		if (initializing) { //ignore any signals and just all strategies to populate their internal state
 			for (int i = 0; i < plainStrategies.length; i++) {
-				plainStrategies[i].getSignal(candle);
+				plainStrategies[i].getSignal(candle, trader.context);
 			}
 			return;
 		}
@@ -81,7 +81,7 @@ public final class TradingEngine implements Engine {
 
 		for (int i = 0; i < strategies.length; i++) {
 			Strategy strategy = strategies[i];
-			Signal signal = strategy.getSignal(candle);
+			Signal signal = strategy.getSignal(candle, trader.context);
 
 			if(log.isTraceEnabled()) {
 				log.trace("{} - {}: {} ({})", getSymbol(), candle, signal, strategy.getClass().getSimpleName());

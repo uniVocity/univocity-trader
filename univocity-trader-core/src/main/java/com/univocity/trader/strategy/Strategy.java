@@ -26,14 +26,16 @@ public interface Strategy {
 	 * @param candle the latest candle received from a live {@link com.univocity.trader.Exchange} or the trading history of a symbol
 	 *               (typically managed by {@link com.univocity.trader.simulation.SimulatedExchange}).
 	 *
+	 * @param context
+	 *
 	 * @return an indication to {@code BUY}, {@code SELL} or do nothing (i.e. {@code NEUTRAL}). Any other value will be ignored by the
 	 * {@link com.univocity.trader.account.Trader} that processes this {@link Signal}.
 	 */
-	Signal getSignal(Candle candle);
+	Signal getSignal(Candle candle, Context context);
 
 	/**
 	 * The {@link Trade.Side} side ({@code LONG}, {@code SHORT} or both) this strategy applies to.
-	 * When {@link #getSignal(Candle)} produces a {@code BUY}, and the trade side returned by this method is {@code null},
+	 * When {@link #getSignal(Candle, Context)} produces a {@code BUY}, and the trade side returned by this method is {@code null},
 	 * the {@link Trader} working with the instrument being traded will try to exit any opened short positions and
 	 * will also attempt to go long on the given instrument. If the signal is {@code SELL}, the trader will try to
 	 * close any open long positions, and sell the current instrument short.

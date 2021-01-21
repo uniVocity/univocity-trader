@@ -1,7 +1,6 @@
 package com.univocity.trader.simulation;
 
 import com.univocity.trader.*;
-import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
@@ -133,13 +132,13 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 
 	public static final class Trader extends LiveTrader<Candle, Configuration, SimulationAccount> {
 
-		private CandleRepository noop;
+		private DatabaseCandleRepository noop;
 
 		private Trader(Map<String, List<Candle>> candles) {
 			super(new MockExchange(candles), new Configuration());
 
 			DatabaseConfiguration cfg = new DatabaseConfiguration();
-			noop = new CandleRepository(cfg) {
+			noop = new DatabaseCandleRepository(cfg) {
 				@Override
 				public boolean addToHistory(String symbol, PreciseCandle tick, boolean initializing) {
 					return true;
@@ -151,7 +150,7 @@ public class MockExchange implements Exchange<Candle, SimulationAccount> {
 		}
 
 		@Override
-		public CandleRepository candleRepository() {
+		public DatabaseCandleRepository candleRepository() {
 			return noop;
 		}
 	}

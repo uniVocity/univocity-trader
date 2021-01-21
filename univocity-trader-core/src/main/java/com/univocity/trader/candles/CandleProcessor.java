@@ -10,10 +10,10 @@ public final class CandleProcessor<T> {
 
 	private final Engine consumer;
 	private final Exchange exchange;
-	private final CandleRepository candleRepository;
+	private final DatabaseCandleRepository candleRepository;
 	private final boolean processFullCandlesOnly;
 
-	public CandleProcessor(CandleRepository candleRepository, Engine consumer, Exchange<T, ?> exchange, boolean processFullCandlesOnly) {
+	public CandleProcessor(DatabaseCandleRepository candleRepository, Engine consumer, Exchange<T, ?> exchange, boolean processFullCandlesOnly) {
 		this.candleRepository = candleRepository;
 		this.consumer = consumer;
 		this.exchange = exchange;

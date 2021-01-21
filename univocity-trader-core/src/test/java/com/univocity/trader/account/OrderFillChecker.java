@@ -34,7 +34,7 @@ public class OrderFillChecker {
 				.tradeWithPair("ADA", "BNB")
 				.tradeWith("ADA", "BNB")
 				.enableShorting()
-				.strategies().add(() -> candle -> Signal.NEUTRAL);
+				.strategies().add(() -> (candle, context) -> Signal.NEUTRAL);
 
 		if (orderManager != null) {
 			accountCfg.orderManager(orderManager);

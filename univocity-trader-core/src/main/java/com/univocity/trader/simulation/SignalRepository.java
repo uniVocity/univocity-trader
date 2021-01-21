@@ -134,4 +134,13 @@ public class SignalRepository {
 	Map<Candle, Signal> signalsFor(String symbol) {
 		return signals.get(symbol);
 	}
+
+	Signal signalFor(String symbol, Candle candle) {
+		Map<Candle, Signal> signals = signalsFor(symbol);
+		if (signals == null) {
+			throw new IllegalArgumentException("No signals for " + symbol + " in repository");
+		}
+		return signals.getOrDefault(candle, Signal.NEUTRAL);
+	}
+
 }

@@ -1,5 +1,6 @@
 package com.univocity.trader.examples;
 
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
@@ -22,7 +23,7 @@ public class ScalpingStrategy extends IndicatorStrategy {
 	}
 
 	@Override
-	public Signal getSignal(Candle candle) {
+	public Signal getSignal(Candle candle, Context context) {
 		if (candle.close < boll5m.getLowerBand()) { //close price of the candle is under the lower band.
 			return Signal.BUY;
 		}

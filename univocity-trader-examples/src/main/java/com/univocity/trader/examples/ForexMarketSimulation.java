@@ -41,7 +41,7 @@ public class ForexMarketSimulation {
 		//produces random signals.
 		Strategy random = new Strategy() {
 			@Override
-			public Signal getSignal(Candle candle) {
+			public Signal getSignal(Candle candle, Context context) {
 				double v = Math.random();
 				return v < 0.3 ? Signal.SELL : v > 0.7 ? Signal.BUY : Signal.NEUTRAL;
 			}

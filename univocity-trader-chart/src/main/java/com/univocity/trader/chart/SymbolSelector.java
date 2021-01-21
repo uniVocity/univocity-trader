@@ -31,7 +31,7 @@ public class SymbolSelector extends JPanel {
 	private JComboBox<String> cmbSymbols;
 	private DefaultComboBoxModel<String> cmbSymbolsModel;
 
-	private CandleRepository candleRepository;
+	private DatabaseCandleRepository candleRepository;
 	private final CandleHistory candleHistory;
 
 	private DisabledGlassPane glassPane;
@@ -401,7 +401,7 @@ public class SymbolSelector extends JPanel {
 
 	public static void main(String... args) {
 		DatabaseConfiguration databaseConfiguration = new SimulationConfiguration().database();
-		CandleRepository candleRepository = new CandleRepository(databaseConfiguration);
+		DatabaseCandleRepository candleRepository = new DatabaseCandleRepository(databaseConfiguration);
 
 //		CandleRepository candleRepository = new CandleRepository(databaseConfiguration);
 

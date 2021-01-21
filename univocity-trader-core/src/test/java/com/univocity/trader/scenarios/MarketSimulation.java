@@ -30,19 +30,19 @@ public class MarketSimulation {
 			"1532227380000,1532227439999,83.21,83.21,83.06,83.06,319.33566,SELL\n" +
 			"1532227440000,1532227499999,83.04,83.15,83.0,83.15,368.0443,BUY\n";
 
-	public static void main(String... args) throws IOException {
+	public static void main(String... args){
 		Strategy.Simulator simulator = Strategy.simulator();
+		//simulator.getCandleRepository()
 		SimulationAccount account = simulator.configure().account();
 
 		account
-				.referenceCurrency("USDT") //Balances will be calculated using the reference currency.
+				.referenceCurrency("USDT")
 				.tradeWith("LTC")
 				.maximumInvestmentPercentagePerAsset(50.0)
 				.minimumInvestmentAmountPerTrade(25.0)
 		;
 
-		SignalRepository repository = new SignalRepository("LTCUSDT", new StringReader(input));
-		account.strategies().add(() -> new SignalReproducer("LTCUSDT", repository));
+		account.strategies().add(() -> new SignalReproducer("LTCUSDT", new StringReader(input)));
 
 		account.orderManager(new DefaultOrderManager() {
 			@Override

@@ -36,7 +36,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 	private long lastHour;
 	private Map<String, String[]> allPairs;
 	private C configuration;
-	private CandleRepository candleRepository;
+	private DatabaseCandleRepository candleRepository;
 
 	private class PollThread extends Thread {
 		public PollThread() {
@@ -117,9 +117,9 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 		return configuration;
 	}
 
-	public CandleRepository candleRepository() {
+	public DatabaseCandleRepository candleRepository() {
 		if (candleRepository == null) {
-			candleRepository = new CandleRepository(configuration.database());
+			candleRepository = new DatabaseCandleRepository(configuration.database());
 		}
 		return candleRepository;
 	}

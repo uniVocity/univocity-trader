@@ -39,7 +39,7 @@ public class MartingaleSimulation {
 
 		class AlwaysBuy implements Strategy {
 			@Override
-			public Signal getSignal(Candle candle) {
+			public Signal getSignal(Candle candle, Context context) {
 				return Signal.BUY;
 			}
 		}

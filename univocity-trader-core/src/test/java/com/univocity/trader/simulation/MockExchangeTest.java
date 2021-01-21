@@ -23,7 +23,7 @@ public class MockExchangeTest {
 	private static Strategy strategy() {
 		return new Strategy() {
 			@Override
-			public Signal getSignal(Candle candle) {
+			public Signal getSignal(Candle candle, Context context) {
 				return candle.close > 5 ? Signal.SELL : Signal.BUY;
 			}
 		};

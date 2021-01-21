@@ -16,11 +16,11 @@ import static com.univocity.trader.candles.Candle.*;
  */
 public final class CandleHistoryBackfill {
 
-	private static final Logger log = LoggerFactory.getLogger(CandleRepository.class);
-	private final CandleRepository candleRepository;
+	private static final Logger log = LoggerFactory.getLogger(DatabaseCandleRepository.class);
+	private final DatabaseCandleRepository candleRepository;
 	private boolean resumeBackfill = false;
 
-	public CandleHistoryBackfill(CandleRepository candleRepository) {
+	public CandleHistoryBackfill(DatabaseCandleRepository candleRepository) {
 		this.candleRepository = candleRepository;
 	}
 

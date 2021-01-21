@@ -1,101 +1,29 @@
 package com.univocity.trader.candles;
 
-import com.univocity.trader.config.*;
 import org.slf4j.*;
-import org.springframework.dao.*;
-import org.springframework.jdbc.core.*;
 
-import java.sql.*;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-public class CandleRepository {
+public abstract class CandleRepository {
 	private static final Logger log = LoggerFactory.getLogger(CandleRepository.class);
-	private String databaseName;
-	private static final String INSERT = "INSERT INTO candle (symbol,open_time,close_time,open,high,low,close,volume) VALUES (?,?,?,?,?,?,?,?)";
-	private static final RowMapper<Candle> CANDLE_MAPPER = (rs, rowNum) -> {
-		Candle out = new Candle(
-				rs.getLong(1),
-				rs.getLong(2),
-				rs.getDouble(3),
-				rs.getDouble(4),
-				rs.getDouble(5),
-				rs.getDouble(6),
-				rs.getDouble(7));
-		return out;
-	};
 
 	protected final ConcurrentHashMap<String, Collection<Candle>> cachedResults = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<String, Long> candleCounts = new ConcurrentHashMap<>();
-	private final ThreadLocal<JdbcTemplate> db;
+	protected final ConcurrentHashMap<String, Long> candleCounts = new ConcurrentHashMap<>();
 
-	public CandleRepository(DatabaseConfiguration config) {
-		this.db = ThreadLocal.withInitial(() -> new JdbcTemplate(config.dataSource()));
+	public CandleRepository() {
+
 	}
 
-	public JdbcTemplate db() {
-		return db.get();
-	}
-
-	private String buildCandleQuery(String symbol) {
-		return "SELECT open_time, close_time, open, high, low, close, volume FROM candle WHERE symbol = '" + symbol + "'";
-	}
-
-	private PreparedStatement prepareInsert(PreparedStatement ps, String symbol, PreciseCandle tick) throws SQLException {
-		ps.setObject(1, symbol);
-		ps.setObject(2, tick.openTime);
-		ps.setObject(3, tick.closeTime);
-		ps.setObject(4, tick.open);
-		ps.setObject(5, tick.high);
-		ps.setObject(6, tick.low);
-		ps.setObject(7, tick.close);
-		ps.setObject(8, tick.volume);
-		return ps;
-	}
-
-	private final ConcurrentHashMap<String, PreciseCandle> processingCandles = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<String, PreciseCandle> fullCandles = new ConcurrentHashMap<>();
-
-	public boolean addToHistory(String symbol, PreciseCandle tick, boolean initializing) {
-		candleCounts.clear();
-		try {
-			PreciseCandle processingCandle = processingCandles.get(symbol);
-			if (processingCandle != null && processingCandle.openTime == tick.openTime && processingCandle.closeTime == tick.closeTime) {
-				processingCandles.put(symbol, tick); //saving update of latest candle
-				return true;
-			} else {
-				try {
-					if (processingCandle != null) { //save fully populated candle
-						if (db().execute(INSERT, (PreparedStatementCallback<Integer>) ps -> prepareInsert(ps, symbol, processingCandle).executeUpdate()) == 0) {
-							log.warn("Could not persist " + symbol + " Tick: " + processingCandle);
-							return false;
-						}
-						fullCandles.put(symbol, processingCandle);
-					}
-				} finally {
-					processingCandles.put(symbol, tick);
-				}
-			}
-		} catch (Exception ex) {
-			if (ex.getMessage().contains("Duplicate entry")) {
-				if (!initializing) {
-					log.error("Skipping duplicate " + symbol + " Tick: " + tick);
-				}
-			} else {
-				log.error("Error persisting " + symbol + " Tick: " + tick, ex);
-			}
-			return false;
-		}
-		return true;
-	}
+	public abstract boolean addToHistory(String symbol, PreciseCandle tick, boolean initializing);
 
 	protected Enumeration<Candle> cacheAndReturnResults(String symbol, String query, Instant from, Instant to, Collection<Candle> out) {
 		cachedResults.put(symbol, out);
 		return Collections.enumeration(out);
 	}
 
-	private Enumeration<Candle> toEnumeration(String symbol, String query, Instant from, Instant to, Runnable readingProcess, Collection<Candle> out, boolean[] ended) {
+	final Enumeration<Candle> toEnumeration(String symbol, String query, Instant from, Instant to, Runnable readingProcess, Collection<Candle> out, boolean[] ended) {
 		if (!(out instanceof BlockingQueue)) {
 			readingProcess.run();
 			return cacheAndReturnResults(symbol, query, from, to, out);
@@ -139,6 +67,8 @@ public class CandleRepository {
 		ended[0] = true;
 	}
 
+	protected abstract long loadCandles(String symbol, String query, Instant from, Instant to, Collection<Candle> out);
+
 	protected Enumeration<Candle> executeQuery(String symbol, String query, Instant from, Instant to, Collection<Candle> out) {
 		boolean[] ended = new boolean[]{false};
 
@@ -147,7 +77,7 @@ public class CandleRepository {
 			Thread.currentThread().setName(symbol + " candle reader");
 			log.debug("Executing SQL query: [{}]", query);
 
-			int count = 0;
+			long count = 0;
 			try {
 				boolean retry = false;
 				do {
@@ -160,22 +90,8 @@ public class CandleRepository {
 							Thread.currentThread().interrupt();
 						}
 					}
-
-					try (Connection c = db().getDataSource().getConnection();
-						 final PreparedStatement s = c.prepareStatement(query);
-						 ResultSet rs = executeQuery(s)) {
-
-						while (rs.next()) {
-							Candle candle = CANDLE_MAPPER.mapRow(rs, 0);
-							storeCandle(symbol, from, to, out, candle);
-							count++;
-						}
-
-						retry = false;
-					} catch (SQLException e) {
-						log.error("Error reading " + symbol + " candles from database.", e);
-						retry = e.getMessage().contains("Too many open files");
-					}
+					count = loadCandles(symbol, query, from, to, out);
+					retry = count < 0;
 				} while (retry);
 			} finally {
 				log.trace("Read all {} candles of {} in {} seconds", count, symbol, (System.currentTimeMillis() - start) / 1000.0);
@@ -186,34 +102,11 @@ public class CandleRepository {
 		return toEnumeration(symbol, query, from, to, readingProcess, out, ended);
 	}
 
-	private boolean isDatabaseMySQL() {
-		if (databaseName == null) {
-			try {
-				databaseName = db().execute((ConnectionCallback<String>) connection -> connection.getMetaData().getDatabaseProductName());
-			} catch (Exception e) {
-				log.warn("Unable to determine database name", e);
-			}
-			if (databaseName == null) {
-				databaseName = "";
-			}
-			databaseName = databaseName.trim().toLowerCase();
-		}
-		return databaseName.contains("mysql") || databaseName.contains("maria");
-	}
-
-	private ResultSet executeQuery(PreparedStatement s) throws SQLException {
-		if (isDatabaseMySQL()) {
-			//ensures MySQL's JDBC driver won't run out of memory if querying a large number of candles
-			s.setFetchSize(Integer.MIN_VALUE);
-		}
-		return s.executeQuery();
-	}
-
-	public void clearCaches() {
+	public final void clearCaches() {
 		cachedResults.clear();
 	}
 
-	public void evictFromCache(String symbol) {
+	public final void evictFromCache(String symbol) {
 		if (log.isTraceEnabled()) {
 			log.trace("Evicting cached candles of {}", symbol);
 		}
@@ -221,28 +114,6 @@ public class CandleRepository {
 		if (candles != null) {
 			candles.clear();
 		}
-	}
-
-	public String narrowQueryToTimeInterval(String query, Long from, Long to) {
-		if (from != null || to != null) {
-			query += " AND ";
-
-			if (from != null) {
-				query += "open_time >= " + from;
-			}
-
-			if (to != null) {
-				if (from != null) {
-					query += " AND ";
-				}
-				query += "close_time <= " + to;
-			}
-		}
-		return query;
-	}
-
-	public String narrowQueryToTimeInterval(String query, Instant from, Instant to) {
-		return narrowQueryToTimeInterval(query, from == null ? null : from.toEpochMilli(), to == null ? null : to.toEpochMilli());
 	}
 
 	protected Enumeration<Candle> getCachedResults(String symbol, String query, Instant from, Instant to) {
@@ -278,12 +149,12 @@ public class CandleRepository {
 		return new ArrayList<>((int) cacheSize);
 	}
 
-	public Enumeration<Candle> iterate(String symbol, Instant from, Instant to, boolean cache) {
-		String query = buildCandleQuery(symbol);
-		query = narrowQueryToTimeInterval(query, from, to);
-		query += " ORDER BY open_time";
+	abstract String buildCandleQuery(String symbol, Instant from, Instant to);
 
+	public final Enumeration<Candle> iterate(String symbol, Instant from, Instant to, boolean cache) {
 		Collection<Candle> out;
+
+		String query = buildCandleQuery(symbol, from, to);
 
 		if (cache) {
 			Enumeration<Candle> cached = getCachedResults(symbol, query, from, to);
@@ -310,59 +181,20 @@ public class CandleRepository {
 		return executeQuery(symbol, query, from, to, out);
 	}
 
-	long count(String query, Object... params) {
-		Long result = db().queryForObject(query, params, Long.class);
-		if (result == null) {
-			return 0;
-		}
-		return result;
-	}
-
-	public Set<String> getKnownSymbols() {
-		return new TreeSet<>(db().queryForList("SELECT DISTINCT symbol FROM candle", String.class));
-	}
-
 	public final long countCandles(String symbol, Instant from, Instant to) {
 		String key = symbol + toMs(from) + "_" + toMs(to);
 		return candleCounts.computeIfAbsent(key, (k) -> performCandleCounting(symbol, from, to));
 	}
 
-	private Long toMs(Instant instant) {
+	protected abstract long performCandleCounting(String symbol, Instant from, Instant to);
+
+	public abstract Set<String> getKnownSymbols();
+
+	final Long toMs(Instant instant) {
 		if (instant == null) {
 			return 0L;
 		}
 		return instant.toEpochMilli();
 	}
 
-	protected long performCandleCounting(String symbol, Instant from, Instant to) {
-		String query = "SELECT COUNT(*) FROM candle WHERE symbol = ?";
-		query = narrowQueryToTimeInterval(query, from, to);
-		return count(query, symbol);
-	}
-
-	public long countCandles(String symbol) {
-		return countCandles(symbol, null, null);
-	}
-
-	public Candle lastCandle(String symbol) {
-		return loadCandle(symbol, "DESC");
-	}
-
-	public Candle firstCandle(String symbol) {
-		return loadCandle(symbol, "ASC");
-	}
-
-	private Candle loadCandle(String symbol, String ordering) {
-		String query = buildCandleQuery(symbol);
-		query += " ORDER BY close_time " + ordering + " LIMIT 1";
-		try {
-			return db().queryForObject(query, CANDLE_MAPPER);
-		} catch (EmptyResultDataAccessException e) {
-			return null;
-		}
-	}
-
-	public PreciseCandle lastFullCandle(String symbol) {
-		return fullCandles.remove(symbol);
-	}
 }

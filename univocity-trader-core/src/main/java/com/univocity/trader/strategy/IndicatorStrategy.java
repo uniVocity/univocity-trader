@@ -1,5 +1,6 @@
 package com.univocity.trader.strategy;
 
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.*;
 
@@ -28,9 +29,11 @@ public abstract class IndicatorStrategy extends IndicatorGroup implements Strate
 	 * @param candle the latest candle received from a live {@link com.univocity.trader.Exchange} or the trading history of a symbol
 	 *               (typically managed by {@link com.univocity.trader.simulation.SimulatedExchange}).
 	 *
+	 * @param context
+	 *
 	 * @return an indication to {@code BUY}, {@code SELL} or do nothing (i.e. {@code NEUTRAL}). Any other value will be ignored by the
 	 * {@link com.univocity.trader.account.Trader} that processes this {@link Signal}.
 	 */
-	public abstract Signal getSignal(Candle candle);
+	public abstract Signal getSignal(Candle candle, Context context);
 
 }

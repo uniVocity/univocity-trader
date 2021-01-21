@@ -1,5 +1,6 @@
 package com.univocity.trader.examples;
 
+import com.univocity.trader.account.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.*;
 import com.univocity.trader.indicators.base.*;
@@ -23,7 +24,7 @@ public class ExampleStrategy extends IndicatorStrategy {
 	}
 
 	@Override
-	public Signal getSignal(Candle candle) {
+	public Signal getSignal(Candle candle, Context context) {
 		if (candle.high < boll1h.getLowerBand()) { // price jumped below lower band on the 1 hour time frame
 			if (candle.low > boll5m.getLowerBand()) { // on the 5 minute time frame, the lowest price of the candle is above the lower band.
 				if (candle.close < boll5m.getMiddleBand()) { // still on the 5 minute time frame, the close price of the candle is under the middle band
