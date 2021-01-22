@@ -14,9 +14,9 @@ public class MarketHistory {
 
 	private static final Logger log = LoggerFactory.getLogger(MarketHistory.class);
 	public final String symbol;
-	private final DatabaseCandleRepository candleRepository;
+	private final CandleRepository candleRepository;
 
-	public MarketHistory(String symbol, DatabaseCandleRepository candleRepository) {
+	public MarketHistory(String symbol, CandleRepository candleRepository) {
 		this.symbol = symbol;
 		this.candleRepository = candleRepository;
 	}

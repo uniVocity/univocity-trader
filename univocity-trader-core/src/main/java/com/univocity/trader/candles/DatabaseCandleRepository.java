@@ -176,15 +176,11 @@ public class DatabaseCandleRepository extends CandleRepository {
 		return count(query, symbol);
 	}
 
-	public long countCandles(String symbol) {
-		return countCandles(symbol, null, null);
-	}
-
-	public Candle lastCandle(String symbol) {
+	public final Candle lastCandle(String symbol) {
 		return loadCandle(symbol, "DESC");
 	}
 
-	public Candle firstCandle(String symbol) {
+	public final Candle firstCandle(String symbol) {
 		return loadCandle(symbol, "ASC");
 	}
 

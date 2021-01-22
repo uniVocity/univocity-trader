@@ -2,9 +2,11 @@ package com.univocity.trader.candles;
 
 import com.univocity.parsers.common.*;
 import com.univocity.trader.utils.*;
+import org.apache.commons.io.input.*;
 import org.slf4j.*;
 
 import java.io.*;
+import java.nio.charset.*;
 import java.time.*;
 import java.util.*;
 
@@ -53,10 +55,14 @@ public class FileCandleRepository extends CandleRepository {
 
 	@Override
 	protected long loadCandles(String symbol, String query, Instant from, Instant to, Collection<Candle> out) {
-		AbstractParser<?> parser = prepareToParse(symbol, from, to, out);
+		AbstractParser<?> parser = null;
 		long count = 0;
-		final long end = to == null ? Long.MAX_VALUE : to.toEpochMilli();
+
 		try {
+			parser = prepareToParse(symbol, from, to, out);
+
+			final long end = to == null ? Long.MAX_VALUE : to.toEpochMilli();
+
 			String[] row;
 			while ((row = parser.parseNext()) != null) {
 				Candle candle = rowFormat.toCandle(row);
@@ -69,17 +75,27 @@ public class FileCandleRepository extends CandleRepository {
 				}
 			}
 		} finally {
-			parser.stopParsing();
+			if (parser != null) {
+				parser.stopParsing();
+			}
 		}
 
 		return count;
 	}
 
-	private AbstractParser<?> prepareToParse(String symbol, Instant from, Instant to, Collection<Candle> out) {
+	private AbstractParser<?> beginParsing(Reader input) {
 		AbstractParser<?> parser = rowFormat.createParser();
-
-		Reader input = repositoryDir.readEntry(symbol);
 		parser.beginParsing(input);
+		return parser;
+	}
+
+	private AbstractParser<?> beginParsing(String symbol) {
+		Reader input = repositoryDir.readEntry(symbol);
+		return beginParsing(input);
+	}
+
+	private AbstractParser<?> prepareToParse(String symbol, Instant from, Instant to, Collection<Candle> out) {
+		AbstractParser<?> parser = beginParsing(symbol);
 
 		if (from != null) {
 			long start = from.toEpochMilli();
@@ -101,5 +117,69 @@ public class FileCandleRepository extends CandleRepository {
 		}
 
 		return parser;
+	}
+
+	@Override
+	public Candle lastCandle(String symbol) {
+		File file = repositoryDir.entries().get(symbol);
+
+		AbstractParser<?> parser = null;
+		Candle candle = null;
+
+		try (ReversedLinesFileReader reader = new ReversedLinesFileReader(file, StandardCharsets.UTF_8)) {
+			String headerRow = "";
+			if (rowFormat.hasHeaders) {
+				parser = beginParsing(symbol);
+				parser.getContext().headers();
+				headerRow = parser.getContext().currentParsedContent();
+				parser.stopParsing();
+			}
+
+			String line;
+			do {
+				line = reader.readLine();
+				if (line != null) {
+					Reader input = new StringReader(headerRow + line);
+					if (parser == null) {
+						parser = rowFormat.createParser();
+					}
+					parser.beginParsing(input);
+					candle = firstCandle(parser);
+				}
+			} while (candle == null && line != null);
+		} catch (Exception e) {
+			log.warn("Error loading last candle of " + symbol + " from " + file);
+		} finally {
+			if (parser != null) {
+				parser.stopParsing();
+			}
+		}
+		return candle;
+	}
+
+	@Override
+	public Candle firstCandle(String symbol) {
+		AbstractParser<?> parser = null;
+		try {
+			parser = beginParsing(symbol);
+			return firstCandle(parser);
+		} finally {
+			if (parser != null) {
+				parser.stopParsing();
+			}
+		}
+	}
+
+	private Candle firstCandle(AbstractParser<?> parser) {
+		Candle candle = null;
+		String[] row;
+		do {
+			row = parser.parseNext();
+			if (row != null) {
+				candle = rowFormat.toCandle(row);
+			}
+		} while (candle == null && row != null);
+
+		return candle;
 	}
 }

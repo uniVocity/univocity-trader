@@ -181,6 +181,10 @@ public abstract class CandleRepository {
 		return executeQuery(symbol, query, from, to, out);
 	}
 
+	public final long countCandles(String symbol) {
+		return countCandles(symbol, null, null);
+	}
+
 	public final long countCandles(String symbol, Instant from, Instant to) {
 		String key = symbol + toMs(from) + "_" + toMs(to);
 		return candleCounts.computeIfAbsent(key, (k) -> performCandleCounting(symbol, from, to));
@@ -197,4 +201,7 @@ public abstract class CandleRepository {
 		return instant.toEpochMilli();
 	}
 
+	public abstract Candle lastCandle(String symbol);
+
+	public abstract Candle firstCandle(String symbol);
 }

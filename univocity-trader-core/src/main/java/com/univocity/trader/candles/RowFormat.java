@@ -15,7 +15,7 @@ public class RowFormat<T, F extends CommonParserSettings<?>> {
 	private static final Logger log = LoggerFactory.getLogger(RowFormat.class);
 
 	private ThreadLocal<SimpleDateFormat> dateTimeFormat;
-	private boolean hasHeaders = true;
+	boolean hasHeaders = true;
 
 	private T openDateTime;
 	private T closeDateTime;
@@ -130,7 +130,7 @@ public class RowFormat<T, F extends CommonParserSettings<?>> {
 					row.length == 7 ? Double.parseDouble(row[6]) : 0
 			);
 		} catch (Exception e) {
-			log.debug("Unable to parse candle data from row " + Arrays.toString(row), e);
+			log.debug("Unable to parse candle data from row {}: {}", Arrays.toString(row), e.getMessage());
 			return null;
 		}
 	}
