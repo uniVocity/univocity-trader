@@ -75,7 +75,7 @@ public abstract class CandleRepository {
 		final long start = System.currentTimeMillis();
 		Runnable readingProcess = () -> {
 			Thread.currentThread().setName(symbol + " candle reader");
-			log.debug("Executing SQL query: [{}]", query);
+			log.debug("Fetching candles with: [{}]", query);
 
 			long count = 0;
 			try {
@@ -135,7 +135,7 @@ public abstract class CandleRepository {
 					Thread.sleep(100);
 					cachedResult = cachedResults.get(symbol);
 				} catch (InterruptedException e) {
-					log.error("Error waiting for cached result of query " + query, e);
+					log.error("Error waiting for cached result for: " + query, e);
 					clearCaches();
 					Thread.currentThread().interrupt();
 				}

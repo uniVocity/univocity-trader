@@ -1,9 +1,9 @@
 package com.univocity.trader.simulation;
 
-import com.univocity.parsers.common.*;
 import com.univocity.parsers.csv.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.indicators.*;
+import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import java.io.*;
@@ -14,16 +14,16 @@ public class SignalRepository {
 	private static final Logger log = LoggerFactory.getLogger(SignalRepository.class);
 	private static final String[] HEADERS = {"OPEN_TIME", "CLOSE_TIME", "OPEN", "HIGH", "LOW", "CLOSE", "VOLUME", "SIGNAL"};
 
-	private final File outputDir;
+	private final RepositoryDir repositoryDir;
 	private final Map<String, Map<Candle, Signal>> signals = new ConcurrentHashMap<>();
 
 
-	public SignalRepository(File signalRepositoryDir) {
-		this.outputDir = signalRepositoryDir;
+	public SignalRepository(RepositoryDir repositoryDir) {
+		this.repositoryDir = repositoryDir;
 	}
 
 	public SignalRepository(String symbol, Reader input) {
-		outputDir = null;
+		this.repositoryDir = new RepositoryDir();
 		load(symbol, input);
 	}
 
@@ -32,20 +32,21 @@ public class SignalRepository {
 	}
 
 	public void save() {
-		if (outputDir == null) {
+		if (repositoryDir.isNotConfigured()) {
 			log.warn("Not saving any signals. No repository dir defined");
 			return;
 		}
-		log.info("Saving signals to repository dir: {}", outputDir);
+		log.info("Saving signals to repository dir: {}", repositoryDir);
 		CsvWriterSettings settings = new CsvWriterSettings();
 		settings.setHeaderWritingEnabled(true);
 		settings.setHeaders(HEADERS);
 
 		List<Thread> threads = new ArrayList<>();
 
+		Map<String, File> entries = repositoryDir.entries();
 		signals.forEach((symbol, v) ->
 				threads.add(new Thread(() -> {
-					File output = outputDir.toPath().resolve(symbol + ".csv").toFile();
+					File output = entries.get(symbol);
 					CsvWriter writer = new CsvWriter(output, "UTF-8", settings);
 					v.forEach((candle, signal) ->
 							writer.writeRow(
@@ -63,7 +64,7 @@ public class SignalRepository {
 				}))
 		);
 		runThreads(threads);
-		log.info("All signals saved to repository dir: {}", outputDir);
+		log.info("All signals saved to repository dir: {}", repositoryDir);
 	}
 
 	public void load(String symbol, Reader input) {
@@ -72,24 +73,16 @@ public class SignalRepository {
 	}
 
 	public void load() {
-		if (outputDir == null) {
+		if (repositoryDir.isNotConfigured()) {
 			throw new IllegalStateException("Can't load signals. No repository dir defined");
 		}
-		log.info("Loading signals from repository dir: {}", outputDir);
+		log.info("Loading signals from repository dir: {}", repositoryDir);
 
 		List<Thread> threads = new ArrayList<>();
-
-		outputDir.toPath().forEach(p -> {
-			if (p.endsWith(".csv")) {
-				String filename = p.getFileName().toString();
-				String symbol = filename.substring(0, filename.length() - 4);
-				Reader input = ArgumentUtils.newReader(p.toFile(), "UTF-8");
-				threads.add(new Thread(() -> parseInput(symbol, input)));
-			}
-		});
+		repositoryDir.readEntries().forEach((symbol, input) -> threads.add(new Thread(() -> parseInput(symbol, input))));
 
 		runThreads(threads);
-		log.info("All signals loaded from repository dir: {}", outputDir);
+		log.info("All signals loaded from repository dir: {}", repositoryDir);
 	}
 
 	private void parseInput(String symbol, Reader reader) {

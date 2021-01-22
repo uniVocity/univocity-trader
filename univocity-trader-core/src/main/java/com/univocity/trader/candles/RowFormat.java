@@ -1,0 +1,250 @@
+package com.univocity.trader.candles;
+
+import com.univocity.parsers.common.*;
+import com.univocity.parsers.csv.*;
+import com.univocity.parsers.fixed.*;
+import com.univocity.parsers.tsv.*;
+import com.univocity.trader.candles.builders.*;
+
+import java.text.*;
+import java.util.*;
+
+public class RowFormat<T, F extends CommonParserSettings<?>> {
+
+	private ThreadLocal<SimpleDateFormat> dateTimeFormat;
+	private boolean hasHeaders = true;
+
+	private T openDateTime;
+	private T closeDateTime;
+	private T open;
+	private T high;
+	private T low;
+	private T close;
+	private T volume;
+
+	private final F parserSettings;
+
+	private RowFormat(F inputFormat) {
+		this.parserSettings = inputFormat;
+	}
+
+	public static <T> ColumnSelectionType<CsvParserSettings> csv() {
+		return new Builder<T, CsvParserSettings>(new RowFormat<>(new CsvParserSettings()));
+	}
+
+	public static <T> ColumnSelectionType<TsvParserSettings> tsv() {
+		return new Builder<T, TsvParserSettings>(new RowFormat<>(new TsvParserSettings()));
+	}
+
+	public static <T> ColumnSelectionType<FixedWidthParserSettings> fixedWidth(FixedWidthFields fixedWidthFields) {
+		return new Builder<>(new RowFormat<>(new FixedWidthParserSettings(fixedWidthFields)));
+	}
+
+	public F parserConfiguration() {
+		return parserSettings;
+	}
+
+	AbstractParser<?> createParser() {
+		setupParserSettings();
+		if (parserSettings instanceof CsvParserSettings) {
+			return new CsvParser((CsvParserSettings) parserSettings);
+		} else if (parserSettings instanceof TsvParserSettings) {
+			return new TsvParser((TsvParserSettings) parserSettings);
+		} else if (parserSettings instanceof FixedWidthParserSettings) {
+			return new FixedWidthParser((FixedWidthParserSettings) parserSettings);
+		}
+		throw new IllegalStateException("Can't create parser for settings: " + parserSettings);
+	}
+
+	private void setupParserSettings() {
+		parserSettings.setReadInputOnSeparateThread(false);
+
+		if (parserSettings instanceof CsvParserSettings) {
+			CsvParserSettings settings = ((CsvParserSettings) parserSettings);
+			settings.detectFormatAutomatically();
+		} else {
+			parserSettings.setLineSeparatorDetectionEnabled(true);
+		}
+
+		parserSettings.setHeaderExtractionEnabled(hasHeaders);
+
+		if (closeDateTime == null) {
+			closeDateTime = openDateTime;
+		}
+		if (open == null) {
+			open = close;
+		}
+		if (high == null) {
+			high = close;
+		}
+		if (low == null) {
+			low = close;
+		}
+
+		List<T> columns = asList(openDateTime, closeDateTime, open, high, low, close, volume);
+		if (close instanceof String) {
+			String[] headers = columns.toArray(new String[0]);
+			parserSettings.selectFields(headers);
+		} else {
+			Integer[] indexes = columns.toArray(new Integer[0]);
+			parserSettings.selectIndexes(indexes);
+		}
+		parserSettings.setColumnReorderingEnabled(true);
+	}
+
+	private List<T> asList(T... elements) {
+		List<T> out = new ArrayList<>(elements.length);
+		for (T e : elements) {
+			if (e != null) {
+				out.add(e);
+			}
+		}
+		return out;
+	}
+
+	Candle toCandle(String[] row) {
+		long openTime;
+		long closeTime;
+
+		if (dateTimeFormat == null) {
+			openTime = Long.parseLong(row[0]);
+			closeTime = Long.parseLong(row[1]);
+		} else {
+			try {
+				SimpleDateFormat format = dateTimeFormat.get();
+				openTime = format.parse(row[0]).getTime();
+				closeTime = format.parse(row[1]).getTime();
+			} catch (ParseException e) {
+				throw new IllegalStateException("Unable to parse date/time from row " + Arrays.toString(row), e);
+			}
+		}
+
+		return new Candle(
+				openTime,
+				closeTime,
+				Double.parseDouble(row[2]),
+				Double.parseDouble(row[3]),
+				Double.parseDouble(row[4]),
+				Double.parseDouble(row[5]),
+				row.length == 7 ? Double.parseDouble(row[6]) : 0
+		);
+	}
+
+	public static class Builder<T, F extends CommonParserSettings<?>> implements
+			ColumnSelectionType<F>, HeaderConfig<T, F>, DateTimeFormat<T, F>, OpenDateTime<T, F>, CloseDateTime<T, F>,
+			OpeningPrice<T, F>, HighestPrice<T, F>, LowestPrice<T, F>, ClosingPrice<T, F>, Volume<T, F>, Build<T, F> {
+
+		private final RowFormat<T, F> rowFormat;
+
+		private Builder(RowFormat<T, F> rowFormat) {
+			this.rowFormat = rowFormat;
+		}
+
+		@Override
+		public HeaderConfig<Integer, F> selectColumnsByIndex() {
+			return (Builder<Integer, F>) this;
+		}
+
+		@Override
+		public HeaderConfig<String, F> selectColumnsByName() {
+			return (Builder<String, F>) this;
+		}
+
+		@Override
+		public DateTimeFormat<T, F> withHeaderRow() {
+			rowFormat.hasHeaders = true;
+			return this;
+		}
+
+		@Override
+		public DateTimeFormat<T, F> noHeaderRow() {
+			rowFormat.hasHeaders = false;
+			return this;
+		}
+
+		@Override
+		public OpenDateTime<T, F> dateAndTimePattern(String pattern) {
+			rowFormat.dateTimeFormat = pattern == null ? null : ThreadLocal.withInitial(() -> new SimpleDateFormat(pattern));
+			return this;
+		}
+
+		@Override
+		public OpenDateTime<T, F> dateAndTimeInMillis() {
+			rowFormat.dateTimeFormat = null;
+			return this;
+		}
+
+		@Override
+		public CloseDateTime<T, F> openDateTime(T column) {
+			rowFormat.openDateTime = column;
+			return this;
+		}
+
+		@Override
+		public OpeningPrice<T, F> closeDateTime(T column) {
+			rowFormat.closeDateTime = column;
+			return this;
+		}
+
+		@Override
+		public OpeningPrice<T, F> noCloseDateTime() {
+			return this;
+		}
+
+		@Override
+		public HighestPrice<T, F> openingPrice(T column) {
+			rowFormat.open = column;
+			return this;
+		}
+
+		@Override
+		public HighestPrice<T, F> noOpeningPrice() {
+			return this;
+		}
+
+		@Override
+		public LowestPrice<T, F> highestPrice(T column) {
+			rowFormat.high = column;
+			return this;
+		}
+
+		@Override
+		public LowestPrice<T, F> noHighestPrice() {
+			return this;
+		}
+
+		@Override
+		public ClosingPrice<T, F> lowestPrice(T column) {
+			rowFormat.low = column;
+			return this;
+		}
+
+		@Override
+		public ClosingPrice<T, F> noLowestPrice() {
+			return this;
+		}
+
+		@Override
+		public Volume<T, F> closingPrice(T column) {
+			rowFormat.close = column;
+			return this;
+		}
+
+		@Override
+		public Build<T, F> volume(T column) {
+			rowFormat.volume = column;
+			return this;
+		}
+
+		@Override
+		public Build<T, F> noVolume() {
+			return this;
+		}
+
+		@Override
+		public RowFormat<T, F> build() {
+			return rowFormat;
+		}
+	}
+}
+

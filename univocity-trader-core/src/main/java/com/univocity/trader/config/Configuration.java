@@ -1,6 +1,7 @@
 package com.univocity.trader.config;
 
 import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.utils.*;
 
 import java.io.*;
 import java.nio.file.*;
@@ -22,7 +23,7 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	private boolean updateHistoryBeforeLiveTrading = true;
 	private boolean pollCandles = true;
 	private Period warmUpPeriod;
-	private File signalRepositoryDir;
+	private final RepositoryDir signalRepositoryDir = new RepositoryDir();
 
 
 	protected Configuration() {
@@ -143,28 +144,17 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 		return (C) this;
 	}
 
-	public File signalRepositoryDir() {
+	public RepositoryDir signalRepositoryDir() {
 		return signalRepositoryDir;
 	}
 
 	public C signalRepositoryDir(File signalRepositoryDir) {
-		if (signalRepositoryDir != null) {
-			if (!signalRepositoryDir.exists()) {
-				if(!signalRepositoryDir.mkdirs()){
-					throw new IllegalArgumentException("Can't create signal repository directory: " + signalRepositoryDir.getAbsolutePath());
-				}
-			} else if(!signalRepositoryDir.isDirectory()){
-				throw new IllegalArgumentException("Signal repository path is not a directory: " + signalRepositoryDir.getAbsolutePath());
-			}
-			this.signalRepositoryDir = signalRepositoryDir;
-		}
+		this.signalRepositoryDir.set(signalRepositoryDir);
 		return (C) this;
 	}
 
-	public C signalRepositoryDir(Path historySnapshotDir) {
-		if (historySnapshotDir != null) {
-			signalRepositoryDir(historySnapshotDir.toFile());
-		}
+	public C signalRepositoryDir(Path signalRepositoryDir) {
+		this.signalRepositoryDir.set(signalRepositoryDir);
 		return (C) this;
 	}
 }
