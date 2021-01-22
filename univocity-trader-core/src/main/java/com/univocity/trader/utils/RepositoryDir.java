@@ -20,11 +20,11 @@ public class RepositoryDir {
 		set(signalRepositoryDir);
 	}
 
-	public boolean isNotConfigured(){
+	public boolean isNotConfigured() {
 		return !isConfigured();
 	}
 
-	public boolean isConfigured(){
+	public boolean isConfigured() {
 		return directory != null;
 	}
 
@@ -53,13 +53,18 @@ public class RepositoryDir {
 
 	public Map<String, File> entries() {
 		Map<String, File> out = new TreeMap<>();
-		directory.toPath().forEach(p -> {
-			if (p.toString().toLowerCase().endsWith(".csv")) {
-				String filename = p.getFileName().toString();
+
+		File[] files = directory.listFiles();
+		if (files == null) {
+			return out;
+		}
+		for (File file : files) {
+			if (file.toString().toLowerCase().endsWith(".csv")) {
+				String filename = file.getName();
 				String symbol = filename.substring(0, filename.length() - 4);
-				out.put(symbol, p.toFile());
+				out.put(symbol, file);
 			}
-		});
+		}
 		return out;
 	}
 

@@ -18,7 +18,7 @@ public class FileCandleRepository extends CandleRepository {
 	private final RowFormat<?, ?> rowFormat;
 
 
-	private FileCandleRepository(RepositoryDir repositoryDir, RowFormat<?, ?> rowFormat) {
+	FileCandleRepository(RepositoryDir repositoryDir, RowFormat<?, ?> rowFormat) {
 		this.repositoryDir = repositoryDir;
 		this.rowFormat = rowFormat;
 	}
@@ -59,10 +59,13 @@ public class FileCandleRepository extends CandleRepository {
 		try {
 			String[] row;
 			while ((row = parser.parseNext()) != null) {
-				Candle candle = storeCandle(row, symbol, from, to, out);
-				count++;
-				if (candle.closeTime >= end) {
-					break;
+				Candle candle = rowFormat.toCandle(row);
+				if (candle != null) {
+					storeCandle(symbol, from, to, out, candle);
+					count++;
+					if (candle.closeTime >= end) {
+						break;
+					}
 				}
 			}
 		} finally {
@@ -81,24 +84,22 @@ public class FileCandleRepository extends CandleRepository {
 		if (from != null) {
 			long start = from.toEpochMilli();
 			long open = 0;
-			String[] row = null;
 
+			Candle candle = null;
+
+			String[] row;
 			while (open < start && (row = parser.parseNext()) != null) {
-				Candle candle = rowFormat.toCandle(row);
-				open = candle.openTime;
+				candle = rowFormat.toCandle(row);
+				if (candle != null) {
+					open = candle.openTime;
+				}
 			}
 
-			if (out != null && row != null) {
-				storeCandle(row, symbol, from, to, out);
+			if (out != null && candle != null) {
+				storeCandle(symbol, from, to, out, candle);
 			}
 		}
 
 		return parser;
-	}
-
-	private Candle storeCandle(String[] row, String symbol, Instant from, Instant to, Collection<Candle> out) {
-		Candle candle = rowFormat.toCandle(row);
-		storeCandle(symbol, from, to, out, candle);
-		return candle;
 	}
 }

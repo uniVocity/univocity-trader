@@ -5,11 +5,14 @@ import com.univocity.parsers.csv.*;
 import com.univocity.parsers.fixed.*;
 import com.univocity.parsers.tsv.*;
 import com.univocity.trader.candles.builders.*;
+import org.slf4j.*;
 
 import java.text.*;
 import java.util.*;
 
 public class RowFormat<T, F extends CommonParserSettings<?>> {
+
+	private static final Logger log = LoggerFactory.getLogger(RowFormat.class);
 
 	private ThreadLocal<SimpleDateFormat> dateTimeFormat;
 	private boolean hasHeaders = true;
@@ -103,31 +106,33 @@ public class RowFormat<T, F extends CommonParserSettings<?>> {
 	}
 
 	Candle toCandle(String[] row) {
-		long openTime;
-		long closeTime;
+		try {
+			long openTime;
+			long closeTime;
 
-		if (dateTimeFormat == null) {
-			openTime = Long.parseLong(row[0]);
-			closeTime = Long.parseLong(row[1]);
-		} else {
-			try {
+			if (dateTimeFormat == null) {
+				openTime = Long.parseLong(row[0]);
+				closeTime = Long.parseLong(row[1]);
+			} else {
+
 				SimpleDateFormat format = dateTimeFormat.get();
 				openTime = format.parse(row[0]).getTime();
 				closeTime = format.parse(row[1]).getTime();
-			} catch (ParseException e) {
-				throw new IllegalStateException("Unable to parse date/time from row " + Arrays.toString(row), e);
 			}
-		}
 
-		return new Candle(
-				openTime,
-				closeTime,
-				Double.parseDouble(row[2]),
-				Double.parseDouble(row[3]),
-				Double.parseDouble(row[4]),
-				Double.parseDouble(row[5]),
-				row.length == 7 ? Double.parseDouble(row[6]) : 0
-		);
+			return new Candle(
+					openTime,
+					closeTime,
+					Double.parseDouble(row[2]),
+					Double.parseDouble(row[3]),
+					Double.parseDouble(row[4]),
+					Double.parseDouble(row[5]),
+					row.length == 7 ? Double.parseDouble(row[6]) : 0
+			);
+		} catch (Exception e) {
+			log.debug("Unable to parse candle data from row " + Arrays.toString(row), e);
+			return null;
+		}
 	}
 
 	public static class Builder<T, F extends CommonParserSettings<?>> implements
