@@ -7,6 +7,7 @@ import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -17,6 +18,14 @@ public class SignalRepository {
 	private final RepositoryDir repositoryDir;
 	private final Map<String, Map<Candle, Signal>> signals = new ConcurrentHashMap<>();
 
+
+	public SignalRepository(File repositoryDir) {
+		this(new RepositoryDir(repositoryDir));
+	}
+
+	public SignalRepository(Path repositoryDir) {
+		this(new RepositoryDir(repositoryDir));
+	}
 
 	public SignalRepository(RepositoryDir repositoryDir) {
 		this.repositoryDir = repositoryDir;

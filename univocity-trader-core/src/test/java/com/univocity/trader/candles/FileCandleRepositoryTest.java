@@ -1,39 +1,19 @@
 package com.univocity.trader.candles;
 
-import com.univocity.parsers.csv.*;
+import com.univocity.trader.simulation.*;
 import com.univocity.trader.utils.*;
 import org.junit.*;
 
-import java.net.*;
-import java.nio.file.*;
 import java.util.*;
 
 import static org.junit.Assert.*;
 
 public class FileCandleRepositoryTest {
 
+
 	@Test
-	public void testCandleLoadingProcess() throws Exception {
-		RowFormat<String, CsvParserSettings> rowFormat = RowFormat.csv()
-				.selectColumnsByName()
-				.withHeaderRow()
-				.dateAndTimePattern("yyyy-MM-dd")
-				.openDateTime("Date")
-				.noCloseDateTime()
-				.openingPrice("Open")
-				.highestPrice("High")
-				.lowestPrice("Low")
-				.closingPrice("Adj Close")
-				.volume("Volume")
-				.build();
-
-		URL dataDir = FileCandleRepositoryTest.class.getResource("data");
-		if (dataDir == null) {
-			dataDir = FileCandleRepositoryTest.class.getResource("/data");
-		}
-		Path path = Paths.get(dataDir.toURI());
-
-		FileCandleRepository repository = new FileCandleRepository(new RepositoryDir(path), rowFormat);
+	public void testCandleLoadingProcess() {
+		FileCandleRepository repository = new FileCandleRepository(new RepositoryDir(FileBasedSimulation.pathToRepositoryDir()), FileBasedSimulation.csvFileFormat());
 
 		Enumeration<Candle> candles = repository.iterate("BTC-USD", null, null, false);
 		Candle first = null;

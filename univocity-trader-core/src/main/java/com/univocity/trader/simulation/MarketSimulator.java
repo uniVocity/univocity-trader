@@ -24,7 +24,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 	private static final Logger log = LoggerFactory.getLogger(MarketSimulator.class);
 
 	private final Supplier<Exchange<?, A>> exchangeSupplier;
-	private DatabaseCandleRepository candleRepository;
+	private CandleRepository candleRepository;
 	private ExecutorService executor;
 
 	protected MarketSimulator(C configuration, Supplier<Exchange<?, A>> exchangeSupplier) {
@@ -37,8 +37,13 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		resetBalances();
 	}
 
-	protected DatabaseCandleRepository createCandleRepository() {
-		return new DatabaseCandleRepository(configure().database());
+	protected CandleRepository createCandleRepository() {
+		FileRepositoryConfiguration fileRepository = configure().fileRepository();
+		if (fileRepository.isConfigured()) {
+			return new FileCandleRepository(fileRepository.dir(), fileRepository.rowFormat());
+		} else {
+			return new DatabaseCandleRepository(configure().database());
+		}
 	}
 
 	@Override
@@ -292,7 +297,7 @@ public abstract class MarketSimulator<C extends Configuration<C, A>, A extends A
 		long startTime;
 	}
 
-	public final DatabaseCandleRepository getCandleRepository() {
+	public final CandleRepository getCandleRepository() {
 		if (candleRepository == null) {
 			candleRepository = createCandleRepository();
 		}

@@ -4,6 +4,7 @@ import com.univocity.trader.account.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.simulation.local.*;
+import com.univocity.trader.utils.*;
 
 import java.io.*;
 import java.time.*;

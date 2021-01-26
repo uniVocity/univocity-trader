@@ -9,6 +9,7 @@ import org.slf4j.*;
 
 import java.text.*;
 import java.util.*;
+import java.util.function.*;
 
 public class RowFormat<T, F extends CommonParserSettings<?>> {
 
@@ -32,15 +33,27 @@ public class RowFormat<T, F extends CommonParserSettings<?>> {
 	}
 
 	public static <T> ColumnSelectionType<CsvParserSettings> csv() {
-		return new Builder<T, CsvParserSettings>(new RowFormat<>(new CsvParserSettings()));
+		return csv(null);
+	}
+
+	public static <T> ColumnSelectionType<CsvParserSettings> csv(Consumer<RowFormat<T, CsvParserSettings>> onBuild) {
+		return new Builder<>(new RowFormat<>(new CsvParserSettings()), onBuild);
 	}
 
 	public static <T> ColumnSelectionType<TsvParserSettings> tsv() {
-		return new Builder<T, TsvParserSettings>(new RowFormat<>(new TsvParserSettings()));
+		return tsv(null);
+	}
+
+	public static <T> ColumnSelectionType<TsvParserSettings> tsv(Consumer<RowFormat<T, TsvParserSettings>> onBuild) {
+		return new Builder<>(new RowFormat<>(new TsvParserSettings()), onBuild);
 	}
 
 	public static <T> ColumnSelectionType<FixedWidthParserSettings> fixedWidth(FixedWidthFields fixedWidthFields) {
-		return new Builder<>(new RowFormat<>(new FixedWidthParserSettings(fixedWidthFields)));
+		return fixedWidth(fixedWidthFields, null);
+	}
+
+	public static <T> ColumnSelectionType<FixedWidthParserSettings> fixedWidth(FixedWidthFields fixedWidthFields, Consumer<RowFormat<T, FixedWidthParserSettings>> onBuild) {
+		return new Builder<>(new RowFormat<>(new FixedWidthParserSettings(fixedWidthFields)), onBuild);
 	}
 
 	public F parserConfiguration() {
@@ -140,9 +153,11 @@ public class RowFormat<T, F extends CommonParserSettings<?>> {
 			OpeningPrice<T, F>, HighestPrice<T, F>, LowestPrice<T, F>, ClosingPrice<T, F>, Volume<T, F>, Build<T, F> {
 
 		private final RowFormat<T, F> rowFormat;
+		private final Consumer<RowFormat<T, F>> onBuild;
 
-		private Builder(RowFormat<T, F> rowFormat) {
+		private Builder(RowFormat<T, F> rowFormat, Consumer<RowFormat<T, F>> onBuild) {
 			this.rowFormat = rowFormat;
+			this.onBuild = onBuild;
 		}
 
 		@Override
@@ -151,7 +166,7 @@ public class RowFormat<T, F extends CommonParserSettings<?>> {
 		}
 
 		@Override
-		public HeaderConfig<String, F> selectColumnsByName() {
+		public DateTimeFormat<String, F> selectColumnsByName() {
 			return (Builder<String, F>) this;
 		}
 
@@ -248,6 +263,9 @@ public class RowFormat<T, F extends CommonParserSettings<?>> {
 
 		@Override
 		public RowFormat<T, F> build() {
+			if (onBuild != null) {
+				onBuild.accept(rowFormat);
+			}
 			return rowFormat;
 		}
 	}

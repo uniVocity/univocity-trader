@@ -6,6 +6,8 @@ import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static com.univocity.trader.utils.RepositoryDir.*;
+
 public abstract class CandleRepository {
 	private static final Logger log = LoggerFactory.getLogger(CandleRepository.class);
 
@@ -15,6 +17,8 @@ public abstract class CandleRepository {
 	public CandleRepository() {
 
 	}
+
+	public abstract boolean isWritingSupported();
 
 	public abstract boolean addToHistory(String symbol, PreciseCandle tick, boolean initializing);
 
@@ -69,7 +73,12 @@ public abstract class CandleRepository {
 
 	protected abstract long loadCandles(String symbol, String query, Instant from, Instant to, Collection<Candle> out);
 
-	protected Enumeration<Candle> executeQuery(String symbol, String query, Instant from, Instant to, Collection<Candle> out) {
+	public static String cleanSymbol(String symbol) {
+		return symbol.replaceAll("[^A-Za-z0-9]", "");
+	}
+
+	protected Enumeration<Candle> executeQuery(String symbl, String query, Instant from, Instant to, Collection<Candle> out) {
+		String symbol = cleanSymbol(symbl);
 		boolean[] ended = new boolean[]{false};
 
 		final long start = System.currentTimeMillis();

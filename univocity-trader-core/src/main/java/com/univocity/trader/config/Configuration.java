@@ -16,6 +16,7 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	private final ConfigurationManager<C> manager;
 
 	private final DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration();
+	private final FileRepositoryConfiguration fileRepositoryConfiguration = new FileRepositoryConfiguration();
 	private final EmailConfiguration emailConfiguration = new EmailConfiguration();
 	private final Simulation simulation = new Simulation();
 	final AccountList<T> accountList = new AccountList<T>(this::newAccountConfiguration);
@@ -73,6 +74,10 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 
 	public DatabaseConfiguration database() {
 		return databaseConfiguration;
+	}
+
+	public FileRepositoryConfiguration fileRepository() {
+		return fileRepositoryConfiguration;
 	}
 
 	public EmailConfiguration mailSender() {

@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 
 public final class Client<T> {
 
-	private DatabaseCandleRepository candleRepository;
+	private CandleRepository candleRepository;
 	private Exchange<T, ?> exchange;
 
 	private final Map<String, CandleProcessor<T>[]> candleProcessors = new ConcurrentHashMap<>();
@@ -40,7 +40,7 @@ public final class Client<T> {
 		return accountManager;
 	}
 
-	public void initialize(DatabaseCandleRepository candleRepository, Exchange<T, ?> exchange, SmtpMailSender mailSender) {
+	public void initialize(CandleRepository candleRepository, Exchange<T, ?> exchange, SmtpMailSender mailSender) {
 		if (accountManager.getAllSymbolPairs().isEmpty()) {
 			throw new IllegalStateException("No trade symbols defined for client " + accountManager.accountId());
 		}

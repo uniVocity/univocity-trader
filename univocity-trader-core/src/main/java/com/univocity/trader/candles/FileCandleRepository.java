@@ -20,9 +20,17 @@ public class FileCandleRepository extends CandleRepository {
 	private final RowFormat<?, ?> rowFormat;
 
 
-	FileCandleRepository(RepositoryDir repositoryDir, RowFormat<?, ?> rowFormat) {
+	public FileCandleRepository(RepositoryDir repositoryDir, RowFormat<?, ?> rowFormat) {
 		this.repositoryDir = repositoryDir;
 		this.rowFormat = rowFormat;
+	}
+
+	public RepositoryDir getRepositoryDir() {
+		return repositoryDir;
+	}
+
+	public RowFormat<?, ?> getRowFormat() {
+		return rowFormat;
 	}
 
 	@Override
@@ -155,6 +163,11 @@ public class FileCandleRepository extends CandleRepository {
 			}
 		}
 		return candle;
+	}
+
+	@Override
+	public boolean isWritingSupported() {
+		return false;
 	}
 
 	@Override

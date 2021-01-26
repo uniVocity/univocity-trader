@@ -6,6 +6,8 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
+import static com.univocity.trader.candles.CandleRepository.*;
+
 public class RepositoryDir {
 	private File directory;
 
@@ -62,6 +64,7 @@ public class RepositoryDir {
 			if (file.toString().toLowerCase().endsWith(".csv")) {
 				String filename = file.getName();
 				String symbol = filename.substring(0, filename.length() - 4);
+				symbol = cleanSymbol(symbol);
 				out.put(symbol, file);
 			}
 		}
@@ -69,7 +72,11 @@ public class RepositoryDir {
 	}
 
 	public Reader readEntry(String name) {
-		return readEntry(entries().get(name));
+		File file = entries().get(name);
+		if (file == null) {
+			throw new IllegalArgumentException("No file for '" + name + "' under directory '" + directory.getAbsolutePath() + "'. Available names: " + entries().keySet());
+		}
+		return readEntry(file);
 	}
 
 	private Reader readEntry(File file) {

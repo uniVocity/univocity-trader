@@ -47,7 +47,7 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 
 	/**
 	 * Returns historical candles/ticks for a given symbol at the given time interval, for a given time period. Used to populate
-	 * the local database managed by {@link DatabaseCandleRepository} for backtesting and {@link Strategy} development. If the live exchange
+	 * the local database managed by {@link CandleRepository} for backtesting and {@link Strategy} development. If the live exchange
 	 * limits the number of candles returned at once, that limit should be respected, and the interval given by
 	 * {@code startTime} or {@code endTime} can be shortened internally.
 	 *

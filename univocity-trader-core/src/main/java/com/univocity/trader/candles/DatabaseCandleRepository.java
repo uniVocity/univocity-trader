@@ -43,6 +43,11 @@ public class DatabaseCandleRepository extends CandleRepository {
 		return query;
 	}
 
+	@Override
+	public boolean isWritingSupported() {
+		return true;
+	}
+
 	private PreparedStatement prepareInsert(PreparedStatement ps, String symbol, PreciseCandle tick) throws SQLException {
 		ps.setObject(1, symbol);
 		ps.setObject(2, tick.openTime);

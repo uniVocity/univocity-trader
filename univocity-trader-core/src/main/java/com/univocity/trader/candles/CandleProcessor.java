@@ -10,10 +10,10 @@ public final class CandleProcessor<T> {
 
 	private final Engine consumer;
 	private final Exchange exchange;
-	private final DatabaseCandleRepository candleRepository;
+	private final CandleRepository candleRepository;
 	private final boolean processFullCandlesOnly;
 
-	public CandleProcessor(DatabaseCandleRepository candleRepository, Engine consumer, Exchange<T, ?> exchange, boolean processFullCandlesOnly) {
+	public CandleProcessor(CandleRepository candleRepository, Engine consumer, Exchange<T, ?> exchange, boolean processFullCandlesOnly) {
 		this.candleRepository = candleRepository;
 		this.consumer = consumer;
 		this.exchange = exchange;
@@ -37,8 +37,8 @@ public final class CandleProcessor<T> {
 				}
 
 				Candle candle;
-				if (processFullCandlesOnly && !initializing) {
-					PreciseCandle fullCandle = candleRepository.lastFullCandle(consumer.getSymbol());
+				if (processFullCandlesOnly && !initializing && candleRepository.isWritingSupported()) {
+					PreciseCandle fullCandle = ((DatabaseCandleRepository)candleRepository).lastFullCandle(consumer.getSymbol());
 					if (fullCandle == null) {
 						return;
 					} else {

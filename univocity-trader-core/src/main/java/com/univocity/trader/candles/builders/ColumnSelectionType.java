@@ -6,7 +6,7 @@ import com.univocity.trader.candles.*;
 public interface ColumnSelectionType<F extends CommonParserSettings<?>> {
 	HeaderConfig<Integer, F> selectColumnsByIndex();
 
-	HeaderConfig<String, F> selectColumnsByName();
+	DateTimeFormat<String, F> selectColumnsByName();
 }
 
 

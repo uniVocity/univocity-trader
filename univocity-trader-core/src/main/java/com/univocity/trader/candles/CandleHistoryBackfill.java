@@ -16,7 +16,7 @@ import static com.univocity.trader.candles.Candle.*;
  */
 public final class CandleHistoryBackfill {
 
-	private static final Logger log = LoggerFactory.getLogger(DatabaseCandleRepository.class);
+	private static final Logger log = LoggerFactory.getLogger(CandleHistoryBackfill.class);
 	private final DatabaseCandleRepository candleRepository;
 	private boolean resumeBackfill = false;
 
@@ -83,7 +83,7 @@ public final class CandleHistoryBackfill {
 	}
 
 	private Instant resumeIfPossible(String symbol, Instant startingTime) {
-		if(resumeBackfill) {
+		if (resumeBackfill) {
 			Instant lastClose = resume(symbol);
 			if (lastClose != null) {
 				log.info("Resuming backfill process of symbol {} from {}", symbol, getFormattedDateTimeWithYear(lastClose.toEpochMilli()));
@@ -246,7 +246,7 @@ public final class CandleHistoryBackfill {
 
 		//all candles received are already in the database. Making a checkpoint so the backfill process can be
 		//interrupted and resume from there.
-		if(received > 0 && persisted == 0){
+		if (received > 0 && persisted == 0) {
 			// deleting then inserting on purpose to avoid using a database-specific function to update the
 			// timestamp is column `candle.ts`. This allows people to use the database they prefer.
 			var delete = "DELETE FROM candle WHERE symbol = ? AND open_time = ? AND close_time = ?";
