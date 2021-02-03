@@ -2,12 +2,16 @@ package com.univocity.trader.scenarios;
 
 import com.univocity.trader.account.*;
 import com.univocity.trader.config.*;
+import com.univocity.trader.notification.*;
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.simulation.local.*;
 import com.univocity.trader.utils.*;
+import org.junit.*;
 
 import java.io.*;
 import java.time.*;
+
+import static org.junit.Assert.*;
 
 public class MarketSimulation {
 
@@ -31,7 +35,8 @@ public class MarketSimulation {
 			"1532227380000,1532227439999,83.21,83.21,83.06,83.06,319.33566,SELL\n" +
 			"1532227440000,1532227499999,83.04,83.15,83.0,83.15,368.0443,BUY\n";
 
-	public static void main(String... args){
+	@Test
+	public void testMarketOrders(){
 		Strategy.Simulator simulator = Strategy.simulator();
 		//simulator.getCandleRepository()
 		SimulationAccount account = simulator.configure().account();
@@ -52,6 +57,14 @@ public class MarketSimulation {
 			}
 		});
 
+		simulator.configure().account().listeners().add(new OrderExecutionToLog());
+		simulator.configure().account().listeners().add(new OrderListener() {
+			@Override
+			public void simulationEnded(Trader trader, Client client) {
+				assertEquals(1225.636493, trader.totalFundsInReferenceCurrency(), 6);
+			}
+		});
+
 
 		Simulation simulation = simulator.configure().simulation();
 		simulation.initialFunds(1000.0)
@@ -64,5 +77,6 @@ public class MarketSimulation {
 
 //		execute simulation
 		simulator.run();
+
 	}
 }

@@ -15,7 +15,7 @@ public class FileCandleRepositoryTest {
 	public void testCandleLoadingProcess() {
 		FileCandleRepository repository = new FileCandleRepository(new RepositoryDir(FileBasedSimulation.pathToRepositoryDir()), FileBasedSimulation.csvFileFormat());
 
-		Enumeration<Candle> candles = repository.iterate("BTC-USD", null, null, false);
+		Enumeration<Candle> candles = repository.iterate("BTCUSD", null, null, false);
 		Candle first = null;
 		Candle last = null;
 		int count = 0;
@@ -40,11 +40,11 @@ public class FileCandleRepositoryTest {
 		assertNotNull(last);
 		assertEquals(lastStr, last.toString());
 
-		first = repository.firstCandle("BTC-USD");
+		first = repository.firstCandle("BTCUSD");
 		assertNotNull(first);
 		assertEquals(firstStr, first.toString());
 
-		last = repository.lastCandle("BTC-USD");
+		last = repository.lastCandle("BTCUSD");
 		assertNotNull(last);
 		assertEquals(lastStr, last.toString());
 	}

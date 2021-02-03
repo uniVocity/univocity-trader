@@ -208,14 +208,6 @@ public class Order extends OrderRequest implements Comparable<Order> {
 		return getStatus() == FILLED || getStatus() == Status.CANCELLED;
 	}
 
-	public boolean isMarket() {
-		return getType() == Type.MARKET;
-	}
-
-	public boolean isLimit() {
-		return getType() == Type.LIMIT;
-	}
-
 	public String print(long latestClose) {
 		StringBuilder description = new StringBuilder();
 

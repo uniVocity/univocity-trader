@@ -7,6 +7,7 @@ import java.util.function.*;
 
 import static com.univocity.trader.account.Order.Side.*;
 import static com.univocity.trader.account.Order.TriggerCondition.*;
+import static com.univocity.trader.account.Order.Type.*;
 
 public class OrderRequest {
 
@@ -23,7 +24,7 @@ public class OrderRequest {
 
 	private double price = 0.0;
 	private double quantity = 0.0;
-	private Order.Type type = Order.Type.LIMIT;
+	private Order.Type type = LIMIT;
 	private boolean active = true;
 
 	private List<OrderRequest> attachedRequests = null;
@@ -157,6 +158,14 @@ public class OrderRequest {
 
 	public final boolean isSell() {
 		return side == SELL;
+	}
+
+	public boolean isMarket() {
+		return getType() == MARKET;
+	}
+
+	public boolean isLimit() {
+		return getType() == LIMIT;
 	}
 
 	public void updateTime(long time) {
