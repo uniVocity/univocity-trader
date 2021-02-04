@@ -1,138 +1,133 @@
 package com.univocity.trader.exchange.binance.futures.model.market;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.univocity.trader.exchange.binance.futures.constant.BinanceApiConstants;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.math.BigDecimal;
-
+/**
+ * Kline/Candlestick bars for a symbol. Klines are uniquely identified by their open time.
+ */
+@JsonFormat(shape = JsonFormat.Shape.ARRAY)
+@JsonPropertyOrder()
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Candlestick {
 
-    private Long openTime;
+	protected Long openTime;
+	protected String open;
+	protected String high;
+	protected String low;
+	protected String close;
+	protected String volume;
+	protected Long closeTime;
+	protected String quoteAssetVolume;
+	protected Long numberOfTrades;
+	protected String takerBuyBaseAssetVolume;
+	protected String takerBuyQuoteAssetVolume;
 
-    private BigDecimal open;
+	public final Long getOpenTime() {
+		return openTime;
+	}
 
-    private BigDecimal high;
+	public final void setOpenTime(Long openTime) {
+		this.openTime = openTime;
+	}
 
-    private BigDecimal low;
+	public final String getOpen() {
+		return open;
+	}
 
-    private BigDecimal close;
+	public final void setOpen(String open) {
+		this.open = open;
+	}
 
-    private BigDecimal volume;
+	public final String getHigh() {
+		return high;
+	}
 
-    private Long closeTime;
+	public final void setHigh(String high) {
+		this.high = high;
+	}
 
-    private BigDecimal quoteAssetVolume;
+	public final String getLow() {
+		return low;
+	}
 
-    private Integer numTrades;
+	public final void setLow(String low) {
+		this.low = low;
+	}
 
-    private BigDecimal takerBuyBaseAssetVolume;
+	public final String getClose() {
+		return close;
+	}
 
-    private BigDecimal takerBuyQuoteAssetVolume;
+	public final void setClose(String close) {
+		this.close = close;
+	}
 
-    private BigDecimal ignore;
+	public final String getVolume() {
+		return volume;
+	}
 
-    public Long getOpenTime() {
-        return openTime;
-    }
+	public final void setVolume(String volume) {
+		this.volume = volume;
+	}
 
-    public void setOpenTime(Long openTime) {
-        this.openTime = openTime;
-    }
+	public final Long getCloseTime() {
+		return closeTime;
+	}
 
-    public BigDecimal getOpen() {
-        return open;
-    }
+	public final void setCloseTime(Long closeTime) {
+		this.closeTime = closeTime;
+	}
 
-    public void setOpen(BigDecimal open) {
-        this.open = open;
-    }
+	public final String getQuoteAssetVolume() {
+		return quoteAssetVolume;
+	}
 
-    public BigDecimal getHigh() {
-        return high;
-    }
+	public final void setQuoteAssetVolume(String quoteAssetVolume) {
+		this.quoteAssetVolume = quoteAssetVolume;
+	}
 
-    public void setHigh(BigDecimal high) {
-        this.high = high;
-    }
+	public final Long getNumberOfTrades() {
+		return numberOfTrades;
+	}
 
-    public BigDecimal getLow() {
-        return low;
-    }
+	public final void setNumberOfTrades(Long numberOfTrades) {
+		this.numberOfTrades = numberOfTrades;
+	}
 
-    public void setLow(BigDecimal low) {
-        this.low = low;
-    }
+	public final String getTakerBuyBaseAssetVolume() {
+		return takerBuyBaseAssetVolume;
+	}
 
-    public BigDecimal getClose() {
-        return close;
-    }
+	public final void setTakerBuyBaseAssetVolume(String takerBuyBaseAssetVolume) {
+		this.takerBuyBaseAssetVolume = takerBuyBaseAssetVolume;
+	}
 
-    public void setClose(BigDecimal close) {
-        this.close = close;
-    }
+	public final String getTakerBuyQuoteAssetVolume() {
+		return takerBuyQuoteAssetVolume;
+	}
 
-    public BigDecimal getVolume() {
-        return volume;
-    }
+	public final void setTakerBuyQuoteAssetVolume(String takerBuyQuoteAssetVolume) {
+		this.takerBuyQuoteAssetVolume = takerBuyQuoteAssetVolume;
+	}
 
-    public void setVolume(BigDecimal volume) {
-        this.volume = volume;
-    }
-
-    public Long getCloseTime() {
-        return closeTime;
-    }
-
-    public void setCloseTime(Long closeTime) {
-        this.closeTime = closeTime;
-    }
-
-    public BigDecimal getQuoteAssetVolume() {
-        return quoteAssetVolume;
-    }
-
-    public void setQuoteAssetVolume(BigDecimal quoteAssetVolume) {
-        this.quoteAssetVolume = quoteAssetVolume;
-    }
-
-    public Integer getNumTrades() {
-        return numTrades;
-    }
-
-    public void setNumTrades(Integer numTrades) {
-        this.numTrades = numTrades;
-    }
-
-    public BigDecimal getTakerBuyBaseAssetVolume() {
-        return takerBuyBaseAssetVolume;
-    }
-
-    public void setTakerBuyBaseAssetVolume(BigDecimal takerBuyBaseAssetVolume) {
-        this.takerBuyBaseAssetVolume = takerBuyBaseAssetVolume;
-    }
-
-    public BigDecimal getTakerBuyQuoteAssetVolume() {
-        return takerBuyQuoteAssetVolume;
-    }
-
-    public void setTakerBuyQuoteAssetVolume(BigDecimal takerBuyQuoteAssetVolume) {
-        this.takerBuyQuoteAssetVolume = takerBuyQuoteAssetVolume;
-    }
-
-    public BigDecimal getIgnore() {
-        return ignore;
-    }
-
-    public void setIgnore(BigDecimal ignore) {
-        this.ignore = ignore;
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("openTime", openTime)
-                .append("open", open).append("high", high).append("low", low).append("close", close)
-                .append("volume", volume).append("closeTime", closeTime).append("quoteAssetVolume", quoteAssetVolume)
-                .append("numTrades", numTrades).append("takerBuyBaseAssetVolume", takerBuyBaseAssetVolume)
-                .append("takerBuyQuoteAssetVolume", takerBuyQuoteAssetVolume).append("ignore", ignore).toString();
-    }
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
+				.append("openTime", openTime)
+				.append("open", open)
+				.append("high", high)
+				.append("low", low)
+				.append("close", close)
+				.append("volume", volume)
+				.append("closeTime", closeTime)
+				.append("quoteAssetVolume", quoteAssetVolume)
+				.append("numberOfTrades", numberOfTrades)
+				.append("takerBuyBaseAssetVolume", takerBuyBaseAssetVolume)
+				.append("takerBuyQuoteAssetVolume", takerBuyQuoteAssetVolume)
+				.toString();
+	}
 }

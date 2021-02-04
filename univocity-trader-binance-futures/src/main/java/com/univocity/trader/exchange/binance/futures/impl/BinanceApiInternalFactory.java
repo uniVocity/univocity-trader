@@ -4,6 +4,7 @@ import com.univocity.trader.exchange.binance.futures.RequestOptions;
 import com.univocity.trader.exchange.binance.futures.SubscriptionClient;
 import com.univocity.trader.exchange.binance.futures.SubscriptionOptions;
 import com.univocity.trader.exchange.binance.futures.SyncRequestClient;
+import org.asynchttpclient.AsyncHttpClient;
 
 import java.net.URI;
 
@@ -24,7 +25,8 @@ public final class BinanceApiInternalFactory {
         return new SyncRequestImpl(requestImpl);
     }
 
-    public SubscriptionClient createSubscriptionClient(String apiKey, String secretKey, SubscriptionOptions options) {
+    public SubscriptionClient createSubscriptionClient(String apiKey, String secretKey, AsyncHttpClient client) {
+        /*
         SubscriptionOptions subscriptionOptions = new SubscriptionOptions(options);
         RequestOptions requestOptions = new RequestOptions();
         try {
@@ -33,9 +35,9 @@ public final class BinanceApiInternalFactory {
         } catch (Exception e) {
 
         }
-        SubscriptionClient webSocketStreamClient = new WebSocketStreamClientImpl(apiKey, secretKey,
-                subscriptionOptions);
-        return webSocketStreamClient;
+        SubscriptionClient webSocketStreamClient = new WebSocketStreamClientImpl(apiKey, secretKey, subscriptionOptions);
+         */
+        return new WebSocketStreamClientImpl(apiKey, secretKey, client);
     }
 
 }
