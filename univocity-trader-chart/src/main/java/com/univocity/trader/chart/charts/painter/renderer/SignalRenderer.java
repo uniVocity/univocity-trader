@@ -15,11 +15,18 @@ public class SignalRenderer extends ObjectRenderer<String, AreaTheme> {
 
 	public SignalRenderer(String description, AreaTheme theme, Indicator indicator) {
 		super(description, theme, String[]::new, (c) -> generateSignal(indicator, c));
+		displayValue(false);
 	}
+
 
 	@Override
 	public double getValueAt(int i) {
 		return 0;
+	}
+
+	@Override
+	public Color getColorAt(int i) {
+		return null;
 	}
 
 	private static String generateSignal(Indicator indicator, Candle candle) {

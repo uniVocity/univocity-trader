@@ -39,7 +39,6 @@ public class DatabaseCandleRepository extends CandleRepository {
 	final String buildCandleQuery(String symbol, Instant from, Instant to) {
 		String query = "SELECT open_time, close_time, open, high, low, close, volume FROM candle WHERE symbol = '" + symbol + "'";
 		query = narrowQueryToTimeInterval(query, from, to);
-		query += " ORDER BY open_time";
 		return query;
 	}
 

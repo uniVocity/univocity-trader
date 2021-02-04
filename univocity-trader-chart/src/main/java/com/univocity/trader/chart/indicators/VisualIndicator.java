@@ -34,6 +34,7 @@ public class VisualIndicator extends AreaPainter {
 	private final Rectangle bounds;
 	final IndicatorDefinition config;
 	private int position = -1;
+	private Color[] colors = new Color[0];
 
 	private double[] values;
 	private Candle last;
@@ -259,10 +260,10 @@ public class VisualIndicator extends AreaPainter {
 				AreaRenderer a = new AreaRenderer(config.compose.description(), theme, renderers);
 				currentRenderers = new Renderer[]{a};
 			} else {
-
 				currentRenderers = renderers;
 			}
 			indicatorPainter = new CompositePainter(indicator.getClass().getSimpleName(), this, this::reset, this::process, currentRenderers);
+			colors = new Color[currentRenderers.length];
 		}
 		return indicatorPainter;
 	}
@@ -373,6 +374,10 @@ public class VisualIndicator extends AreaPainter {
 		return minimum;
 	}
 
+	public Color[] getCurrentSelectionColors() {
+		return colors;
+	}
+
 	public double[] getCurrentSelectionValues(int position) {
 		if (position < 0) {
 			return null;
@@ -381,6 +386,7 @@ public class VisualIndicator extends AreaPainter {
 			Renderer<?> r = currentRenderers[i];
 			if (r.displayValue()) {
 				values[c] = r.getValueAt(position);
+				colors[c] = r.getColorAt(position);
 				c++;
 			}
 		}

@@ -21,6 +21,8 @@ public interface Renderer<T extends Theme> {
 
 	double getValueAt(int i);
 
+	Color getColorAt(int i);
+
 	void paintNext(int i, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter);
 
 	void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, StringBuilder headerLine);

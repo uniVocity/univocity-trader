@@ -86,4 +86,11 @@ public class HistogramRenderer extends DoubleRenderer<HistogramTheme<?>> {
 	protected Color getSelectionFillColor(Color currentFillColor, double previousValue, double currentValue) {
 		return currentFillColor;
 	}
+
+	@Override
+	public final Color getColorAt(int i) {
+		double value = getValueAt(i);
+		return getFillColor(theme.getFillColor(value), getValueAt(i - 1), value);
+	}
 }
+

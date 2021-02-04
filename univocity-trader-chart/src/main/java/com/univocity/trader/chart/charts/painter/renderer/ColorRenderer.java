@@ -25,6 +25,11 @@ public class ColorRenderer extends ObjectRenderer<Color, Theme> {
 	}
 
 	@Override
+	public Color getColorAt(int i) {
+		return this.objectAt(i);
+	}
+
+	@Override
 	public void updateSelection(int i, Candle candle, Point candleLocation, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter, StringBuilder headerLine) {
 
 	}

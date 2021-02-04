@@ -4,6 +4,7 @@ import com.univocity.trader.*;
 import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.*;
+import com.univocity.trader.chart.charts.theme.*;
 import com.univocity.trader.chart.dynamic.*;
 
 import java.awt.*;
@@ -49,6 +50,14 @@ public abstract class DoubleRenderer<T extends Theme> extends AbstractRenderer<T
 			return Double.MIN_VALUE;
 		}
 		return values[i];
+	}
+
+	@Override
+	public Color getColorAt(int i ){
+		if(getTheme() instanceof LineTheme){
+			return ((LineTheme<?>)getTheme()).getLineColor();
+		}
+		return null;
 	}
 
 	@Override

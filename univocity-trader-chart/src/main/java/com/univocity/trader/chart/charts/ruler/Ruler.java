@@ -12,6 +12,7 @@ public abstract class Ruler<T extends RulerTheme<?>> implements Painter<T> {
 	Insets insets = new Insets(0, 0, 0, 0);
 	private T theme;
 	private BasicChart<?> chart;
+	protected Color textColor;
 
 	public Ruler(BasicChart<?> chart) {
 		chart.addPainter(overlay(), this);
@@ -109,6 +110,9 @@ public abstract class Ruler<T extends RulerTheme<?>> implements Painter<T> {
 
 	protected void drawString(int x, int y, String string, Graphics2D g, int stroke) {
 		text(g);
+		if(textColor != null){
+			g.setColor(textColor);
+		}
 		g.drawString(string, x + stroke * 2, y + getFontHeight() - stroke * 2);
 	}
 

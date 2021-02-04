@@ -32,6 +32,14 @@ public class ColoredHistogramRenderer extends CompositeRenderer<HistogramTheme<?
 	}
 
 	@Override
+	public Color getColorAt(int i) {
+		if(lineColorRenderer != null){
+			return lineColorRenderer.getColorAt(i);
+		}
+		return null;
+	}
+
+	@Override
 	public void paintNext(int i, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter) {
 		histogram.drawBar(i, histogram.getValueAt(i), chart, overlay, g, painter, fillColorRenderer.objectAt(i), lineColorRenderer.objectAt(i));
 	}

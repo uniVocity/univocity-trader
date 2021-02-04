@@ -32,6 +32,11 @@ public class AreaRenderer extends CompositeRenderer<AreaTheme> {
 	}
 
 	@Override
+	public Color getColorAt(int i) {
+		return null;
+	}
+
+	@Override
 	public void paintNext(int i, BasicChart<?> chart, Painter.Overlay overlay, Graphics2D g, AreaPainter painter) {
 		line1.paintNext(i, chart, overlay, null, painter);
 		line2.paintNext(i, chart, overlay, null, painter);

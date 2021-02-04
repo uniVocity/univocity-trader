@@ -85,6 +85,25 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 		g.drawLine(width - length, y, width, y);
 	}
 
+	private void reverseSort(double values[], Color[] colors){
+		for(int i = 0; i < values.length; i++){
+			for(int j = i + 1; j < values.length; j++){
+				double vi = values[i];
+				double vj = values[j];
+
+				Color ci = colors[i];
+				Color cj = colors[j];
+
+				if(vj > vi){
+					values[j] = vi;
+					values[i] = vj;
+					colors[j] = ci;
+					colors[i] = cj;
+				}
+			}
+		}
+	}
+
 	protected void drawSelection(BasicChart<?> chart, Graphics2D g, int width, Candle candle, Point location) {
 		setProfile(SELECTION);
 		refY1 = drawPrices(chart, g, location, candle, chart.getCentralValue(candle), true, -1, false);
@@ -96,23 +115,33 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 		for (Painter<?> underlay : chart.underlays()) {
 			if (underlay instanceof VisualIndicator) {
 				VisualIndicator p = (VisualIndicator) underlay;
-				double[] values = p.getCurrentSelectionValues(chart.candleHistory.indexOf(candle));
+				int candleIndex = chart.candleHistory.indexOf(candle);
+				double[] values = p.getCurrentSelectionValues(candleIndex);
+				Color[] colors = p.getCurrentSelectionColors();
 				if (values != null && values.length > 0) {
 					setProfile(HIGHLIGHT);
-					Arrays.sort(values);
-					ArrayUtils.reverse(values);
+					reverseSort(values, colors);
 
 					if (values.length > 2) {
 						int middle = values.length / 2;
+						textColor = colors[middle];
 						refY1 = drawValue(values[middle], p, chart, g, location, candle, -1, true, true);
+
+						textColor = colors[0];
 						refY2 = drawValue(values[0], p, chart, g, location, candle, refY1, true, false);
+
+						textColor = colors[values.length - 1];
 						refY3 = drawValue(values[values.length - 1], p, chart, g, location, candle, refY1, false, false);
 					} else if (values.length == 2) {
+						textColor = colors[0];
 						refY1 = drawValue(values[0], p, chart, g, location, candle, -1, true, false);
+						textColor = colors[1];
 						refY2 = drawValue(values[1], p, chart, g, location, candle, refY1, false, false);
 					} else {
+						textColor = colors[0];
 						refY1 = drawValue(values[0], p, chart, g, location, candle, -1, false, true);
 					}
+					textColor = null;
 				}
 			}
 		}

@@ -163,7 +163,7 @@ public abstract class CandleRepository {
 	public final Enumeration<Candle> iterate(String symbol, Instant from, Instant to, boolean cache) {
 		Collection<Candle> out;
 
-		String query = buildCandleQuery(symbol, from, to);
+		String query = buildCandleQuery(symbol, from, to) + " ORDER BY open_time";
 
 		if (cache) {
 			Enumeration<Candle> cached = getCachedResults(symbol, query, from, to);
