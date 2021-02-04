@@ -151,17 +151,19 @@ public interface SyncRequestClient {
      * Send in a new order.
      *
      * @return Order.
-     */
+
     Order postOrder(String symbol, OrderSide side, PositionSide positionSide, OrderType orderType,
 					TimeInForce timeInForce, String quantity, String price, String reduceOnly,
 					String newClientOrderId, String stopPrice, WorkingType workingType, NewOrderRespType newOrderRespType);
+     */
+    FuturesOrder postOrder(FuturesOrder order, NewOrderRespType newOrderRespType);
 
     /**
      * Cancel an active order.
      *
      * @return Order.
      */
-    Order cancelOrder(String symbol, Long orderId, String origClientOrderId);
+    FuturesOrder cancelOrder(String symbol, Long orderId, String origClientOrderId);
 
     /**
      * Cancel all open orders.
@@ -225,21 +227,21 @@ public interface SyncRequestClient {
      *
      * @return Order status.
      */
-    Order getOrder(String symbol, Long orderId, String origClientOrderId);
+    FuturesOrder getOrder(String symbol, Long orderId, String origClientOrderId);
 
     /**
      * Get all open orders on a symbol. Careful when accessing this with no symbol.
      *
      * @return Open orders.
      */
-    List<Order> getOpenOrders(String symbol);
+    List<FuturesOrder> getOpenOrders(String symbol);
 
     /**
      * Get all account orders; active, canceled, or filled.
      *
      * @return All orders.
      */
-    List<Order> getAllOrders(String symbol, Long orderId, Long startTime, Long endTime, Integer limit);
+    List<FuturesOrder> getAllOrders(String symbol, Long orderId, Long startTime, Long endTime, Integer limit);
   
     /**
      * Get account balances.

@@ -5,25 +5,24 @@ import com.univocity.trader.SymbolPriceDetails;
 import com.univocity.trader.TradingFees;
 import com.univocity.trader.account.*;
 import com.univocity.trader.account.OrderBook;
-import com.univocity.trader.account.Trade;
 import com.univocity.trader.exchange.binance.futures.exception.*;
+import com.univocity.trader.exchange.binance.futures.impl.BinanceApiInternalFactory;
 import com.univocity.trader.exchange.binance.futures.model.enums.*;
 import com.univocity.trader.exchange.binance.futures.model.market.*;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import org.asynchttpclient.AsyncHttpClient;
-import org.asynchttpclient.util.*;
+import com.univocity.trader.exchange.binance.futures.model.trade.AccountBalance;
+import com.univocity.trader.exchange.binance.futures.model.trade.FuturesOrder;
+import com.univocity.trader.exchange.binance.futures.model.trade.PositionRisk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 import static com.univocity.trader.account.Balance.roundStr;
-import static com.univocity.trader.account.Order.Side.BUY;
 import static com.univocity.trader.account.Order.Side.SELL;
 import static com.univocity.trader.account.Order.Status.*;
 
@@ -32,8 +31,8 @@ class BinanceFuturesClientAccount implements ClientAccount {
 	private static final Logger log = LoggerFactory.getLogger(BinanceFuturesClientAccount.class);
 
 	private static final AtomicLong id = new AtomicLong(0);
-//	private final BinanceApiClientFactory factory;
-//	private final BinanceApiRestClient client;
+	private final BinanceApiInternalFactory factory;
+	private final SyncRequestClient client;
 	private SymbolPriceDetails symbolPriceDetails;
 	private BinanceFuturesExchange exchangeApi;
 	private double minimumBnbAmountToKeep = 1.0;
@@ -41,12 +40,14 @@ class BinanceFuturesClientAccount implements ClientAccount {
 	public BinanceFuturesClientAccount(String apiKey, String secret, BinanceFuturesExchange exchangeApi) {
 		this.exchangeApi = exchangeApi;
 
-		final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
-//		final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536);
-
+		//final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
+		//final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536);
 //		factory = BinanceApiClientFactory.newInstance(apiKey, secret, asyncHttpClient);
 //		client = factory.newRestClient();
-//		new KeepAliveUserDataStream(client).start();
+
+		factory = BinanceApiInternalFactory.getInstance();
+		client = factory.createSyncRequestClient(apiKey, secret, new RequestOptions());
+		new KeepAliveUserDataStream(client).start();
 	}
 
 	public double getMinimumBnbAmountToKeep() {
@@ -110,42 +111,41 @@ class BinanceFuturesClientAccount implements ClientAccount {
 		}
 
 
-		String finalPrice = price;
-		String finalStopPrice = stopPrice;
+		BigDecimal finalPrice = new BigDecimal(price);
+		BigDecimal finalStopPrice = stopPrice == null ? null : new BigDecimal(stopPrice);
 
 
-//		switch (orderRequest.getSide()) {
-//			case BUY:
-//				switch (orderRequest.getType()) {
-//					case LIMIT:
-//
-//						if (stopPrice != null) {
-//							order = execute(orderRequest, q -> limitOCOSell(symbol, GTC, q, finalPrice, finalStopPrice, finalStopPrice));
-//						} else {
-//							order = execute(orderRequest, q -> limitBuy(symbol, GTC, q, finalPrice));
-//						}
-//						break;
-//					case MARKET:
-//						order = execute(orderRequest, q -> marketBuy(symbol, q));
-//						break;
-//				}
-//				break;
-//			case SELL:
-//				switch (orderRequest.getType()) {
-//					case LIMIT:
-//						if (stopPrice != null) {
-//							order = execute(orderRequest, q -> limitOCOBuy(symbol, GTC, q, finalStopPrice, finalPrice, finalPrice));
-//						} else {
-//							order = execute(orderRequest, q -> limitSell(symbol, GTC, q, finalPrice));
-//						}
-//
-//
-//						break;
-//					case MARKET:
-//						order = execute(orderRequest, q -> marketSell(symbol, q));
-//						break;
-//				}
-//		}
+		switch (orderRequest.getSide()) {
+			case BUY:
+				switch (orderRequest.getType()) {
+					case LIMIT:
+
+						if (stopPrice != null) {
+							order = execute(orderRequest, q -> FuturesOrder.limitOCOSell(symbol, TimeInForce.GTC, q, finalPrice, finalStopPrice));
+						} else {
+							order = execute(orderRequest, q -> FuturesOrder.limitBuy(symbol, TimeInForce.GTC, q, finalPrice));
+						}
+						break;
+					case MARKET:
+						order = execute(orderRequest, q -> FuturesOrder.marketBuy(symbol, q));
+						break;
+				}
+				break;
+			case SELL:
+				switch (orderRequest.getType()) {
+					case LIMIT:
+						if (stopPrice != null) {
+							order = execute(orderRequest, q -> FuturesOrder.limitOCOBuy(symbol, TimeInForce.GTC, q, finalStopPrice, finalPrice));
+						} else {
+							order = execute(orderRequest, q -> FuturesOrder.limitSell(symbol, TimeInForce.GTC, q, finalPrice));
+						}
+
+						break;
+					case MARKET:
+						order = execute(orderRequest, q -> FuturesOrder.marketSell(symbol, q));
+						break;
+				}
+		}
 
 
 		if (attachments != null) {
@@ -160,31 +160,52 @@ class BinanceFuturesClientAccount implements ClientAccount {
 
 	@Override
 	public OrderBook getOrderBook(String symbol, int depth) {
-//		com.univocity.trader.exchange.binance.api.client.domain.market.OrderBook book = client.getOrderBook(symbol, depth == 0 ? 5 : depth);
-
+		com.univocity.trader.exchange.binance.futures.model.market.OrderBook book = client.getOrderBook(symbol, depth == 0 ? 5 : depth);
 		OrderBook out = new OrderBook(this, symbol, depth);
-//		for (OrderBookEntry bid : book.getBids()) {
-//			out.addBid(Double.parseDouble(bid.getPrice()), Double.parseDouble(bid.getQty()));
-//		}
-//		for (OrderBookEntry ask : book.getAsks()) {
-//			out.addAsk(Double.parseDouble(ask.getPrice()), Double.parseDouble(ask.getQty()));
-//		}
+		for (OrderBookEntry bid : book.getBids()) {
+			out.addBid(bid.getPrice().doubleValue(), bid.getQty().doubleValue());
+		}
+		for (OrderBookEntry ask : book.getAsks()) {
+			out.addAsk(ask.getPrice().doubleValue(), ask.getQty().doubleValue());
+		}
 		return out;
 	}
 
 	@Override
 	public ConcurrentHashMap<String, Balance> updateBalances(boolean force) {
-//		Account account = client.getAccount();
-//		List<AssetBalance> balances = account.getBalances();
-
+		List<AccountBalance> balances = client.getBalance();
 		ConcurrentHashMap<String, Balance> out = new ConcurrentHashMap<>();
-//		for (AssetBalance b : balances) {
-//			String symbol = b.getAsset();
-//			Balance balance = new Balance(null, symbol);
-//			balance.setFree(Double.parseDouble(b.getFree()));
-//			balance.setLocked(Double.parseDouble(b.getLocked()));
-//			out.put(symbol, balance);
-//		}
+		for(AccountBalance b : balances) {
+			String symbol = b.getAsset();
+			Balance balance = new Balance(null, symbol);
+			balance.setFree(b.getAvailableBalance().compareTo(BigDecimal.ZERO) < 0 ? 0 : b.getAvailableBalance().doubleValue());
+			//balance.setLocked(b.getCrossUnPnl().doubleValue());
+			//balance.setShorted(b.getCrossWalletBalance().doubleValue());
+			out.put(symbol, balance);
+		}
+
+		//查询金本位合约持仓
+		List<PositionRisk>  positionRisks = client.getPositionRisk();
+		for(PositionRisk risk : positionRisks) {
+			if(risk.getPositionAmt().compareTo(BigDecimal.ZERO) == 0) {
+				continue;
+			}
+			String asset = risk.getSymbol().replace("USDT", "");
+			Balance balance = null;
+			if(out.containsKey(asset)) {
+				balance = out.get(asset);
+			} else {
+				balance = new Balance(null, asset);
+				out.put(asset, balance);
+			}
+
+			if(risk.getPositionAmt().compareTo(BigDecimal.ZERO) > 0) {
+				balance.setFree(risk.getPositionAmt().doubleValue());
+			} else {
+				balance.setShorted(Math.abs(risk.getPositionAmt().doubleValue()));
+			}
+
+		}
 		return out;
 	}
 
@@ -244,101 +265,132 @@ class BinanceFuturesClientAccount implements ClientAccount {
 		}
 		throw new IllegalStateException("Can't translate " + side + " to Order.Side");
 	}
+/*
+	private Trade.Side translate(PositionSide side) {
+		switch (side) {
+			case SHORT:
+				return Trade.Side.SHORT;
+			case LONG:
+				return Trade.Side.LONG;
+		}
+		throw new IllegalStateException("Can't translate " + side + " to Order.Side");
+	}
+	*/
 
-//	private Order.Status translate(OrderStatus status) {
-//		switch (status) {
-//			case EXPIRED:
-//			case CANCELED:
-//			case PENDING_CANCEL:
-//			case REJECTED:
-//				return Order.Status.CANCELLED;
-//
-//			case NEW:
-//				return Order.Status.NEW;
-//			case FILLED:
-//				return FILLED;
-//			case PARTIALLY_FILLED:
-//				return Order.Status.PARTIALLY_FILLED;
-//		}
-//		throw new IllegalStateException("Can't translate " + status + " to Order.Status");
-//	}
+	private Order.Status translate(OrderStatus status) {
+		switch (status) {
+			case EXPIRED:
+			case CANCELED:
+			case REJECTED:
+				return Order.Status.CANCELLED;
+			case NEW:
+				return Order.Status.NEW;
+			case FILLED:
+				return FILLED;
+			case PARTIALLY_FILLED:
+				return Order.Status.PARTIALLY_FILLED;
+		}
+		throw new IllegalStateException("Can't translate " + status + " to Order.Status");
+	}
 
 	private Order.Type translate(OrderType type) {
-//		switch (type) {
-//			case LIMIT:
-//			case LIMIT_MAKER:
-//			case STOP_LOSS_LIMIT:
-//				return Order.Type.LIMIT;
-//			case MARKET:
-//				return Order.Type.MARKET;
-//		}
+		switch (type) {
+			case LIMIT:
+			case STOP_MARKET:
+			case TAKE_PROFIT_MARKET:
+				return Order.Type.LIMIT;
+			case MARKET:
+				return Order.Type.MARKET;
+		}
 		throw new IllegalStateException("Can't translate " + type + " to Order.Type");
 	}
+
+
 //
-//	private Order execute(OrderRequest orderPreparation, Function<String, NewOrder> orderFunction) {
-//		if (orderPreparation.getSide() == SELL && orderPreparation.getAssetsSymbol().equalsIgnoreCase("BNB")) {
-//			double newQuantity = orderPreparation.getQuantity() - minimumBnbAmountToKeep;
-//			orderPreparation.setQuantity(newQuantity);
-//		}
-//
-//		SymbolPriceDetails f = getPriceDetails().switchToSymbol(orderPreparation.getSymbol());
-//		if (orderPreparation.getTotalOrderAmount() > f.getMinimumOrderAmount(orderPreparation.getPrice())) {
-//			NewOrder order = null;
-//			try {
-//				BigDecimal qty = f.adjustQuantityScale(orderPreparation.getQuantity());
-//				order = orderFunction.apply(qty.toPlainString());
-//				log.info("Executing {} order: {}", order.getType(), order);
-//
-//				return translate(orderPreparation, order.getStopPrice() != null ? client.newOrderOCO(order.newOrderRespType(NewOrderResponseType.FULL)) : client.newOrder(order.newOrderRespType(NewOrderResponseType.FULL)));
-//			} catch (BinanceApiException e) {
-//				log.error("Error processing order " + order, e);
-//			}
-//		}
-//		return null;
-//	}
+	private Order execute(OrderRequest orderPreparation, Function<BigDecimal, FuturesOrder> orderFunction) {
+		if (orderPreparation.getSide() == SELL && orderPreparation.getAssetsSymbol().equalsIgnoreCase("BNB")) {
+			double newQuantity = orderPreparation.getQuantity() - minimumBnbAmountToKeep;
+			orderPreparation.setQuantity(newQuantity);
+		}
+
+		SymbolPriceDetails f = getPriceDetails().switchToSymbol(orderPreparation.getSymbol());
+		if (orderPreparation.getTotalOrderAmount() > f.getMinimumOrderAmount(orderPreparation.getPrice())) {
+			//NewOrder order = null;
+			FuturesOrder order = null;
+			try {
+				BigDecimal qty = f.adjustQuantityScale(orderPreparation.getQuantity());
+				order = orderFunction.apply(qty);
+				log.info("Executing {} order: {}", order.getType(), order);
+
+				//return translate(orderPreparation, order.getStopPrice() != null ? client.newOrderOCO(order.newOrderRespType(NewOrderResponseType.FULL)) : client.postOrder(order.newOrderRespType(NewOrderResponseType.FULL)));
+				return translate(orderPreparation, client.postOrder(order, NewOrderRespType.ACK));
+			} catch (BinanceApiException e) {
+				log.error("Error processing order " + order, e);
+			}
+		}
+		return null;
+	}
 
 	@Override
 	public Order updateOrderStatus(Order order) {
-//		OrderStatusRequest request = new OrderStatusRequest(order.getSymbol(), Long.valueOf(order.getOrderId()));
-//		return translate(order, client.getOrderStatus(request));
-		return order;
+		return translate(order, client.getOrder(order.getSymbol(), Long.valueOf(order.getOrderId()), null));
 	}
 
-//	private Order translate(Order original, com.univocity.trader.exchange.binance.api.client.domain.account.Order order) {
-//		Order out = new Order(original.getInternalId(), original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), Trade.Side.LONG, order.getTime());
-//		out.setStatus(translate(order.getStatus()));
-//		out.setExecutedQuantity(Double.parseDouble(order.getExecutedQty()));
-//		out.setAveragePrice(Double.parseDouble(order.getPrice()));
-//		out.setPrice(Double.parseDouble(order.getPrice()));
-//		out.setOrderId(String.valueOf(order.getOrderId()));
-//		out.setType(translate(order.getType()));
-//		out.setQuantity(Double.parseDouble(order.getOrigQty()));
-//		out.setTrade(original.getTrade());
-//		if (original.getAttachments() != null) {
-//			for (Order attachment : original.getAttachments()) {
-//				attachment.setParent(out);
-//			}
-//		}
-//		return out;
-//	}
+	private Order translate(Order original, FuturesOrder order) {
+		//Order out = new Order(original.getInternalId(), original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), translate(order.getPositionSide()), order.getUpdateTime());
+		Order out = new Order(original.getInternalId(), original.getAssetsSymbol(), original.getFundsSymbol(), translate(order.getSide()), original.getTradeSide(), order.getUpdateTime());
+		out.setStatus(translate(order.getStatus()));
+		out.setExecutedQuantity(order.getExecutedQty().doubleValue());
+		out.setAveragePrice(order.getPrice().doubleValue());
+		out.setPrice(order.getPrice().doubleValue());
+		out.setOrderId(String.valueOf(order.getOrderId()));
+		out.setType(translate(order.getType()));
+		out.setQuantity(order.getOrigQty().doubleValue());
+		out.setTrade(original.getTrade());
+		if (original.getAttachments() != null) {
+			for (Order attachment : original.getAttachments()) {
+				attachment.setParent(out);
+			}
+		}
+		return out;
+	}
+
+	private Order translate(OrderRequest preparation, FuturesOrder order) {
+		//Order out = new Order(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(order.getSide()), translate(order.getPositionSide()), order.getUpdateTime());
+		Order out = new Order(id.incrementAndGet(), preparation.getAssetsSymbol(), preparation.getFundsSymbol(), translate(order.getSide()), preparation.getTradeSide(), order.getUpdateTime());
+
+		out.setPrice(order.getPrice().doubleValue());
+		out.setAveragePrice(order.getPrice().doubleValue());
+		out.setQuantity(order.getOrigQty().doubleValue());
+		out.setExecutedQuantity(order.getExecutedQty().doubleValue());
+		out.setOrderId(String.valueOf(order.getOrderId()));
+		out.setStatus(translate(order.getStatus()));
+		out.setType(translate(order.getType()));
+		/*
+		for (OrderDetails orderDetails : response.getAttachments()) {
+			Order o = createOrder(preparation, orderDetails);
+			out.setParent(o);
+		}
+		*/
+		return out;
+	}
 
 	@Override
 	public void cancel(Order order) {
-//		try {
-//			// Try to fetch existing order status
-//			com.univocity.trader.exchange.binance.api.client.domain.account.Order status = client.getOrderStatus(new OrderStatusRequest(order.getSymbol(), Long.valueOf(order.getOrderId())));
-//			// Order might have been cancelled manually by user
-//			if (OrderStatus.CANCELED.equals(status.getStatus()) || OrderStatus.PENDING_CANCEL.equals(status.getStatus())) {
-//				log.info("Order {} was already cancelled or is pending cancellation", order);
-//			} else {
-//				CancelOrderResponse response = client.cancelOrder(new CancelOrderRequest(order.getSymbol(), Long.valueOf(order.getOrderId())));
-//				log.info("Cancelled order {}. Response: {}", order, response);
-//			}
-//		} catch (BinanceApiException e) {
-//			if (!"Unknown order sent.".equals(e.getMessage())) {
-//				throw e;
-//			}
-//			log.debug("Attempted to cancel an order that was not found on Binance (order {})", order);
-//		}
+		try {
+			FuturesOrder futuresOrder = client.getOrder(order.getSymbol(), Long.valueOf(order.getOrderId()), null);
+			if (OrderStatus.CANCELED.equals(futuresOrder.getStatus()) || OrderStatus.REJECTED.equals(futuresOrder.getStatus())) {
+				log.info("Order {} was already cancelled or is pending cancellation", order);
+			} else {
+				FuturesOrder cancelledFuturesOrder = client.cancelOrder(order.getSymbol(), Long.valueOf(order.getOrderId()), null);
+				log.info("Cancelled order {}. Response: {}", order, cancelledFuturesOrder);
+			}
+		} catch (BinanceApiException e) {
+			if (!"Unknown order sent.".equals(e.getMessage())) {
+				throw e;
+			}
+			log.debug("Attempted to cancel an order that was not found on Binance (order {})", order);
+		}
 	}
+
 }

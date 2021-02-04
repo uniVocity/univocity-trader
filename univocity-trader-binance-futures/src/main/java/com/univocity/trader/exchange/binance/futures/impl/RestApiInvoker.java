@@ -14,7 +14,8 @@ import com.univocity.trader.exchange.binance.futures.impl.utils.JsonWrapper;
 abstract class RestApiInvoker {
 
     private static final Logger log = LoggerFactory.getLogger(RestApiInvoker.class);
-    private static final OkHttpClient client = new OkHttpClient();
+    //private static final OkHttpClient client = new OkHttpClient();
+    private static final OkHttpClient client = HttpUtils.newOkHttpClient();
 
     static void checkResponse(JsonWrapper json) {
         try {

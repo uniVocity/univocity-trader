@@ -4,6 +4,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.univocity.trader.exchange.binance.futures.model.enums.CandlestickInterval;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public abstract class Channels {
 
     public static final String OP_SUB = "sub";
@@ -29,10 +32,19 @@ public abstract class Channels {
         return json.toJSONString();
     }
   
-    public static String candlestickChannel(String symbol, CandlestickInterval interval) {
+    public static String candlestickChannel(String symbols, CandlestickInterval interval) {
+        /*
+        final String channel = Arrays.stream(symbols.split(","))
+                .map(String::trim)
+                .map(s -> String.format("%s@kline_%s", s, interval))
+                .collect(Collectors.joining("/"));*/
+        final String[] channels = symbols.split(",");
+
         JSONObject json = new JSONObject();
         JSONArray params = new JSONArray();
-        params.add(symbol + "@kline_" + interval);
+        for(String channel : channels) {
+            params.add(channel + "@kline_" + interval);
+        }
         json.put("params", params);
         json.put("id", System.currentTimeMillis());
         json.put("method", "SUBSCRIBE");

@@ -5,14 +5,20 @@ import com.univocity.trader.candles.PreciseCandle;
 import com.univocity.trader.candles.SymbolInformation;
 import com.univocity.trader.candles.TickConsumer;
 import com.univocity.trader.exchange.binance.futures.impl.BinanceApiInternalFactory;
+import com.univocity.trader.exchange.binance.futures.impl.HttpUtils;
 import com.univocity.trader.exchange.binance.futures.model.enums.CandlestickInterval;
+import com.univocity.trader.exchange.binance.futures.model.event.CandlestickEvent;
 import com.univocity.trader.exchange.binance.futures.model.market.Candlestick;
 import com.univocity.trader.exchange.binance.futures.model.market.ExchangeInfoEntry;
 import com.univocity.trader.indicators.base.TimeInterval;
 import com.univocity.trader.utils.IncomingCandles;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import org.asynchttpclient.AsyncHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +32,13 @@ class BinanceFuturesExchange implements Exchange<Candlestick, Account> {
 
     private SubscriptionClient socketClient;
     private SyncRequestClient restClient;
+
+    private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
+    private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536);
+
     private final Map<String, SymbolInformation> symbolInformation = new ConcurrentHashMap<>();
+
+    private org.asynchttpclient.ws.WebSocket socketClientCloseable;
 
     private BinanceFuturesClientAccount binanceFuturesClientAccount;
     private char[] apiSecret;
@@ -58,7 +70,8 @@ class BinanceFuturesExchange implements Exchange<Candlestick, Account> {
 
     @Override
     public IncomingCandles<Candlestick> getHistoricalTicks(String symbol, TimeInterval interval, long startTime, long endTime) {
-        return IncomingCandles.fromCollection(restClient().getCandlestick(symbol, CandlestickInterval.fromTimeInterval(interval), 1000L, startTime, Long.valueOf(endTime).intValue()));
+        //return IncomingCandles.fromCollection(restClient().getCandlestick(symbol, CandlestickInterval.fromTimeInterval(interval), 1000L, startTime, Long.valueOf(endTime).intValue()));
+        return IncomingCandles.fromCollection(restClient().getCandlestick(symbol, CandlestickInterval.fromTimeInterval(interval),  startTime, endTime, 1500));
     }
 
     @Override
@@ -66,11 +79,11 @@ class BinanceFuturesExchange implements Exchange<Candlestick, Account> {
         return new PreciseCandle(
                 exchangeCandle.getOpenTime(),
                 exchangeCandle.getCloseTime(),
-                exchangeCandle.getOpen(),
-                exchangeCandle.getHigh(),
-                exchangeCandle.getLow(),
-                exchangeCandle.getClose(),
-                exchangeCandle.getVolume()
+                new BigDecimal(exchangeCandle.getOpen()),
+                new BigDecimal(exchangeCandle.getHigh()),
+                new BigDecimal(exchangeCandle.getLow()),
+                new BigDecimal(exchangeCandle.getClose()),
+                new BigDecimal(exchangeCandle.getVolume())
         );
     }
 
@@ -84,10 +97,29 @@ class BinanceFuturesExchange implements Exchange<Candlestick, Account> {
         CandlestickInterval interval = CandlestickInterval.fromTimeInterval(tickInterval);
         log.info("Opening Binance {} live stream for: {}", tickInterval, symbols);
 
-        socketClient().subscribeCandlestickEvent(symbols, interval, (data) -> {
+        /*socketClientCloseable = socketClient().subscribeCandlestickEvent(symbols, interval, (data) -> {
             priceReceived(data.getSymbol(), data.getClose().doubleValue());
-        }, (data) -> {
-            consumer.streamError(data.getCause());
+            consumer.tickReceived(data.getSymbol(), data);
+        });*/
+        socketClientCloseable = socketClient().subscribeCandlestickEvent(symbols, interval, new BinanceFuturesApiCallback<CandlestickEvent>() {
+            @Override
+            public void onResponse(CandlestickEvent response) {
+                try {
+                    priceReceived(response.getSymbol(), Double.parseDouble(response.getClose()));
+                } catch (Exception e){
+                    log.warn("Error updating latest price of " + response.getSymbol(), e);
+                }
+
+                consumer.tickReceived(response.getSymbol(), response);
+            }
+
+            public void onFailure(Throwable cause) {
+                consumer.streamError(cause);
+            }
+
+            public void onClose() {
+                consumer.streamClosed();
+            }
         });
 
     }
@@ -142,13 +174,17 @@ class BinanceFuturesExchange implements Exchange<Candlestick, Account> {
 
     private SubscriptionClient socketClient() {
         if (socketClient == null) {
-            socketClient = BinanceApiInternalFactory.getInstance().createSubscriptionClient(apiKey, apiSecret == null ? null : new String(apiSecret), new SubscriptionOptions());
+            socketClient = BinanceApiInternalFactory.getInstance().createSubscriptionClient(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient);
         }
         return socketClient;
     }
 
     @Override
     public void closeLiveStream() throws Exception {
+        if (socketClientCloseable != null) {
+            socketClientCloseable.sendCloseFrame();
+            socketClientCloseable = null;
+        }
     }
 
     private SyncRequestClient restClient() {

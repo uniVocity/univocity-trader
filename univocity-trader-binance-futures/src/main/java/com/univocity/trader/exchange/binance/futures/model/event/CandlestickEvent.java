@@ -1,212 +1,111 @@
 package com.univocity.trader.exchange.binance.futures.model.event;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.univocity.trader.exchange.binance.futures.constant.BinanceApiConstants;
+import com.univocity.trader.exchange.binance.futures.model.market.Candlestick;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.math.BigDecimal;
+/**
+ * An interval candlestick for a symbol providing informations on price that can be used to produce candlestick charts.
+ */
+@JsonDeserialize(using = CandlestickEventDeserializer.class)
+@JsonSerialize(using = CandlestickEventSerializer.class)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CandlestickEvent extends Candlestick {
 
-public class CandlestickEvent {
+	private String eventType;
 
-    private String eventType;
+	private long eventTime;
 
-    private Long eventTime;
+	private String symbol;
 
-    private String symbol;
+	private String intervalId;
 
-    private Long startTime;
+	private Long firstTradeId;
 
-    private Long closeTime;
+	private Long lastTradeId;
 
-    private String interval;
+	private Boolean isBarFinal;
 
-    private Long firstTradeId;
+	public String getEventType() {
+		return eventType;
+	}
 
-    private Long lastTradeId;
+	public void setEventType(String eventType) {
+		this.eventType = eventType;
+	}
 
-    private BigDecimal open;
+	public long getEventTime() {
+		return eventTime;
+	}
 
-    private BigDecimal close;
+	public void setEventTime(long eventTime) {
+		this.eventTime = eventTime;
+	}
 
-    private BigDecimal high;
+	public String getSymbol() {
+		return symbol;
+	}
 
-    private BigDecimal low;
+	public void setSymbol(String symbol) {
+		this.symbol = symbol;
+	}
 
-    private BigDecimal volume;
+	public String getIntervalId() {
+		return intervalId;
+	}
 
-    private Long numTrades;
+	public void setIntervalId(String intervalId) {
+		this.intervalId = intervalId;
+	}
 
-    private Boolean isClosed;
+	public Long getFirstTradeId() {
+		return firstTradeId;
+	}
 
-    private BigDecimal quoteAssetVolume;
+	public void setFirstTradeId(Long firstTradeId) {
+		this.firstTradeId = firstTradeId;
+	}
 
-    private BigDecimal takerBuyBaseAssetVolume;
+	public Long getLastTradeId() {
+		return lastTradeId;
+	}
 
-    private BigDecimal takerBuyQuoteAssetVolume;
+	public void setLastTradeId(Long lastTradeId) {
+		this.lastTradeId = lastTradeId;
+	}
 
-    private Long ignore;
+	public Boolean getBarFinal() {
+		return isBarFinal;
+	}
 
-    public String getEventType() {
-        return eventType;
-    }
+	public void setBarFinal(Boolean barFinal) {
+		isBarFinal = barFinal;
+	}
 
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
-    }
-
-    public Long getEventTime() {
-        return eventTime;
-    }
-
-    public void setEventTime(Long eventTime) {
-        this.eventTime = eventTime;
-    }
-
-    public String getSymbol() {
-        return symbol;
-    }
-
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
-    }
-
-    public Long getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Long startTime) {
-        this.startTime = startTime;
-    }
-
-    public Long getCloseTime() {
-        return closeTime;
-    }
-
-    public void setCloseTime(Long closeTime) {
-        this.closeTime = closeTime;
-    }
-
-    public String getInterval() {
-        return interval;
-    }
-
-    public void setInterval(String interval) {
-        this.interval = interval;
-    }
-
-    public Long getFirstTradeId() {
-        return firstTradeId;
-    }
-
-    public void setFirstTradeId(Long firstTradeId) {
-        this.firstTradeId = firstTradeId;
-    }
-
-    public Long getLastTradeId() {
-        return lastTradeId;
-    }
-
-    public void setLastTradeId(Long lastTradeId) {
-        this.lastTradeId = lastTradeId;
-    }
-
-    public BigDecimal getOpen() {
-        return open;
-    }
-
-    public void setOpen(BigDecimal open) {
-        this.open = open;
-    }
-
-    public BigDecimal getClose() {
-        return close;
-    }
-
-    public void setClose(BigDecimal close) {
-        this.close = close;
-    }
-
-    public BigDecimal getHigh() {
-        return high;
-    }
-
-    public void setHigh(BigDecimal high) {
-        this.high = high;
-    }
-
-    public BigDecimal getLow() {
-        return low;
-    }
-
-    public void setLow(BigDecimal low) {
-        this.low = low;
-    }
-
-    public BigDecimal getVolume() {
-        return volume;
-    }
-
-    public void setVolume(BigDecimal volume) {
-        this.volume = volume;
-    }
-
-    public Long getNumTrades() {
-        return numTrades;
-    }
-
-    public void setNumTrades(Long numTrades) {
-        this.numTrades = numTrades;
-    }
-
-    public Boolean getIsClosed() {
-        return isClosed;
-    }
-
-    public void setIsClosed(Boolean isClosed) {
-        this.isClosed = isClosed;
-    }
-
-    public BigDecimal getQuoteAssetVolume() {
-        return quoteAssetVolume;
-    }
-
-    public void setQuoteAssetVolume(BigDecimal quoteAssetVolume) {
-        this.quoteAssetVolume = quoteAssetVolume;
-    }
-
-    public BigDecimal getTakerBuyBaseAssetVolume() {
-        return takerBuyBaseAssetVolume;
-    }
-
-    public void setTakerBuyBaseAssetVolume(BigDecimal takerBuyBaseAssetVolume) {
-        this.takerBuyBaseAssetVolume = takerBuyBaseAssetVolume;
-    }
-
-    public BigDecimal getTakerBuyQuoteAssetVolume() {
-        return takerBuyQuoteAssetVolume;
-    }
-
-    public void setTakerBuyQuoteAssetVolume(BigDecimal takerBuyQuoteAssetVolume) {
-        this.takerBuyQuoteAssetVolume = takerBuyQuoteAssetVolume;
-    }
-
-    public Long getIgnore() {
-        return ignore;
-    }
-
-    public void setIgnore(Long ignore) {
-        this.ignore = ignore;
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE).append("eventType", eventType)
-                .append("eventTime", eventTime).append("symbol", symbol).append("startTime", startTime)
-                .append("closeTime", closeTime).append("symbol", symbol).append("interval", interval)
-                .append("firstTradeId", firstTradeId).append("lastTradeId", lastTradeId).append("open", open)
-                .append("close", close).append("high", high).append("low", low).append("volume", volume)
-                .append("numTrades", numTrades).append("isClosed", isClosed)
-                .append("quoteAssetVolume", quoteAssetVolume).append("takerBuyBaseAssetVolume", takerBuyBaseAssetVolume)
-                .append("takerBuyQuoteAssetVolume", takerBuyQuoteAssetVolume).append("ignore", ignore).toString();
-    }
-
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, BinanceApiConstants.TO_STRING_BUILDER_STYLE)
+				.append("eventType", eventType)
+				.append("eventTime", eventTime)
+				.append("symbol", symbol)
+				.append("openTime", openTime)
+				.append("open", open)
+				.append("high", high)
+				.append("low", low)
+				.append("close", close)
+				.append("volume", volume)
+				.append("closeTime", closeTime)
+				.append("intervalId", intervalId)
+				.append("firstTradeId", firstTradeId)
+				.append("lastTradeId", lastTradeId)
+				.append("quoteAssetVolume", quoteAssetVolume)
+				.append("numberOfTrades", numberOfTrades)
+				.append("takerBuyBaseAssetVolume", takerBuyBaseAssetVolume)
+				.append("takerBuyQuoteAssetVolume", takerBuyQuoteAssetVolume)
+				.append("isBarFinal", isBarFinal)
+				.toString();
+	}
 }

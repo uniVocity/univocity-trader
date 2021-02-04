@@ -106,7 +106,7 @@ public class WebSocketConnection extends WebSocketListener {
         super.onMessage(webSocket, text);
         lastReceivedTime = System.currentTimeMillis();
 
-        log.debug("[On Message]:{}", text);
+        //log.debug("[On Message]:{}", text);
         try {
             JsonWrapper jsonWrapper = JsonWrapper.parseFromString(text);
 
