@@ -19,7 +19,7 @@ public class StochasticOscillatorD extends SingleValueIndicator {
 	}
 
 	public StochasticOscillatorD(int dLength, TimeInterval interval) {
-		this(dLength, dLength, interval);
+		this(dLength, 14, interval);
 	}
 
 	public StochasticOscillatorD(int dLength, int kLength, TimeInterval interval) {

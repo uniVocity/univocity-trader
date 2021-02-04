@@ -270,7 +270,7 @@ public class DefaultIndicators {
 	@Render(value = "d", theme = RedLine.class)
 	@Render(value = "getUpperBound", description = "High", displayValue = false, theme = BoundaryLineTheme.class)
 	@Render(value = "getLowerBound", description = "Low", displayValue = false, theme = BoundaryLineTheme.class)
-	public static StochasticOscillatorD StochasticOscillator(@PositiveDefault(14) int dLength, @PositiveDefault(14) int kLength, @PositiveDefault(value = StochasticOscillatorD.UPPER_BOUND, maximum = 100.0) double high, @PositiveDefault(value = StochasticOscillatorD.LOWER_BOUND, maximum = 100) double low, TimeInterval interval) {
+	public static StochasticOscillatorD StochasticOscillator(@PositiveDefault(3) int dLength, @PositiveDefault(14) int kLength, @PositiveDefault(value = StochasticOscillatorD.UPPER_BOUND, maximum = 100.0) double high, @PositiveDefault(value = StochasticOscillatorD.LOWER_BOUND, maximum = 100) double low, TimeInterval interval) {
 		StochasticOscillatorD out = Indicators.StochasticOscillatorD(dLength, kLength, interval);
 		out.setLowerBound(low);
 		out.setUpperBound(high);
