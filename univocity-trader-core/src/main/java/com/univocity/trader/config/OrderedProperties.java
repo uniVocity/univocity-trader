@@ -1,5 +1,7 @@
 package com.univocity.trader.config;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -7,7 +9,7 @@ import java.util.*;
  *
  * @author Univocity Software Pty Ltd - <a href="mailto:dev@univocity.com">dev@univocity.com</a>
  */
-public class OrderedProperties extends Properties {
+public class OrderedProperties extends Properties implements Closeable{
 
 	private static final long serialVersionUID = 4335376309848461398L;
 
@@ -38,5 +40,10 @@ public class OrderedProperties extends Properties {
 		return super.remove(key);
 	}
 
+	@Override
+	public void close() throws IOException {
+		propertySequence.clear();
+		super.clone();
+	}
 
 }

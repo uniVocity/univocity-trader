@@ -902,4 +902,24 @@ public class PropertyBasedConfiguration {
 	public Set<String> getPropertyNames(){
 		return Collections.unmodifiableSet(values.keySet());
 	}
+	
+	public static class AnyOneBuilder {
+
+		public PropertyBasedConfiguration build(String... configurationPath) {
+
+			try {
+				for(String path : configurationPath) {
+					String prefixPath = this.getClass().getResource(File.separator) != null ?
+							(this.getClass().getResource(File.separator).getPath()) : (System.getProperty("user.dir") + File.separator);
+
+					File nwfile = new File(prefixPath + path);
+					if(nwfile.exists())  return new PropertyBasedConfiguration(nwfile);
+				}
+			} catch (Exception e) {
+				log.error(e.getMessage(), e);
+			}
+			return new PropertyBasedConfiguration(new OrderedProperties());
+		}
+	}
+	
 }
