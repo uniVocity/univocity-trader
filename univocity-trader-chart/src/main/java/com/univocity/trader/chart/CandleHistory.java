@@ -68,6 +68,11 @@ public class CandleHistory implements Iterable<Candle> {
 		notifyUpdateListeners(UpdateType.INCREMENT);
 	}
 
+	public void update(Candle candle) {
+		candles.set(size() - 1, candle);
+		notifyUpdateListeners(UpdateType.INCREMENT);
+	}
+
 	public void setCandles(List<Candle> candles) {
 		this.candles.clear();
 		this.candles.addAll(candles);
@@ -75,7 +80,7 @@ public class CandleHistory implements Iterable<Candle> {
 	}
 
 	public void notifyUpdateListeners(UpdateType updateType) {
-		dataUpdateListeners.forEach(c->c.accept(updateType));
+		dataUpdateListeners.forEach(c -> c.accept(updateType));
 	}
 
 	public CandleHistoryView newView() {

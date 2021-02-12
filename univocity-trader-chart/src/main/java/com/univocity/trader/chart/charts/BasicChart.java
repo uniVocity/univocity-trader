@@ -139,8 +139,33 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 		return mousePosition;
 	}
 
+	protected void prepareToDraw(Graphics2D g){
+
+	}
+
+	protected abstract void doDraw(Graphics2D g, int i, Candle candle, Point current, Point previous);
+
 	@Override
-	protected void draw(Graphics2D g, int width) {
+	protected final void draw(Graphics2D g, int width) {
+		final int imgTo = getBoundaryRight();
+		final int imgFrom = imgTo - getWidth();
+
+		prepareToDraw(g);
+		Point prev = null;
+		for (int i = 0; i < candleHistory.size(); i++) {
+			Candle candle = candleHistory.get(i);
+			if (candle == null) {
+				break;
+			}
+			Point current = createCandleCoordinate(i, candle, imgFrom, imgTo);
+			if(current != null){
+				doDraw(g, i, candle, current, prev);
+				prev = current;
+			} else if(prev != null) {
+				break;
+			}
+		}
+
 		runPainters(g, Painter.Overlay.BACK, width);
 
 		for (Painter<?> painter : painters.get(NONE)) {
