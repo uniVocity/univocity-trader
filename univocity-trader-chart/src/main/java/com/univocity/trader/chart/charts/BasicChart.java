@@ -258,7 +258,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	protected abstract void drawHovered(Candle hovered, Point location, Graphics2D g);
 
 	private void runPainters(Graphics2D g, Painter.Overlay overlay, int width) {
-		for (Painter<?> painter : painters.get(overlay)) {
+		for (Painter<?> painter : Collections.unmodifiableList(painters.get(overlay))) {
 			painter.paintOn(this, g, width, overlay);
 			canvas.insets.right = Math.max(painter.insets().right, canvas.insets.right);
 			canvas.insets.left = Math.max(painter.insets().left, canvas.insets.left);

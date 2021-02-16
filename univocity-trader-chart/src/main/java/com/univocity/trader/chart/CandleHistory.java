@@ -73,6 +73,16 @@ public class CandleHistory implements Iterable<Candle> {
 		notifyUpdateListeners(UpdateType.INCREMENT);
 	}
 
+	public void addOrUpdate(Candle candle) {
+		Candle last = getLast();
+		int comparison = last.compareTo(candle);
+		if (comparison < 0) {
+			add(candle);
+		} else if (comparison == 0) {
+			update(candle);
+		}
+	}
+
 	public void setCandles(List<Candle> candles) {
 		this.candles.clear();
 		this.candles.addAll(candles);

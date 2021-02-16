@@ -235,4 +235,8 @@ public interface Exchange<T, C extends AccountConfiguration<C>> {
 	}
 
 //	boolean isDirectSwitchSupported(String currentAssetSymbol, String targetAssetSymbol);
+
+	default String getName(){
+		return getClass().getSimpleName();
+	}
 }

@@ -2,13 +2,11 @@ package com.univocity.trader.chart;
 
 import com.github.weisj.darklaf.*;
 import com.github.weisj.darklaf.theme.*;
-import com.univocity.trader.candles.*;
 import com.univocity.trader.chart.charts.*;
 import com.univocity.trader.chart.charts.painter.Painter;
 import com.univocity.trader.chart.charts.ruler.*;
 import com.univocity.trader.chart.charts.scrolling.*;
 import com.univocity.trader.chart.indicators.*;
-import com.univocity.trader.config.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -74,6 +72,7 @@ public class ChartWindow extends JFrame {
 		if (symbolSelector == null) {
 			symbolSelector = new SymbolSelector(getCandleHistory());
 			setGlassPane(symbolSelector.getGlassPane());
+			symbolSelector.addLiveFeedConsumer((c) -> getValueRuler().setCurrentPrice(c == null ? 0.0 : c.close));
 		}
 		return symbolSelector;
 	}
@@ -115,7 +114,6 @@ public class ChartWindow extends JFrame {
 	private ValueRuler getValueRuler() {
 		if (valueRuler == null) {
 			valueRuler = new ValueRuler(getChart());
-
 		}
 		return valueRuler;
 	}
