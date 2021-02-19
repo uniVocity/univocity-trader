@@ -8,6 +8,7 @@ import com.univocity.trader.chart.gui.components.*;
 import com.univocity.trader.chart.gui.components.time.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import javax.swing.*;
@@ -129,9 +130,22 @@ public class SymbolSelector extends JPanel {
 		return exchange;
 	}
 
-	private void fireLiveFeedConsumers(Candle tick){
+	private void fireLiveFeedConsumers(Candle tick) {
 		for (Consumer<Candle> consumer : liveFeedConsumers) {
 			consumer.accept(tick);
+		}
+	}
+
+	private void loadRecentCandles(Exchange exchange, String symbol, boolean updateCandleHistory) {
+		IncomingCandles recent = exchange.getLatestTicks(symbol, TimeInterval.MINUTE);
+		for (Object tick : recent) {
+			if (tick != null) {
+				PreciseCandle latestCandle = exchange.generatePreciseCandle(tick);
+				candleRepository.addToHistory(symbol, latestCandle, true);
+				if (updateCandleHistory) {
+					candleHistory.addOrUpdateSilently(new Candle(latestCandle));
+				}
+			}
 		}
 	}
 
@@ -140,19 +154,46 @@ public class SymbolSelector extends JPanel {
 			WindowUtils.displayWarning(this, "Can't open live stream for symbol " + symbol + " in " + exchange.getName() + ". No database active to process data.");
 			return;
 		}
-		DatabaseCandleRepository repository = (DatabaseCandleRepository) candleRepository;
-		backfill(exchange);
-		getGlassPane().activate("Starting live data stream for " + getSymbol());
+		backfill(exchange, false);
+
+		SwingUtilities.invokeLater(() -> getGlassPane().activate("Starting live data stream for " + getSymbol()));
+		new Thread(() -> startStream((DatabaseCandleRepository) candleRepository, exchange, symbol)).start();
+
+	}
+
+	private void startStream(DatabaseCandleRepository repository, Exchange exchange, String symbol) {
+		loadRecentCandles(exchange, symbol, false);
+		fillAvailableDates();
+		loadCandles();
+
 		exchange.openLiveStream(symbol.toLowerCase(), TimeInterval.MINUTE, new TickConsumer() {
+
+			boolean initializing = true;
 
 			@Override
 			public void tickReceived(String symbol, Object rawTick) {
-				getGlassPane().deactivate();
-				System.out.println(symbol + " > " + rawTick);
 				PreciseCandle tickInStream = exchange.generatePreciseCandle(rawTick);
+				Candle tick = new Candle(tickInStream);
+				updateChartEnd(tick);
+
+				if (initializing) {
+					synchronized (this) {
+						if (initializing) {
+							try {
+								loadRecentCandles(exchange, symbol, true);
+								Candle last = candleHistory.getLast();
+								initializing = tick.openTime - last.openTime > TimeInterval.MINUTE.ms;
+							} finally {
+								if (!initializing) {
+									getGlassPane().deactivate();
+								}
+							}
+						}
+					}
+				}
 
 				repository.addToHistory(symbol.toUpperCase(), tickInStream, false);
-				Candle tick = new Candle(tickInStream);
+
 
 				fireLiveFeedConsumers(tick);
 
@@ -240,16 +281,18 @@ public class SymbolSelector extends JPanel {
 			getBtUpdate().setEnabled(false);
 			return;
 		}
-		new Thread(() -> backfill(exchange)).start();
+		new Thread(() -> backfill(exchange, true)).start();
 	}
 
-	private void backfill(Exchange<?, ?> exchange) {
+	private void backfill(Exchange<?, ?> exchange, boolean loadCandles) {
 		try {
 			glassPane.activate("Updating history of " + getSymbol());
 			CandleHistoryBackfill backfill = new CandleHistoryBackfill((DatabaseCandleRepository) candleRepository);
 			backfill.fillHistoryGaps(exchange, getSymbol(), getChartStart().getCommittedValue(), Instant.now(), TimeInterval.minutes(1));
-			//fillAvailableDates();
-			loadCandles();
+			fillAvailableDates();
+			if (loadCandles) {
+				loadCandles();
+			}
 		} finally {
 			glassPane.deactivate();
 		}
@@ -326,7 +369,6 @@ public class SymbolSelector extends JPanel {
 		}
 
 		try {
-
 			Instant from = getChartStart().getCommittedValue();
 			Instant to = getChartEnd().getCommittedValue();
 
@@ -399,17 +441,20 @@ public class SymbolSelector extends JPanel {
 		if (symbol != null) {
 			Candle first = candleRepository.firstCandle(symbol);
 			if (first != null) {
-				Candle last = candleRepository.lastCandle(symbol);
-
 				getChartStart().setMinimumValue(first.openTime);
-				getChartEnd().setMaximumValue(last.closeTime);
-
 				getChartStart().setValue(first.openTime);
-				getChartEnd().setValue(last.closeTime);
+
+				Candle last = candleRepository.lastCandle(symbol);
+				updateChartEnd(last);
 
 				updateDateFields();
 			}
 		}
+	}
+
+	private void updateChartEnd(Candle tick) {
+		getChartEnd().setMaximumValue(tick.closeTime);
+		getChartEnd().setValue(tick.closeTime);
 	}
 
 	private void setDateSelectionEnabled(boolean enabled) {

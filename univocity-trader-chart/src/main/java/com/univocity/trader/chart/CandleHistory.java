@@ -64,22 +64,37 @@ public class CandleHistory implements Iterable<Candle> {
 	}
 
 	public void add(Candle candle) {
-		candles.add(candle);
+		addSilently(candle);
 		notifyUpdateListeners(UpdateType.INCREMENT);
+	}
+
+	public void updateSilently(Candle candle) {
+		candles.set(size() - 1, candle);
 	}
 
 	public void update(Candle candle) {
-		candles.set(size() - 1, candle);
+		updateSilently(candle);
 		notifyUpdateListeners(UpdateType.INCREMENT);
 	}
 
-	public void addOrUpdate(Candle candle) {
+
+	public boolean addOrUpdateSilently(Candle candle) {
 		Candle last = getLast();
+
 		int comparison = last.compareTo(candle);
 		if (comparison < 0) {
-			add(candle);
+			addSilently(candle);
+			return true;
 		} else if (comparison == 0) {
-			update(candle);
+			updateSilently(candle);
+			return true;
+		}
+		return false;
+	}
+
+	public void addOrUpdate(Candle candle) {
+		if(addOrUpdateSilently(candle)){
+			notifyUpdateListeners(UpdateType.INCREMENT);
 		}
 	}
 
