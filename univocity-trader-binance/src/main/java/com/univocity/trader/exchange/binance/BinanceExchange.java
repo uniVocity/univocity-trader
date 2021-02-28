@@ -37,12 +37,14 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	private char[] apiSecret;
 	private String apiKey;
 	private final double[] NO_PRICE = new double[]{-1.0};
+	private boolean isTestNet = false;
 
 
 	@Override
 	public BinanceClientAccount connectToAccount(Account clientConfiguration) {
 		this.apiKey = clientConfiguration.apiKey();
 		this.apiSecret = clientConfiguration.secret();
+		this.isTestNet = clientConfiguration.isTestNet();
 		this.binanceClientAccount = new BinanceClientAccount(clientConfiguration.apiKey(), new String(clientConfiguration.secret()), this);
 		return this.binanceClientAccount;
 	}
@@ -189,7 +191,7 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private BinanceApiWebSocketClient socketClient() {
 		if (socketClient == null) {
-			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient);
+			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient, isTestNet);
 			socketClient = factory.newWebSocketClient();
 		}
 		return socketClient;
@@ -199,8 +201,7 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private BinanceApiRestClient restClient() {
 		if (restClient == null) {
-			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient);
-			restClient = factory.newRestClient();
+			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient, isTestNet);
 		}
 		return restClient;
 	}

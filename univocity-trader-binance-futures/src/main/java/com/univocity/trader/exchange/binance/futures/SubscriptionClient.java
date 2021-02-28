@@ -28,21 +28,22 @@ public interface SubscriptionClient {
      *
      * @return The instance of synchronous client.
 
+     */
     static SubscriptionClient create() {
         return create("", "", new SubscriptionOptions());
     }
-     */
+
     /**
      * Create the subscription client to subscribe the update from server.
      *
      * @param apiKey    The public key applied from Binance.
      * @param secretKey The private key applied from Binance.
      * @return The instance of synchronous client.
-
+     */
     static SubscriptionClient create(String apiKey, String secretKey) {
         return BinanceApiInternalFactory.getInstance().createSubscriptionClient(apiKey, secretKey,
                 new SubscriptionOptions());
-    }*/
+    }
 
     /**
      * Create the subscription client to subscribe the update from server.
@@ -52,16 +53,16 @@ public interface SubscriptionClient {
      * @param subscriptionOptions The option of subscription connection, see
      *                            {@link SubscriptionOptions}
      * @return The instance of synchronous client.
-
+     */
     static SubscriptionClient create(String apiKey, String secretKey, SubscriptionOptions subscriptionOptions) {
         return BinanceApiInternalFactory.getInstance().createSubscriptionClient(apiKey, secretKey, subscriptionOptions);
     }
-     */
+
     /**
      * Unsubscribe all subscription.
+     */
 
     void unsubscribeAll();
-     */
 
     /**
      * Subscribe aggregate trade event. If the aggregate trade is updated,
