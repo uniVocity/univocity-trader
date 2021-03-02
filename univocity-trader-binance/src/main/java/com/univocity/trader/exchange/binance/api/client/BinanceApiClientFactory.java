@@ -1,6 +1,7 @@
 package com.univocity.trader.exchange.binance.api.client;
 
 import com.univocity.trader.exchange.binance.api.client.impl.*;
+import com.univocity.trader.exchange.binance.api.client.config.*;
 import org.asynchttpclient.*;
 
 /**
@@ -9,16 +10,9 @@ import org.asynchttpclient.*;
 public class BinanceApiClientFactory {
 
   /**
-   * API Key
+   * Api Configuration to create the clients
    */
-  private String apiKey;
-
-  /**
-   * Secret.
-   */
-  private String secret;
-
-  private AsyncHttpClient client;
+  private final BinanceApiConfig apiConfig;
 
   /**
    * Instantiates a new binance api client factory.
@@ -26,10 +20,8 @@ public class BinanceApiClientFactory {
    * @param apiKey the API key
    * @param secret the Secret
    */
-  private BinanceApiClientFactory(String apiKey, String secret, AsyncHttpClient client) {
-    this.apiKey = apiKey;
-    this.secret = secret;
-    this.client = client;
+  private BinanceApiClientFactory(String apiKey, String secret, AsyncHttpClient client, boolean isTestNet) {
+    this.apiConfig = new BinanceApiConfig(apiKey, secret, client, isTestNet);
   }
 
   /**
@@ -37,11 +29,27 @@ public class BinanceApiClientFactory {
    *
    * @param apiKey the API key
    * @param secret the Secret
+   * @param client the httpClient
+   * @param isTestNet if it uses the Test Network or Real Network
    *
    * @return the binance api client factory
    */
+  public static BinanceApiClientFactory newInstance(String apiKey, String secret, AsyncHttpClient client, boolean isTestNet) {
+    return new BinanceApiClientFactory(apiKey, secret, client, isTestNet);
+  }
+
+  /**
+   * New instance.
+   *
+   * @param apiKey the API key
+   * @param secret the Secret
+   * @param client the httpClient
+   *
+   * @return the binance api client factory
+   */
+
   public static BinanceApiClientFactory newInstance(String apiKey, String secret, AsyncHttpClient client) {
-    return new BinanceApiClientFactory(apiKey, secret, client);
+      return newInstance(apiKey, secret, client, false);
   }
 
   /**
@@ -50,26 +58,27 @@ public class BinanceApiClientFactory {
    * @return the binance api client factory
    */
   public static BinanceApiClientFactory newInstance(AsyncHttpClient client) {
-    return new BinanceApiClientFactory(null, null, client);
+    return new BinanceApiClientFactory(null, null, client, false);
   }
 
   /**
    * Creates a new synchronous/blocking REST client.
    */
   public BinanceApiRestClient newRestClient() {
-    return new BinanceApiRestClientImpl(apiKey, secret, this.client);
+    return new BinanceApiRestClientImpl(apiConfig);
   }
 
   /**
    * Creates a new asynchronous/non-blocking REST client.
    */
-  public BinanceApiAsyncRestClient newAsyncRestClient() {return new BinanceApiAsyncRestClientImpl(apiKey, secret, this.client);
+  public BinanceApiAsyncRestClient newAsyncRestClient() {return new BinanceApiAsyncRestClientImpl(apiConfig);
   }
 
   /**
    * Creates a new web socket client used for handling data streams.
    */
   public BinanceApiWebSocketClient newWebSocketClient() {
-    return new BinanceApiWebSocketClientImpl(this.client);
+    return new BinanceApiWebSocketClientImpl(apiConfig.getAsyncHttpClient());
   }
+
 }

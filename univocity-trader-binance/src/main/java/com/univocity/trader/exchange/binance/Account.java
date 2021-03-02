@@ -10,6 +10,7 @@ public class Account extends AccountConfiguration<Account> {
 
 	private String apiKey;
 	private char[] secret;
+	private boolean isTestNet;
 
 	public Account(String id) {
 		super(id);
@@ -43,5 +44,13 @@ public class Account extends AccountConfiguration<Account> {
 
 	public char[] secret() {
 		return secret;
+	}
+
+	public boolean isTestNet() {
+		return isTestNet;
+	}
+
+	public void setTestNet(boolean isTestNet) {
+		this.isTestNet = isTestNet;
 	}
 }

@@ -25,7 +25,7 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	private boolean pollCandles = true;
 	private Period warmUpPeriod;
 	private final RepositoryDir signalRepositoryDir = new RepositoryDir();
-
+	private boolean isTestNet;
 
 	protected Configuration() {
 		this("univocity-trader.properties");
@@ -161,5 +161,13 @@ public abstract class Configuration<C extends Configuration<C, T>, T extends Acc
 	public C signalRepositoryDir(Path signalRepositoryDir) {
 		this.signalRepositoryDir.set(signalRepositoryDir);
 		return (C) this;
+	}
+
+	public boolean isTestNet() {
+		return isTestNet;
+	}
+
+	public void setTestNet(boolean testNet) {
+		isTestNet = testNet;
 	}
 }

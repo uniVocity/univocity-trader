@@ -31,6 +31,10 @@ public class Main {
 	 * live trading option
 	 */
 	private static final String TRADE_OPTION = "trade";
+	/**
+	 * spot test network option
+	 */
+	private static final String TEST_NET_OPTION = "testnet";
 
 	private static String[] getPairs(Exchange exchange) {
 		final String[] univocitySymbols = Tickers.getInstance().getSymbols(Type.crypto);
@@ -59,6 +63,7 @@ public class Main {
 		options.addOption(Option.builder().argName(BACKFILL_OPTION).longOpt(BACKFILL_OPTION).hasArg(false).required(false).desc("backfill historical data from exchange").build());
 		options.addOption(Option.builder().argName(SIMULATE_OPTION).longOpt(SIMULATE_OPTION).hasArg(false).required(false).desc("simulate").build());
 		options.addOption(Option.builder().argName(TRADE_OPTION).longOpt(TRADE_OPTION).hasArg(false).required(false).desc("trade live on exchange").build());
+		options.addOption(Option.builder().argName(TEST_NET_OPTION).longOpt(TEST_NET_OPTION).hasArg(false).required(false).desc("trade live on on test network").build());
 		/*
 		 * parse
 		 */
@@ -76,7 +81,8 @@ public class Main {
 
 			if (cmd.hasOption(TRADE_OPTION)) {
 				ran = true;
-				livetrade(entryPoint, configFileName);
+				final boolean isTestNet = cmd.hasOption(TEST_NET_OPTION);
+				livetrade(entryPoint, configFileName, isTestNet);
 			} else {
 				AbstractSimulator<?, ?> simulator = loadSimulator(entryPoint, configFileName);
 				/*
@@ -117,9 +123,10 @@ public class Main {
 		}
 	}
 
-	private static void livetrade(EntryPoint entryPoint, String configFileName) {
+	private static void livetrade(EntryPoint entryPoint, String configFileName, boolean isTestNet) {
 		var trader = (LiveTrader<?, ?, ?>) ReflectionUtils.invokeMethod(entryPoint, "trader", true);
-		loadConfiguration(trader.configure(), configFileName);
+		Configuration configuration = loadConfiguration(trader.configure(), configFileName);
+		configuration.setTestNet(isTestNet);
 		trader.run();
 	}
 
@@ -129,11 +136,12 @@ public class Main {
 		return out;
 	}
 
-	private static void loadConfiguration(Configuration config, String fileName) {
+	private static Configuration loadConfiguration(Configuration config, String fileName) {
 		if (fileName != null) {
 			config.loadConfigurationFromProperties(fileName);
 		} else {
 			config.loadConfigurationFromProperties();
 		}
+		return config;
 	}
 }

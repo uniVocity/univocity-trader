@@ -12,15 +12,30 @@ public class BinanceApiConstants {
 	 */
 	public static final String API_BASE_URL = "https://api.binance.com";
 
+    /**
+     * REST API base URL SPOT Test Network.
+     */
+    public static final String API_TEST_NETWORK_BASE_URL = "https://testnet.binance.vision";
+
 	/**
 	 * Streaming API base URL.
 	 */
 	public static final String WS_API_BASE_URL = "wss://stream.binance.com:9443/ws";
 
 	/**
+	 * Streaming API Test Network base URL.
+	 */
+	public static final String WS_SPOT_TEST_NETWORK_API_BASE_URL = "wss:/testnet.binance.vision/ws";
+
+	/**
 	 * Asset info base URL.
 	 */
 	public static final String ASSET_INFO_API_BASE_URL = "https://www.binance.com/";
+
+	/**
+	 * Asset info Test Network base URL.
+	 */
+	public static final String ASSET_INFO_API_TEST_NETWORK_BASE_URL = "https://testnet.binance.vision/";
 
 	/**
 	 * HTTP Header to be used for API-KEY authentication.
