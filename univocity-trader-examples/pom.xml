@@ -28,11 +28,11 @@
 			<version>${revision}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.univocity</groupId>
-			<artifactId>univocity-trader-interactivebrokers</artifactId>
-			<version>${revision}</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.univocity</groupId>-->
+<!--			<artifactId>univocity-trader-interactivebrokers</artifactId>-->
+<!--			<version>${revision}</version>-->
+<!--		</dependency>-->
 	</dependencies>
 
 	<build>
