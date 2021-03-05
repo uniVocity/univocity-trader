@@ -19,7 +19,7 @@ public class LiveForexTrader {
 				.user("admin")
 				.password("qwerty");
 
-		If you want to receive e-mail notifications each time an order is submitted to the exchange, configure your e-mail sender
+		//If you want to receive e-mail notifications each time an order is submitted to the exchange, configure your e-mail sender
 		trader.configure().mailSender()
 				.replyToAddress("dev@univocity.com")
 				.smtpHost("smtp.gmail.com")

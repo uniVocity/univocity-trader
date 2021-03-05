@@ -25,8 +25,10 @@
     <modules>
         <module>univocity-trader-core</module>
         <module>univocity-trader-binance</module>
+<!--    Temporarily comomented since it breaks the build. Once it's fix uncomment this line -->
 <!--        <module>univocity-trader-binance-futures</module>-->
         <module>univocity-trader-iqfeed</module>
+<!--    Uncomment if you have the Interactive Brokers jar and you want to use IB module -->
 <!--        <module>univocity-trader-interactivebrokers</module>-->
         <module>univocity-trader-examples</module>
         <module>univocity-trader-chart</module>
