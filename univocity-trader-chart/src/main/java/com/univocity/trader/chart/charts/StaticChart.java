@@ -92,9 +92,9 @@ public abstract class StaticChart<T extends PainterTheme<?>> extends CoordinateM
 		lastPaint = System.currentTimeMillis();
 	}
 
-	protected void paintOver(Graphics2D g){
+	protected void paintOver(Graphics2D g) {
 
-	};
+	}
 
 	public int getBoundaryLeft() {
 		return canvas.getBoundaryLeft();
@@ -253,16 +253,6 @@ public abstract class StaticChart<T extends PainterTheme<?>> extends CoordinateM
 		return currentCandle;
 	}
 
-	protected Point createCandleCoordinate(int candleIndex) {
-		Candle candle = candleHistory.get(candleIndex);
-		Point p = new Point();
-		if (candle != null) {
-			p.x = getXCoordinate(candleIndex);
-			p.y = getYCoordinate(getCentralValue(candle));
-		}
-		return p;
-	}
-
 	public Point locationOf(Candle candle) {
 		if (candle == null) {
 			return null;
@@ -273,6 +263,14 @@ public abstract class StaticChart<T extends PainterTheme<?>> extends CoordinateM
 		p.y = getY(candle);
 
 		return p;
+	}
+
+	protected Point createCandleCoordinate(int candleIndex, Candle candle, int imgFrom, int imgTo) {
+		int x = getXCoordinate(candleIndex);
+		if (x >= imgFrom && x <= imgTo) {
+			return new Point(x, getYCoordinate(getCentralValue(candle)));
+		}
+		return null;
 	}
 
 	public int getX(Candle candle) {

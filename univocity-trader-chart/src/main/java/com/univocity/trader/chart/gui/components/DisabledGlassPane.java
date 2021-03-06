@@ -88,6 +88,9 @@ public class DisabledGlassPane extends JComponent implements KeyListener {
 	}
 
 	public void deactivate() {
+		if(!isVisible()){
+			return;
+		}
 		SwingUtilities.invokeLater(() -> {
 			setCursor(null);
 			setVisible(false);

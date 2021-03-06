@@ -8,6 +8,7 @@ import com.univocity.trader.chart.gui.components.*;
 import com.univocity.trader.chart.gui.components.time.*;
 import com.univocity.trader.config.*;
 import com.univocity.trader.indicators.base.*;
+import com.univocity.trader.utils.*;
 import org.slf4j.*;
 
 import javax.swing.*;
@@ -16,6 +17,7 @@ import java.awt.*;
 import java.time.*;
 import java.util.List;
 import java.util.*;
+import java.util.function.*;
 
 public class SymbolSelector extends JPanel {
 
@@ -30,6 +32,7 @@ public class SymbolSelector extends JPanel {
 
 	private JComboBox<String> cmbSymbols;
 	private DefaultComboBoxModel<String> cmbSymbolsModel;
+	private Aggregator aggregator;
 
 	private CandleRepository candleRepository;
 	private final CandleHistory candleHistory;
@@ -41,6 +44,7 @@ public class SymbolSelector extends JPanel {
 	private ExchangeSelector exchangeSelector;
 	private JButton btUpdate;
 	private JToggleButton btLive;
+	private List<Consumer<Candle>> liveFeedConsumers = new ArrayList<>();
 
 	public SymbolSelector(CandleHistory candleHistory) {
 		this.candleHistory = candleHistory;
@@ -93,20 +97,128 @@ public class SymbolSelector extends JPanel {
 		if (btLive == null) {
 			btLive = new JToggleButton("Connect");
 			btLive.setEnabled(false);
-			btLive.addActionListener(l -> tradeLive(btLive.isSelected()));
+			btLive.addActionListener(l -> tradeLive());
 		}
 		return btLive;
 	}
 
-	private void tradeLive(boolean live){
-		//TODO:
-		if(!live){
+	private void tradeLive() {
+		if (getBtLive().isSelected()) {
 			getBtLive().setText("Disconnect");
-			System.out.println("Disconnect from exchange");
+			String symbol = getSymbol();
+			if (symbol != null) {
+				new Thread(() -> {
+					startStream(getExchange(true), symbol);
+				}).start();
+			}
 		} else {
+			getExchange(true);
 			getBtLive().setText("Connect");
-			System.out.println("Connect to exchange");
 		}
+	}
+
+	private Exchange getExchange(boolean disconnect) {
+		Exchange exchange = getExchangeSelector().getSelectedExchange();
+		if (disconnect) {
+			try {
+				exchange.closeLiveStream();
+				fireLiveFeedConsumers(null);
+			} catch (Exception e) {
+				log.error("Error closing live stream from " + exchange.getName());
+			}
+		}
+		return exchange;
+	}
+
+	private void fireLiveFeedConsumers(Candle tick) {
+		for (Consumer<Candle> consumer : liveFeedConsumers) {
+			consumer.accept(tick);
+		}
+	}
+
+	private void loadRecentCandles(Exchange exchange, String symbol, boolean updateCandleHistory) {
+		IncomingCandles recent = exchange.getLatestTicks(symbol, TimeInterval.MINUTE);
+		for (Object tick : recent) {
+			if (tick != null) {
+				PreciseCandle latestCandle = exchange.generatePreciseCandle(tick);
+				candleRepository.addToHistory(symbol, latestCandle, true);
+				if (updateCandleHistory) {
+					candleHistory.addOrUpdateSilently(new Candle(latestCandle));
+				}
+			}
+		}
+	}
+
+	private void startStream(Exchange exchange, String symbol) {
+		if (!(candleRepository instanceof DatabaseCandleRepository)) {
+			WindowUtils.displayWarning(this, "Can't open live stream for symbol " + symbol + " in " + exchange.getName() + ". No database active to process data.");
+			return;
+		}
+		backfill(exchange, false);
+
+		SwingUtilities.invokeLater(() -> getGlassPane().activate("Starting live data stream for " + getSymbol()));
+		new Thread(() -> startStream((DatabaseCandleRepository) candleRepository, exchange, symbol)).start();
+
+	}
+
+	private void startStream(DatabaseCandleRepository repository, Exchange exchange, String symbol) {
+		loadRecentCandles(exchange, symbol, false);
+		fillAvailableDates();
+		loadCandles();
+
+		exchange.openLiveStream(symbol.toLowerCase(), TimeInterval.MINUTE, new TickConsumer() {
+
+			boolean initializing = true;
+
+			@Override
+			public void tickReceived(String symbol, Object rawTick) {
+				PreciseCandle tickInStream = exchange.generatePreciseCandle(rawTick);
+				Candle tick = new Candle(tickInStream);
+				updateChartEnd(tick);
+
+				if (initializing) {
+					synchronized (this) {
+						if (initializing) {
+							try {
+								loadRecentCandles(exchange, symbol, true);
+								Candle last = candleHistory.getLast();
+								initializing = tick.openTime - last.openTime > TimeInterval.MINUTE.ms;
+							} finally {
+								if (!initializing) {
+									getGlassPane().deactivate();
+								}
+							}
+						}
+					}
+				}
+
+				repository.addToHistory(symbol.toUpperCase(), tickInStream, false);
+
+
+				fireLiveFeedConsumers(tick);
+
+				Aggregator aggregator = getAggregator(false);
+
+				aggregator.aggregate(tick);
+				if ((tick = aggregator.getFull()) != null) {
+					candleHistory.addOrUpdate(tick);
+				}
+
+				//tick.close;
+			}
+
+			@Override
+			public void streamError(Throwable cause) {
+				log.error("Error receiving live data from exchange", cause);
+				getGlassPane().deactivate();
+			}
+
+			@Override
+			public void streamClosed() {
+				log.info("Closing live data stream");
+				getGlassPane().deactivate();
+			}
+		});
 	}
 
 	private ExchangeSelector getExchangeSelector() {
@@ -149,7 +261,7 @@ public class SymbolSelector extends JPanel {
 	private void executeLoadCandles() {
 		Thread thread = new Thread(() -> {
 			try {
-				glassPane.activate("Loading " + getSymbol() + " candles...");
+				getGlassPane().activate("Loading " + getSymbol() + " candles...");
 				loadCandles();
 			} finally {
 				glassPane.deactivate();
@@ -159,7 +271,7 @@ public class SymbolSelector extends JPanel {
 	}
 
 	private void executeBackfill() {
-		if(!candleRepository.isWritingSupported()){
+		if (!candleRepository.isWritingSupported()) {
 			log.warn("Can't backfill data. Writing not supported");
 			return;
 		}
@@ -169,20 +281,22 @@ public class SymbolSelector extends JPanel {
 			getBtUpdate().setEnabled(false);
 			return;
 		}
-		Thread thread = new Thread(() -> {
-			try {
-				glassPane.activate("Updating history of " + getSymbol());
-				CandleHistoryBackfill backfill = new CandleHistoryBackfill((DatabaseCandleRepository) candleRepository);
-				backfill.fillHistoryGaps(exchange, getSymbol(), getChartStart().getCommittedValue(), Instant.now(), TimeInterval.minutes(1));
-				fillAvailableDates();
-				loadCandles();
-			} finally {
-				glassPane.deactivate();
-			}
-		});
-		thread.start();
+		new Thread(() -> backfill(exchange, true)).start();
 	}
 
+	private void backfill(Exchange<?, ?> exchange, boolean loadCandles) {
+		try {
+			glassPane.activate("Updating history of " + getSymbol());
+			CandleHistoryBackfill backfill = new CandleHistoryBackfill((DatabaseCandleRepository) candleRepository);
+			backfill.fillHistoryGaps(exchange, getSymbol(), getChartStart().getCommittedValue(), Instant.now(), TimeInterval.minutes(1));
+			fillAvailableDates();
+			if (loadCandles) {
+				loadCandles();
+			}
+		} finally {
+			glassPane.deactivate();
+		}
+	}
 
 	public String getSymbol() {
 		String symbol = (String) getCmbSymbols().getSelectedItem();
@@ -238,6 +352,14 @@ public class SymbolSelector extends JPanel {
 		return cmbSymbolsModel;
 	}
 
+	private Aggregator getAggregator(boolean reset) {
+		if (aggregator == null || reset) {
+			TimeInterval interval = getInterval();
+			aggregator = new Aggregator("").getInstance(interval);
+		}
+		return aggregator;
+	}
+
 	private void loadCandles() {
 		btUpdate.setEnabled(false);
 		btLoad.setEnabled(false);
@@ -247,14 +369,13 @@ public class SymbolSelector extends JPanel {
 		}
 
 		try {
-			TimeInterval interval = getInterval();
 			Instant from = getChartStart().getCommittedValue();
 			Instant to = getChartEnd().getCommittedValue();
 
-			Aggregator aggregator = new Aggregator("").getInstance(interval);
-
 			long count = candleRepository.countCandles(symbol, from, to);
 			List<Candle> candles = new ArrayList<>((int) count);
+
+			Aggregator aggregator = getAggregator(true);
 
 			Enumeration<Candle> data = candleRepository.iterate(symbol, from, to, false);
 			while (data.hasMoreElements()) {
@@ -320,17 +441,20 @@ public class SymbolSelector extends JPanel {
 		if (symbol != null) {
 			Candle first = candleRepository.firstCandle(symbol);
 			if (first != null) {
-				Candle last = candleRepository.lastCandle(symbol);
-
 				getChartStart().setMinimumValue(first.openTime);
-				getChartEnd().setMaximumValue(last.closeTime);
-
 				getChartStart().setValue(first.openTime);
-				getChartEnd().setValue(last.closeTime);
+
+				Candle last = candleRepository.lastCandle(symbol);
+				updateChartEnd(last);
 
 				updateDateFields();
 			}
 		}
+	}
+
+	private void updateChartEnd(Candle tick) {
+		getChartEnd().setMaximumValue(tick.closeTime);
+		getChartEnd().setValue(tick.closeTime);
 	}
 
 	private void setDateSelectionEnabled(boolean enabled) {
@@ -403,6 +527,9 @@ public class SymbolSelector extends JPanel {
 		return type.toTimeInterval(units);
 	}
 
+	public void addLiveFeedConsumer(Consumer<Candle> feedConsumer) {
+		liveFeedConsumers.add(feedConsumer);
+	}
 
 	public static void main(String... args) {
 		DatabaseConfiguration databaseConfiguration = new SimulationConfiguration().database();
@@ -413,4 +540,6 @@ public class SymbolSelector extends JPanel {
 		SymbolSelector symbolSelector = new SymbolSelector(new CandleHistory());
 		WindowUtils.displayTestFrame(symbolSelector);
 	}
+
+
 }

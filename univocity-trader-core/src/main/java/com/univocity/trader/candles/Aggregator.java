@@ -78,7 +78,7 @@ public final class Aggregator {
 	}
 
 	public void setFull(Candle candle){
-		this.full = full;
+		this.full = candle;
 	}
 
 	public Candle getFull() {

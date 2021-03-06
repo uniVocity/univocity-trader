@@ -1,6 +1,7 @@
 package com.univocity.trader.exchange.binance.api.client.impl;
 
 import com.univocity.trader.exchange.binance.api.client.*;
+import com.univocity.trader.exchange.binance.api.client.config.BinanceApiConfig;
 import com.univocity.trader.exchange.binance.api.client.constant.*;
 import com.univocity.trader.exchange.binance.api.client.domain.account.*;
 import com.univocity.trader.exchange.binance.api.client.domain.account.request.*;
@@ -20,8 +21,8 @@ public class BinanceApiAsyncRestClientImpl implements BinanceApiAsyncRestClient 
 
   private final BinanceApiService binanceApiService;
 
-  public BinanceApiAsyncRestClientImpl(String apiKey, String secret, AsyncHttpClient client) {
-    binanceApiService = createService(BinanceApiService.class, client, apiKey, secret);
+  public BinanceApiAsyncRestClientImpl(BinanceApiConfig apiConfig) {
+    binanceApiService = createService(BinanceApiService.class, apiConfig);
   }
 
   // General endpoints

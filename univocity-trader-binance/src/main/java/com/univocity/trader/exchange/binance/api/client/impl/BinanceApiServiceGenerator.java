@@ -1,7 +1,8 @@
 package com.univocity.trader.exchange.binance.api.client.impl;
 
+
 import com.univocity.trader.exchange.binance.api.client.BinanceApiError;
-import com.univocity.trader.exchange.binance.api.client.constant.BinanceApiConstants;
+import com.univocity.trader.exchange.binance.api.client.config.BinanceApiConfig;
 import com.univocity.trader.exchange.binance.api.client.exception.BinanceApiException;
 import okhttp3.ResponseBody;
 import org.asynchttpclient.AsyncHttpClient;
@@ -32,17 +33,21 @@ public class BinanceApiServiceGenerator {
 	public static final int MAX_RETRY_FAILURES = 5;
 
 	public static <S> S createService(Class<S> serviceClass, AsyncHttpClient httpClient) {
-		return createService(serviceClass, httpClient, null, null);
+		return createService(serviceClass, new BinanceApiConfig(null, null, httpClient, false));
 	}
 
 	public static <S> S createService(Class<S> serviceClass, AsyncHttpClient httpClient, String apiKey, String secret) {
+		return createService(serviceClass, new BinanceApiConfig(apiKey, secret, httpClient,  false));
+    }
+
+	public static <S> S createService(Class<S> serviceClass, BinanceApiConfig apiConfig) {
 		AsyncHttpClientCallFactory.AsyncHttpClientCallFactoryBuilder callFactoryBuilder =
-				AsyncHttpClientCallFactory.builder().httpClient(httpClient);
+				AsyncHttpClientCallFactory.builder().httpClient(apiConfig.getAsyncHttpClient());
 		Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
-				.baseUrl(BinanceApiConstants.API_BASE_URL)
+				.baseUrl(apiConfig.getApiBaseUrl())
 				.addConverterFactory(converterFactory)
 				.validateEagerly(true);
-		BinanceCallCustomizer.customize(apiKey, secret, callFactoryBuilder);
+		BinanceCallCustomizer.customize(apiConfig.getApiKey(), apiConfig.getSecret(), callFactoryBuilder);
 		Retrofit retrofit = retrofitBuilder.callFactory(callFactoryBuilder.build()).build();
 		return retrofit.create(serviceClass);
 	}

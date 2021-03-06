@@ -14,17 +14,8 @@ public class BarChart extends BasicChart<BarChartTheme> {
 	}
 
 	@Override
-	protected void draw(Graphics2D g, int width) {
-		for (int i = 0; i < candleHistory.size(); i++) {
-			Candle candle = candleHistory.get(i);
-			if(candle == null){
-				return;
-			}
-			Point location = createCandleCoordinate(i);
-			drawBar(getLineColor(candle), candle, location, g);
-		}
-
-		super.draw(g, width);
+	protected final void doDraw(Graphics2D g, int i, Candle candle, Point current, Point previous){
+		drawBar(getLineColor(candle), candle, current, g);
 	}
 
 	private void drawBar(Color color, Candle candle, Point location, Graphics2D g) {
@@ -75,7 +66,7 @@ public class BarChart extends BasicChart<BarChartTheme> {
 		drawSelectedBar(hovered, location, g);
 	}
 
-	private void drawSelectedBar(Candle selected, Point location, Graphics2D g){
+	private void drawSelectedBar(Candle selected, Point location, Graphics2D g) {
 		drawBar(getLineSelectionColor(selected), selected, location, g);
 	}
 

@@ -14,18 +14,13 @@ abstract class FilledBarChart<C extends AbstractFilledBarTheme<?>> extends Basic
 	}
 
 	@Override
-	protected void draw(Graphics2D g, int width) {
+	protected final void prepareToDraw(Graphics2D g) {
 		g.setStroke(getLineStroke());
-		for (int i = 0; i < candleHistory.size(); i++) {
-			Candle candle = candleHistory.get(i);
-			if (candle == null) {
-				return;
-			}
-			Point location = createCandleCoordinate(i);
-			drawBar(candle, location, g, getLineColor(candle), getFillColor(candle));
-		}
+	}
 
-		super.draw(g, width);
+	@Override
+	protected void doDraw(Graphics2D g, int i, Candle candle, Point current, Point previous) {
+		drawBar(candle, current, g, getLineColor(candle), getFillColor(candle));
 	}
 
 	protected abstract void drawBar(Candle trade, Point location, Graphics2D g, Color lineColor, Color fillColor);

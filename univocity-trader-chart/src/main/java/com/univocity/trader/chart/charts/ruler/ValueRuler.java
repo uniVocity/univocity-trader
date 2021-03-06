@@ -22,6 +22,7 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 	private static final Color glassWhite = new Color(255, 255, 255, 128);
 
 	private int refY1, refY2, refY3;
+	private double currentPrice;
 
 	public ValueRuler(BasicChart<?> chart) {
 		super(chart);
@@ -53,23 +54,73 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 
 		final double yIncrement = getFontHeight();
 
-		int height = chart.getAvailableHeight();
+		final int height = chart.getAvailableHeight();
 		int y = height - chart.getYCoordinate(chart.getMaximum());
 
 		int insetRight = 0;
+
+		double min = Double.MAX_VALUE;
+		double max = Double.MIN_VALUE;
 		while (y > 0) {
-			String tag = getValueFormat().format(chart.getValueAtY(y));
-			int tagWidth = this.theme().getMaxStringWidth(tag, g);
+			double value = chart.getValueAtY(y);
+			if(value < min){
+				min = value;
+			}
+			if(value > max){
+				max = value;
+			}
 
-			insetRight = Math.max(insetRight, tagWidth);
-
-			int yy = height - y;
-			text(g);
-			g.drawString(tag, chart.getBoundaryRight() - tagWidth - getRightValueTagSpacing(), yy + (getFontHeight() / 2));
+			insetRight = drawValue(chart, g, value, insetRight, height, y, false);
 			y -= yIncrement;
 		}
 
+		if(currentPrice > 0.0){
+			if(currentPrice < min){
+				y = height - chart.getYCoordinate(chart.getMaximum());
+			} else if(currentPrice > max){
+				y = 0;
+			} else {
+				y = chart.getYCoordinate(currentPrice);
+			}
+
+			insetRight = drawValue(chart, g, currentPrice, insetRight, height,  y - getFontHeight() / 2, true);
+
+			g.setColor(getColorForCandle(chart.candleHistory.getLast()));
+			g.fillOval(chart.getBoundaryRight() - insetRight - 3, y - 3, 4, 4);
+
+//			final int fontHeight = this.theme().getFontHeight();
+//			int stringY = this.theme().centralizeYToFontHeight(y);
+//			Point location = new Point(chart.getBoundaryRight() - insetRight, y);
+//
+//			setProfile(HIGHLIGHT);
+//			drawing(g);
+//			drawLineToPrice(g, fontHeight, location, 0, y, stringY, null);
+		}
+
 		insets.right = insetRight;
+	}
+
+	private int drawValue(BasicChart<?> chart, Graphics2D g, double value, int insetRight, int height, int y, boolean highlight){
+		String tag = getValueFormat().format(value);
+		int tagWidth = this.theme().getMaxStringWidth(tag, g);
+
+		insetRight = Math.max(insetRight, tagWidth);
+
+		int yy = height - y;
+		text(g);
+
+		if(highlight){
+			int x = chart.getBoundaryRight() - tagWidth - this.theme().getRightValueTagSpacing();
+			drawStringInBox(x, y, tagWidth, tag, g, 2, chart.theme().getBackgroundColor());
+		} else {
+			g.drawString(tag, chart.getBoundaryRight() - tagWidth - getRightValueTagSpacing(), yy + (getFontHeight() / 2));
+		}
+
+		return insetRight;
+	}
+
+	public void setCurrentPrice(double currentPrice) {
+		this.currentPrice = currentPrice;
 	}
 
 	private int getMinimumWidth() {
@@ -174,6 +225,10 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 		return drawValues(chart, y, chart.getAvailableHeight(), g, location, candle, value, drawInBox, refY, drawAboveRef, false);
 	}
 
+	private Color getColorForCandle(Candle candle){
+		return candle == null ? getBackgroundColor() : candle.isGreen() ? getProfitBackground() : getLossBackground();
+	}
+
 	private int drawValues(BasicChart<?> chart, int y, int height, Graphics2D g, Point location, Candle candle, double value, boolean drawInBox, int refY, boolean drawAboveRef, boolean inMiddle) {
 		final int fontHeight = this.theme().getFontHeight();
 		int stringY = this.theme().centralizeYToFontHeight(y);
@@ -202,7 +257,7 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 		int x = chart.getBoundaryRight() - tagWidth - this.theme().getRightValueTagSpacing();
 		if (drawInBox || inMiddle) {
 			if (drawInBox) {
-				drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, candle == null ? getBackgroundColor() : candle.isGreen() ? getProfitBackground() : getLossBackground());
+				drawStringInBox(x, stringY, chart.getWidth(), tag, g, 1, getColorForCandle(candle));
 			} else {
 				drawString(x, stringY, tag, g, 1);
 			}
@@ -225,14 +280,17 @@ public class ValueRuler extends Ruler<ValueRulerTheme> {
 		if ((!drawInBox || candle == null)) {
 			setProfile(HIGHLIGHT);
 			drawing(g);
-			drawLineToPrice(g, fontHeight, location, x, y, stringY);
+			drawLineToPrice(g, fontHeight, location, x, y, stringY, null);
 		}
 
 		return stringY;
 	}
 
-	private void drawLineToPrice(Graphics2D g, int fontHeight, Point location, int x, int y, int stringY) {
+	private void drawLineToPrice(Graphics2D g, int fontHeight, Point location, int x, int y, int stringY, Stroke stroke) {
 		drawing(g);
+		if(stroke != null) {
+			g.setStroke(stroke);
+		}
 		int heightAdjust = (fontHeight / 2);
 		g.drawLine(location.x, y, x, stringY + heightAdjust);
 	}

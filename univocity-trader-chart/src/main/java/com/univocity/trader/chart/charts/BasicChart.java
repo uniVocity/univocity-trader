@@ -139,8 +139,33 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 		return mousePosition;
 	}
 
+	protected void prepareToDraw(Graphics2D g){
+
+	}
+
+	protected abstract void doDraw(Graphics2D g, int i, Candle candle, Point current, Point previous);
+
 	@Override
-	protected void draw(Graphics2D g, int width) {
+	protected final void draw(Graphics2D g, int width) {
+		final int imgTo = getBoundaryRight();
+		final int imgFrom = imgTo - getWidth();
+
+		prepareToDraw(g);
+		Point prev = null;
+		for (int i = 0; i < candleHistory.size(); i++) {
+			Candle candle = candleHistory.get(i);
+			if (candle == null) {
+				break;
+			}
+			Point current = createCandleCoordinate(i, candle, imgFrom, imgTo);
+			if(current != null){
+				doDraw(g, i, candle, current, prev);
+				prev = current;
+			} else if(prev != null) {
+				break;
+			}
+		}
+
 		runPainters(g, Painter.Overlay.BACK, width);
 
 		for (Painter<?> painter : painters.get(NONE)) {
@@ -233,7 +258,7 @@ public abstract class BasicChart<T extends PainterTheme<?>> extends StaticChart<
 	protected abstract void drawHovered(Candle hovered, Point location, Graphics2D g);
 
 	private void runPainters(Graphics2D g, Painter.Overlay overlay, int width) {
-		for (Painter<?> painter : painters.get(overlay)) {
+		for (Painter<?> painter : Collections.unmodifiableList(painters.get(overlay))) {
 			painter.paintOn(this, g, width, overlay);
 			canvas.insets.right = Math.max(painter.insets().right, canvas.insets.right);
 			canvas.insets.left = Math.max(painter.insets().left, canvas.insets.left);

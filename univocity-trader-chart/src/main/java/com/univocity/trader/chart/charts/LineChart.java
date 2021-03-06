@@ -29,23 +29,17 @@ public class LineChart extends BasicChart<LineTheme<LineChart>> {
 	}
 
 	@Override
-	protected void draw(Graphics2D g, int width) {
+	protected void prepareToDraw(Graphics2D g) {
 		g.setStroke(getLineStroke());
 		g.setColor(getLineColor());
+	}
 
-		Point startPoint = null;
-		for (int i = 0; i < candleHistory.size(); i++) {
-			Point location = createCandleCoordinate(i);
-			if (startPoint == null) {
-				startPoint = location;
-				continue;
-			}
-
-			g.drawLine(startPoint.x, startPoint.y, location.x, location.y);
-			startPoint = location;
+	@Override
+	protected void doDraw(Graphics2D g, int i, Candle candle, Point current, Point previous) {
+		if(previous == null){
+			return;
 		}
-
-		super.draw(g, width);
+		g.drawLine(previous.x, previous.y, current.x, current.y);
 	}
 
 	@Override
@@ -58,11 +52,11 @@ public class LineChart extends BasicChart<LineTheme<LineChart>> {
 		drawCircle(getMarkerColor(), location, g);
 	}
 
-	private int getMarkerWidth(){
+	private int getMarkerWidth() {
 		return theme().getMarkerWidth();
 	}
 
-	private Color getMarkerColor(){
+	private Color getMarkerColor() {
 		return theme().getMarkerColor();
 	}
 
@@ -70,7 +64,7 @@ public class LineChart extends BasicChart<LineTheme<LineChart>> {
 		return theme().getLineColor();
 	}
 
-	private void drawCircle(Color color, Point location, Graphics2D g){
+	private void drawCircle(Color color, Point location, Graphics2D g) {
 		g.setColor(color);
 		int markerWidth = getMarkerWidth();
 		g.fillOval(location.x - markerWidth / 2, location.y - markerWidth / 2, markerWidth, markerWidth);
