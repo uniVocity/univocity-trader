@@ -99,7 +99,7 @@ public class WebSocketStreamClientImpl implements SubscriptionClient, Closeable 
         }
         return null;
     }
-/*
+
     @Override
     public void unsubscribeAll() {
         for (WebSocketConnection connection : connections) {
@@ -107,7 +107,7 @@ public class WebSocketStreamClientImpl implements SubscriptionClient, Closeable 
             connection.close();
         }
         connections.clear();
-    }*/
+    }
 
     @Override
     public WebSocket subscribeAggregateTradeEvent(String symbol, BinanceFuturesApiCallback<AggregateTradeEvent> callback) {

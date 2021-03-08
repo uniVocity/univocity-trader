@@ -12,7 +12,7 @@ public class SubscribeAllTicker {
         client.subscribeAllTickerEvent(((event) -> {
             System.out.println(event);
             client.unsubscribeAll();
-        }), null);
+        }));
 
     }
 

@@ -12,7 +12,7 @@ public class SubscribeDiffDepth {
         client.subscribeDiffDepthEvent("btcusdt", ((event) -> {
             System.out.println(event);
             client.unsubscribeAll();
-        }), null);
+        }));
 
     }
 

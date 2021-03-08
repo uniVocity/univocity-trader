@@ -12,7 +12,7 @@ public class SubscribeSymbolBookTicker {
         client.subscribeSymbolBookTickerEvent("btcusdt", ((event) -> {
             System.out.println(event);
             client.unsubscribeAll();
-        }), null);
+        }));
 
     }
 

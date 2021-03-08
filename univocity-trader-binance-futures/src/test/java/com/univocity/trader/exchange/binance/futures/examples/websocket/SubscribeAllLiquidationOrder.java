@@ -11,7 +11,7 @@ public class SubscribeAllLiquidationOrder {
    
         client.subscribeAllLiquidationOrderEvent(((event) -> {
             System.out.println(event);
-        }), null);
+        }));
 
     }
 

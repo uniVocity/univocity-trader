@@ -5,6 +5,9 @@ import com.univocity.trader.exchange.binance.futures.SyncRequestClient;
 
 import com.univocity.trader.exchange.binance.futures.examples.constants.PrivateConfig;
 import com.univocity.trader.exchange.binance.futures.model.enums.*;
+import com.univocity.trader.exchange.binance.futures.model.trade.*;
+
+import java.math.*;
 
 public class PostOrder {
     public static void main(String[] args) {
@@ -16,7 +19,7 @@ public class PostOrder {
 
         // place dual position side order.
         // Switch between dual or both position side, call: com.binance.client.examples.trade.ChangePositionSide
-        System.out.println(syncRequestClient.postOrder("BTCUSDT", OrderSide.SELL, PositionSide.SHORT, OrderType.LIMIT, TimeInForce.GTC,
-                "1", "9000", null, null, null, null, NewOrderRespType.RESULT));
+        System.out.println(syncRequestClient.postOrder(new FuturesOrder("BTCUSDT", OrderSide.SELL, PositionSide.SHORT, OrderType.LIMIT, TimeInForce.GTC,
+                new BigDecimal("1"), new BigDecimal("9000")), NewOrderRespType.RESULT));
     }
 }

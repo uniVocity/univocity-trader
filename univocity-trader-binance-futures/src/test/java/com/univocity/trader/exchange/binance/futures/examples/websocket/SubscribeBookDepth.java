@@ -12,7 +12,7 @@ public class SubscribeBookDepth {
         client.subscribeBookDepthEvent("btcusdt", 5, ((event) -> {
             System.out.println(event);
             client.unsubscribeAll();
-        }), null);
+        }));
 
     }
 

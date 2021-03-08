@@ -11,7 +11,7 @@ public class SubscribeAllBookTicker {
    
         client.subscribeAllBookTickerEvent(((event) -> {
             System.out.println(event);
-        }), null);
+        }));
 
     }
 

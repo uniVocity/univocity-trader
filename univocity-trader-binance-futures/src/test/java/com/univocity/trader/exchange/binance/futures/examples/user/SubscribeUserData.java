@@ -26,9 +26,7 @@ public class SubscribeUserData {
         SubscriptionClient client = SubscriptionClient.create(PrivateConfig.API_KEY, PrivateConfig.SECRET_KEY);
 
    
-        client.subscribeUserDataEvent(listenKey, ((event) -> {
-            System.out.println(event);
-        }), null);
+        client.subscribeUserDataEvent(listenKey, (System.out::println));
 
     }
 

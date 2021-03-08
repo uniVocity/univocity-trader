@@ -2,8 +2,7 @@ package com.univocity.trader.exchange.binance.futures;
 
 import java.util.List;
 
-import com.univocity.trader.exchange.binance.futures.impl.BinanceApiInternalFactory;
-import com.univocity.trader.exchange.binance.futures.impl.BinanceFuturesApiWebSocketListener;
+import com.univocity.trader.exchange.binance.futures.impl.*;
 import com.univocity.trader.exchange.binance.futures.model.enums.CandlestickInterval;
 import com.univocity.trader.exchange.binance.futures.model.event.AggregateTradeEvent;
 import com.univocity.trader.exchange.binance.futures.model.event.CandlestickEvent;
@@ -14,6 +13,9 @@ import com.univocity.trader.exchange.binance.futures.model.event.SymbolBookTicke
 import com.univocity.trader.exchange.binance.futures.model.event.SymbolMiniTickerEvent;
 import com.univocity.trader.exchange.binance.futures.model.event.SymbolTickerEvent;
 import com.univocity.trader.exchange.binance.futures.model.user.UserDataUpdateEvent;
+import io.netty.channel.*;
+import io.netty.channel.nio.*;
+import org.asynchttpclient.*;
 import org.asynchttpclient.ws.WebSocket;
 
 /***
@@ -41,8 +43,15 @@ public interface SubscriptionClient {
      * @return The instance of synchronous client.
      */
     static SubscriptionClient create(String apiKey, String secretKey) {
-        return BinanceApiInternalFactory.getInstance().createSubscriptionClient(apiKey, secretKey,
-                new SubscriptionOptions());
+
+
+        return BinanceApiInternalFactory.getInstance().createSubscriptionClient(apiKey, secretKey,getAsyncHttpClient());
+    }
+
+    private static AsyncHttpClient getAsyncHttpClient(){
+        final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
+        return HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536);
+
     }
 
     /**
@@ -55,7 +64,7 @@ public interface SubscriptionClient {
      * @return The instance of synchronous client.
      */
     static SubscriptionClient create(String apiKey, String secretKey, SubscriptionOptions subscriptionOptions) {
-        return BinanceApiInternalFactory.getInstance().createSubscriptionClient(apiKey, secretKey, subscriptionOptions);
+        return BinanceApiInternalFactory.getInstance().createSubscriptionClient(apiKey, secretKey, getAsyncHttpClient());
     }
 
     /**

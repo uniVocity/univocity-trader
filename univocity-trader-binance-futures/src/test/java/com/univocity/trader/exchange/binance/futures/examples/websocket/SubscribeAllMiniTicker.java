@@ -11,7 +11,7 @@ public class SubscribeAllMiniTicker {
    
         client.subscribeAllMiniTickerEvent(((event) -> {
             System.out.println(event);
-        }), null);
+        }));
 
     }
 

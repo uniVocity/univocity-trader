@@ -12,7 +12,7 @@ public class SubscribeAggregateTrade {
         client.subscribeAggregateTradeEvent("btcusdt", ((event) -> {
             System.out.println(event);
             client.unsubscribeAll();
-        }), null);
+        }));
 
     }
 
