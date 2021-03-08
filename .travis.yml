@@ -3,7 +3,5 @@ language: java
 jdk:
   - openjdk11
 
-# no need to build all branches
-branches:
-  only:
-    - master
+script:
+  - ./mvnw clean install
