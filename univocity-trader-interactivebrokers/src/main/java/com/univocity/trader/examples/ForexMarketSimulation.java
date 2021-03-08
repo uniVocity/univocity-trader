@@ -19,11 +19,11 @@ public class ForexMarketSimulation {
 		InteractiveBrokers.Simulator simulator = InteractiveBrokers.simulator();
 
 //		TODO: configure your database connection as needed. By default MySQL will be used
-//		simulator.configure().database()
-//				.jdbcDriver("my.database.DriverClass")
-//				.jdbcUrl("jdbc:mydb://localhost:5555/database")
-//				.user("admin")
-//				.password("qwerty");
+		simulator.configure().database()
+				.jdbcDriver("my.database.DriverClass")
+				.jdbcUrl("jdbc:mydb://localhost:5555/database")
+				.user("admin")
+				.password("qwerty");
 
 		//you can test with one or more accounts at the same time
 		Account account = simulator.configure().account();

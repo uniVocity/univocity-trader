@@ -13,13 +13,13 @@ public class LiveForexTrader {
 		InteractiveBrokers.Trader trader = InteractiveBrokers.trader();
 
 //		TODO: configure your database connection as needed. By default MySQL will be used
-//		trader.configure().database()
-//				.jdbcDriver("my.database.DriverClass")
-//				.jdbcUrl("jdbc:mydb://localhost:5555/database")
-//				.user("admin")
-//				.password("qwerty");
+		trader.configure().database()
+				.jdbcDriver("my.database.DriverClass")
+				.jdbcUrl("jdbc:mydb://localhost:5555/database")
+				.user("admin")
+				.password("qwerty");
 
-//		If you want to receive e-mail notifications each time an order is submitted to the exchange, configure your e-mail sender
+		//If you want to receive e-mail notifications each time an order is submitted to the exchange, configure your e-mail sender
 		trader.configure().mailSender()
 				.replyToAddress("dev@univocity.com")
 				.smtpHost("smtp.gmail.com")
