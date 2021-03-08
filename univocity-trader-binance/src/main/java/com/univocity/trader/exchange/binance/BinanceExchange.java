@@ -202,6 +202,7 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	private BinanceApiRestClient restClient() {
 		if (restClient == null) {
 			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient, isTestNet);
+			restClient = factory.newRestClient();
 		}
 		return restClient;
 	}
