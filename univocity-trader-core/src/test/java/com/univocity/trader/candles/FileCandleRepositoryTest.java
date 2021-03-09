@@ -2,6 +2,7 @@ package com.univocity.trader.candles;
 
 import com.univocity.trader.simulation.*;
 import com.univocity.trader.utils.*;
+import org.apache.commons.lang3.*;
 import org.junit.*;
 
 import java.util.*;
@@ -32,21 +33,24 @@ public class FileCandleRepositoryTest {
 
 		assertEquals(count, 365);
 
-		String firstStr = "Jan 22 00:00 | O(8,744.21093800), C(8,680.87597700),  H(8,792.99414100), L(8,636.74707000), V(22,600,204,050.00000000)";
+		String firstStr = cleanDateString("Jan 22 00:00 | O(8,744.21093800), C(8,680.87597700),  H(8,792.99414100), L(8,636.74707000), V(22,600,204,050.00000000)");
 		assertNotNull(first);
-		assertEquals(firstStr, first.toString());
+		assertEquals(firstStr, cleanDateString(first.toString()));
 
-		String lastStr = "Jan 22 00:00 | O(30,483.74218800), C(30,861.99414100),  H(31,960.31054700), L(28,953.37304700), V(94,849,540,096.00000000)";
+		String lastStr = cleanDateString("Jan 22 00:00 | O(30,483.74218800), C(30,861.99414100),  H(31,960.31054700), L(28,953.37304700), V(94,849,540,096.00000000)");
 		assertNotNull(last);
-		assertEquals(lastStr, last.toString());
+		assertEquals(lastStr, cleanDateString(last.toString()));
 
 		first = repository.firstCandle("BTCUSD");
 		assertNotNull(first);
-		assertEquals(firstStr, first.toString());
+		assertEquals(firstStr, cleanDateString(first.toString()));
 
 		last = repository.lastCandle("BTCUSD");
 		assertNotNull(last);
-		assertEquals(lastStr, last.toString());
+		assertEquals(lastStr, cleanDateString(last.toString()));
 	}
 
+	private static String cleanDateString(String s) {
+		return StringUtils.replace(s, "Jan.", "Jan");
+	}
 }
