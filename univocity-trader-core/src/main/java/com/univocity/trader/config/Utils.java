@@ -16,6 +16,7 @@
 package com.univocity.trader.config;
 
 import io.github.classgraph.*;
+import org.apache.commons.io.*;
 import org.apache.commons.lang3.*;
 
 import java.io.*;
@@ -1435,6 +1436,82 @@ public class Utils {
 
 		return decimals;
 	}
+
+
+	public static String readTextFromResource(String resourcePath, Charset encoding) {
+		return readTextFromInput(getInput(resourcePath), encoding);
+	}
+
+	public static List<String> readLinesFromResource(String resourcePath, Charset encoding) {
+		return readLinesFromInput(getInput(resourcePath), encoding);
+	}
+
+	public static List<String> readLinesFromInput(InputStream in, Charset encoding) {
+		try {
+			return IOUtils.readLines(in, encoding);
+		} catch (Exception var3) {
+			if (var3 instanceof RuntimeException) {
+				throw (RuntimeException) var3;
+			} else {
+				throw new IllegalArgumentException("Unable to read contents from input", var3);
+			}
+		}
+	}
+
+	public static String readTextFromInput(InputStream in, Charset encoding) {
+		try {
+			StringBuilder out = new StringBuilder();
+			Iterator var3 = readLinesFromInput(in, encoding).iterator();
+
+			while (var3.hasNext()) {
+				String line = (String) var3.next();
+				out.append(line).append('\n');
+			}
+
+			if (out.length() > 0) {
+				out.deleteCharAt(out.length() - 1);
+			}
+
+			return out.toString();
+		} catch (Exception var5) {
+			if (var5 instanceof RuntimeException) {
+				throw (RuntimeException) var5;
+			} else {
+				throw new IllegalArgumentException("Unable to read contents from input", var5);
+			}
+		}
+	}
+
+	private static InputStream getInput(String path) {
+		try {
+			if (path != null) {
+				path = FilenameUtils.separatorsToUnix(path);
+			}
+
+			File file = new File(path);
+			if (!file.exists()) {
+				InputStream input = Utils.class.getResourceAsStream(path);
+				if (input == null) {
+					input = Utils.class.getClassLoader().getResourceAsStream(path);
+				}
+
+				if (input == null) {
+					input = ClassLoader.getSystemResourceAsStream(path);
+				}
+
+				if (input == null) {
+					throw new IllegalStateException("Unable to determine resource from given path: " + path);
+				} else {
+					return input;
+				}
+			} else {
+				return new FileInputStream(file);
+			}
+		} catch (IOException var3) {
+			throw new IllegalStateException("Unable to read resource from given path " + path, var3);
+		}
+	}
+
 }
 
 

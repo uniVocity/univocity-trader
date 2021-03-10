@@ -1,7 +1,6 @@
 package com.univocity.trader.config;
 
 import org.apache.commons.lang3.*;
-import org.springframework.jdbc.core.*;
 import org.springframework.jdbc.datasource.*;
 
 import javax.sql.*;
@@ -14,7 +13,6 @@ public class DatabaseConfiguration implements ConfigurationGroup {
 	private char[] password;
 	private String jdbcDriver;
 	private Supplier<DataSource> dataSource;
-	private final ThreadLocal<JdbcTemplate> db = ThreadLocal.withInitial(() -> new JdbcTemplate(dataSource()));
 
 	@Override
 	public void readProperties(PropertyBasedConfiguration properties) {
@@ -24,6 +22,21 @@ public class DatabaseConfiguration implements ConfigurationGroup {
 
 		String pwd = properties.getProperty("database.password");
 		password = pwd == null ? null : pwd.toCharArray();
+	}
+
+	public DatabaseConfiguration embedded() {
+		return embedded("./database/");
+	}
+
+	public DatabaseConfiguration inMemory() {
+		return embedded("mem:database"); //private memory database - no name given
+	}
+
+	public DatabaseConfiguration embedded(String pathToDatabaseDir) {
+		return jdbcDriver(org.h2.Driver.class.getName())
+				.user("sa")
+				.password("")
+				.jdbcUrl("jdbc:h2:" + pathToDatabaseDir + ";MODE=MySQL;DATABASE_TO_UPPER=TRUE");
 	}
 
 	public String jdbcUrl() {
@@ -73,14 +86,14 @@ public class DatabaseConfiguration implements ConfigurationGroup {
 	}
 
 	public DataSource dataSource() {
-		if(dataSource == null){
+		if (dataSource == null) {
 			return defaultDataSource();
 		}
 		return dataSource.get();
 	}
 
 	private DataSource getDataSource() {
-		if(dataSource == null){
+		if (dataSource == null) {
 			return defaultDataSource();
 		}
 		return dataSource.get();

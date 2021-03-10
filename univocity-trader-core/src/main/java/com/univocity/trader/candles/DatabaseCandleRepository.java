@@ -5,6 +5,7 @@ import org.slf4j.*;
 import org.springframework.dao.*;
 import org.springframework.jdbc.core.*;
 
+import java.nio.charset.*;
 import java.sql.*;
 import java.time.*;
 import java.util.*;
@@ -30,6 +31,41 @@ public class DatabaseCandleRepository extends CandleRepository {
 
 	public DatabaseCandleRepository(DatabaseConfiguration config) {
 		this.db = ThreadLocal.withInitial(() -> new JdbcTemplate(config.dataSource()));
+		initializeDatabase();
+	}
+
+
+	private void initializeDatabase() {
+		String dbName = isDatabaseMySQL() ? "mysql" : databaseName;
+
+		createTableIfNotExists("candle", dbName);
+		createTableIfNotExists("gap", dbName);
+	}
+
+	private void createTableIfNotExists(final String tableName, String databaseName) {
+		final JdbcTemplate db = db();
+		try {
+			boolean exists = db.execute((StatementCallback<Boolean>) statement -> {
+				try {
+					db.queryForObject("SELECT count(*) FROM " + tableName + " WHERE 0 = 1", Number.class);
+					return true;
+				} catch (Throwable e) {
+					return false;
+				}
+			});
+
+			if (!exists) {
+				db.execute((StatementCallback<Void>) statement -> {
+					String script = Utils.readTextFromResource("db/" + databaseName + "/" + tableName + ".sql", StandardCharsets.UTF_8);
+					statement.execute(script);
+					return null;
+				});
+
+				System.out.println(db.queryForObject("SELECT count(*) FROM " + tableName + " WHERE 0 = 1", Number.class));
+			}
+		} catch (Exception e) {
+			log.error("Error initializing " + databaseName + " table " + tableName, e);
+		}
 	}
 
 	public final JdbcTemplate db() {
@@ -73,7 +109,9 @@ public class DatabaseCandleRepository extends CandleRepository {
 				try {
 					if (processingCandle != null) { //save fully populated candle
 						if (db().execute(INSERT, (PreparedStatementCallback<Integer>) ps -> prepareInsert(ps, symbol, processingCandle).executeUpdate()) == 0) {
-							log.warn("Could not persist " + symbol + " Tick: " + processingCandle);
+							if(!initializing) {
+								log.warn("Could not persist " + symbol + " Tick: " + processingCandle);
+							}
 							return false;
 						}
 						fullCandles.put(symbol, processingCandle);
@@ -83,7 +121,7 @@ public class DatabaseCandleRepository extends CandleRepository {
 				}
 			}
 		} catch (Exception ex) {
-			if (ex.getMessage().contains("Duplicate entry")) {
+			if (ex instanceof DuplicateKeyException) {
 				if (!initializing) {
 					log.error("Skipping duplicate " + symbol + " Tick: " + tick);
 				}
