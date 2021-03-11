@@ -25,7 +25,7 @@ public class DatabaseConfiguration implements ConfigurationGroup {
 	}
 
 	public DatabaseConfiguration embedded() {
-		return embedded("./database/");
+		return embedded("./database/history");
 	}
 
 	public DatabaseConfiguration inMemory() {
@@ -86,13 +86,6 @@ public class DatabaseConfiguration implements ConfigurationGroup {
 	}
 
 	public DataSource dataSource() {
-		if (dataSource == null) {
-			return defaultDataSource();
-		}
-		return dataSource.get();
-	}
-
-	private DataSource getDataSource() {
 		if (dataSource == null) {
 			return defaultDataSource();
 		}

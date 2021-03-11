@@ -47,3 +47,4 @@ local.properties
 *.launch
 
 **/tmp/*
+/database/

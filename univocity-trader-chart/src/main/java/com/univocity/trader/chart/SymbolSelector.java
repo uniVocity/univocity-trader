@@ -30,8 +30,7 @@ public class SymbolSelector extends JPanel {
 	private JComboBox<TimeIntervalType> cmbUnitType;
 	private JSpinner txtUnits;
 
-	private JComboBox<String> cmbSymbols;
-	private DefaultComboBoxModel<String> cmbSymbolsModel;
+	private UppercaseComboBox cmbSymbols;
 	private Aggregator aggregator;
 
 	private CandleRepository candleRepository;
@@ -164,7 +163,7 @@ public class SymbolSelector extends JPanel {
 	private void startStream(DatabaseCandleRepository repository, Exchange exchange, String symbol) {
 		loadRecentCandles(exchange, symbol, false);
 		fillAvailableDates();
-		loadCandles();
+		loadCandles(true);
 
 		exchange.openLiveStream(symbol.toLowerCase(), TimeInterval.MINUTE, new TickConsumer() {
 
@@ -233,18 +232,8 @@ public class SymbolSelector extends JPanel {
 		getCmbSymbols().setEnabled(false);
 		getBtLive().setEnabled(false);
 
-		String currentSymbol = getSymbol();
-
-		this.candleRepository = liveTrader.candleRepository();
-		getCmbSymbolsModel().removeAllElements();
-
-		Set<String> available = candleRepository.getKnownSymbols();
-		getCmbSymbolsModel().addAll(available);
-
-		if (currentSymbol != null && available.contains(currentSymbol)) {
-			System.out.println(currentSymbol);
-			getCmbSymbolsModel().setSelectedItem(currentSymbol);
-		}
+		candleRepository = liveTrader.candleRepository();
+		getCmbSymbols().setItems(candleRepository.getKnownSymbols());
 
 		getCmbSymbols().setEnabled(true);
 	}
@@ -262,7 +251,7 @@ public class SymbolSelector extends JPanel {
 		Thread thread = new Thread(() -> {
 			try {
 				getGlassPane().activate("Loading " + getSymbol() + " candles...");
-				loadCandles();
+				loadCandles(true);
 			} finally {
 				glassPane.deactivate();
 			}
@@ -287,69 +276,34 @@ public class SymbolSelector extends JPanel {
 	private void backfill(Exchange<?, ?> exchange, boolean loadCandles) {
 		try {
 			glassPane.activate("Updating history of " + getSymbol());
-			CandleHistoryBackfill backfill = new CandleHistoryBackfill((DatabaseCandleRepository) candleRepository);
-			backfill.fillHistoryGaps(exchange, getSymbol(), getChartStart().getCommittedValue(), Instant.now(), TimeInterval.minutes(1));
-			fillAvailableDates();
+			backfill(exchange);
 			if (loadCandles) {
-				loadCandles();
+				loadCandles(true);
 			}
 		} finally {
 			glassPane.deactivate();
 		}
 	}
 
+	private void backfill(Exchange<?, ?> exchange) {
+		CandleHistoryBackfill backfill = new CandleHistoryBackfill((DatabaseCandleRepository) candleRepository);
+		backfill.fillHistoryGaps(exchange, getSymbol(), getChartStart().getCommittedValue(), Instant.now(), TimeInterval.minutes(1));
+		fillAvailableDates();
+	}
+
 	public String getSymbol() {
-		String symbol = (String) getCmbSymbols().getSelectedItem();
-		if (getCmbSymbols().getSelectedIndex() == -1) {
-			if (symbol != null) {
-				symbol = symbol.trim();
-			}
-		}
-
-		if (symbol != null && !symbol.isEmpty()) {
-			return symbol;
-		}
-		return null;
+		return getCmbSymbols().getSelectedItem();
 	}
 
-	private void updateSymbols() {
-		String symbol = getSymbol();
-		if (symbol != null) {
-			int symbolCount = cmbSymbolsModel.getSize();
-			for (int i = 0; i < symbolCount; i++) {
-				if (cmbSymbolsModel.getElementAt(i).equals(symbol)) {
-					return;
-				}
-			}
-			cmbSymbolsModel.addElement(symbol);
-		}
-	}
-
-	public void setSelectedSymbol(String symbol) {
-		String current = getSymbol();
-		if (current == null || !current.equals(symbol)) {
-			this.cmbSymbols.setSelectedItem(symbol);
-		}
-	}
-
-	private JComboBox<String> getCmbSymbols() {
+	private UppercaseComboBox getCmbSymbols() {
 		if (cmbSymbols == null) {
-			cmbSymbols = new JComboBox<>(getCmbSymbolsModel());
+			cmbSymbols = new UppercaseComboBox();
 			cmbSymbols.setEnabled(false);
-			cmbSymbols.setEditable(true);
-			cmbSymbols.setSelectedIndex(-1);
 			cmbSymbols.addActionListener((e) -> getBtLoad().setEnabled(true));
 			cmbSymbols.addActionListener((e) -> getBtLive().setEnabled(true));
 			cmbSymbols.addActionListener((e) -> fillAvailableDates());
 		}
 		return cmbSymbols;
-	}
-
-	private DefaultComboBoxModel<String> getCmbSymbolsModel() {
-		if (cmbSymbolsModel == null) {
-			cmbSymbolsModel = new DefaultComboBoxModel<>();
-		}
-		return cmbSymbolsModel;
 	}
 
 	private Aggregator getAggregator(boolean reset) {
@@ -360,7 +314,7 @@ public class SymbolSelector extends JPanel {
 		return aggregator;
 	}
 
-	private void loadCandles() {
+	private void loadCandles(boolean backfillIfNoData) {
 		btUpdate.setEnabled(false);
 		btLoad.setEnabled(false);
 		String symbol = validateSymbol();
@@ -392,13 +346,21 @@ public class SymbolSelector extends JPanel {
 			}
 
 			if (candles.size() == 0) {
-				WindowUtils.displayWarning(this, "No history data available for symbol " + symbol);
+				if (backfillIfNoData) {
+					backfill(getExchangeSelector().getSelectedExchange());
+					loadCandles(false);
+					return;
+				} else {
+					WindowUtils.displayWarning(this, "No history data available for symbol " + symbol);
+				}
 			}
 			candleHistory.setCandles(candles);
 			btUpdate.setEnabled(true);
 		} catch (Exception ex) {
 			log.error("Error loading data for symbol " + symbol, ex);
 			WindowUtils.displayError(this, "Error loading data for symbol " + symbol);
+		} finally {
+			btLoad.setEnabled(true);
 		}
 	}
 

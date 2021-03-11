@@ -60,8 +60,6 @@ public class DatabaseCandleRepository extends CandleRepository {
 					statement.execute(script);
 					return null;
 				});
-
-				System.out.println(db.queryForObject("SELECT count(*) FROM " + tableName + " WHERE 0 = 1", Number.class));
 			}
 		} catch (Exception e) {
 			log.error("Error initializing " + databaseName + " table " + tableName, e);
