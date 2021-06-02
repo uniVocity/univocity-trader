@@ -35,6 +35,7 @@ public class MarketSimulation {
 			"1532227380000,1532227439999,83.21,83.21,83.06,83.06,319.33566,SELL\n" +
 			"1532227440000,1532227499999,83.04,83.15,83.0,83.15,368.0443,BUY\n";
 
+	@Ignore
 	@Test
 	public void testMarketOrders(){
 		Strategy.Simulator simulator = Strategy.simulator();
