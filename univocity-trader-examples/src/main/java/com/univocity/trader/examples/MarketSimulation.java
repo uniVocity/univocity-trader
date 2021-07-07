@@ -55,8 +55,8 @@ public class MarketSimulation {
 		simulation.initialFunds(1000.0)
 				.tradingFees(SimpleTradingFees.percentage(0.1))
 				.emulateSlippage()
-				.simulateFrom(LocalDate.of(2018, 7, 1).atStartOfDay())
-				.simulateTo(LocalDate.of(2019, 7, 1).atStartOfDay());
+				.simulateFrom(LocalDate.of(2021, 5, 18).atStartOfDay())
+				.simulateTo(LocalDate.of(2021, 6, 1).atStartOfDay());
 
 		simulator.symbolInformation("USDT").priceDecimalPlaces(2).quantityDecimalPlaces(2);
 

@@ -116,6 +116,6 @@ public class OrderExecutionToLog implements OrderListener {
 	}
 
 	protected void logDetails(String details, Trade trade, Client client) {
-		log.debug(details);
+		log.info(details);
 	}
 }
