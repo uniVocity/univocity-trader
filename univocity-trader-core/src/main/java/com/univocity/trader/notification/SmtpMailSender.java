@@ -72,20 +72,20 @@ public class SmtpMailSender {
 					sender.setHost(config.smtpHost());
 
 					Properties properties = new Properties();
-					properties.put("mail.transport.protocol", "smtps");
+					properties.put("mail.transport.protocol", "smtp");
 					if (config.smtpSSL()) {
-						properties.put("mail.smtps.starttls.enable", true);
+						properties.put("mail.smtp.starttls.enable", true);
 					}
-					properties.put("mail.smtps.auth", true);
+					properties.put("mail.smtp.auth", true);
 
 					Integer port = config.smtpPort();
 					if (port != null && port != 0) {
-						properties.put("mail.smtps.socketFactory.port", port);
+						properties.put("mail.smtp.socketFactory.port", port);
 						sender.setPort(port);
 					}
 
-					properties.put("mail.smtps.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-					properties.put("mail.smtps.socketFactory.fallback", false);
+					properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+					properties.put("mail.smtp.socketFactory.fallback", true);
 
 					final String user = config.smtpUsername();
 					final char[] password = config.smtpPassword();

@@ -36,10 +36,8 @@ public class OrderExecutionToLog implements OrderListener {
 	}
 
 	protected void logDetails(Order order, Trade trade, Client client) {
-		if (log.isDebugEnabled()) {
-			String row = generateDetailsRow(order, trade, client);
-			logDetails(row, trade, client);
-		}
+		String row = generateDetailsRow(order, trade, client);
+		logDetails(row, trade, client);
 	}
 
 	protected String generateDetailsRow(Order order, Trade trade, Client client) {
