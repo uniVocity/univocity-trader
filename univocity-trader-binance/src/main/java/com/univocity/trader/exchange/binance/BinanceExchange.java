@@ -172,11 +172,11 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 				SymbolFilter tickSize = symbolInfo.getSymbolFilter(FilterType.PRICE_FILTER);
 				String tickStep = tickSize.getTickSize(); //comes as: 0.01000000
 				int priceDecimalPlaces = tickStep.indexOf('1') - 1;
-				BigDecimal stepSize = new BigDecimal(step);
+				//BigDecimal stepSize = new BigDecimal(step);
 
 				SymbolFilter notional = symbolInfo.getSymbolFilter(MIN_NOTIONAL);
 				BigDecimal minOrderAmount = new BigDecimal(notional.getMinNotional());
-				BigDecimal minQtyAmount = new BigDecimal(notional.getMinQty());
+				BigDecimal minQtyAmount = new BigDecimal(lotSize.getMinQty());
 
 				SymbolInformation out = new SymbolInformation(symbol);
 				out.quantityDecimalPlaces(quantityDecimalPlaces);
