@@ -63,11 +63,11 @@ class IQFeedClientAccount implements ClientAccount {
 		this.minimumBnbAmountToKeep = minimumBnbAmountToKeep;
 	}
 
-	private SymbolPriceDetails getSymbolPriceDetails() {
+	/*private SymbolPriceDetails getSymbolPriceDetails() {
 		if (symbolPriceDetails == null) {
 			symbolPriceDetails = new SymbolPriceDetails(exchangeAPI);
 		}
 		return symbolPriceDetails;
-	}
+	}*/
 
 }

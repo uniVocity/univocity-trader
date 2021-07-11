@@ -133,7 +133,7 @@ public final class TradingManager {
 	}
 
 	public boolean hasPosition(Candle c, boolean includeLocked, boolean includeLong, boolean includeShort) {
-		double minimum = getPriceDetails().getMinimumOrderAmount(c.close);
+		double minimum = getPriceDetails().getMinimumOrderAmount();
 
 		double assets = 0.0;
 
@@ -329,7 +329,7 @@ public final class TradingManager {
 
 		orderManager.prepareOrder(book, orderPreparation, context);
 		SymbolPriceDetails priceDetails = context.priceDetails();
-		if (!orderPreparation.isCancelled() && orderPreparation.getTotalOrderAmount() > (priceDetails.getMinimumOrderAmount(orderPreparation.getPrice()))) {
+		if (!orderPreparation.isCancelled() && orderPreparation.getTotalOrderAmount() > (priceDetails.getMinimumOrderAmount())) {
 			orderPreparation.setPrice(orderPreparation.getPrice());
 			orderPreparation.setQuantity(orderPreparation.getQuantity());
 
@@ -337,7 +337,7 @@ public final class TradingManager {
 			double minimumInvestment = configuration.minimumInvestmentAmountPerTrade(orderPreparation.getAssetsSymbol());
 			double orderAmount = orderPreparation.getTotalOrderAmount() * 1.01 + getTradingFees().feesOnOrder(orderPreparation);
 
-			if ((orderAmount >= minimumInvestment || closingShort) && orderAmount > priceDetails.getMinimumOrderAmount(orderPreparation.getPrice())) {
+			if ((orderAmount >= minimumInvestment || closingShort) && orderAmount > priceDetails.getMinimumOrderAmount()) {
 				return orderPreparation;
 			}
 		}

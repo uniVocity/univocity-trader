@@ -176,11 +176,13 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 				SymbolFilter notional = symbolInfo.getSymbolFilter(MIN_NOTIONAL);
 				BigDecimal minOrderAmount = new BigDecimal(notional.getMinNotional());
+				BigDecimal minQtyAmount = new BigDecimal(notional.getMinQty());
 
 				SymbolInformation out = new SymbolInformation(symbol);
 				out.quantityDecimalPlaces(quantityDecimalPlaces);
 				out.priceDecimalPlaces(priceDecimalPlaces);
 				out.minimumAssetsPerOrder(minOrderAmount);
+				out.minimumQtyPerOrder(minQtyAmount);
 				symbolInformation.put(symbol, out);
 			});
 

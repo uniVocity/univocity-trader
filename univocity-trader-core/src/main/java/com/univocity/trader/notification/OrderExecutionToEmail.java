@@ -177,7 +177,7 @@ public class OrderExecutionToEmail implements OrderListener {
 
 				double worth = allAssets * lastPrice;
 				total.set(total.get() + convertToReferenceCurrency(worth, next));
-				if (worth > next.getPriceDetails().getMinimumOrderAmount(lastPrice)) {
+				if (worth > next.getPriceDetails().getMinimumOrderAmount()) {
 					printing = true;
 					msg.append("\n\t* ").append(f.quantityToString(assets)).append(" ").append(next.getAssetSymbol());
 					msg.append(", ");

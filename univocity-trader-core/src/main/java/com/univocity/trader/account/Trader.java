@@ -343,7 +343,7 @@ public final class Trader {
 			return -1.0;
 		}
 		double amountToSpend = tradingManager.allocateFunds(side);
-		final double minimum = priceDetails().getMinimumOrderAmount(context.latestCandle.close);
+		final double minimum = priceDetails().getMinimumOrderAmount();
 
 		if (amountToSpend <= minimum) {
 			tradingManager.cancelStaleOrdersFor(side, this);
@@ -411,7 +411,7 @@ public final class Trader {
 	}
 
 	public double allocateFunds(Trade.Side tradeSide) {
-		final double minimum = priceDetails().getMinimumOrderAmount(context.latestCandle.close);
+		final double minimum = priceDetails().getMinimumOrderAmount();
 		double funds = tradingManager.allocateFunds(tradeSide);
 		if (funds < minimum) {
 			return 0.0;

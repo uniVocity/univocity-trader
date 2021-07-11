@@ -61,9 +61,9 @@ class BinanceClientAccount implements ClientAccount {
 		this.minimumBnbAmountToKeep = minimumBnbAmountToKeep;
 	}
 
-	private SymbolPriceDetails getPriceDetails() {
+	private SymbolPriceDetails getPriceDetails(String referenceCurrency) {
 		if (symbolPriceDetails == null) {
-			symbolPriceDetails = new SymbolPriceDetails(exchangeApi);
+			symbolPriceDetails = new SymbolPriceDetails(exchangeApi, referenceCurrency);
 		}
 		return symbolPriceDetails;
 	}
@@ -285,8 +285,8 @@ class BinanceClientAccount implements ClientAccount {
 			orderPreparation.setQuantity(newQuantity);
 		}
 
-		SymbolPriceDetails f = getPriceDetails().switchToSymbol(orderPreparation.getSymbol());
-		if (orderPreparation.getTotalOrderAmount() > f.getMinimumOrderAmount(orderPreparation.getPrice())) {
+		SymbolPriceDetails f = getPriceDetails(orderPreparation.getFundsSymbol()).switchToSymbol(orderPreparation.getSymbol());
+		if (orderPreparation.getTotalOrderAmount() > f.getMinimumOrderAmount()) {
 			NewOrder order = null;
 			try {
 				BigDecimal qty = f.adjustQuantityScale(orderPreparation.getQuantity());

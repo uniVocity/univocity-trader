@@ -27,7 +27,7 @@ public class AbstractIchimokuLineIndicator extends SingleValueCalculationIndicat
 
     @Override
     protected Indicator[] children() {
-        return new Indicator[]{};
+        return new Indicator[] { this.high, this.low };
     }
 
 }

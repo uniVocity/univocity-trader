@@ -12,6 +12,8 @@ public final class SymbolInformation {
 	private int quantityDecimalPlaces = 0;
 	private BigDecimal minimumAssetsPerOrder = DEFAULT_MINIMUM_ASSETS_PER_ORDER;
 	private double minimumAssetsPerOrderAmount = -1.0;
+	private BigDecimal minimumQtyPerOrder = DEFAULT_MINIMUM_ASSETS_PER_ORDER;
+	private double minimumQtyPerOrderAmount = -1.0;
 
 	public SymbolInformation(String symbol) {
 		this.symbol = symbol;
@@ -50,6 +52,13 @@ public final class SymbolInformation {
 		return minimumAssetsPerOrderAmount;
 	}
 
+	public double minimumQtyPerOrderAmount() {
+		if (minimumQtyPerOrderAmount < 0.0) {
+			minimumQtyPerOrderAmount = minimumQtyPerOrder.doubleValue();
+		}
+		return minimumQtyPerOrderAmount;
+	}
+
 	public SymbolInformation minimumAssetsPerOrder(double minimumAssetsPerOrder) {
 		return minimumAssetsPerOrder(BigDecimal.valueOf(minimumAssetsPerOrder));
 	}
@@ -57,6 +66,16 @@ public final class SymbolInformation {
 	public SymbolInformation minimumAssetsPerOrder(BigDecimal minimumAssetsPerOrder) {
 		this.minimumAssetsPerOrder = minimumAssetsPerOrder;
 		this.minimumAssetsPerOrderAmount = -1.0;
+		return this;
+	}
+
+	public SymbolInformation minimumQtyPerOrder(double minimumQtyPerOrder) {
+		return minimumQtyPerOrder(BigDecimal.valueOf(minimumQtyPerOrder));
+	}
+
+	public SymbolInformation minimumQtyPerOrder(BigDecimal minimumQtyPerOrder) {
+		this.minimumQtyPerOrder = minimumQtyPerOrder;
+		this.minimumQtyPerOrderAmount = -1.0;
 		return this;
 	}
 
@@ -68,6 +87,7 @@ public final class SymbolInformation {
 				", quantityDecimalPlaces=" + quantityDecimalPlaces +
 				", minimumAssetsPerOrder=" + minimumAssetsPerOrder +
 				", minimumAssetsPerOrderAmount=" + minimumAssetsPerOrderAmount +
+				", minimumQtyPerOrderAmount=" + minimumQtyPerOrderAmount +
 				'}';
 	}
 }
