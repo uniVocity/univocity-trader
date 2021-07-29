@@ -15,6 +15,7 @@ import org.springframework.mail.javamail.*;
 
 import javax.mail.*;
 import javax.mail.internet.*;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 public class SmtpMailSender {
@@ -27,8 +28,8 @@ public class SmtpMailSender {
 		this.config = config;
 	}
 
-	public String getSenderAddress(){
-		return config.smtpSender();
+	public EmailConfiguration getConfig(){
+		return this.config;
 	}
 
 	public Email newEmail(String[] to, String title, String content) {
@@ -41,6 +42,7 @@ public class SmtpMailSender {
 		email.setReplyTo(config.replyToAddress());
 		email.setBody(content);
 		email.setFrom(config.smtpSender());
+		email.setSenderName(config.senderName());
 		email.setTitle(title);
 		email.setTo(to);
 		return email;
@@ -117,6 +119,7 @@ public class SmtpMailSender {
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
 			helper.setFrom(email.getFrom());
+			helper.setFrom(email.getFrom(), email.getSenderName());
 			helper.setTo(email.getTo());
 			if (StringUtils.isNotBlank(email.getReplyTo())) {
 				helper.setReplyTo(email.getReplyTo());
@@ -124,7 +127,7 @@ public class SmtpMailSender {
 
 			helper.setSubject(email.getTitle());
 			helper.setText(email.getBody());
-		} catch (MessagingException e) {
+		} catch (MessagingException | UnsupportedEncodingException e) {
 			log.warn("Unable to write e-mail", e);
 		}
 

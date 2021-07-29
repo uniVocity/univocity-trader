@@ -10,6 +10,7 @@ package com.univocity.trader.notification;
 public class Email {
 
 	private String from;
+	private String senderName;
 	private String[] to;
 	private String replyTo;
 	private String title;
@@ -19,9 +20,15 @@ public class Email {
 		return from;
 	}
 
+	public String getSenderName() {
+		return this.senderName;
+	}
+
 	public void setFrom(String from) {
 		this.from = from;
 	}
+
+	public void setSenderName(String senderName) { this.senderName = senderName; }
 
 	public String[] getTo() {
 		return to;

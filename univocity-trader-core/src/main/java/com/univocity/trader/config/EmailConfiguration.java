@@ -10,11 +10,12 @@ public class EmailConfiguration implements ConfigurationGroup {
 	private boolean smtpSSL;
 	private String smtpUsername;
 	private char[] smtpPassword;
-	private String smtpSender = null;
+	private String smtpSender;
+	private String senderName;
 
 	@Override
 	public void readProperties(PropertyBasedConfiguration properties) {
-		boolean mailingConfigured = properties.containsAnyProperties("mail.reply.to", "mail.smtp.host", "mail.smtp.ssl", "mail.smtp.port", "mail.smtp.username", "mail.smtp.sender", "mail.smtp.password");
+		boolean mailingConfigured = properties.containsAnyProperties("mail.reply.to", "mail.smtp.host", "mail.smtp.ssl", "mail.smtp.port", "mail.smtp.username", "mail.smtp.sender", "mail.smtp.sender-name", "mail.smtp.password");
 		if (mailingConfigured) {
 			replyToAddress = properties.getProperty("mail.reply.to");
 			smtpHost = properties.getProperty("mail.smtp.host");
@@ -22,6 +23,7 @@ public class EmailConfiguration implements ConfigurationGroup {
 			smtpPort = properties.getInteger("mail.smtp.port", 0);
 			smtpUsername = properties.getProperty("mail.smtp.username");
 			smtpSender = properties.getProperty("mail.smtp.sender");
+			this.senderName = properties.getProperty("mail.smtp.sender-name");
 
 			String pwd = properties.getProperty("mail.smtp.password");
 			smtpPassword = pwd == null ? null : pwd.toCharArray();
@@ -38,6 +40,10 @@ public class EmailConfiguration implements ConfigurationGroup {
 
 	public String smtpSender() {
 		return smtpSender;
+	}
+
+	public String senderName() {
+		return this.senderName;
 	}
 
 	public String smtpHost() {
@@ -66,6 +72,11 @@ public class EmailConfiguration implements ConfigurationGroup {
 
 	public EmailConfiguration smtpSender(String smtpSender) {
 		this.smtpSender = smtpSender;
+		return this;
+	}
+
+	public EmailConfiguration senderName(String senderName) {
+		this.senderName = senderName;
 		return this;
 	}
 
@@ -98,6 +109,6 @@ public class EmailConfiguration implements ConfigurationGroup {
 
 	@Override
 	public boolean isConfigured() {
-		return StringUtils.isNoneBlank(smtpUsername, smtpSender, smtpHost) && ArrayUtils.isNotEmpty(smtpPassword);
+		return StringUtils.isNoneBlank(smtpUsername, smtpSender, smtpHost, senderName) && ArrayUtils.isNotEmpty(smtpPassword);
 	}
 }

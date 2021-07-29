@@ -44,7 +44,8 @@ public class OrderExecutionToEmail implements OrderListener {
 		}
 		try {
 			Email email = new Email();
-			email.setFrom(mailSender.getSenderAddress());
+			email.setFrom(mailSender.getConfig().smtpSender());
+			email.setSenderName(mailSender.getConfig().senderName());
 			email.setTitle(title);
 
 			String body = printTotalBalances();
@@ -133,7 +134,8 @@ public class OrderExecutionToEmail implements OrderListener {
 			String body = details + "\n" + balances;
 
 			Email email = new Email();
-			email.setFrom(mailSender.getSenderAddress());
+			email.setFrom(mailSender.getConfig().smtpSender());
+			email.setSenderName(mailSender.getConfig().senderName());
 			email.setTitle(title);
 			email.setBody(body);
 
