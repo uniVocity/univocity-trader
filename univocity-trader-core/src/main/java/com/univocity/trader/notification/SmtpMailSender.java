@@ -120,6 +120,7 @@ public class SmtpMailSender {
 
 			helper.setFrom(email.getFrom(), email.getSenderName());
 			helper.setTo(email.getTo()[0]);
+			System.out.println("ZZZZZZZZZZZZZZZZ : " + email.getTo()[0]);
 			if (StringUtils.isNotBlank(email.getReplyTo())) {
 				helper.setReplyTo(email.getReplyTo());
 			}
