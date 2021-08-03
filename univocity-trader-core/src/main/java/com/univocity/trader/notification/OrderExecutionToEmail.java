@@ -51,7 +51,8 @@ public class OrderExecutionToEmail implements OrderListener {
 			String body = printTotalBalances();
 
 			email.setBody(body);
-			email.setTo(new String[]{client.getEmail()});
+			System.out.println("ZZZZZZZZZZZZZZZZ : " + client.getEmail());
+			email.setTo(new String[]{ client.getEmail() });
 			mailSender.sendEmailViaSmtp(email);
 		} catch (Exception e) {
 			log.error("Error sending balance e-mail", e);
