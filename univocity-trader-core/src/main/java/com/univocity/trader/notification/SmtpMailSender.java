@@ -119,8 +119,7 @@ public class SmtpMailSender {
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
 			helper.setFrom(email.getFrom(), email.getSenderName());
-			helper.setTo(email.getTo()[0]);
-			System.out.println("ZZZZZZZZZZZZZZZZ : " + email.getTo()[0]);
+			helper.setTo(email.getTo());
 			if (StringUtils.isNotBlank(email.getReplyTo())) {
 				helper.setReplyTo(email.getReplyTo());
 			}

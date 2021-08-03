@@ -47,10 +47,7 @@ public class OrderExecutionToEmail implements OrderListener {
 			email.setFrom(mailSender.getConfig().smtpSender());
 			email.setSenderName(mailSender.getConfig().senderName());
 			email.setTitle(title);
-
-			String body = printTotalBalances();
-
-			email.setBody(body);
+			email.setBody(printTotalBalances());
 			email.setTo(new String[]{ client.getEmail() });
 			mailSender.sendEmailViaSmtp(email);
 		} catch (Exception e) {
@@ -138,7 +135,6 @@ public class OrderExecutionToEmail implements OrderListener {
 			email.setSenderName(mailSender.getConfig().senderName());
 			email.setTitle(title);
 			email.setBody(body);
-
 			email.setTo(new String[]{client.getEmail()});
 			mailSender.sendEmailViaSmtp(email);
 		} catch (Exception e) {
