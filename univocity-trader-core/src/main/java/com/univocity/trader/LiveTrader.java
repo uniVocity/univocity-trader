@@ -119,7 +119,7 @@ public abstract class LiveTrader<T, C extends Configuration<C, A>, A extends Acc
 
 	public DatabaseCandleRepository candleRepository() {
 		if (candleRepository == null) {
-			candleRepository = new DatabaseCandleRepository(configuration.database().embedded());
+			candleRepository = new DatabaseCandleRepository(configuration.database());
 		}
 		return candleRepository;
 	}
