@@ -30,7 +30,7 @@
 <!--    Uncomment if you have the Interactive Brokers jar and you want to use IB module -->
 <!--        <module>univocity-trader-interactivebrokers</module>-->
         <module>univocity-trader-examples</module>
-        <module>univocity-trader-chart</module>
+        <!--<module>univocity-trader-chart</module>-->
     </modules>
 
     <issueManagement>
