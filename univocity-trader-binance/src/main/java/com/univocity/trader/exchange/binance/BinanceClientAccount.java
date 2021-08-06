@@ -46,7 +46,7 @@ class BinanceClientAccount implements ClientAccount {
 		this.exchangeApi = exchangeApi;
 
 		final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
-		final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536);
+		final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536, exchangeApi.getProxyServer());
 
 		factory = BinanceApiClientFactory.newInstance(apiKey, secret, asyncHttpClient);
 		client = factory.newRestClient();

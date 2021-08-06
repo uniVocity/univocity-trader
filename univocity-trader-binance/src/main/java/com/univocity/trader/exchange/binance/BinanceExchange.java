@@ -11,6 +11,7 @@ import com.univocity.trader.utils.*;
 import io.netty.channel.*;
 import io.netty.channel.nio.*;
 import org.asynchttpclient.*;
+import org.asynchttpclient.proxy.ProxyServer;
 import org.slf4j.*;
 
 import java.math.*;
@@ -20,7 +21,7 @@ import java.util.stream.*;
 
 import static com.univocity.trader.exchange.binance.api.client.domain.general.FilterType.*;
 
-class BinanceExchange implements Exchange<Candlestick, Account> {
+public class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private static final Logger log = LoggerFactory.getLogger(BinanceExchange.class);
 
@@ -30,7 +31,8 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	private final Map<String, SymbolInformation> symbolInformation = new ConcurrentHashMap<>();
 
 	private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup(2);
-	private final AsyncHttpClient asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536);
+	private AsyncHttpClient asyncHttpClient;
+	private ProxyServer proxyServer;
 	private String listenKey;
 	private Timer timer;
 	private BinanceClientAccount binanceClientAccount;
@@ -190,9 +192,23 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 		return symbolInformation;
 	}
 
+	public void setupAsyncHttpClient(ProxyServer proxyServer) {
+		if (this.asyncHttpClient == null) {
+			log.info("AAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+			this.proxyServer = proxyServer;
+			this.asyncHttpClient = HttpUtils.newAsyncHttpClient(eventLoopGroup, 65536, this.proxyServer);
+		} else {
+			log.warn("AsyncHttpClient already created !");
+		}
+	}
+
+	public void setupAsyncHttpClient() {
+		this.setupAsyncHttpClient(null);
+	}
 
 	private BinanceApiWebSocketClient socketClient() {
 		if (socketClient == null) {
+			log.info("BBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
 			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient, isTestNet);
 			socketClient = factory.newWebSocketClient();
 		}
@@ -203,6 +219,7 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 
 	private BinanceApiRestClient restClient() {
 		if (restClient == null) {
+			log.info("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
 			BinanceApiClientFactory factory = BinanceApiClientFactory.newInstance(apiKey, apiSecret == null ? null : new String(apiSecret), asyncHttpClient, isTestNet);
 			restClient = factory.newRestClient();
 		}
@@ -212,6 +229,10 @@ class BinanceExchange implements Exchange<Candlestick, Account> {
 	@Override
 	public int historicalCandleCountLimit() {
 		return 1000;
+	}
+
+	public ProxyServer getProxyServer() {
+		return this.proxyServer;
 	}
 
 	//	@Override

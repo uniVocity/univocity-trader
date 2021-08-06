@@ -11,6 +11,10 @@ import static com.univocity.trader.account.Order.Type.*;
 
 public class OrderRequest {
 
+	public static Order.Type DEFAULT_ORDER_TYPE = LIMIT; // This allows to statically change default order type
+
+	// -------------------------------------------- //
+
 	private boolean cancelled = false;
 	private final String assetsSymbol;
 	private final String fundsSymbol;
@@ -24,7 +28,7 @@ public class OrderRequest {
 
 	private double price = 0.0;
 	private double quantity = 0.0;
-	private Order.Type type = LIMIT;
+	private Order.Type type = DEFAULT_ORDER_TYPE;
 	private boolean active = true;
 
 	private List<OrderRequest> attachedRequests = null;
